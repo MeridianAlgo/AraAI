@@ -1,0 +1,2 @@
+Date,Symbol,Current_Price,Predicted_Price,Direction,Confidence,Risk_Level,Recommendation,Actual_Price,Error_Percent,Direction_Correct,Learned
+2025-07-20,AAPL,168.84,167.76,DOWN,0.650,MEDIUM,SELL,,,,
