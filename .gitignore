@@ -1,12 +1,15 @@
-# Byte-compiled / optimized / DLL files
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -28,8 +31,6 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -51,29 +52,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
 # Jupyter Notebook
 .ipynb_checkpoints
 
@@ -85,13 +63,9 @@ ipython_config.py
 .python-version
 
 # pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+Pipfile.lock
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+# PEP 582
 __pypackages__/
 
 # Celery stuff
@@ -102,7 +76,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -128,21 +101,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# PyTorch
-*.pth
-*.pt
-
-# Data files
-*.csv
-*.json
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-logs/
-*.log
-
 # IDE
 .vscode/
 .idea/
@@ -159,20 +117,23 @@ logs/
 ehthumbs.db
 Thumbs.db
 
-# Project specific
-predictions.csv
-model_checkpoints/
-data/models/
-node_modules/
-.kiro/
+# Logs
+*.log
+logs/
 
-# GPU specific
-*.cuda
-*.rocm
-*.mps
+# Data files
+*.csv
+*.json
+*.sqlite
+*.db
+
+# Model files
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
 
 # Temporary files
 tmp/
 temp/
-*.tmp
-*.temp

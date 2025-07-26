@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "meridianalgo-smarttrader"
-version = "1.0.0"
+version = "1.0.1"
 description = "Ultra-Accurate AI Stock Analysis with Universal GPU Support (AMD • Intel • NVIDIA • Apple)"
 readme = "README.md"
 license = {text = "MIT"}

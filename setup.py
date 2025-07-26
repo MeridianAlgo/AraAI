@@ -19,7 +19,7 @@ def read_requirements():
 
 setup(
     name="meridianalgo-smarttrader",
-    version="1.0.0",
+    version="1.0.1",
     author="MeridianAlgo",
     author_email="contact@meridianalgo.com",
     description="Ultra-Accurate AI Stock Analysis with Universal GPU Support (AMD • Intel • NVIDIA • Apple)",
