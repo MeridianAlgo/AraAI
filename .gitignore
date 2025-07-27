@@ -1,9 +1,4 @@
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Ara AI Stock Analysis - Git Ignore
 
 # Python
 __pycache__/
@@ -23,83 +18,16 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.venv
-env/
+# Virtual environments
 venv/
+env/
 ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
+ara_env/
 
 # IDE
 .vscode/
@@ -117,23 +45,42 @@ dmypy.json
 ehthumbs.db
 Thumbs.db
 
-# Logs
+# Ara AI specific
 *.log
-logs/
+temp_model_*.pth
+perfect_model_temp.pth
+best_model_temp.pth
 
-# Data files
-*.csv
-*.json
-*.sqlite
-*.db
-
-# Model files
-*.pkl
-*.joblib
-*.h5
-*.pt
-*.pth
+# Data files (keep structure but ignore large data)
+# predictions.csv - Keep for demo
+# prediction_accuracy.csv - Keep for demo
+# online_learning_data.csv - Keep for demo
+# learning_params_*.json - Keep for demo
 
 # Temporary files
-tmp/
-temp/
+*.tmp
+*.temp
+.cache/
+
+# Environment variables
+.env.local
+.env.production
+
+# Documentation builds
+docs/_build/
+
+# Test coverage
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyTorch
+*.pth
+*.pt
+
+# Logs
+logs/
+*.log

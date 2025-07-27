@@ -1,56 +1,95 @@
 @echo off
-echo ========================================
-echo    Ara - AI Stock Analysis Platform
-echo         Quick Install Script
-echo ========================================
+title Ara AI Stock Analysis - Installation
+color 0A
+
+echo.
+echo ╔══════════════════════════════════════════════════════════════╗
+echo ║                 ARA AI STOCK ANALYSIS                        ║
+echo ║              Perfect Prediction System                       ║
+echo ║                   Installation                               ║
+echo ╚══════════════════════════════════════════════════════════════╝
 echo.
 
-echo [1/4] Checking Python installation...
+REM Check if Python is installed
+echo [1/5] Checking Python installation...
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: Python is not installed or not in PATH
-    echo Please install Python from https://python.org/downloads/
+    echo ❌ Python is not installed or not in PATH
+    echo.
+    echo Please install Python 3.8+ from https://python.org
     echo Make sure to check "Add Python to PATH" during installation
+    echo.
     pause
     exit /b 1
 )
-echo SUCCESS: Python is installed
 
+python --version
+echo ✅ Python found!
 echo.
-echo [2/4] Creating virtual environment...
-python -m venv ara_env
+
+REM Check Python version
+echo [2/5] Verifying Python version...
+python -c "import sys; exit(0 if sys.version_info >= (3, 8) else 1)"
 if errorlevel 1 (
-    echo ERROR: Failed to create virtual environment
+    echo ❌ Python 3.8+ required
+    echo Please upgrade your Python installation
     pause
     exit /b 1
 )
-echo SUCCESS: Virtual environment created
-
+echo ✅ Python version compatible!
 echo.
-echo [3/4] Activating virtual environment...
-call ara_env\Scripts\activate.bat
 
+REM Upgrade pip
+echo [3/5] Upgrading pip...
+python -m pip install --upgrade pip --quiet
+echo ✅ Pip upgraded!
 echo.
-echo [4/4] Installing dependencies...
-pip install -r requirements.txt
+
+REM Install required packages
+echo [4/5] Installing dependencies...
+echo This may take a few minutes...
+pip install -r requirements.txt --quiet
 if errorlevel 1 (
-    echo ERROR: Failed to install dependencies
+    echo ❌ Installation failed
+    echo Please check your internet connection and try again
+    pause
+    exit /b 1
+)
+echo ✅ Dependencies installed!
+echo.
+
+REM Verify installation
+echo [5/5] Verifying installation...
+python -c "import torch, pandas, numpy, yfinance, rich; print('✅ All packages verified!')"
+if errorlevel 1 (
+    echo ❌ Verification failed
+    echo Some packages may not have installed correctly
     pause
     exit /b 1
 )
 
 echo.
-echo ========================================
-echo     Installation Complete!
-echo ========================================
+echo ╔══════════════════════════════════════════════════════════════╗
+echo ║                   INSTALLATION COMPLETE!                    ║
+echo ╚══════════════════════════════════════════════════════════════╝
 echo.
-echo To use Ara:
-echo 1. Run: ara_env\Scripts\activate.bat
-echo 2. Then: python ara.py AAPL
+echo 🚀 Ready to use Ara AI Stock Analysis!
 echo.
-echo Example commands:
-echo   python ara.py AAPL
-echo   python ara.py TSLA --days 30
-echo   python ara.py --gpu-info
+echo 📊 USAGE EXAMPLES:
+echo    python ara.py AAPL --verbose    (Detailed Apple analysis)
+echo    python ara.py NVDA              (Quick NVIDIA analysis)
+echo    python ara.py TSLA --verbose    (Detailed Tesla analysis)
+echo.
+echo 📈 UTILITY COMMANDS:
+echo    python check_accuracy.py        (View prediction accuracy)
+echo    python view_predictions.py      (View prediction history)
+echo    python comprehensive_report.py  (Full system report)
+echo.
+echo 🎯 FEATURES:
+echo    • Perfect prediction system (sub-1%% error target)
+echo    • 62 advanced features
+echo    • Ultra-advanced neural networks
+echo    • Real-time accuracy validation
+echo    • Automated learning system
 echo.
 pause
