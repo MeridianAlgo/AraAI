@@ -11,6 +11,12 @@ yfinance>=0.2.0
 # UI and Visualization
 rich>=13.0.0
 
+# Environment Variables
+python-dotenv>=1.0.0
+
+# HTTP Requests
+requests>=2.28.0
+
 # Additional ML Libraries
 scipy>=1.9.0
 

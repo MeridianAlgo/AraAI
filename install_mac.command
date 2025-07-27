@@ -123,8 +123,46 @@ fi
 print_status "Dependencies installed!"
 echo
 
+# Setup environment variables
+echo -e "${BLUE}[7/9] Setting up environment variables...${NC}"
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        cp ".env.example" ".env"
+        print_status "Created .env file from template"
+    else
+        print_warning ".env.example not found, creating basic .env file"
+        cat > ".env" << EOF
+# Ara AI Stock Analysis - Environment Variables
+GEMINI_API_KEY=your_gemini_api_key_here
+PAPER_TRADING=true
+LOG_LEVEL=INFO
+EOF
+    fi
+else
+    print_info ".env file already exists"
+fi
+echo
+
+# API Key Setup Guide
+echo -e "${BLUE}[8/9] API Key Setup Required...${NC}"
+echo -e "${YELLOW}🔑 REQUIRED API KEYS:${NC}"
+echo
+echo -e "${CYAN}1. Google Gemini API (Required for AI analysis):${NC}"
+echo "   • Visit: https://makersuite.google.com/app/apikey"
+echo "   • Sign in with Google account"
+echo "   • Click 'Create API Key'"
+echo "   • Copy the key and paste it in your .env file"
+echo
+echo -e "${CYAN}2. Optional APIs for enhanced features:${NC}"
+echo "   • Alpaca Trading: https://alpaca.markets/ (for live trading)"
+echo "   • News API: https://newsapi.org/ (for sentiment analysis)"
+echo
+echo -e "${RED}⚠️  IMPORTANT: You must set up your API keys before running the program!${NC}"
+echo "   Edit the .env file and replace 'your_gemini_api_key_here' with your actual key"
+echo
+
 # Verify installation
-echo -e "${BLUE}[7/7] Verifying installation...${NC}"
+echo -e "${BLUE}[9/9] Verifying installation...${NC}"
 if ! $PYTHON_CMD -c "import torch, pandas, numpy, yfinance, rich; print('✅ All packages verified!')" 2>/dev/null; then
     print_error "Verification failed"
     echo "Some packages may not have installed correctly"
@@ -142,6 +180,28 @@ cat > "$SHORTCUT_PATH" << EOF
 #!/bin/bash
 cd "$(dirname "$0")"
 cd "$(pwd)"
+
+# Check if .env file exists and has API key
+if [ ! -f ".env" ] || ! grep -q "GEMINI_API_KEY=" ".env" || grep -q "your_gemini_api_key_here" ".env"; then
+    echo "❌ API Key Setup Required!"
+    echo
+    echo "Please set up your API keys first:"
+    echo "1. Get Gemini API key: https://makersuite.google.com/app/apikey"
+    echo "2. Edit the .env file in this folder"
+    echo "3. Replace 'your_gemini_api_key_here' with your actual key"
+    echo "4. Save the file and run this again"
+    echo
+    if command -v code &> /dev/null; then
+        echo "Opening VS Code to edit .env file..."
+        code .env
+    else
+        echo "Opening .env file with default editor..."
+        open -e .env
+    fi
+    read -p "Press Enter to exit..."
+    exit 1
+fi
+
 echo "🚀 Ara AI Stock Analysis"
 echo "Enter stock symbol (e.g., AAPL, NVDA, TSLA):"
 read -p "Symbol: " SYMBOL
@@ -155,7 +215,35 @@ chmod +x "$SHORTCUT_PATH"
 print_status "Desktop shortcut created!"
 echo
 
+# Open IDE for API key setup
+echo -e "${BLUE}Opening your code editor for API key setup...${NC}"
+echo -e "${YELLOW}📝 NEXT STEPS:${NC}"
+echo "1. Set up your API keys in the .env file"
+echo "2. Save the file"
+echo "3. Run the program!"
+echo
+
+# Try to open VS Code, then other editors
+if command -v code &> /dev/null; then
+    print_info "Opening VS Code..."
+    code . &
+elif command -v cursor &> /dev/null; then
+    print_info "Opening Cursor..."
+    cursor . &
+elif command -v subl &> /dev/null; then
+    print_info "Opening Sublime Text..."
+    subl . &
+elif command -v atom &> /dev/null; then
+    print_info "Opening Atom..."
+    atom . &
+else
+    print_warning "No supported code editor found"
+    print_info "Please manually edit the .env file with your favorite text editor"
+    echo "You can also use: nano .env or vim .env"
+fi
+
 # Success message
+echo
 echo -e "${CYAN}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                   INSTALLATION COMPLETE!                    ║"
@@ -164,9 +252,12 @@ echo -e "${NC}"
 echo
 echo -e "${GREEN}🚀 Ara AI Stock Analysis is ready to use!${NC}"
 echo
+echo -e "${RED}⚠️  BEFORE RUNNING: Set up your API keys in the .env file!${NC}"
+echo
 echo -e "${YELLOW}📊 USAGE OPTIONS:${NC}"
 echo "1. Double-click 'Ara AI Stock Analysis.command' on your Desktop"
-echo "2. Or use Terminal commands:"
+echo "2. Use the interactive launcher: $PYTHON_CMD run_ara.py"
+echo "3. Or use Terminal commands directly:"
 echo
 echo -e "${YELLOW}📈 TERMINAL COMMANDS:${NC}"
 echo "   $PYTHON_CMD ara.py AAPL --verbose    (Detailed Apple analysis)"
@@ -174,6 +265,7 @@ echo "   $PYTHON_CMD ara.py NVDA              (Quick NVIDIA analysis)"
 echo "   $PYTHON_CMD ara.py TSLA --verbose    (Detailed Tesla analysis)"
 echo
 echo -e "${YELLOW}🔧 UTILITY COMMANDS:${NC}"
+echo "   $PYTHON_CMD test_api.py              (Test your API key setup)"
 echo "   $PYTHON_CMD check_accuracy.py        (View prediction accuracy)"
 echo "   $PYTHON_CMD view_predictions.py      (View prediction history)"
 echo "   $PYTHON_CMD comprehensive_report.py  (Full system report)"
@@ -185,6 +277,11 @@ echo "   • Ultra-advanced neural networks"
 echo "   • Real-time accuracy validation"
 echo "   • Automated learning system"
 echo
-echo -e "${BLUE}💡 TIP: You can now close this window and use the desktop shortcut!${NC}"
+echo -e "${YELLOW}🔑 API SETUP REMINDER:${NC}"
+echo "   1. Get Gemini API key: https://makersuite.google.com/app/apikey"
+echo "   2. Edit .env file and replace 'your_gemini_api_key_here'"
+echo "   3. Save the file and run the program!"
+echo
+echo -e "${BLUE}💡 TIP: Your code editor should be opening now to edit the .env file!${NC}"
 echo
 read -p "Press Enter to exit..."
