@@ -1,6 +1,0 @@
-include README.md
-include LICENSE
-include requirements.txt
-recursive-include meridianalgo *.py
-global-exclude __pycache__
-global-exclude *.py[co]
