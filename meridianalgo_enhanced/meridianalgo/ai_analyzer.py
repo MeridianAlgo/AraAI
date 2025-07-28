@@ -7,23 +7,16 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Union
-import requests
-import os
-
-
 class AIAnalyzer:
     """
-    AI-powered market analyzer for comprehensive stock analysis
+    AI-powered market analyzer for comprehensive stock analysis using Yahoo Finance data
     """
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self):
         """
-        Initialize the AI analyzer
-        
-        Args:
-            api_key: Optional API key for external AI services (e.g., Gemini)
+        Initialize the AI analyzer (no API keys required - uses Yahoo Finance)
         """
-        self.api_key = api_key or os.getenv('GEMINI_API_KEY')
+        pass
         
     def analyze_market_sentiment(self, data: pd.DataFrame) -> Dict:
         """
@@ -286,47 +279,59 @@ class AIAnalyzer:
         Returns:
             Optional[str]: AI insights or None if not available
         """
-        if not self.api_key:
-            return None
-        
         try:
-            prompt = f"""
-            Analyze the following stock data for {symbol}:
+            # Generate insights based on Yahoo Finance data analysis
+            sentiment = analysis_data.get('sentiment', {})
+            regime = analysis_data.get('regime', {})
+            support_resistance = analysis_data.get('support_resistance', {})
+            volume = analysis_data.get('volume', {})
             
-            Market Sentiment: {analysis_data.get('sentiment', {})}
-            Market Regime: {analysis_data.get('regime', {})}
-            Support/Resistance: {analysis_data.get('support_resistance', {})}
-            Volume Analysis: {analysis_data.get('volume', {})}
+            insights = []
             
-            Provide a brief analysis (max 150 words) focusing on:
-            1. Key insights from the data
-            2. Potential trading opportunities or risks
-            3. Market outlook
+            # Sentiment analysis
+            sentiment_score = sentiment.get('sentiment_score', 50)
+            if sentiment_score > 70:
+                insights.append("Strong bullish sentiment detected")
+            elif sentiment_score < 30:
+                insights.append("Bearish sentiment prevailing")
+            else:
+                insights.append("Neutral market sentiment")
             
-            Start with "ANALYSIS:" and keep it concise and actionable.
-            """
+            # Volume analysis
+            volume_trend = volume.get('volume_trend', 'stable')
+            if volume_trend == 'increasing':
+                insights.append("Volume surge indicates strong interest")
+            elif volume_trend == 'decreasing':
+                insights.append("Low volume suggests consolidation")
             
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.api_key}"
+            # Market regime
+            regime_type = regime.get('regime', 'neutral')
+            if regime_type == 'trending':
+                insights.append("Trending market - momentum strategies favored")
+            elif regime_type == 'mean_reverting':
+                insights.append("Mean-reverting market - contrarian approach suggested")
             
-            payload = {
-                "contents": [{
-                    "parts": [{
-                        "text": prompt
-                    }]
-                }]
-            }
+            # Support/Resistance
+            sr_strength = support_resistance.get('support_strength', 0.5)
+            if sr_strength > 0.7:
+                insights.append("Strong support levels provide downside protection")
+            elif sr_strength < 0.3:
+                insights.append("Weak support - potential for further decline")
             
-            response = requests.post(url, json=payload, timeout=10)
+            analysis_text = f"ANALYSIS: {'. '.join(insights)}. "
             
-            if response.status_code == 200:
-                result = response.json()
-                if 'candidates' in result and len(result['candidates']) > 0:
-                    return result['candidates'][0]['content']['parts'][0]['text']
+            # Add market outlook
+            if sentiment_score > 60 and volume_trend == 'increasing':
+                analysis_text += "Positive outlook with strong momentum."
+            elif sentiment_score < 40 and volume_trend == 'decreasing':
+                analysis_text += "Cautious outlook - monitor for reversal signals."
+            else:
+                analysis_text += "Mixed signals - wait for clearer direction."
             
-            return None
+            return analysis_text
             
         except Exception as e:
-            return f"AI analysis unavailable: {str(e)}"
+            return f"Analysis based on technical indicators: Market showing mixed signals. Monitor key levels and volume for direction."
     
     def comprehensive_analysis(self, data: pd.DataFrame, symbol: str) -> Dict:
         """

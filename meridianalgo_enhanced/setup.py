@@ -5,10 +5,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="meridianalgo",
-    version="0.2.1",
+    version="0.3.0",
     author="MeridianAlgo",
     author_email="meridianalgo@gmail.com",
-    description="A Python library for algorithmic trading and financial analysis with AI/ML capabilities",
+    description="Advanced stock prediction system using Yahoo Finance - Zero setup, no API keys required",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/MeridianAlgo/Packages",
@@ -29,12 +29,14 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        "pandas>=1.3.0",
+        "pandas>=1.5.0",
         "numpy>=1.21.0",
-        "requests>=2.25.0",
         "python-dateutil>=2.8.0",
         "yfinance>=0.2.0",
-        "scikit-learn>=1.0.0",
+        "scikit-learn>=1.3.0",
+        "python-dotenv>=1.0.0",
+        "rich>=13.0.0",
+        "scipy>=1.9.0",
     ],
     extras_require={
         "ml": [
@@ -54,7 +56,7 @@ setup(
             "flake8>=3.8.0",
         ],
     },
-    keywords="trading, finance, machine learning, AI, stock analysis, algorithmic trading, backtesting",
+    keywords="stock prediction, yahoo finance, machine learning, AI, financial analysis, no api keys, zero setup",
     project_urls={
         "Bug Reports": "https://github.com/MeridianAlgo/Packages/issues",
         "Source": "https://github.com/MeridianAlgo/Packages",

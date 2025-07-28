@@ -1,8 +1,8 @@
 """
-MeridianAlgo - A Python library for algorithmic trading and financial analysis with AI/ML capabilities
+MeridianAlgo - Advanced stock prediction system using Yahoo Finance - Zero setup, no API keys required
 """
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 __author__ = "MeridianAlgo"
 __email__ = "meridianalgo@gmail.com"
 
