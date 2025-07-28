@@ -1,18 +1,18 @@
 @echo off
-title Ara AI Stock Analysis - Perfect Prediction System
-color 0B
+title Ara AI Stock Analysis - Advanced Prediction System
+color 0F
 
 cls
 echo.
 echo                    ╔══════════════════════════════════════════════════════════════╗
-echo                    ║                 ARA AI STOCK ANALYSIS                        ║
-echo                    ║              Perfect Prediction System                       ║
+echo                    ║                 🚀 ARA AI STOCK ANALYSIS 🚀                  ║
+echo                    ║              Advanced Prediction System                      ║
 echo                    ║                 Windows Installation                         ║
 echo                    ╚══════════════════════════════════════════════════════════════╝
 echo.
-echo                           🚀 Ultra-Advanced Neural Network Predictions
-echo                              📊 Sub-1%% Error Rate Target
-echo                                 🎯 62 Advanced Features
+echo                           📊 Yahoo Finance Data • 🆓 No API Keys Required
+echo                              🧠 Advanced Neural Networks • ⚡ Instant Setup
+echo                                 🎯 62 Technical Features • 📈 Real-time Analysis
 echo.
 
 REM Check if Python is installed
@@ -159,11 +159,11 @@ echo    python view_predictions.py      (View prediction history)
 echo    python comprehensive_report.py  (Full system report)
 echo.
 echo 🎯 FEATURES:
-echo    • Perfect prediction system (sub-1%% error target)
-echo    • 62 advanced features
-echo    • Ultra-advanced neural networks
-echo    • Real-time accuracy validation
-echo    • Automated learning system
+echo    • Advanced prediction system with rigorous validation
+echo    • 62 sophisticated technical features
+echo    • Deep neural networks with attention mechanisms
+echo    • Multi-tier accuracy validation (^<1%% excellent, ^<3%% acceptable)
+echo    • Automated learning system with failsafes
 echo.
 echo 🔑 API SETUP REMINDER:
 echo    1. Get Gemini API key: https://makersuite.google.com/app/apikey

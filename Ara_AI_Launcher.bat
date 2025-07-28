@@ -7,10 +7,12 @@ cd /d "%~dp0"
 cls
 echo.
 echo                    ╔══════════════════════════════════════════════════════════════╗
-echo                    ║                 ARA AI STOCK ANALYSIS                        ║
-echo                    ║              Perfect Prediction System                       ║
+echo                    ║                 🚀 ARA AI STOCK ANALYSIS 🚀                  ║
+echo                    ║              Advanced Prediction System                      ║
 echo                    ║                    Quick Launcher                            ║
 echo                    ╚══════════════════════════════════════════════════════════════╝
+echo.
+echo                           📊 Yahoo Finance • 🆓 No Setup Required • ⚡ Instant Analysis
 echo.
 
 echo ✅ System ready! No API keys required - uses Yahoo Finance.

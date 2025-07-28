@@ -206,13 +206,20 @@ def validate_and_cleanup_predictions():
                         actual_price = actual_data['Close'].iloc[0]
                         error_pct = abs(predicted_price - actual_price) / actual_price * 100
                         
+                        # Stricter accuracy thresholds
+                        excellent = error_pct < 1.0
+                        good = error_pct < 2.0
+                        acceptable = error_pct < 3.0
+                        
                         validation_results.append({
                             'symbol': symbol,
                             'date': pred_date.date(),
                             'predicted': predicted_price,
                             'actual': actual_price,
                             'error_pct': error_pct,
-                            'accurate': error_pct < 5.0,
+                            'accurate': acceptable,  # Changed from 5% to 3%
+                            'excellent': excellent,
+                            'good': good,
                             'timestamp': row['Timestamp']
                         })
                         
@@ -233,20 +240,30 @@ def validate_and_cleanup_predictions():
         if validation_results:
             save_accuracy_results(validation_results)
             
-            # Display validation summary
+            # Display comprehensive validation summary
+            excellent_rate = sum(1 for r in validation_results if r['excellent']) / len(validation_results) * 100
+            good_rate = sum(1 for r in validation_results if r['good']) / len(validation_results) * 100
             accuracy_rate = sum(1 for r in validation_results if r['accurate']) / len(validation_results) * 100
             avg_error = sum(r['error_pct'] for r in validation_results) / len(validation_results)
             
-            console.print(f"\n[bold white]📊 VALIDATION SUMMARY[/]")
-            console.print(f"[green]✅ Validated: {len(validation_results)} predictions[/]")
-            console.print(f"[cyan]📈 Accuracy Rate: {accuracy_rate:.1f}% (within 5% error)[/]")
+            console.print(f"\n[bold white]📊 COMPREHENSIVE VALIDATION SUMMARY[/]")
+            console.print(f"[green]✅ Total Validated: {len(validation_results)} predictions[/]")
+            console.print(f"[bright_green]🎯 Excellent (<1% error): {excellent_rate:.1f}%[/]")
+            console.print(f"[green]✅ Good (<2% error): {good_rate:.1f}%[/]")
+            console.print(f"[cyan]📈 Acceptable (<3% error): {accuracy_rate:.1f}%[/]")
             console.print(f"[white]📉 Average Error: {avg_error:.2f}%[/]")
             
-            # Show recent validations
+            # Show recent validations with better categorization
             console.print(f"\n[bold white]Recent Validations:[/]")
-            for result in validation_results[-3:]:
-                color = "green" if result['accurate'] else "red"
-                status = "✅" if result['accurate'] else "❌"
+            for result in validation_results[-5:]:
+                if result['excellent']:
+                    color, status = "bright_green", "🎯"
+                elif result['good']:
+                    color, status = "green", "✅"
+                elif result['accurate']:
+                    color, status = "yellow", "⚠️"
+                else:
+                    color, status = "red", "❌"
                 console.print(f"[{color}]{status} {result['symbol']} {result['date']}: ${result['predicted']:.2f} → ${result['actual']:.2f} ({result['error_pct']:.1f}% error)[/]")
         
         # Clean up predictions.csv - keep only future predictions and recent ones
@@ -488,6 +505,59 @@ def create_sample_data(symbol, days=60):
         })
     
     return pd.DataFrame(sample_data).set_index('Date')
+
+def validate_prediction_quality(predictions, current_price, stock_data, confidence):
+    """
+    Validate prediction quality with multiple failsafes before accepting predictions
+    """
+    try:
+        if not predictions or len(predictions) == 0:
+            return False, "No predictions generated"
+        
+        # Failsafe 1: Check for extreme predictions (>50% change)
+        for i, pred in enumerate(predictions):
+            change_pct = abs(pred - current_price) / current_price * 100
+            if change_pct > 50:
+                return False, f"Day {i+1} prediction shows extreme {change_pct:.1f}% change - likely unreliable"
+        
+        # Failsafe 2: Check for unrealistic price values
+        for i, pred in enumerate(predictions):
+            if pred <= 0:
+                return False, f"Day {i+1} prediction is negative or zero: ${pred:.2f}"
+            if pred > current_price * 10:  # More than 10x current price
+                return False, f"Day {i+1} prediction unrealistically high: ${pred:.2f}"
+        
+        # Failsafe 3: Check prediction consistency (shouldn't jump wildly)
+        for i in range(1, len(predictions)):
+            day_change = abs(predictions[i] - predictions[i-1]) / predictions[i-1] * 100
+            if day_change > 20:  # >20% day-to-day change in predictions
+                return False, f"Inconsistent predictions: {day_change:.1f}% change between day {i} and {i+1}"
+        
+        # Failsafe 4: Check confidence threshold
+        if confidence < 60:
+            return False, f"Model confidence too low: {confidence:.1f}% (minimum 60% required)"
+        
+        # Failsafe 5: Check recent volatility context
+        recent_data = stock_data.tail(10)
+        recent_volatility = recent_data['Close'].std() / recent_data['Close'].mean() * 100
+        
+        # If stock is very stable, predictions shouldn't be too volatile
+        if recent_volatility < 2:  # Very stable stock
+            max_pred_change = max(abs(p - current_price) / current_price * 100 for p in predictions)
+            if max_pred_change > 10:
+                return False, f"Predictions too volatile ({max_pred_change:.1f}%) for stable stock (volatility: {recent_volatility:.1f}%)"
+        
+        # Failsafe 6: Volume validation
+        recent_volume = recent_data['Volume'].tail(5).mean()
+        if recent_volume < 100000:  # Very low volume stocks are harder to predict
+            max_pred_change = max(abs(p - current_price) / current_price * 100 for p in predictions)
+            if max_pred_change > 15:
+                return False, f"High prediction volatility ({max_pred_change:.1f}%) for low-volume stock"
+        
+        return True, "Predictions passed all validation checks"
+        
+    except Exception as e:
+        return False, f"Validation error: {str(e)}"
 
 def get_yahoo_insights(symbol, prediction_data, stock_data):
     """Get insights based on Yahoo Finance data analysis"""
@@ -1309,6 +1379,36 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
                         constrained_pred = max(current_price * 0.92, min(current_price * 1.08, constrained_pred))
                         
                         predictions.append(constrained_pred)
+                    
+                    # CRITICAL: Validate prediction quality with failsafes
+                    validation_passed, validation_message = validate_prediction_quality(
+                        predictions, current_price, data_df, confidence
+                    )
+                    
+                    if not validation_passed:
+                        console.print(f"[red]⚠️  Prediction validation failed: {validation_message}[/]")
+                        console.print("[yellow]Applying conservative fallback predictions...[/]")
+                        
+                        # Generate conservative fallback predictions
+                        predictions = []
+                        daily_volatility = data_df['Close'].pct_change().tail(30).std()
+                        base_change = daily_volatility * current_price * 0.5  # Very conservative
+                        
+                        for i in range(5):
+                            # Conservative trend-following prediction
+                            trend_factor = 1 + (trend_strength * (i + 1) * 0.3)  # Reduced trend impact
+                            conservative_pred = current_price * trend_factor
+                            
+                            # Apply minimal change constraint
+                            max_change = base_change * (i + 1)
+                            conservative_pred = np.clip(
+                                conservative_pred,
+                                current_price - max_change,
+                                current_price + max_change
+                            )
+                            predictions.append(conservative_pred)
+                        
+                        console.print("[green]✅ Applied conservative predictions with enhanced safety[/]")
                 else:
                     predictions = None
             else:
@@ -1402,6 +1502,28 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
                     final_pred = max(final_pred, current_price * 0.1)
                     
                     predictions.append(final_pred)
+                
+                # Validate statistical predictions as well
+                validation_passed, validation_message = validate_prediction_quality(
+                    predictions, current_price, data_df, 75  # Default confidence for statistical method
+                )
+                
+                if not validation_passed:
+                    console.print(f"[red]⚠️  Statistical prediction validation failed: {validation_message}[/]")
+                    console.print("[yellow]Applying ultra-conservative predictions...[/]")
+                    
+                    # Ultra-conservative fallback
+                    predictions = []
+                    for i in range(5):
+                        # Minimal change prediction (trend-neutral)
+                        conservative_change = current_price * 0.002 * (i + 1)  # 0.2% per day max
+                        if trend_signal > 0:
+                            conservative_pred = current_price + conservative_change
+                        else:
+                            conservative_pred = current_price - conservative_change
+                        predictions.append(conservative_pred)
+                    
+                    console.print("[green]✅ Applied ultra-conservative predictions[/]")
             
             if not predictions:
                 console.print("[red]ERROR: Prediction generation failed[/]")

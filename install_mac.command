@@ -35,11 +35,12 @@ print_warning() {
 clear
 echo -e "${CYAN}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                 ARA AI STOCK ANALYSIS                        ║"
-echo "║              Perfect Prediction System                       ║"
+echo "║                 🚀 ARA AI STOCK ANALYSIS 🚀                  ║"
+echo "║              Advanced Prediction System                      ║"
 echo "║              macOS One-Click Installer                       ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
+echo -e "${BLUE}📊 Yahoo Finance Data • 🆓 No API Keys Required • ⚡ Instant Setup${NC}"
 echo
 
 # Check if running on macOS
@@ -250,11 +251,11 @@ echo "   $PYTHON_CMD view_predictions.py      (View prediction history)"
 echo "   $PYTHON_CMD comprehensive_report.py  (Full system report)"
 echo
 echo -e "${YELLOW}🎯 FEATURES:${NC}"
-echo "   • Perfect prediction system (sub-1% error target)"
-echo "   • 62 advanced features"
-echo "   • Ultra-advanced neural networks"
-echo "   • Real-time accuracy validation"
-echo "   • Automated learning system"
+echo "   • Advanced prediction system with rigorous validation"
+echo "   • 62 sophisticated technical features"
+echo "   • Deep neural networks with attention mechanisms"
+echo "   • Multi-tier accuracy validation (<1% excellent, <3% acceptable)"
+echo "   • Automated learning system with failsafes"
 echo
 echo -e "${YELLOW}💡 QUICK START:${NC}"
 echo "   1. Run: $PYTHON_CMD run_ara.py (interactive launcher)"

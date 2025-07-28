@@ -136,7 +136,7 @@ def generate_comprehensive_report():
     print(f"📈 Features: 21 enhanced features per prediction")
     print(f"🤖 Models: Linear Regression + Random Forest + Enhanced Neural Network")
     print(f"⚡ Device: CPU with 8 threads optimization")
-    print(f"🎯 Accuracy Threshold: 5% error tolerance")
+    print(f"🎯 Accuracy Thresholds: <1% Excellent, <2% Good, <3% Acceptable")
     
     print("\n" + "=" * 80)
     print("SYSTEM READY FOR PRODUCTION USE")
