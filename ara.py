@@ -15,7 +15,6 @@ import yfinance as yf
 import warnings
 warnings.filterwarnings('ignore')
 
-import requests
 import pandas as pd
 import csv
 from pathlib import Path
@@ -490,53 +489,74 @@ def create_sample_data(symbol, days=60):
     
     return pd.DataFrame(sample_data).set_index('Date')
 
-def get_gemini_fact_check(symbol, prediction_data):
-    """Get AI fact-check from Gemini API"""
+def get_yahoo_insights(symbol, prediction_data, stock_data):
+    """Get insights based on Yahoo Finance data analysis"""
+    
     try:
-        # Check if API key exists
-        api_key = os.getenv('GEMINI_API_KEY')
-        if not api_key:
-            return None
-            
-        # Prepare the prompt
-        prompt = f"""
-        Analyze this stock prediction for {symbol}:
+        # Analyze recent performance
+        recent_data = stock_data.tail(30)  # Last 30 days
+        current_price = prediction_data.get('current_price', 0)
+        predicted_price = prediction_data.get('predicted_price', 0)
         
-        Current Price: ${prediction_data.get('current_price', 'N/A')}
-        Predicted Price: ${prediction_data.get('predicted_price', 'N/A')}
-        Confidence: {prediction_data.get('confidence', 'N/A')}%
-        Trend: {prediction_data.get('trend', 'N/A')}
+        # Calculate key metrics
+        volatility = recent_data['Close'].std()
+        avg_volume = recent_data['Volume'].mean()
+        recent_volume = recent_data['Volume'].iloc[-1]
         
-        Please provide a brief fact-check and verdict. Start your response with one of:
-        - VERDICT: GOOD if the prediction seems reasonable
-        - VERDICT: WARNING if there are concerns
-        - VERDICT: CAUTION if the prediction seems unrealistic
+        # Price momentum
+        price_change_1d = (recent_data['Close'].iloc[-1] - recent_data['Close'].iloc[-2]) / recent_data['Close'].iloc[-2] * 100
+        price_change_5d = (recent_data['Close'].iloc[-1] - recent_data['Close'].iloc[-6]) / recent_data['Close'].iloc[-6] * 100
+        price_change_30d = (recent_data['Close'].iloc[-1] - recent_data['Close'].iloc[0]) / recent_data['Close'].iloc[0] * 100
         
-        Keep response under 200 words.
-        """
+        # Volume analysis
+        volume_ratio = recent_volume / avg_volume if avg_volume > 0 else 1.0
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        # Generate insights
+        insights = []
+        verdict = "GOOD"
         
-        payload = {
-            "contents": [{
-                "parts": [{
-                    "text": prompt
-                }]
-            }]
-        }
+        # Volatility check
+        if volatility > current_price * 0.05:  # High volatility (>5%)
+            insights.append(f"High volatility detected ({volatility:.2f})")
+            verdict = "WARNING"
         
-        response = requests.post(url, json=payload, timeout=10)
+        # Volume analysis
+        if volume_ratio > 2.0:
+            insights.append("Unusually high trading volume")
+        elif volume_ratio < 0.5:
+            insights.append("Low trading volume")
+            if verdict == "GOOD":
+                verdict = "CAUTION"
         
-        if response.status_code == 200:
-            result = response.json()
-            if 'candidates' in result and len(result['candidates']) > 0:
-                return result['candidates'][0]['content']['parts'][0]['text']
+        # Price momentum
+        if abs(price_change_1d) > 5:
+            insights.append(f"Strong 1-day momentum: {price_change_1d:+.1f}%")
         
-        return None
+        if abs(price_change_5d) > 10:
+            insights.append(f"Significant 5-day trend: {price_change_5d:+.1f}%")
+            if price_change_5d * (predicted_price - current_price) < 0:  # Opposite directions
+                verdict = "WARNING"
+        
+        # Prediction vs recent trend
+        prediction_direction = "up" if predicted_price > current_price else "down"
+        recent_trend = "up" if price_change_5d > 0 else "down"
+        
+        if prediction_direction != recent_trend:
+            insights.append(f"Prediction goes against recent {recent_trend} trend")
+            verdict = "CAUTION"
+        
+        # Build final message
+        base_msg = f"30-day volatility: ${volatility:.2f}, Volume ratio: {volume_ratio:.1f}x"
+        if insights:
+            full_msg = f"{base_msg}. {'. '.join(insights)}"
+        else:
+            full_msg = f"{base_msg}. Technical indicators support prediction"
+        
+        return f"VERDICT: {verdict} - {full_msg}"
         
     except Exception as e:
-        vprint(f"Gemini API error: {e}")
-        return None
+        vprint(f"Yahoo insights error: {e}")
+        return "VERDICT: INFO - Analysis based on technical indicators only"
 
 def calculate_technical_indicators(df):
     """Calculate comprehensive technical indicators for enhanced accuracy"""
@@ -578,33 +598,54 @@ def calculate_technical_indicators(df):
         return {}
 
 def prepare_advanced_features(df, symbol):
-    """Prepare advanced features using the sophisticated feature engineering"""
+    """Prepare advanced features using Yahoo Finance data analysis"""
     try:
-        # Import from the enhanced package
-        sys.path.append('meridianalgo_enhanced')
-        from meridianalgo.ai_analyzer import AIAnalyzer
+        # Calculate advanced features from Yahoo Finance data
+        recent_data = df.tail(30)  # Last 30 days
         
-        # Initialize AI analyzer
-        analyzer = AIAnalyzer()
+        # Volatility analysis
+        volatility = recent_data['Close'].std()
+        volatility_level = min(volatility / recent_data['Close'].mean() * 100, 10.0)  # Cap at 10%
         
-        # Get comprehensive analysis
-        analysis = analyzer.comprehensive_analysis(df, symbol)
+        # Volume analysis
+        avg_volume = recent_data['Volume'].mean()
+        recent_volume = recent_data['Volume'].iloc[-1]
+        volume_ratio = recent_volume / avg_volume if avg_volume > 0 else 1.0
         
-        # Extract useful features from analysis
+        # Price momentum signals
+        price_changes = recent_data['Close'].pct_change().dropna()
+        bullish_days = (price_changes > 0.02).sum()  # Days with >2% gain
+        bearish_days = (price_changes < -0.02).sum()  # Days with >2% loss
+        
+        # Sentiment approximation based on price action
+        recent_performance = (recent_data['Close'].iloc[-1] - recent_data['Close'].iloc[0]) / recent_data['Close'].iloc[0]
+        sentiment_score = max(0, min(100, 50 + (recent_performance * 100)))  # Scale to 0-100
+        
+        # Market regime confidence based on consistency
+        price_direction_consistency = abs(price_changes.mean()) / (price_changes.std() + 1e-8)
+        regime_confidence = min(100, price_direction_consistency * 50)
+        
         advanced_features = {
-            'sentiment_score': analysis.get('sentiment_analysis', {}).get('sentiment_score', 50),
-            'regime_confidence': analysis.get('market_regime', {}).get('regime_confidence', 50),
-            'volatility_level': analysis.get('sentiment_analysis', {}).get('volatility_value', 2.0),
-            'volume_ratio': analysis.get('volume_analysis', {}).get('volume_ratio', 1.0),
-            'bullish_signals': analysis.get('analysis_summary', {}).get('bullish_signals', 0),
-            'bearish_signals': analysis.get('analysis_summary', {}).get('bearish_signals', 0)
+            'sentiment_score': sentiment_score,
+            'regime_confidence': regime_confidence,
+            'volatility_level': volatility_level,
+            'volume_ratio': volume_ratio,
+            'bullish_signals': bullish_days,
+            'bearish_signals': bearish_days
         }
         
         return advanced_features
         
     except Exception as e:
         vprint(f"Advanced feature engineering failed: {e}")
-        return {}
+        return {
+            'sentiment_score': 50,
+            'regime_confidence': 50,
+            'volatility_level': 2.0,
+            'volume_ratio': 1.0,
+            'bullish_signals': 0,
+            'bearish_signals': 0
+        }
 
 def optimize_for_device():
     """Optimize PyTorch settings based on available device (AMD/Intel/NVIDIA/Apple)"""
@@ -1404,17 +1445,17 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
                 vprint(f"Online learning update failed: {e}")
                 console.print("[yellow]WARNING: Online learning update failed[/]")
         
-        # Step 7: Get AI Fact-Check
-        gemini_result = None
+        # Step 7: Get Yahoo Finance Insights
+        yahoo_result = None
         if not used_sample_data:  # Only for real data
-            with console.status("Getting AI fact-check..."):
+            with console.status("Analyzing market data..."):
                 prediction_data = {
                     'current_price': current_price,
                     'predicted_price': predictions[0],
                     'confidence': confidence,
                     'trend': 'UP' if predictions[0] > current_price else 'DOWN'
                 }
-                gemini_result = get_gemini_fact_check(symbol, prediction_data)
+                yahoo_result = get_yahoo_insights(symbol, prediction_data, data)
         
         # Step 8: Display Results
         table = Table(title="", box=box.ROUNDED, border_style="white")
@@ -1505,20 +1546,23 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
         panel_title = f"Ara AI Stock Analysis: {symbol.upper()}" if not used_sample_data else f"Ara AI Stock Analysis: {symbol.upper()} (Sample)"
         console.print(Panel(table, title=panel_title, border_style="white", padding=(1,2)))
         
-        # Show Gemini fact-check if available
-        if gemini_result:
+        # Show Yahoo Finance insights if available
+        if yahoo_result:
             # Extract verdict
-            if "VERDICT: GOOD" in gemini_result.upper():
+            if "VERDICT: GOOD" in yahoo_result.upper():
                 verdict_color = "green"
-                verdict_prefix = "GOOD:"
-            elif "VERDICT: WARNING" in gemini_result.upper():
+                verdict_prefix = "✅ GOOD:"
+            elif "VERDICT: WARNING" in yahoo_result.upper():
                 verdict_color = "yellow"
-                verdict_prefix = "WARNING:"
+                verdict_prefix = "⚠️ WARNING:"
+            elif "VERDICT: CAUTION" in yahoo_result.upper():
+                verdict_color = "orange1"
+                verdict_prefix = "🔶 CAUTION:"
             else:
                 verdict_color = "white"
-                verdict_prefix = "INFO:"
+                verdict_prefix = "ℹ️ INFO:"
             
-            console.print(Panel(f"{verdict_prefix} {gemini_result}", title=f"Gemini AI Fact-Check", border_style=verdict_color, padding=(1,2)))
+            console.print(Panel(f"{verdict_prefix} {yahoo_result}", title=f"📊 Market Analysis", border_style=verdict_color, padding=(1,2)))
         
         return True
         

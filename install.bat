@@ -72,7 +72,6 @@ if not exist ".env" (
     ) else (
         echo ⚠️  .env.example not found, creating basic .env file
         echo # Ara AI Stock Analysis - Environment Variables > .env
-        echo GEMINI_API_KEY=your_gemini_api_key_here >> .env
         echo PAPER_TRADING=true >> .env
         echo LOG_LEVEL=INFO >> .env
     )
@@ -81,22 +80,20 @@ if not exist ".env" (
 )
 echo.
 
-REM API Key Setup Guide
-echo [6/7] API Key Setup Required...
-echo 🔑 REQUIRED API KEYS:
+REM System Ready Message
+echo [6/7] System Configuration...
+echo ✅ No API keys required! Uses Yahoo Finance (free)
 echo.
-echo 1. Google Gemini API (Required for AI analysis):
-echo    • Visit: https://makersuite.google.com/app/apikey
-echo    • Sign in with Google account
-echo    • Click 'Create API Key'
-echo    • Copy the key and paste it in your .env file
+echo 📊 DATA SOURCE:
+echo    • Yahoo Finance: Free real-time stock data
+echo    • No registration or API keys needed
+echo    • Comprehensive market analysis
 echo.
-echo 2. Optional APIs for enhanced features:
+echo 🔧 Optional APIs for enhanced features:
 echo    • Alpaca Trading: https://alpaca.markets/ (for live trading)
 echo    • News API: https://newsapi.org/ (for sentiment analysis)
 echo.
-echo ⚠️  IMPORTANT: You must set up your API keys before running the program!
-echo    Edit the .env file and replace 'your_gemini_api_key_here' with your actual key
+echo 🚀 Ready to use immediately!
 echo.
 
 REM Verify installation
@@ -147,7 +144,7 @@ echo ╚════════════════════════
 echo.
 echo 🚀 Ready to use Ara AI Stock Analysis!
 echo.
-echo ⚠️  BEFORE RUNNING: Set up your API keys in the .env file!
+echo 🚀 Ready to use immediately! No API setup required.
 echo.
 echo 📊 USAGE OPTIONS:
 echo    python run_ara.py               (Interactive launcher - recommended)
@@ -170,11 +167,11 @@ echo    • Automated learning system
 echo.
 echo 🔑 API SETUP REMINDER:
 echo    1. Get Gemini API key: https://makersuite.google.com/app/apikey
-echo    2. Edit .env file and replace 'your_gemini_api_key_here'
-echo    3. Save the file and run the program!
+echo    2. Or: python ara.py AAPL --verbose (direct command)
+echo    3. No API keys needed - uses Yahoo Finance!
 echo.
-echo 💡 TIP: Your code editor should be opening now to edit the .env file!
+echo 🎯 TIP: The system is ready to use immediately!
 echo.
-echo 🎯 QUICK START: After setting up your API key, double-click "Ara_AI_Launcher.bat"
+echo 🚀 LAUNCH: Double-click "Ara_AI_Launcher.bat" to start analyzing!
 echo.
 pause

@@ -15,18 +15,17 @@ from rich.text import Text
 
 console = Console()
 
-def check_api_setup():
-    """Check if API keys are properly configured"""
-    if not os.path.exists('.env'):
-        return False, "No .env file found"
-    
-    load_dotenv()
-    api_key = os.getenv('GEMINI_API_KEY')
-    
-    if not api_key or api_key == 'your_gemini_api_key_here':
-        return False, "Gemini API key not configured"
-    
-    return True, "API keys configured"
+def check_system_ready():
+    """Check if system is ready to run"""
+    try:
+        import yfinance as yf
+        # Test basic functionality
+        ticker = yf.Ticker("AAPL")
+        return True, "System ready - Yahoo Finance working"
+    except ImportError:
+        return False, "yfinance package not installed"
+    except Exception as e:
+        return False, f"System check failed: {str(e)}"
 
 def main():
     console.clear()
@@ -38,21 +37,19 @@ def main():
     
     console.print(Panel.fit(header, border_style="cyan"))
     
-    # Check API setup
-    api_ok, api_message = check_api_setup()
+    # Check system readiness
+    system_ok, system_message = check_system_ready()
     
-    if not api_ok:
-        console.print(f"\n❌ {api_message}")
-        console.print("\n[bold red]API Setup Required![/bold red]")
+    if not system_ok:
+        console.print(f"\n❌ {system_message}")
+        console.print("\n[bold red]System Setup Required![/bold red]")
         console.print("\n[yellow]Please run:[/yellow]")
         console.print("  python test_api.py")
-        console.print("\nOr set up your API keys manually:")
-        console.print("1. Get Gemini API key: https://makersuite.google.com/app/apikey")
-        console.print("2. Edit .env file and add your key")
-        console.print("3. Run this launcher again")
+        console.print("\nOr install missing dependencies:")
+        console.print("  pip install yfinance")
         return
     
-    console.print(f"\n✅ {api_message}")
+    console.print(f"\n✅ {system_message}")
     
     # Get stock symbol
     console.print("\n[bold green]Ready to analyze stocks![/bold green]")

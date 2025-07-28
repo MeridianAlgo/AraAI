@@ -110,7 +110,6 @@ if [ ! -f ".env" ]; then
         print_warning ".env.example not found, creating basic .env file"
         cat > ".env" << EOF
 # Ara AI Stock Analysis - Environment Variables
-GEMINI_API_KEY=your_gemini_api_key_here
 PAPER_TRADING=true
 LOG_LEVEL=INFO
 EOF
@@ -120,22 +119,20 @@ else
 fi
 echo
 
-# API Key Setup Guide
-echo -e "${BLUE}[7/8] API Key Setup Required...${NC}"
-echo -e "${YELLOW}🔑 REQUIRED API KEYS:${NC}"
+# System Ready Message
+echo -e "${BLUE}[7/8] System Configuration...${NC}"
+echo -e "${GREEN}✅ No API keys required! Uses Yahoo Finance (free)${NC}"
 echo
-echo -e "${CYAN}1. Google Gemini API (Required for AI analysis):${NC}"
-echo "   • Visit: https://makersuite.google.com/app/apikey"
-echo "   • Sign in with Google account"
-echo "   • Click 'Create API Key'"
-echo "   • Copy the key and paste it in your .env file"
+echo -e "${YELLOW}📊 DATA SOURCE:${NC}"
+echo "   • Yahoo Finance: Free real-time stock data"
+echo "   • No registration or API keys needed"
+echo "   • Comprehensive market analysis"
 echo
-echo -e "${CYAN}2. Optional APIs for enhanced features:${NC}"
+echo -e "${CYAN}🔧 Optional APIs for enhanced features:${NC}"
 echo "   • Alpaca Trading: https://alpaca.markets/ (for live trading)"
 echo "   • News API: https://newsapi.org/ (for sentiment analysis)"
 echo
-echo -e "${RED}⚠️  IMPORTANT: You must set up your API keys before running the program!${NC}"
-echo "   Edit the .env file and replace 'your_gemini_api_key_here' with your actual key"
+echo -e "${GREEN}🚀 Ready to use immediately!${NC}"
 echo
 
 # Verify installation
@@ -189,7 +186,7 @@ echo -e "${NC}"
 echo
 echo -e "${GREEN}🚀 Ready to use Ara AI Stock Analysis!${NC}"
 echo
-echo -e "${RED}⚠️  BEFORE RUNNING: Set up your API keys in the .env file!${NC}"
+echo -e "${GREEN}🚀 Ready to use immediately! No API setup required.${NC}"
 echo
 echo -e "${YELLOW}📊 USAGE OPTIONS:${NC}"
 echo "   $PYTHON_CMD run_ara.py               (Interactive launcher - recommended)"
@@ -210,11 +207,11 @@ echo "   • Ultra-advanced neural networks"
 echo "   • Real-time accuracy validation"
 echo "   • Automated learning system"
 echo
-echo -e "${YELLOW}🔑 API SETUP REMINDER:${NC}"
-echo "   1. Get Gemini API key: https://makersuite.google.com/app/apikey"
-echo "   2. Edit .env file and replace 'your_gemini_api_key_here'"
-echo "   3. Save the file and run the program!"
+echo -e "${YELLOW}💡 QUICK START:${NC}"
+echo "   1. Run: $PYTHON_CMD run_ara.py (interactive launcher)"
+echo "   2. Or: $PYTHON_CMD ara.py AAPL --verbose (direct command)"
+echo "   3. No API keys needed - uses Yahoo Finance!"
 echo
-echo -e "${BLUE}💡 TIP: Your code editor should be opening now to edit the .env file!${NC}"
+echo -e "${BLUE}🎯 TIP: The system is ready to use immediately!${NC}"
 echo "   Or add an alias: echo 'alias ara=\"$PYTHON_CMD $(pwd)/ara.py\"' >> ~/.bashrc"
 echo
