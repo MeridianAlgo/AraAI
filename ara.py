@@ -1380,6 +1380,9 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
                         
                         predictions.append(constrained_pred)
                     
+                    # Calculate confidence for validation
+                    confidence = calculate_prediction_confidence(X_final, y, predictions, training_results)
+                    
                     # CRITICAL: Validate prediction quality with failsafes
                     validation_passed, validation_message = validate_prediction_quality(
                         predictions, current_price, data_df, confidence
@@ -1524,13 +1527,17 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
                         predictions.append(conservative_pred)
                     
                     console.print("[green]✅ Applied ultra-conservative predictions[/]")
+                
+                # Calculate confidence for statistical method
+                confidence = 75  # Default confidence for statistical/conservative predictions
             
             if not predictions:
                 console.print("[red]ERROR: Prediction generation failed[/]")
                 return False
             
-            # Calculate confidence and accuracy metrics
-            confidence = calculate_prediction_confidence(X_final, y, predictions, training_results)
+            # Use confidence calculated earlier or calculate if not available
+            if 'confidence' not in locals():
+                confidence = calculate_prediction_confidence(X_final, y, predictions, training_results)
             
             # Calculate additional accuracy metrics
             accuracy_metrics = calculate_advanced_accuracy_metrics(data_df, predictions, tech_indicators)
@@ -1577,7 +1584,7 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
                     'confidence': confidence,
                     'trend': 'UP' if predictions[0] > current_price else 'DOWN'
                 }
-                yahoo_result = get_yahoo_insights(symbol, prediction_data, data)
+                yahoo_result = get_yahoo_insights(symbol, prediction_data, data_df)
         
         # Step 8: Display Results
         table = Table(title="", box=box.ROUNDED, border_style="white")
