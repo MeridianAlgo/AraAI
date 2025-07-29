@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 MeridianAlgo
+Copyright (c) 2024 Meridian Algo - Ara AI Stock Analysis Platform
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+DISCLAIMER:
+This software is for educational and research purposes only. Stock market 
+predictions are inherently uncertain, and past performance does not guarantee 
+future results. Always conduct your own research and consider consulting with 
+financial professionals before making investment decisions. The authors and 
+contributors are not responsible for any financial losses incurred from using 
+this software.

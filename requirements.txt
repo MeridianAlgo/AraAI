@@ -1,26 +1,33 @@
-# Ara AI Stock Analysis - Perfect Prediction System
-# Core ML and Data Processing
-torch>=2.0.0
-numpy>=1.21.0
-pandas>=1.5.0
-scikit-learn>=1.3.0
+# Ara AI Stock Analysis Platform - Dependencies
+# Production-ready requirements for ensemble ML stock prediction
 
-# Financial Data
-yfinance>=0.2.0
+# Core ML and Data Science
+torch>=1.12.0                  # Deep learning framework (LSTM neural networks)
+scikit-learn>=1.1.0             # Machine learning models (Random Forest, Gradient Boosting)
+pandas>=1.5.0                   # Data manipulation and analysis
+numpy>=1.21.0                   # Numerical computing and array operations
 
-# UI and Visualization
-rich>=13.0.0
+# Market Data and Financial APIs
+yfinance>=0.1.87                # Yahoo Finance data (free, no API key required)
+requests>=2.28.0                # HTTP requests for data fetching
 
-# Environment Variables
-python-dotenv>=1.0.0
+# User Interface and Console Output
+rich>=12.0.0                    # Beautiful console output with progress bars
 
-# Additional ML Libraries
-scipy>=1.9.0
+# Optional: Enhanced Performance (uncomment if needed)
+# numba>=0.56.0                 # JIT compilation for numerical functions
+# joblib>=1.2.0                 # Parallel processing for ML models
 
-# Optional GPU Support (uncomment if you have NVIDIA GPU)
-# torch-audio>=2.0.0
-# torchvision>=0.15.0
+# Development and Testing (uncomment for development)
+# pytest>=7.0.0                 # Testing framework
+# flake8>=5.0.0                 # Code style checking
+# black>=22.0.0                 # Code formatting
 
-# Development and Testing (optional)
-# pytest>=7.0.0
-# jupyter>=1.0.0
+# Platform-specific GPU acceleration (install separately if needed)
+# For NVIDIA GPUs: torch with CUDA support (automatically detected)
+# For AMD GPUs: pip install torch-directml (Windows)
+# For Intel GPUs: pip install intel-extension-for-pytorch
+# For Apple Silicon: MPS support included in torch>=1.12.0
+
+# Minimum Python version: 3.8+
+# Recommended Python version: 3.9+ for best performance
