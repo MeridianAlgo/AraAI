@@ -6,6 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Accuracy: 78-85%](https://img.shields.io/badge/Accuracy-78--85%25-green.svg)](https://github.com/MeridianAlgo/Ara)
 [![No API Keys](https://img.shields.io/badge/API%20Keys-Not%20Required-brightgreen.svg)](https://github.com/MeridianAlgo/Ara)
+[![GitHub Stars](https://img.shields.io/github/stars/MeridianAlgo/Ara?style=social)](https://github.com/MeridianAlgo/Ara/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/MeridianAlgo/Ara?style=social)](https://github.com/MeridianAlgo/Ara/network/members)
 
 > **Professional-grade stock prediction system using ensemble machine learning models with real-time market data integration and automated validation.**
 

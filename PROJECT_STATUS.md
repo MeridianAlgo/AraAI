@@ -124,7 +124,7 @@ requests>=2.28.0            # HTTP requests
 ### **Quick Start**
 ```bash
 # Clone repository
-git clone https://github.com/meridianalgo/ara.git
+git clone https://github.com/MeridianAlgo/Ara.git
 cd ara
 
 # Install (Windows)

@@ -165,6 +165,299 @@ def vprint(*args, **kwargs):
     if VERBOSE:
         print(*args, **kwargs)
 
+def check_existing_predictions(symbol, days=5):
+    """
+    Check for existing predictions and their accuracy, ask user what to do
+    """
+    try:
+        predictions_file = 'predictions.csv'
+        if not os.path.exists(predictions_file):
+            return None, "no_file"
+        
+        df = pd.read_csv(predictions_file)
+        if df.empty:
+            return None, "empty_file"
+        
+        # Find predictions for this symbol from today
+        today = datetime.now().date()
+        symbol_predictions = df[
+            (df['Symbol'] == symbol) & 
+            (pd.to_datetime(df['Timestamp']).dt.date == today)
+        ]
+        
+        if symbol_predictions.empty:
+            # Check for recent predictions (last 3 days)
+            recent_predictions = df[
+                (df['Symbol'] == symbol) & 
+                (pd.to_datetime(df['Timestamp']).dt.date >= today - timedelta(days=3))
+            ]
+            
+            if not recent_predictions.empty:
+                return recent_predictions, "recent_found"
+            return None, "no_recent"
+        
+        # Check accuracy of past predictions for this symbol
+        past_predictions = df[
+            (df['Symbol'] == symbol) & 
+            (pd.to_datetime(df['Date']).dt.date < today)
+        ]
+        
+        accuracy_info = None
+        if not past_predictions.empty:
+            # Calculate accuracy for past predictions
+            validated_count = 0
+            total_error = 0
+            excellent_count = 0
+            good_count = 0
+            
+            for _, row in past_predictions.iterrows():
+                try:
+                    pred_date = datetime.fromisoformat(row['Date'])
+                    if pred_date.date() < today:
+                        # Get actual price
+                        ticker = yf.Ticker(symbol)
+                        actual_data = ticker.history(start=pred_date.date(), end=pred_date.date() + timedelta(days=2))
+                        
+                        if not actual_data.empty:
+                            actual_price = actual_data['Close'].iloc[0]
+                            predicted_price = row['Predicted_Price']
+                            error_pct = abs(predicted_price - actual_price) / actual_price * 100
+                            
+                            validated_count += 1
+                            total_error += error_pct
+                            
+                            if error_pct < 1.0:
+                                excellent_count += 1
+                            elif error_pct < 2.0:
+                                good_count += 1
+                                
+                except Exception:
+                    continue
+            
+            if validated_count > 0:
+                avg_error = total_error / validated_count
+                excellent_rate = (excellent_count / validated_count) * 100
+                good_rate = (good_count / validated_count) * 100
+                overall_accuracy = ((excellent_count + good_count) / validated_count) * 100
+                
+                accuracy_info = {
+                    'validated_count': validated_count,
+                    'avg_error': avg_error,
+                    'excellent_rate': excellent_rate,
+                    'good_rate': good_rate,
+                    'overall_accuracy': overall_accuracy
+                }
+        
+        return symbol_predictions, "found_today", accuracy_info
+        
+    except Exception as e:
+        vprint(f"Error checking existing predictions: {e}")
+        return None, "error"
+
+def ask_user_prediction_choice(symbol, existing_predictions, accuracy_info=None):
+    """
+    Ask user whether to use cached predictions or generate new ones
+    """
+    try:
+        console.print(f"\n[bold yellow]🔍 Found existing predictions for {symbol} from today![/]")
+        
+        # Show existing predictions
+        console.print(f"\n[bold white]📊 Current Cached Predictions:[/]")
+        table = Table(box=box.ROUNDED)
+        table.add_column("Day", style="cyan")
+        table.add_column("Date", style="white")
+        table.add_column("Predicted Price", style="green")
+        table.add_column("Change", style="yellow")
+        
+        current_price = None
+        for _, row in existing_predictions.iterrows():
+            pred_date = datetime.fromisoformat(row['Date'])
+            predicted_price = row['Predicted_Price']
+            current_price = row.get('Current_Price', predicted_price)
+            
+            if current_price and current_price != predicted_price:
+                change = ((predicted_price - current_price) / current_price) * 100
+                change_str = f"{change:+.1f}%"
+            else:
+                change_str = "N/A"
+            
+            day_num = (pred_date.date() - datetime.now().date()).days + 1
+            table.add_row(
+                f"Day {day_num}",
+                pred_date.strftime("%Y-%m-%d"),
+                f"${predicted_price:.2f}",
+                change_str
+            )
+        
+        console.print(table)
+        
+        # Show accuracy information if available
+        if accuracy_info:
+            console.print(f"\n[bold white]📈 Historical Accuracy for {symbol}:[/]")
+            console.print(f"[green]✅ Validated Predictions: {accuracy_info['validated_count']}[/]")
+            console.print(f"[cyan]📊 Average Error: {accuracy_info['avg_error']:.1f}%[/]")
+            console.print(f"[bright_green]🎯 Excellent (<1% error): {accuracy_info['excellent_rate']:.1f}%[/]")
+            console.print(f"[green]✅ Good (<2% error): {accuracy_info['good_rate']:.1f}%[/]")
+            console.print(f"[yellow]📈 Overall Accuracy: {accuracy_info['overall_accuracy']:.1f}%[/]")
+        
+        console.print(f"\n[bold white]🤔 What would you like to do?[/]")
+        console.print(f"[cyan]1.[/] Use cached predictions (faster)")
+        console.print(f"[cyan]2.[/] Generate new predictions (fresh analysis)")
+        console.print(f"[cyan]3.[/] Show prediction accuracy details")
+        
+        while True:
+            try:
+                choice = input("\nEnter your choice (1-3): ").strip()
+                
+                if choice == "1":
+                    console.print(f"[green]✅ Using cached predictions for {symbol}[/]")
+                    return "use_cached"
+                elif choice == "2":
+                    console.print(f"[yellow]🔄 Generating new predictions for {symbol}...[/]")
+                    return "generate_new"
+                elif choice == "3":
+                    show_detailed_accuracy(symbol)
+                    continue
+                else:
+                    console.print("[red]❌ Invalid choice. Please enter 1, 2, or 3.[/]")
+                    continue
+                    
+            except KeyboardInterrupt:
+                console.print(f"\n[yellow]⚠️  Operation cancelled. Using cached predictions.[/]")
+                return "use_cached"
+            except Exception:
+                console.print("[red]❌ Invalid input. Please try again.[/]")
+                continue
+                
+    except Exception as e:
+        vprint(f"Error in user choice dialog: {e}")
+        return "generate_new"
+
+def show_detailed_accuracy(symbol):
+    """
+    Show detailed accuracy information for a symbol
+    """
+    try:
+        accuracy_file = 'prediction_accuracy.csv'
+        if not os.path.exists(accuracy_file):
+            console.print(f"[yellow]⚠️  No accuracy data available for {symbol}[/]")
+            return
+        
+        df = pd.read_csv(accuracy_file)
+        symbol_data = df[df['symbol'] == symbol]
+        
+        if symbol_data.empty:
+            console.print(f"[yellow]⚠️  No accuracy data found for {symbol}[/]")
+            return
+        
+        console.print(f"\n[bold white]📊 Detailed Accuracy Report for {symbol}[/]")
+        
+        # Recent predictions (last 10)
+        recent_data = symbol_data.tail(10)
+        
+        table = Table(title=f"Recent Predictions for {symbol}", box=box.ROUNDED)
+        table.add_column("Date", style="cyan")
+        table.add_column("Predicted", style="white")
+        table.add_column("Actual", style="white")
+        table.add_column("Error %", style="yellow")
+        table.add_column("Grade", style="green")
+        
+        for _, row in recent_data.iterrows():
+            error_pct = row['error_pct']
+            
+            if error_pct < 1.0:
+                grade = "🎯 Excellent"
+                grade_style = "bright_green"
+            elif error_pct < 2.0:
+                grade = "✅ Good"
+                grade_style = "green"
+            elif error_pct < 3.0:
+                grade = "📈 Acceptable"
+                grade_style = "yellow"
+            else:
+                grade = "❌ Poor"
+                grade_style = "red"
+            
+            table.add_row(
+                str(row['date']),
+                f"${row['predicted']:.2f}",
+                f"${row['actual']:.2f}",
+                f"{error_pct:.1f}%",
+                f"[{grade_style}]{grade}[/]"
+            )
+        
+        console.print(table)
+        
+        # Summary statistics
+        total_predictions = len(symbol_data)
+        avg_error = symbol_data['error_pct'].mean()
+        excellent_count = len(symbol_data[symbol_data['error_pct'] < 1.0])
+        good_count = len(symbol_data[symbol_data['error_pct'] < 2.0])
+        acceptable_count = len(symbol_data[symbol_data['error_pct'] < 3.0])
+        
+        console.print(f"\n[bold white]📈 Summary Statistics:[/]")
+        console.print(f"[white]Total Predictions: {total_predictions}[/]")
+        console.print(f"[white]Average Error: {avg_error:.1f}%[/]")
+        console.print(f"[bright_green]Excellent (<1%): {excellent_count} ({excellent_count/total_predictions*100:.1f}%)[/]")
+        console.print(f"[green]Good (<2%): {good_count} ({good_count/total_predictions*100:.1f}%)[/]")
+        console.print(f"[yellow]Acceptable (<3%): {acceptable_count} ({acceptable_count/total_predictions*100:.1f}%)[/]")
+        
+    except Exception as e:
+        console.print(f"[red]❌ Error showing accuracy details: {e}[/]")
+
+def display_cached_predictions(symbol, predictions_df):
+    """
+    Display cached predictions in a nice format
+    """
+    try:
+        console.print(f"\n[bold green]📋 Cached Predictions for {symbol}[/]")
+        
+        # Get current price for comparison
+        ticker = yf.Ticker(symbol)
+        current_data = ticker.history(period="1d")
+        current_price = current_data['Close'].iloc[-1] if not current_data.empty else 0
+        
+        table = Table(title=f"📈 {symbol} Stock Predictions (Cached)", box=box.ROUNDED)
+        table.add_column("Day", style="cyan", no_wrap=True)
+        table.add_column("Date", style="white")
+        table.add_column("Predicted Price", style="green", justify="right")
+        table.add_column("Change", style="yellow", justify="right")
+        table.add_column("Change %", style="magenta", justify="right")
+        
+        for _, row in predictions_df.iterrows():
+            pred_date = datetime.fromisoformat(row['Date'])
+            predicted_price = row['Predicted_Price']
+            
+            change = predicted_price - current_price
+            change_pct = (change / current_price) * 100 if current_price > 0 else 0
+            
+            day_num = (pred_date.date() - datetime.now().date()).days + 1
+            
+            table.add_row(
+                f"Day {day_num}",
+                pred_date.strftime("%Y-%m-%d"),
+                f"${predicted_price:.2f}",
+                f"${change:+.2f}",
+                f"{change_pct:+.1f}%"
+            )
+        
+        console.print(table)
+        
+        # Show cache info
+        timestamp = pd.to_datetime(predictions_df.iloc[0]['Timestamp'])
+        cache_age = datetime.now() - timestamp.to_pydatetime()
+        
+        console.print(f"\n[bold white]📊 CACHE INFORMATION[/]")
+        console.print(f"[white]Current Price: [green]${current_price:.2f}[/]")
+        console.print(f"[white]Cache Age: [cyan]{cache_age.seconds // 3600}h {(cache_age.seconds % 3600) // 60}m[/]")
+        console.print(f"[white]Generated: [cyan]{timestamp.strftime('%Y-%m-%d %H:%M:%S')}[/]")
+        
+        return True
+        
+    except Exception as e:
+        console.print(f"[red]❌ Error displaying cached predictions: {e}[/]")
+        return False
+
 def validate_and_cleanup_predictions():
     """
     Automated system to validate old predictions, save accuracy, and cleanup predictions.csv
@@ -1246,41 +1539,246 @@ def _calculate_breakout_probability(data_df):
     except:
         return pd.Series([0.5] * len(data_df))
 
-def smart_trade_analysis(symbol, days=60, epochs=10):
-    """Ultra-accurate analysis using advanced ML ensemble"""
+def check_existing_predictions(symbol, days=5):
+    """Check for existing predictions and validate their accuracy"""
     try:
-        console.print(f"\n[bold white]Ara - AI Stock Analysis for {symbol.upper()}[/]")
-        console.print(f"Training Days: {days} | Epochs: {epochs} | Device: {DEVICE_NAME}\n")
+        predictions_file = 'predictions.csv'
+        if not os.path.exists(predictions_file):
+            return None, "no_file", {}
         
-        # Check if we already have predictions for this symbol today
-        existing_predictions = check_existing_predictions(symbol)
-        if existing_predictions is not None:
-            console.print(f"[yellow]Found existing predictions for {symbol.upper()} from today![/]")
-            console.print(f"[white]Returning cached predictions to avoid redundant analysis...[/]")
+        df = pd.read_csv(predictions_file)
+        if df.empty:
+            return None, "empty_file", {}
+        
+        # Filter predictions for this symbol
+        symbol_predictions = df[df['Symbol'] == symbol].copy()
+        if symbol_predictions.empty:
+            return None, "no_symbol", {}
+        
+        # Check for today's predictions
+        today = datetime.now().date()
+        today_predictions = symbol_predictions[
+            pd.to_datetime(symbol_predictions['Timestamp']).dt.date == today
+        ]
+        
+        if not today_predictions.empty:
+            # Found today's predictions - check accuracy of previous predictions
+            accuracy_info = validate_existing_accuracy(symbol, symbol_predictions)
+            return today_predictions.to_dict('records'), "found_today", accuracy_info
+        
+        # Check for recent predictions (within 3 days)
+        three_days_ago = today - timedelta(days=3)
+        recent_predictions = symbol_predictions[
+            pd.to_datetime(symbol_predictions['Timestamp']).dt.date >= three_days_ago
+        ]
+        
+        if not recent_predictions.empty:
+            accuracy_info = validate_existing_accuracy(symbol, symbol_predictions)
+            return recent_predictions.to_dict('records'), "recent_found", accuracy_info
+        
+        return None, "old_predictions", {}
+        
+    except Exception as e:
+        vprint(f"Error checking existing predictions: {e}")
+        return None, "error", {}
+
+def validate_existing_accuracy(symbol, predictions_df):
+    """Validate accuracy of existing predictions"""
+    try:
+        accuracy_info = {
+            'has_results': False,
+            'day1_target': 0,
+            'day1_actual': 0,
+            'day1_error': 0,
+            'accuracy_tier': 'Unknown',
+            'has_cached': False
+        }
+        
+        # Get current price
+        ticker = yf.Ticker(symbol)
+        current_data = ticker.history(period="1d")
+        if current_data.empty:
+            return accuracy_info
+        
+        current_price = current_data['Close'].iloc[-1]
+        
+        # Find yesterday's prediction for today
+        yesterday = datetime.now().date() - timedelta(days=1)
+        yesterday_predictions = predictions_df[
+            pd.to_datetime(predictions_df['Timestamp']).dt.date == yesterday
+        ]
+        
+        if not yesterday_predictions.empty:
+            # Get the Day +1 prediction (which should be for today)
+            day1_prediction = yesterday_predictions.iloc[-1]['Predicted_Price']
             
-            # Display existing predictions in the same format
-            current_price = existing_predictions.iloc[0]['Current_Price']
-            predictions = existing_predictions['Predicted_Price'].tolist()
+            accuracy_info['has_results'] = True
+            accuracy_info['day1_target'] = day1_prediction
+            accuracy_info['day1_actual'] = current_price
+            accuracy_info['day1_error'] = abs(day1_prediction - current_price) / current_price * 100
             
-            # Create display table
-            table = Table(title=f"Ara AI Stock Analysis: {symbol.upper()}", box=box.ROUNDED)
-            table.add_column("Metric", style="bold white")
-            table.add_column("Value", style="bold cyan")
-            table.add_column("Details", style="white")
+            # Determine accuracy tier
+            if accuracy_info['day1_error'] < 1.0:
+                accuracy_info['accuracy_tier'] = 'Excellent (<1% error)'
+            elif accuracy_info['day1_error'] < 2.0:
+                accuracy_info['accuracy_tier'] = 'Good (<2% error)'
+            elif accuracy_info['day1_error'] < 3.0:
+                accuracy_info['accuracy_tier'] = 'Acceptable (<3% error)'
+            else:
+                accuracy_info['accuracy_tier'] = 'Poor (>3% error)'
+        
+        # Check if there are cached predictions for today
+        today = datetime.now().date()
+        today_predictions = predictions_df[
+            pd.to_datetime(predictions_df['Timestamp']).dt.date == today
+        ]
+        accuracy_info['has_cached'] = not today_predictions.empty
+        
+        return accuracy_info
+        
+    except Exception as e:
+        vprint(f"Error validating accuracy: {e}")
+        return accuracy_info
+
+def ask_user_prediction_choice(symbol, existing_predictions, accuracy_info):
+    """Ask user whether to use cached predictions or generate new ones"""
+    try:
+        console.print(f"\n[bold yellow]📊 EXISTING PREDICTIONS FOUND FOR {symbol.upper()}[/]")
+        
+        if accuracy_info['has_results']:
+            console.print(f"[white]Yesterday's Day +1 Prediction Accuracy:[/]")
+            console.print(f"[white]Target: ${accuracy_info['day1_target']:.2f} | Actual: ${accuracy_info['day1_actual']:.2f} | Error: {accuracy_info['day1_error']:.1f}%[/]")
             
-            table.add_row("Current Price", f"${current_price:.2f}", "Latest market data")
+            if accuracy_info['day1_error'] < 1.0:
+                status_color, status_icon = "bright_green", "🎯"
+            elif accuracy_info['day1_error'] < 2.0:
+                status_color, status_icon = "green", "✅"
+            elif accuracy_info['day1_error'] < 3.0:
+                status_color, status_icon = "yellow", "⚠️"
+            else:
+                status_color, status_icon = "red", "❌"
             
-            for i, pred in enumerate(predictions[:3]):
-                change_pct = ((pred - current_price) / current_price * 100)
-                table.add_row(f"Day +{i+1} Prediction", f"${pred:.2f}", f"{change_pct:+.1f}%")
+            console.print(f"[{status_color}]{status_icon} {accuracy_info['accuracy_tier']}[/]")
+        
+        console.print(f"\n[bold white]🤔 WHAT WOULD YOU LIKE TO DO?[/]")
+        console.print(f"[white]1. Use today's cached predictions (fast)[/]")
+        console.print(f"[white]2. Generate new predictions (will save old ones for learning)[/]")
+        console.print(f"[dim]Press Enter for option 2 (generate new)[/]")
+        
+        choice = input("\nEnter choice (1 or 2): ").strip()
+        
+        if choice == "1":
+            return "use_cached"
+        else:
+            return "generate_new"
             
+    except Exception as e:
+        vprint(f"Error asking user choice: {e}")
+        return "generate_new"
+
+def display_cached_predictions(symbol, predictions):
+    """Display cached predictions in a nice format"""
+    try:
+        console.print(f"\n[green]Found existing predictions for {symbol.upper()} from today![/]")
+        console.print("[green]Returning cached predictions to avoid redundant analysis...[/]")
+        
+        # Get the most recent prediction
+        if isinstance(predictions, list) and predictions:
+            latest_prediction = predictions[-1]
+            
+            # Create a simple table for cached predictions
+            table = Table(title=f"Ara AI Stock Analysis: {symbol.upper()}")
+            table.add_column("Metric", style="cyan", no_wrap=True)
+            table.add_column("Value", style="white")
+            table.add_column("Details", style="dim")
+            
+            table.add_row("Current Price", f"${latest_prediction.get('Current_Price', 0):.2f}", "Latest market data")
+            table.add_row("Day +1 Prediction", f"${latest_prediction.get('Predicted_Price', 0):.2f}", 
+                         f"{((latest_prediction.get('Predicted_Price', 0) - latest_prediction.get('Current_Price', 0)) / latest_prediction.get('Current_Price', 1) * 100):+.1f}%")
             table.add_row("Status", "Retrieved from cache", "No new analysis needed")
             
             console.print(table)
             return True
         
-        # Validate ALL previous predictions first
-        validation_summary = validate_all_previous_predictions()
+        return False
+        
+    except Exception as e:
+        vprint(f"Error displaying cached predictions: {e}")
+        return False
+
+def save_old_predictions_for_learning(symbol, existing_predictions, accuracy_info):
+    """Save old predictions to accuracy tracking for machine learning"""
+    try:
+        if not accuracy_info['has_results']:
+            return
+        
+        accuracy_file = 'prediction_accuracy.csv'
+        
+        # Create accuracy record
+        accuracy_record = {
+            'symbol': symbol,
+            'date': (datetime.now().date() - timedelta(days=1)).isoformat(),
+            'predicted': accuracy_info['day1_target'],
+            'actual': accuracy_info['day1_actual'],
+            'error_pct': accuracy_info['day1_error'],
+            'accurate': accuracy_info['day1_error'] < 3.0,
+            'excellent': accuracy_info['day1_error'] < 1.0,
+            'good': accuracy_info['day1_error'] < 2.0,
+            'timestamp': datetime.now().isoformat(),
+            'validation_timestamp': datetime.now().isoformat()
+        }
+        
+        # Load existing accuracy data or create new
+        if os.path.exists(accuracy_file):
+            accuracy_df = pd.read_csv(accuracy_file)
+            # Check if this record already exists
+            existing_record = accuracy_df[
+                (accuracy_df['symbol'] == symbol) & 
+                (accuracy_df['date'] == accuracy_record['date'])
+            ]
+            
+            if existing_record.empty:
+                # Add new record
+                new_df = pd.concat([accuracy_df, pd.DataFrame([accuracy_record])], ignore_index=True)
+                new_df.to_csv(accuracy_file, index=False)
+                console.print(f"[green]✅ Saved prediction accuracy for learning: {accuracy_info['day1_error']:.1f}% error[/]")
+        else:
+            # Create new file
+            pd.DataFrame([accuracy_record]).to_csv(accuracy_file, index=False)
+            console.print(f"[green]✅ Created accuracy tracking file with {accuracy_info['day1_error']:.1f}% error[/]")
+        
+    except Exception as e:
+        vprint(f"Error saving old predictions for learning: {e}")
+
+def smart_trade_analysis(symbol, days=60, epochs=10):
+    """Ultra-accurate analysis using advanced ML ensemble with intelligent caching"""
+    try:
+        console.print(f"\n[bold white]Ara - AI Stock Analysis for {symbol.upper()}[/]")
+        console.print(f"Training Days: {days} | Epochs: {epochs} | Device: {DEVICE_NAME}\n")
+        
+        # Check for existing predictions with intelligent caching
+        existing_predictions, status, accuracy_info = check_existing_predictions(symbol, days=5)
+        
+        if status == "found_today":
+            # Ask user what to do with existing predictions
+            user_choice = ask_user_prediction_choice(symbol, existing_predictions, accuracy_info)
+            
+            if user_choice == "use_cached":
+                # Display cached predictions and return
+                if display_cached_predictions(symbol, existing_predictions):
+                    return True
+                else:
+                    console.print("[yellow]⚠️  Error displaying cached predictions, generating new ones...[/]")
+            elif user_choice == "generate_new":
+                # Save existing predictions to accuracy tracking before generating new ones
+                console.print("[yellow]🔄 Saving existing predictions for learning...[/]")
+                save_old_predictions_for_learning(symbol, existing_predictions, accuracy_info)
+        elif status == "recent_found":
+            console.print(f"[yellow]ℹ️  Found recent predictions for {symbol} (within 3 days)[/]")
+            console.print("[white]Generating fresh analysis...[/]")
+        
+        # Validate ALL previous predictions first (this also moves old predictions to accuracy tracking)
+        validation_summary = validate_and_cleanup_predictions()
         
         used_sample_data = False
         

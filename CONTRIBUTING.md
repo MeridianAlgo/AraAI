@@ -5,7 +5,7 @@ Thank you for your interest in contributing to Ara AI! This document provides gu
 ## 🤝 How to Contribute
 
 ### Reporting Issues
-- Use the [GitHub Issues](https://github.com/meridianalgo/ara/issues) page
+- Use the [GitHub Issues](https://github.com/MeridianAlgo/Ara/issues) page
 - Search existing issues before creating a new one
 - Provide detailed information including:
   - Python version
@@ -15,7 +15,7 @@ Thank you for your interest in contributing to Ara AI! This document provides gu
   - Expected vs actual behavior
 
 ### Suggesting Features
-- Open a [Feature Request](https://github.com/meridianalgo/ara/issues/new?template=feature_request.md)
+- Open a [Feature Request](https://github.com/MeridianAlgo/Ara/issues/new?template=feature_request.md)
 - Describe the feature and its benefits
 - Provide examples of how it would be used
 - Consider implementation complexity
@@ -25,8 +25,8 @@ Thank you for your interest in contributing to Ara AI! This document provides gu
 #### Development Setup
 ```bash
 # Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/ara.git
-cd ara
+git clone https://github.com/YOUR_USERNAME/Ara.git
+cd Ara
 
 # Create a virtual environment
 python -m venv venv
