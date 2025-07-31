@@ -42,26 +42,40 @@
 
 ### Installation
 
-**Windows:**
+**🚀 Universal Python Installer (Recommended):**
 ```bash
 # Clone the repository
 git clone https://github.com/MeridianAlgo/Ara.git
 cd Ara
 
-# Run the installer
+# Run the universal installer (works on all platforms)
+python install.py
+```
+
+**Windows (Multiple Options):**
+```bash
+# Option 1: Universal Python installer
+python install.py
+
+# Option 2: PowerShell installer (if batch files are blocked)
+powershell -ExecutionPolicy Bypass -File install.ps1
+
+# Option 3: Batch installer
 install.bat
 ```
 
 **Linux/macOS:**
 ```bash
-# Clone the repository
-git clone https://github.com/MeridianAlgo/Ara.git
-cd Ara
+# Option 1: Universal Python installer
+python install.py
 
-# Make installer executable and run
+# Option 2: Shell installer
 chmod +x install.sh
 ./install.sh
 ```
+
+**⚠️ Windows Security Note:**
+If Windows blocks the batch file with "This app can't run on your PC", use the PowerShell installer or Python installer instead.
 
 ### Basic Usage
 
@@ -264,6 +278,20 @@ requests>=2.28.0            # HTTP requests
 ### Common Issues
 
 **1. Installation Problems**
+
+**Windows "This app can't run on your PC" Error:**
+```bash
+# Use PowerShell installer instead
+powershell -ExecutionPolicy Bypass -File install.ps1
+
+# Or use universal Python installer
+python install.py
+
+# Or install manually
+python -m pip install -r requirements.txt --user
+```
+
+**General Installation Issues:**
 ```bash
 # Update pip first
 python -m pip install --upgrade pip
@@ -273,6 +301,9 @@ pip install -r requirements.txt --user
 
 # For macOS with Apple Silicon
 pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# Try individual package installation
+python -m pip install torch pandas numpy yfinance rich scikit-learn
 ```
 
 **2. Market Data Issues**
