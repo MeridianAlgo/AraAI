@@ -180,7 +180,7 @@ def main():
         if os.path.exists("run_ara.py"):
             subprocess.run([sys.executable, "run_ara.py"])
         elif os.path.exists("ara.py"):
-            print("🚀 Ara AI Stock Analysis Platform")
+            print("Ara AI Stock Analysis Platform")
             print("=" * 40)
             symbol = input("Enter stock symbol (e.g., AAPL): ").strip().upper()
             if symbol:
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     main()
 '''
     
-    with open("ara_launcher.py", "w") as f:
+    with open("ara_launcher.py", "w", encoding="utf-8") as f:
         f.write(launcher_content)
     
     # Make executable on Unix systems
@@ -221,7 +221,7 @@ cd /d "%~dp0"
 python ara_launcher.py
 pause
 '''
-        with open("start_ara.bat", "w") as f:
+        with open("start_ara.bat", "w", encoding="utf-8") as f:
             f.write(batch_content)
         
         print_colored("✅ Windows launcher created (start_ara.bat)", "green")
@@ -232,7 +232,7 @@ pause
 cd "$(dirname "$0")"
 {sys.executable} ara_launcher.py
 '''
-        with open("Ara AI Stock Analysis.command", "w") as f:
+        with open("Ara AI Stock Analysis.command", "w", encoding="utf-8") as f:
             f.write(command_content)
         os.chmod("Ara AI Stock Analysis.command", 0o755)
         
@@ -244,7 +244,7 @@ cd "$(dirname "$0")"
 cd "$(dirname "$0")"
 {sys.executable} ara_launcher.py
 '''
-        with open("start_ara.sh", "w") as f:
+        with open("start_ara.sh", "w", encoding="utf-8") as f:
             f.write(shell_content)
         os.chmod("start_ara.sh", 0o755)
         
@@ -260,7 +260,7 @@ Icon=utilities-terminal
 Terminal=true
 Categories=Office;Finance;
 '''
-        with open("Ara AI Stock Analysis.desktop", "w") as f:
+        with open("Ara AI Stock Analysis.desktop", "w", encoding="utf-8") as f:
             f.write(desktop_content)
         os.chmod("Ara AI Stock Analysis.desktop", 0o755)
         
