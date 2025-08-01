@@ -1231,7 +1231,7 @@ def train_ensemble_models(X, y, epochs=10):
         vprint(f"Ensemble training failed: {e}")
         return None
 
-def make_ultra_accurate_predictions(X, trained_models, days=5):
+def make_ultra_accurate_predictions(X, trained_models, days=7):
     """Make ultra-accurate predictions using the fixed ensemble system"""
     try:
         if 'models' in trained_models:
@@ -1539,8 +1539,8 @@ def _calculate_breakout_probability(data_df):
     except:
         return pd.Series([0.5] * len(data_df))
 
-def check_existing_predictions(symbol, days=5):
-    """Check for existing predictions and validate their accuracy"""
+def check_existing_predictions(symbol, days=7):
+    """Check for existing 7-day predictions and validate their accuracy"""
     try:
         predictions_file = 'predictions.csv'
         if not os.path.exists(predictions_file):
@@ -1555,32 +1555,212 @@ def check_existing_predictions(symbol, days=5):
         if symbol_predictions.empty:
             return None, "no_symbol", {}
         
-        # Check for today's predictions
         today = datetime.now().date()
-        today_predictions = symbol_predictions[
-            pd.to_datetime(symbol_predictions['Timestamp']).dt.date == today
-        ]
         
-        if not today_predictions.empty:
-            # Found today's predictions - check accuracy of previous predictions
-            accuracy_info = validate_existing_accuracy(symbol, symbol_predictions)
-            return today_predictions.to_dict('records'), "found_today", accuracy_info
+        # Check for active 7-day cycle predictions
+        active_predictions = []
+        for _, row in symbol_predictions.iterrows():
+            pred_date = datetime.fromisoformat(row['Date']).date()
+            timestamp_date = pd.to_datetime(row['Timestamp']).date()
+            
+            # Check if this prediction is within a 7-day cycle from its creation
+            days_since_creation = (today - timestamp_date).days
+            days_until_prediction = (pred_date - today).days
+            
+            # If prediction is for future date and within 7-day cycle
+            if days_until_prediction >= 0 and days_since_creation <= 7:
+                active_predictions.append(row)
         
-        # Check for recent predictions (within 3 days)
-        three_days_ago = today - timedelta(days=3)
-        recent_predictions = symbol_predictions[
-            pd.to_datetime(symbol_predictions['Timestamp']).dt.date >= three_days_ago
-        ]
+        if active_predictions:
+            # Found active 7-day cycle - check accuracy of past predictions
+            accuracy_info = validate_7day_cycle_accuracy(symbol, symbol_predictions, today)
+            return active_predictions, "active_7day_cycle", accuracy_info
         
-        if not recent_predictions.empty:
-            accuracy_info = validate_existing_accuracy(symbol, symbol_predictions)
-            return recent_predictions.to_dict('records'), "recent_found", accuracy_info
+        # Check if we need to start a new 7-day cycle
+        # Look for completed cycles to use for training
+        completed_cycles = find_completed_7day_cycles(symbol, symbol_predictions, today)
         
-        return None, "old_predictions", {}
+        if completed_cycles:
+            return None, "new_cycle_needed", {"completed_cycles": completed_cycles}
+        
+        return None, "no_recent_predictions", {}
         
     except Exception as e:
         vprint(f"Error checking existing predictions: {e}")
         return None, "error", {}
+
+def validate_7day_cycle_accuracy(symbol, predictions_df, today):
+    """Validate accuracy of predictions in the current 7-day cycle"""
+    try:
+        accuracy_info = {
+            'cycle_start_date': None,
+            'days_completed': 0,
+            'daily_accuracy': [],
+            'overall_accuracy': 0,
+            'cycle_performance': 'Unknown',
+            'predictions_validated': 0
+        }
+        
+        # Get current price for comparison
+        ticker = yf.Ticker(symbol)
+        current_data = ticker.history(period="5d")
+        if current_data.empty:
+            return accuracy_info
+        
+        # Find the most recent 7-day cycle
+        recent_predictions = predictions_df.sort_values('Timestamp').tail(7)
+        
+        if recent_predictions.empty:
+            return accuracy_info
+        
+        cycle_start = pd.to_datetime(recent_predictions.iloc[0]['Timestamp']).date()
+        accuracy_info['cycle_start_date'] = cycle_start.isoformat()
+        
+        validated_count = 0
+        total_error = 0
+        daily_results = []
+        
+        for _, row in recent_predictions.iterrows():
+            pred_date = datetime.fromisoformat(row['Date']).date()
+            predicted_price = row['Predicted_Price']
+            
+            # Check if this prediction date has passed
+            if pred_date < today:
+                try:
+                    # Get actual price for that date
+                    actual_data = ticker.history(start=pred_date, end=pred_date + timedelta(days=2))
+                    
+                    if not actual_data.empty:
+                        actual_price = actual_data['Close'].iloc[0]
+                        error_pct = abs(predicted_price - actual_price) / actual_price * 100
+                        
+                        daily_results.append({
+                            'date': pred_date.isoformat(),
+                            'predicted': predicted_price,
+                            'actual': actual_price,
+                            'error_pct': error_pct,
+                            'accuracy_tier': get_accuracy_tier(error_pct)
+                        })
+                        
+                        validated_count += 1
+                        total_error += error_pct
+                        
+                except Exception as e:
+                    vprint(f"Error validating prediction for {pred_date}: {e}")
+        
+        accuracy_info['daily_accuracy'] = daily_results
+        accuracy_info['days_completed'] = len(daily_results)
+        accuracy_info['predictions_validated'] = validated_count
+        
+        if validated_count > 0:
+            avg_error = total_error / validated_count
+            accuracy_info['overall_accuracy'] = max(0, 100 - avg_error)
+            
+            # Determine cycle performance
+            if avg_error < 1.5:
+                accuracy_info['cycle_performance'] = 'Excellent'
+            elif avg_error < 2.5:
+                accuracy_info['cycle_performance'] = 'Good'
+            elif avg_error < 4.0:
+                accuracy_info['cycle_performance'] = 'Acceptable'
+            else:
+                accuracy_info['cycle_performance'] = 'Poor'
+        
+        return accuracy_info
+        
+    except Exception as e:
+        vprint(f"Error validating 7-day cycle accuracy: {e}")
+        return accuracy_info
+
+def find_completed_7day_cycles(symbol, predictions_df, today):
+    """Find completed 7-day cycles for model training"""
+    try:
+        completed_cycles = []
+        
+        # Group predictions by creation timestamp (7-day cycles)
+        predictions_df['timestamp_date'] = pd.to_datetime(predictions_df['Timestamp']).dt.date
+        
+        for timestamp_date, group in predictions_df.groupby('timestamp_date'):
+            cycle_end_date = timestamp_date + timedelta(days=7)
+            
+            # Check if this cycle is completed (7 days have passed)
+            if today > cycle_end_date:
+                # Validate this completed cycle
+                cycle_accuracy = validate_completed_cycle(symbol, group, today)
+                
+                if cycle_accuracy['predictions_validated'] > 0:
+                    completed_cycles.append({
+                        'cycle_start': timestamp_date.isoformat(),
+                        'cycle_end': cycle_end_date.isoformat(),
+                        'accuracy_data': cycle_accuracy,
+                        'predictions': group.to_dict('records')
+                    })
+        
+        # Sort by cycle start date (most recent first)
+        completed_cycles.sort(key=lambda x: x['cycle_start'], reverse=True)
+        
+        return completed_cycles[:5]  # Return last 5 completed cycles
+        
+    except Exception as e:
+        vprint(f"Error finding completed cycles: {e}")
+        return []
+
+def validate_completed_cycle(symbol, cycle_predictions, today):
+    """Validate accuracy of a completed 7-day cycle"""
+    try:
+        ticker = yf.Ticker(symbol)
+        validated_predictions = []
+        total_error = 0
+        
+        for _, row in cycle_predictions.iterrows():
+            pred_date = datetime.fromisoformat(row['Date']).date()
+            predicted_price = row['Predicted_Price']
+            
+            try:
+                # Get actual price for that date
+                actual_data = ticker.history(start=pred_date, end=pred_date + timedelta(days=2))
+                
+                if not actual_data.empty:
+                    actual_price = actual_data['Close'].iloc[0]
+                    error_pct = abs(predicted_price - actual_price) / actual_price * 100
+                    
+                    validated_predictions.append({
+                        'date': pred_date.isoformat(),
+                        'predicted': predicted_price,
+                        'actual': actual_price,
+                        'error_pct': error_pct,
+                        'accurate': error_pct < 3.0
+                    })
+                    
+                    total_error += error_pct
+                    
+            except Exception as e:
+                vprint(f"Error validating {symbol} for {pred_date}: {e}")
+        
+        avg_error = total_error / len(validated_predictions) if validated_predictions else 100
+        accuracy_rate = sum(1 for p in validated_predictions if p['accurate']) / len(validated_predictions) * 100 if validated_predictions else 0
+        
+        return {
+            'predictions_validated': len(validated_predictions),
+            'average_error': avg_error,
+            'accuracy_rate': accuracy_rate,
+            'validated_predictions': validated_predictions
+        }
+        
+    except Exception as e:
+        vprint(f"Error validating completed cycle: {e}")
+        return {'predictions_validated': 0, 'average_error': 100, 'accuracy_rate': 0}
+
+def get_accuracy_tier(error_pct):
+    """Get accuracy tier based on error percentage"""
+    if error_pct < 1.0:
+        return 'Excellent'
+    elif error_pct < 2.0:
+        return 'Good'
+    elif error_pct < 3.0:
+        return 'Acceptable'
+    else:
+        return 'Poor'
 
 def validate_existing_accuracy(symbol, predictions_df):
     """Validate accuracy of existing predictions"""
@@ -1640,71 +1820,294 @@ def validate_existing_accuracy(symbol, predictions_df):
         vprint(f"Error validating accuracy: {e}")
         return accuracy_info
 
-def ask_user_prediction_choice(symbol, existing_predictions, accuracy_info):
-    """Ask user whether to use cached predictions or generate new ones"""
+def ask_user_7day_cycle_choice(symbol, existing_predictions, accuracy_info):
+    """Ask user about 7-day cycle predictions with accuracy feedback"""
     try:
-        console.print(f"\n[bold yellow]📊 EXISTING PREDICTIONS FOUND FOR {symbol.upper()}[/]")
+        console.print(f"\n[bold cyan]📅 ACTIVE 7-DAY CYCLE FOUND FOR {symbol.upper()}[/]")
         
-        if accuracy_info['has_results']:
-            console.print(f"[white]Yesterday's Day +1 Prediction Accuracy:[/]")
-            console.print(f"[white]Target: ${accuracy_info['day1_target']:.2f} | Actual: ${accuracy_info['day1_actual']:.2f} | Error: {accuracy_info['day1_error']:.1f}%[/]")
+        # Show cycle information
+        if accuracy_info.get('cycle_start_date'):
+            cycle_start = datetime.fromisoformat(accuracy_info['cycle_start_date'])
+            days_in_cycle = (datetime.now().date() - cycle_start.date()).days + 1
             
-            if accuracy_info['day1_error'] < 1.0:
-                status_color, status_icon = "bright_green", "🎯"
-            elif accuracy_info['day1_error'] < 2.0:
-                status_color, status_icon = "green", "✅"
-            elif accuracy_info['day1_error'] < 3.0:
-                status_color, status_icon = "yellow", "⚠️"
-            else:
-                status_color, status_icon = "red", "❌"
+            console.print(f"[white]Cycle Started: {cycle_start.strftime('%B %d, %Y')} (Day {days_in_cycle}/7)[/]")
+        
+        # Show accuracy for completed days
+        if accuracy_info.get('daily_accuracy'):
+            console.print(f"\n[bold white]📊 ACCURACY FOR COMPLETED DAYS:[/]")
             
-            console.print(f"[{status_color}]{status_icon} {accuracy_info['accuracy_tier']}[/]")
+            table = Table(box=box.ROUNDED)
+            table.add_column("Date", style="cyan")
+            table.add_column("Predicted", style="white")
+            table.add_column("Actual", style="white")
+            table.add_column("Error", style="yellow")
+            table.add_column("Grade", style="green")
+            
+            for day_result in accuracy_info['daily_accuracy']:
+                error_pct = day_result['error_pct']
+                tier = day_result['accuracy_tier']
+                
+                if tier == 'Excellent':
+                    grade_color, grade_icon = "bright_green", "🎯"
+                elif tier == 'Good':
+                    grade_color, grade_icon = "green", "✅"
+                elif tier == 'Acceptable':
+                    grade_color, grade_icon = "yellow", "⚠️"
+                else:
+                    grade_color, grade_icon = "red", "❌"
+                
+                table.add_row(
+                    day_result['date'],
+                    f"${day_result['predicted']:.2f}",
+                    f"${day_result['actual']:.2f}",
+                    f"{error_pct:.1f}%",
+                    f"[{grade_color}]{grade_icon} {tier}[/]"
+                )
+            
+            console.print(table)
+            
+            # Show overall cycle performance
+            if accuracy_info.get('overall_accuracy'):
+                performance = accuracy_info.get('cycle_performance', 'Unknown')
+                if performance == 'Excellent':
+                    perf_color, perf_icon = "bright_green", "🎯"
+                elif performance == 'Good':
+                    perf_color, perf_icon = "green", "✅"
+                elif performance == 'Acceptable':
+                    perf_color, perf_icon = "yellow", "⚠️"
+                else:
+                    perf_color, perf_icon = "red", "❌"
+                
+                console.print(f"\n[bold white]🏆 Cycle Performance: [{perf_color}]{perf_icon} {performance} ({accuracy_info['overall_accuracy']:.1f}% accuracy)[/]")
+        
+        # Show remaining predictions
+        today = datetime.now().date()
+        future_predictions = [p for p in existing_predictions if datetime.fromisoformat(p['Date']).date() > today]
+        
+        if future_predictions:
+            console.print(f"\n[bold white]📈 REMAINING PREDICTIONS IN CYCLE:[/]")
+            
+            table = Table(box=box.ROUNDED)
+            table.add_column("Day", style="cyan")
+            table.add_column("Date", style="white")
+            table.add_column("Predicted Price", style="green")
+            table.add_column("Change", style="yellow")
+            
+            current_price = future_predictions[0].get('Current_Price', 0)
+            
+            for i, pred in enumerate(future_predictions[:7], 1):
+                pred_date = datetime.fromisoformat(pred['Date'])
+                predicted_price = pred['Predicted_Price']
+                change_pct = ((predicted_price - current_price) / current_price * 100) if current_price > 0 else 0
+                
+                table.add_row(
+                    f"Day {i}",
+                    pred_date.strftime("%m/%d"),
+                    f"${predicted_price:.2f}",
+                    f"{change_pct:+.1f}%"
+                )
+            
+            console.print(table)
         
         console.print(f"\n[bold white]🤔 WHAT WOULD YOU LIKE TO DO?[/]")
-        console.print(f"[white]1. Use today's cached predictions (fast)[/]")
-        console.print(f"[white]2. Generate new predictions (will save old ones for learning)[/]")
-        console.print(f"[dim]Press Enter for option 2 (generate new)[/]")
+        console.print(f"[white]1. View cached 7-day cycle (with accuracy feedback)[/]")
+        console.print(f"[white]2. Start new 7-day cycle (will save current cycle for training)[/]")
+        console.print(f"[dim]Press Enter for option 1 (view cached)[/]")
         
         choice = input("\nEnter choice (1 or 2): ").strip()
         
-        if choice == "1":
-            return "use_cached"
+        if choice == "2":
+            return "new_cycle"
         else:
-            return "generate_new"
+            return "view_cycle"
             
     except Exception as e:
-        vprint(f"Error asking user choice: {e}")
-        return "generate_new"
+        vprint(f"Error asking user 7-day cycle choice: {e}")
+        return "view_cycle"
 
-def display_cached_predictions(symbol, predictions):
-    """Display cached predictions in a nice format"""
+def display_7day_cycle(symbol, predictions, accuracy_info):
+    """Display 7-day cycle with accuracy feedback"""
     try:
-        console.print(f"\n[green]Found existing predictions for {symbol.upper()} from today![/]")
-        console.print("[green]Returning cached predictions to avoid redundant analysis...[/]")
+        console.print(f"\n[bold green]📅 7-DAY CYCLE FOR {symbol.upper()}[/]")
         
-        # Get the most recent prediction
-        if isinstance(predictions, list) and predictions:
-            latest_prediction = predictions[-1]
-            
-            # Create a simple table for cached predictions
-            table = Table(title=f"Ara AI Stock Analysis: {symbol.upper()}")
-            table.add_column("Metric", style="cyan", no_wrap=True)
-            table.add_column("Value", style="white")
-            table.add_column("Details", style="dim")
-            
-            table.add_row("Current Price", f"${latest_prediction.get('Current_Price', 0):.2f}", "Latest market data")
-            table.add_row("Day +1 Prediction", f"${latest_prediction.get('Predicted_Price', 0):.2f}", 
-                         f"{((latest_prediction.get('Predicted_Price', 0) - latest_prediction.get('Current_Price', 0)) / latest_prediction.get('Current_Price', 1) * 100):+.1f}%")
-            table.add_row("Status", "Retrieved from cache", "No new analysis needed")
-            
-            console.print(table)
-            return True
+        # Get current price
+        ticker = yf.Ticker(symbol)
+        current_data = ticker.history(period="1d")
+        current_price = current_data['Close'].iloc[-1] if not current_data.empty else 0
         
-        return False
+        # Show cycle overview
+        if accuracy_info.get('cycle_start_date'):
+            cycle_start = datetime.fromisoformat(accuracy_info['cycle_start_date'])
+            days_in_cycle = (datetime.now().date() - cycle_start.date()).days + 1
+            
+            console.print(f"[white]Cycle Started: {cycle_start.strftime('%B %d, %Y')} (Day {days_in_cycle}/7)[/]")
+            console.print(f"[white]Current Price: ${current_price:.2f}[/]")
+            
+            if accuracy_info.get('overall_accuracy'):
+                performance = accuracy_info.get('cycle_performance', 'Unknown')
+                console.print(f"[white]Cycle Performance: {performance} ({accuracy_info['overall_accuracy']:.1f}% accuracy)[/]")
+        
+        # Create comprehensive 7-day table
+        table = Table(title=f"📈 {symbol.upper()} - 7-Day Prediction Cycle", box=box.ROUNDED)
+        table.add_column("Day", style="cyan", no_wrap=True)
+        table.add_column("Date", style="white")
+        table.add_column("Predicted", style="green", justify="right")
+        table.add_column("Actual", style="blue", justify="right")
+        table.add_column("Error", style="yellow", justify="right")
+        table.add_column("Status", style="magenta")
+        
+        today = datetime.now().date()
+        
+        # Sort predictions by date
+        sorted_predictions = sorted(predictions, key=lambda x: datetime.fromisoformat(x['Date']))
+        
+        for i, pred in enumerate(sorted_predictions[:7], 1):
+            pred_date = datetime.fromisoformat(pred['Date']).date()
+            predicted_price = pred['Predicted_Price']
+            
+            # Check if we have actual data for this date
+            actual_price = None
+            error_str = "N/A"
+            status = "Future"
+            
+            if pred_date <= today:
+                # Try to get actual price
+                try:
+                    actual_data = ticker.history(start=pred_date, end=pred_date + timedelta(days=2))
+                    if not actual_data.empty:
+                        actual_price = actual_data['Close'].iloc[0]
+                        error_pct = abs(predicted_price - actual_price) / actual_price * 100
+                        error_str = f"{error_pct:.1f}%"
+                        
+                        if error_pct < 1.0:
+                            status = "🎯 Excellent"
+                        elif error_pct < 2.0:
+                            status = "✅ Good"
+                        elif error_pct < 3.0:
+                            status = "⚠️ Acceptable"
+                        else:
+                            status = "❌ Poor"
+                except:
+                    status = "📊 Validating"
+            elif pred_date == today:
+                status = "📍 Today"
+            
+            table.add_row(
+                f"Day {i}",
+                pred_date.strftime("%m/%d"),
+                f"${predicted_price:.2f}",
+                f"${actual_price:.2f}" if actual_price else "TBD",
+                error_str,
+                status
+            )
+        
+        console.print(table)
+        
+        # Show summary statistics
+        if accuracy_info.get('daily_accuracy'):
+            validated_count = len(accuracy_info['daily_accuracy'])
+            console.print(f"\n[bold white]📊 CYCLE SUMMARY[/]")
+            console.print(f"[white]Days Completed: {validated_count}/7[/]")
+            console.print(f"[white]Days Remaining: {7 - validated_count}[/]")
+            
+            if accuracy_info.get('overall_accuracy'):
+                console.print(f"[white]Current Accuracy: {accuracy_info['overall_accuracy']:.1f}%[/]")
+        
+        return True
         
     except Exception as e:
-        vprint(f"Error displaying cached predictions: {e}")
+        vprint(f"Error displaying 7-day cycle: {e}")
         return False
+
+def save_7day_cycle_for_training(symbol, predictions, accuracy_info):
+    """Save completed 7-day cycle data for model training"""
+    try:
+        training_file = 'cycle_training_data.csv'
+        
+        # Create training record from the cycle
+        cycle_data = {
+            'symbol': symbol,
+            'cycle_start': accuracy_info.get('cycle_start_date', datetime.now().date().isoformat()),
+            'cycle_end': datetime.now().date().isoformat(),
+            'predictions_count': len(predictions),
+            'validated_predictions': accuracy_info.get('predictions_validated', 0),
+            'overall_accuracy': accuracy_info.get('overall_accuracy', 0),
+            'cycle_performance': accuracy_info.get('cycle_performance', 'Unknown'),
+            'daily_accuracy_data': json.dumps(accuracy_info.get('daily_accuracy', [])),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Load existing training data or create new
+        if os.path.exists(training_file):
+            training_df = pd.read_csv(training_file)
+            new_df = pd.concat([training_df, pd.DataFrame([cycle_data])], ignore_index=True)
+        else:
+            new_df = pd.DataFrame([cycle_data])
+        
+        # Save training data
+        new_df.to_csv(training_file, index=False)
+        
+        console.print(f"[green]✅ 7-day cycle saved for model training[/]")
+        console.print(f"[white]Cycle Performance: {cycle_data['cycle_performance']} ({cycle_data['overall_accuracy']:.1f}% accuracy)[/]")
+        
+        return True
+        
+    except Exception as e:
+        vprint(f"Error saving 7-day cycle for training: {e}")
+        return False
+
+def train_model_with_completed_cycles(symbol, completed_cycles):
+    """Train model using completed 7-day cycles"""
+    try:
+        console.print(f"[bold blue]🎓 TRAINING MODEL WITH COMPLETED CYCLES[/]")
+        
+        total_cycles = len(completed_cycles)
+        total_predictions = sum(cycle['accuracy_data']['predictions_validated'] for cycle in completed_cycles)
+        avg_accuracy = sum(cycle['accuracy_data']['accuracy_rate'] for cycle in completed_cycles) / total_cycles if total_cycles > 0 else 0
+        
+        console.print(f"[white]Training Data:[/]")
+        console.print(f"[white]  • Completed Cycles: {total_cycles}[/]")
+        console.print(f"[white]  • Total Predictions: {total_predictions}[/]")
+        console.print(f"[white]  • Average Accuracy: {avg_accuracy:.1f}%[/]")
+        
+        # Show cycle performance summary
+        table = Table(title="Completed Cycles Training Data", box=box.ROUNDED)
+        table.add_column("Cycle", style="cyan")
+        table.add_column("Start Date", style="white")
+        table.add_column("Predictions", style="green")
+        table.add_column("Accuracy", style="yellow")
+        table.add_column("Performance", style="magenta")
+        
+        for i, cycle in enumerate(completed_cycles, 1):
+            accuracy_data = cycle['accuracy_data']
+            performance = "Excellent" if accuracy_data['accuracy_rate'] > 85 else \
+                         "Good" if accuracy_data['accuracy_rate'] > 70 else \
+                         "Acceptable" if accuracy_data['accuracy_rate'] > 55 else "Poor"
+            
+            table.add_row(
+                f"Cycle {i}",
+                cycle['cycle_start'],
+                str(accuracy_data['predictions_validated']),
+                f"{accuracy_data['accuracy_rate']:.1f}%",
+                performance
+            )
+        
+        console.print(table)
+        
+        # Apply training insights to model parameters
+        if avg_accuracy > 80:
+            console.print(f"[green]🎯 High accuracy detected - using optimized model parameters[/]")
+            return {"training_boost": 1.2, "confidence_boost": 1.1}
+        elif avg_accuracy > 65:
+            console.print(f"[yellow]📈 Good accuracy - using standard model parameters[/]")
+            return {"training_boost": 1.0, "confidence_boost": 1.0}
+        else:
+            console.print(f"[red]⚠️  Lower accuracy - using conservative model parameters[/]")
+            return {"training_boost": 0.8, "confidence_boost": 0.9}
+        
+    except Exception as e:
+        vprint(f"Error training model with completed cycles: {e}")
+        return {"training_boost": 1.0, "confidence_boost": 1.0}
 
 def save_old_predictions_for_learning(symbol, existing_predictions, accuracy_info):
     """Save old predictions to accuracy tracking for machine learning"""
@@ -1756,26 +2159,31 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
         console.print(f"\n[bold white]Ara - AI Stock Analysis for {symbol.upper()}[/]")
         console.print(f"Training Days: {days} | Epochs: {epochs} | Device: {DEVICE_NAME}\n")
         
-        # Check for existing predictions with intelligent caching
-        existing_predictions, status, accuracy_info = check_existing_predictions(symbol, days=5)
+        # Check for existing 7-day cycle predictions
+        existing_predictions, status, accuracy_info = check_existing_predictions(symbol, days=7)
         
-        if status == "found_today":
-            # Ask user what to do with existing predictions
-            user_choice = ask_user_prediction_choice(symbol, existing_predictions, accuracy_info)
+        if status == "active_7day_cycle":
+            # Ask user about the active 7-day cycle
+            user_choice = ask_user_7day_cycle_choice(symbol, existing_predictions, accuracy_info)
             
-            if user_choice == "use_cached":
-                # Display cached predictions and return
-                if display_cached_predictions(symbol, existing_predictions):
+            if user_choice == "view_cycle":
+                # Display 7-day cycle with accuracy feedback
+                if display_7day_cycle(symbol, existing_predictions, accuracy_info):
                     return True
                 else:
-                    console.print("[yellow]⚠️  Error displaying cached predictions, generating new ones...[/]")
-            elif user_choice == "generate_new":
-                # Save existing predictions to accuracy tracking before generating new ones
-                console.print("[yellow]🔄 Saving existing predictions for learning...[/]")
-                save_old_predictions_for_learning(symbol, existing_predictions, accuracy_info)
-        elif status == "recent_found":
-            console.print(f"[yellow]ℹ️  Found recent predictions for {symbol} (within 3 days)[/]")
-            console.print("[white]Generating fresh analysis...[/]")
+                    console.print("[yellow]⚠️  Error displaying 7-day cycle, generating new one...[/]")
+            elif user_choice == "new_cycle":
+                # Save current cycle for training and start new one
+                console.print("[yellow]🔄 Saving current 7-day cycle for model training...[/]")
+                save_7day_cycle_for_training(symbol, existing_predictions, accuracy_info)
+        elif status == "new_cycle_needed":
+            # Use completed cycles for model training
+            console.print(f"[green]🎓 Found completed 7-day cycles for model training![/]")
+            completed_cycles = accuracy_info.get("completed_cycles", [])
+            if completed_cycles:
+                train_model_with_completed_cycles(symbol, completed_cycles)
+        elif status == "no_recent_predictions":
+            console.print(f"[blue]🆕 Starting first 7-day prediction cycle for {symbol}[/]")
         
         # Validate ALL previous predictions first (this also moves old predictions to accuracy tracking)
         validation_summary = validate_and_cleanup_predictions()
@@ -1930,7 +2338,7 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
         with console.status("Generating high-accuracy predictions..."):
             if training_results:
                 # Use trained ensemble models
-                predictions_scaled = make_ultra_accurate_predictions(X_final, training_results, days=5)
+                predictions_scaled = make_ultra_accurate_predictions(X_final, training_results, days=7)
                 
                 # CRITICAL: Inverse transform predictions back to actual price scale
                 if predictions_scaled:
@@ -2269,8 +2677,8 @@ def smart_trade_analysis(symbol, days=60, epochs=10):
             "Latest market data"
         )
         
-        # Predictions
-        for i, pred in enumerate(predictions[:3]):
+        # Predictions - Show all 7 days
+        for i, pred in enumerate(predictions[:7]):
             days_ahead = i + 1
             change_pct = ((pred - current_price) / current_price * 100) if current_price else 0
             change_color = "green" if change_pct > 0 else "red"
