@@ -1,0 +1,111 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meridianalgo"
+version = "2.0.1"
+description = "Advanced AI Stock Analysis with Ensemble ML Models and Intelligent Caching"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "MeridianAlgo Team", email = "support@meridianalgo.com"}
+]
+maintainers = [
+    {name = "MeridianAlgo Team", email = "support@meridianalgo.com"}
+]
+keywords = [
+    "stock analysis", "machine learning", "AI", "financial prediction",
+    "ensemble models", "LSTM", "random forest", "gradient boosting",
+    "technical indicators", "market prediction", "algorithmic trading",
+    "GPU acceleration", "intelligent caching", "prediction accuracy"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry", 
+    "Intended Audience :: Developers",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Natural Language :: English",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "torch>=1.12.0",
+    "scikit-learn>=1.1.0",
+    "pandas>=1.5.0", 
+    "numpy>=1.21.0",
+    "yfinance>=0.1.87",
+    "requests>=2.28.0",
+    "rich>=12.0.0"
+]
+
+[project.optional-dependencies]
+gpu-nvidia = ["torch[cuda]"]
+gpu-amd = ["torch-directml"]
+gpu-intel = ["intel-extension-for-pytorch"]
+performance = ["numba>=0.56.0", "joblib>=1.2.0"]
+dev = ["pytest>=7.0.0", "flake8>=5.0.0", "black>=22.0.0"]
+all = [
+    "numba>=0.56.0", 
+    "joblib>=1.2.0",
+    "pytest>=7.0.0", 
+    "flake8>=5.0.0", 
+    "black>=22.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/MeridianAlgo/Ara"
+Documentation = "https://github.com/MeridianAlgo/Ara/blob/main/README.md"
+Repository = "https://github.com/MeridianAlgo/Ara"
+"Bug Tracker" = "https://github.com/MeridianAlgo/Ara/issues"
+PyPI = "https://pypi.org/project/meridianalgo/"
+
+[project.scripts]
+ara = "meridianalgo.cli:main"
+meridianalgo = "meridianalgo.cli:main"
+
+[tool.setuptools]
+packages = ["meridianalgo"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+meridianalgo = ["*.md", "*.txt", "*.json"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+exclude = [".git", "__pycache__", "build", "dist", ".eggs"]
