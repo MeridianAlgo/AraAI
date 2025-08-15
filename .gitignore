@@ -1,15 +1,10 @@
-# Ara AI Stock Analysis Platform - Comprehensive .gitignore
+# Ara AI - Enhanced .gitignore
 
-# ===== PYTHON =====
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -23,7 +18,6 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -47,65 +41,10 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
 .hypothesis/
 .pytest_cache/
-cover/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# pdm
-.pdm.toml
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# Virtual environments
 .env
 .venv
 env/
@@ -114,120 +53,14 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# ===== ARA AI SPECIFIC =====
-# Prediction data files
-predictions.csv
-prediction_accuracy.csv
-online_learning_data.csv
-learning_params_*.json
-
-# Model files and checkpoints
-*.pkl
-*.joblib
-*.h5
-*.pth
-*.pt
-models/
-checkpoints/
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Cache directories
-cache/
-.cache/
-__cache__/
-
-# Temporary data files
-temp/
-tmp/
-*.tmp
-
-# Log files
-*.log
-logs/
-ara_*.log
-training_*.log
-
-# Configuration files with sensitive data
-config_local.py
-secrets.py
-api_keys.py
-.secrets
-
-# Data directories
-data/raw/
-data/processed/
-data/external/
-historical_data/
-market_data/
-
-# Output directories
-output/
-results/
-reports/
-plots/
-figures/
-
-# Backup files
-*.bak
-*.backup
-*~
-
-# ===== MACHINE LEARNING =====
-# Jupyter notebook checkpoints
-.ipynb_checkpoints/
-
-# MLflow
-mlruns/
-mlartifacts/
-
-# Weights & Biases
-wandb/
-
-# TensorBoard logs
-runs/
-tensorboard_logs/
-
-# Model artifacts
-artifacts/
-experiments/
-
-# ===== DEVELOPMENT =====
-# IDE files
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS generated files
+# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -236,113 +69,30 @@ experiments/
 ehthumbs.db
 Thumbs.db
 
-# Windows
-*.lnk
+# Ara AI specific
+predictions.csv
+prediction_accuracy.csv
+online_learning_data.csv
+*.log
+cache/
+data/
+models/
+temp/
 
-# Linux
-*~
-
-# ===== DOCUMENTATION =====
-# Sphinx build
-_build/
-_static/
-_templates/
-
-# ===== TESTING =====
-# Test files (if any remain)
-test_*.py
-*_test.py
-tests/
-.pytest_cache/
-
-# ===== DEPLOYMENT =====
-# Docker
-.dockerignore
-Dockerfile.local
-
-# Kubernetes
-*.yaml.local
-*.yml.local
-
-# ===== FINANCIAL DATA =====
-# API keys and credentials
-*.key
-*.pem
-*.crt
-credentials.json
-auth.json
-
-# Market data files
-*.csv
-*.json
-*.xml
-*.xlsx
-*.xls
-
-# Exclude specific files but allow some
-!requirements.txt
-!README.md
-!LICENSE
-!.gitignore
-!ara.py
-!install.bat
-!install.sh
-!run_ara.py
-
-# ===== PERFORMANCE =====
-# Profiling data
-*.prof
-*.profile
-
-# Memory dumps
-*.dump
-*.dmp
-
-# ===== SECURITY =====
-# Environment variables
-.env*
-!.env.example
-
-# SSH keys
-id_rsa
-id_rsa.pub
-*.pem
-
-# SSL certificates
-*.crt
-*.key
-*.p12
-*.pfx
-
-# ===== CUSTOM EXCLUSIONS =====
-# Newsletter system (if integrated)
-newsletter_generator/
-newsletters/
-ai_newsletter_system/
-
-# Temporary development files
-scratch/
-playground/
-experiments/
-dev_notes.md
-TODO.md
-
-# Large files
-*.zip
+# Build artifacts
 *.tar.gz
-*.rar
-*.7z
+*.whl
+*.zip
 
-# Media files
-*.mp4
-*.avi
-*.mov
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
+# Security
+*.key
+*.pem
+*.crt
+config/*.ini
+.env.*
 
-# Documentation builds
-docs/build/
-site/
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup

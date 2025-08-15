@@ -33,7 +33,7 @@ def read_requirements():
 
 setup(
     name="meridianalgo",
-    version="2.0.1",  # Major version bump for enhanced Ara AI integration
+    version="2.1.0",  # Major version bump for enhanced Ara AI integration
     author="MeridianAlgo Team",
     author_email="support@meridianalgo.com",
     description="Advanced AI Stock Analysis with Ensemble ML Models and Intelligent Caching",

@@ -3,6 +3,7 @@
 **Advanced Machine Learning Stock Prediction System with Ensemble Models**
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://img.shields.io/pypi/v/meridianalgo.svg)](https://pypi.org/project/meridianalgo/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Accuracy: 78-85%](https://img.shields.io/badge/Accuracy-78--85%25-green.svg)](https://github.com/MeridianAlgo/Ara)
 [![No API Keys](https://img.shields.io/badge/API%20Keys-Not%20Required-brightgreen.svg)](https://github.com/MeridianAlgo/Ara)
@@ -10,6 +11,42 @@
 [![GitHub Forks](https://img.shields.io/github/forks/MeridianAlgo/Ara?style=social)](https://github.com/MeridianAlgo/Ara/network/members)
 
 > **Professional-grade stock prediction system using ensemble machine learning models with real-time market data integration and automated validation.**
+
+## 📦 Python Package Available
+
+**MeridianAlgo** is now available as a Python package on PyPI! Install it easily:
+
+```bash
+pip install meridianalgo
+```
+
+### Quick Start with Package
+```python
+from meridianalgo import quick_predict, analyze_accuracy
+
+# Quick prediction
+result = quick_predict('AAPL', days=5)
+print(f"AAPL predictions: {result}")
+
+# Analyze accuracy
+accuracy = analyze_accuracy('AAPL')
+print(f"Accuracy: {accuracy['accuracy_rate']:.1f}%")
+```
+
+### Command Line Interface
+```bash
+# Predict stock prices
+ara AAPL --days 7
+
+# Show accuracy statistics
+ara --accuracy AAPL
+
+# Validate previous predictions
+ara --validate
+
+# Show system information
+ara --system-info
+```
 
 ## ✨ Key Features
 
