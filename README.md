@@ -433,3 +433,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [Report Bug](https://github.com/MeridianAlgo/Ara/issues) • [Request Feature](https://github.com/MeridianAlgo/Ara/issues) • [Documentation](https://github.com/MeridianAlgo/Ara/wiki)
 
 </div>
+
+*Made with ❤️ by [MeridianAlgo](https://github.com/MeridianAlgo)*
+<img width="10" height="10" alt="Quantum Meridian (1)" src="https://github.com/user-attachments/assets/3ea06475-be6d-4bf7-a311-c3cb9ccbf8e2" />
