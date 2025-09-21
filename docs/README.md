@@ -1,6 +1,6 @@
 # 📚 ARA AI Documentation
 
-**Complete documentation for the world's most advanced stock prediction system**
+**Complete documentation for the world's most advanced stock prediction system :) (We dream lol)**
 
 ## 🚀 **Getting Started**
 
