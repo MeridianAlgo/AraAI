@@ -1,3 +1,5 @@
+# Ara AI - Enhanced .gitignore
+
 # Python
 __pycache__/
 *.py[cod]
@@ -21,59 +23,76 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual Environment
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+.env
+.venv
+env/
 venv/
 ENV/
-env/
-.venv
+env.bak/
+venv.bak/
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
-
-# Models and Cache
-models/
-.ara_cache/
-*.pkl
-*.joblib
-*.h5
-*.pt
-*.pth
-
-# Data
-datasets/*.csv
-!datasets/README.md
-
-# Logs
-*.log
-logs/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.hypothesis/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
-# Environment
-.env
-.env.local
 
 # OS
-Thumbs.db
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Temporary
-*.tmp
-*.bak
-*.swp
+# Ara AI specific
+predictions.csv
+prediction_accuracy.csv
+online_learning_data.csv
+*.log
+cache/
+data/
+models/
 temp/
-tmp/
+
+# Build artifacts
+*.tar.gz
+*.whl
+*.zip
+
+# Security
+*.key
+*.pem
+*.crt
+config/*.ini
+.env.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup

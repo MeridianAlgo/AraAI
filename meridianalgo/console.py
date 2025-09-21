@@ -24,7 +24,7 @@ class ConsoleManager:
             return
         
         self.console.print(Panel(
-            "[bold green] Ara AI Stock Analysis Platform[/]\n"
+            "[bold green]🚀 Ara AI Stock Analysis Platform[/]\n"
             "[white]Enhanced with ensemble ML models and intelligent caching[/]",
             title="[bold blue]System Initialization[/]",
             border_style="blue"
@@ -36,9 +36,9 @@ class ConsoleManager:
             return
         
         if gpu_info['details']:
-            gpu_text = "\n".join([f" {detail}" for detail in gpu_info['details']])
+            gpu_text = "\n".join([f"✅ {detail}" for detail in gpu_info['details']])
         else:
-            gpu_text = " No GPU acceleration available"
+            gpu_text = "❌ No GPU acceleration available"
         
         self.console.print(Panel(
             gpu_text,
@@ -50,7 +50,7 @@ class ConsoleManager:
         """Print enhanced prediction results with patterns and analysis"""
         try:
             if not result:
-                self.console.print("[red] No prediction results to display[/]")
+                self.console.print("[red]❌ No prediction results to display[/]")
                 return
             
             symbol = result.get('symbol', 'Unknown')
@@ -71,7 +71,7 @@ class ConsoleManager:
             
             # Create main predictions table with confidence
             table = Table(
-                title=f" {symbol} Stock Predictions",
+                title=f"📈 {symbol} Stock Predictions",
                 box=box.ROUNDED,
                 show_header=True,
                 header_style="bold blue"
@@ -101,7 +101,7 @@ class ConsoleManager:
             self.console.print(table)
             
             # Print current price info
-            self.console.print(f"\n[bold white] Current Price: [green]${current_price:.2f}[/]")
+            self.console.print(f"\n[bold white]📊 Current Price: [green]${current_price:.2f}[/]")
             
             # Print pattern analysis
             pattern_summary = result.get('pattern_summary', {})
@@ -117,7 +117,7 @@ class ConsoleManager:
                     f"Signal: [{signal_color}]{signal}[/]\n"
                     f"Pattern Confidence: {confidence:.0f}%\n"
                     f"Total Patterns Detected: {pattern_summary.get('total_patterns_detected', 0)}",
-                    title="[bold magenta] Chart Pattern Analysis[/]",
+                    title="[bold magenta]📊 Chart Pattern Analysis[/]",
                     border_style="magenta"
                 ))
             
@@ -137,7 +137,7 @@ class ConsoleManager:
                     f"Risk Assessment: {analysis_summary.get('risk_grade', 'C')}\n"
                     f"Valuation: {analysis_summary.get('valuation_summary', 'Fair Value')}\n"
                     f"Market Sentiment: {analysis_summary.get('market_sentiment', 'Neutral')}",
-                    title="[bold green] Investment Analysis[/]",
+                    title="[bold green]💼 Investment Analysis[/]",
                     border_style="green"
                 ))
             
@@ -148,10 +148,10 @@ class ConsoleManager:
             # Print cache info if available
             if result.get('cached'):
                 cache_age = result.get('cache_age', 'Unknown')
-                self.console.print(f"[yellow] Using cached predictions (Age: {cache_age})[/]")
+                self.console.print(f"[yellow]💾 Using cached predictions (Age: {cache_age})[/]")
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying results: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying results: {e}[/]")
     
     def _print_detailed_analysis(self, company_analysis):
         """Print detailed company analysis in verbose mode"""
@@ -159,7 +159,7 @@ class ConsoleManager:
             # Financial Health Details
             financial = company_analysis.get('financial_health', {})
             if financial and 'error' not in financial:
-                fin_table = Table(title=" Financial Health", box=box.SIMPLE)
+                fin_table = Table(title="💰 Financial Health", box=box.SIMPLE)
                 fin_table.add_column("Metric", style="white")
                 fin_table.add_column("Value", style="cyan", justify="right")
                 
@@ -174,7 +174,7 @@ class ConsoleManager:
             # Risk Assessment Details
             risk = company_analysis.get('risk_assessment', {})
             if risk and 'error' not in risk:
-                risk_table = Table(title=" Risk Assessment", box=box.SIMPLE)
+                risk_table = Table(title="⚠️ Risk Assessment", box=box.SIMPLE)
                 risk_table.add_column("Risk Type", style="white")
                 risk_table.add_column("Level", style="yellow", justify="right")
                 
@@ -189,7 +189,7 @@ class ConsoleManager:
             # Technical Analysis Details
             technical = company_analysis.get('technical_analysis', {})
             if technical and 'error' not in technical:
-                tech_table = Table(title=" Technical Analysis", box=box.SIMPLE)
+                tech_table = Table(title="📈 Technical Analysis", box=box.SIMPLE)
                 tech_table.add_column("Indicator", style="white")
                 tech_table.add_column("Value", style="green", justify="right")
                 
@@ -205,13 +205,13 @@ class ConsoleManager:
                 self.console.print(tech_table)
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying detailed analysis: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying detailed analysis: {e}[/]")
     
     def print_accuracy_summary(self, accuracy_stats):
         """Print accuracy summary"""
         try:
             if not accuracy_stats:
-                self.console.print("[yellow]  No accuracy data available[/]")
+                self.console.print("[yellow]⚠️  No accuracy data available[/]")
                 return
             
             symbol = accuracy_stats.get('symbol', 'All')
@@ -223,7 +223,7 @@ class ConsoleManager:
             
             # Create accuracy table
             table = Table(
-                title=f" Accuracy Statistics - {symbol}",
+                title=f"📊 Accuracy Statistics - {symbol}",
                 box=box.ROUNDED,
                 show_header=True,
                 header_style="bold blue"
@@ -249,13 +249,13 @@ class ConsoleManager:
             self.console.print(table)
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying accuracy: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying accuracy: {e}[/]")
     
     def print_validation_summary(self, validation_result):
         """Print validation summary"""
         try:
             if not validation_result:
-                self.console.print("[yellow]  No validation results available[/]")
+                self.console.print("[yellow]⚠️  No validation results available[/]")
                 return
             
             validated = validation_result.get('validated', 0)
@@ -265,39 +265,39 @@ class ConsoleManager:
             avg_error = validation_result.get('avg_error', 0)
             
             self.console.print(Panel(
-                f"[green] Validated: {validated} predictions[/]\n"
-                f"[cyan] Accuracy Rate: {accuracy_rate:.1f}%[/]\n"
-                f"[bright_green] Excellent (<1%): {excellent_rate:.1f}%[/]\n"
-                f"[green] Good (<2%): {good_rate:.1f}%[/]\n"
-                f"[white] Average Error: {avg_error:.2f}%[/]",
+                f"[green]✅ Validated: {validated} predictions[/]\n"
+                f"[cyan]📈 Accuracy Rate: {accuracy_rate:.1f}%[/]\n"
+                f"[bright_green]🎯 Excellent (<1%): {excellent_rate:.1f}%[/]\n"
+                f"[green]✅ Good (<2%): {good_rate:.1f}%[/]\n"
+                f"[white]📉 Average Error: {avg_error:.2f}%[/]",
                 title="[bold blue]Validation Summary[/]",
                 border_style="blue"
             ))
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying validation: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying validation: {e}[/]")
     
     def print_error(self, message):
         """Print error message"""
-        self.console.print(f"[red] {message}[/]")
+        self.console.print(f"[red]❌ {message}[/]")
     
     def print_warning(self, message):
         """Print warning message"""
-        self.console.print(f"[yellow]  {message}[/]")
+        self.console.print(f"[yellow]⚠️  {message}[/]")
     
     def print_success(self, message):
         """Print success message"""
-        self.console.print(f"[green] {message}[/]")
+        self.console.print(f"[green]✅ {message}[/]")
     
     def print_info(self, message):
         """Print info message"""
-        self.console.print(f"[cyan]ℹ  {message}[/]")
+        self.console.print(f"[cyan]ℹ️  {message}[/]")
     
     def print_company_analysis(self, analysis):
         """Print comprehensive company analysis"""
         try:
             if not analysis or 'error' in analysis:
-                self.console.print("[red] No company analysis available[/]")
+                self.console.print("[red]❌ No company analysis available[/]")
                 return
             
             symbol = analysis.get('symbol', 'Unknown')
@@ -308,7 +308,7 @@ class ConsoleManager:
                 f"[bold white]{company_name}[/] ([cyan]{symbol}[/])\n"
                 f"[white]Sector: {analysis.get('sector', 'Unknown')} | Industry: {analysis.get('industry', 'Unknown')}[/]\n"
                 f"[white]Market Cap: ${analysis.get('market_cap', 0):,.0f}[/]",
-                title="[bold blue] Company Overview[/]",
+                title="[bold blue]📊 Company Overview[/]",
                 border_style="blue"
             ))
             
@@ -320,13 +320,13 @@ class ConsoleManager:
             self.console.print(Panel(
                 f"[bold white]Overall Investment Score: {overall_score:.1f}/100[/]\n"
                 f"[bold white]Recommendation: [{rec_color}]{recommendation}[/]",
-                title="[bold green] Investment Summary[/]",
+                title="[bold green]🎯 Investment Summary[/]",
                 border_style="green"
             ))
             
             # Create summary table
             summary_table = Table(
-                title=" Analysis Summary",
+                title="📋 Analysis Summary",
                 box=box.ROUNDED,
                 show_header=True,
                 header_style="bold blue"
@@ -387,7 +387,7 @@ class ConsoleManager:
                 self._print_detailed_company_sections(analysis)
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying company analysis: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying company analysis: {e}[/]")
     
     def _print_detailed_company_sections(self, analysis):
         """Print detailed company analysis sections"""
@@ -395,7 +395,7 @@ class ConsoleManager:
             # Financial Health Details
             financial = analysis.get('financial_health', {})
             if financial and 'error' not in financial:
-                fin_table = Table(title=" Financial Health Details", box=box.SIMPLE)
+                fin_table = Table(title="💰 Financial Health Details", box=box.SIMPLE)
                 fin_table.add_column("Metric", style="white")
                 fin_table.add_column("Value", style="cyan", justify="right")
                 fin_table.add_column("Assessment", style="green")
@@ -421,7 +421,7 @@ class ConsoleManager:
             # Risk Assessment Details
             risk = analysis.get('risk_assessment', {})
             if risk and 'error' not in risk:
-                risk_table = Table(title=" Risk Assessment Details", box=box.SIMPLE)
+                risk_table = Table(title="⚠️ Risk Assessment Details", box=box.SIMPLE)
                 risk_table.add_column("Risk Factor", style="white")
                 risk_table.add_column("Level", style="yellow")
                 risk_table.add_column("Value", style="cyan", justify="right")
@@ -437,7 +437,7 @@ class ConsoleManager:
             # Technical Analysis Details
             technical = analysis.get('technical_analysis', {})
             if technical and 'error' not in technical:
-                tech_table = Table(title=" Technical Analysis Details", box=box.SIMPLE)
+                tech_table = Table(title="📈 Technical Analysis Details", box=box.SIMPLE)
                 tech_table.add_column("Indicator", style="white")
                 tech_table.add_column("Value", style="green", justify="right")
                 tech_table.add_column("Signal", style="cyan")
@@ -470,7 +470,7 @@ class ConsoleManager:
             # Market Intelligence
             market_intel = analysis.get('market_intelligence', {})
             if market_intel and 'error' not in market_intel:
-                intel_table = Table(title=" Market Intelligence", box=box.SIMPLE)
+                intel_table = Table(title="🧠 Market Intelligence", box=box.SIMPLE)
                 intel_table.add_column("Factor", style="white")
                 intel_table.add_column("Value", style="cyan")
                 
@@ -487,26 +487,26 @@ class ConsoleManager:
                 self.console.print(intel_table)
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying detailed sections: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying detailed sections: {e}[/]")
     
     def _get_status_emoji(self, score):
         """Get status emoji based on score"""
         if score >= 80:
-            return " Excellent"
+            return "🟢 Excellent"
         elif score >= 70:
-            return " Good"
+            return "🔵 Good"
         elif score >= 60:
-            return " Fair"
+            return "🟡 Fair"
         elif score >= 50:
-            return " Poor"
+            return "🟠 Poor"
         else:
-            return " Critical"
+            return "🔴 Critical"
     
     def print_ai_analysis(self, analysis):
         """Print AI-powered company analysis"""
         try:
             if not analysis or 'error' in analysis:
-                self.console.print("[red] No AI analysis available[/]")
+                self.console.print("[red]❌ No AI analysis available[/]")
                 if 'error' in analysis:
                     self.console.print(f"[yellow]Error: {analysis['error']}[/]")
                 return
@@ -516,9 +516,9 @@ class ConsoleManager:
             
             # Company Header with AI badge
             self.console.print(Panel(
-                f"[bold white]{company_name}[/] ([cyan]{symbol}[/]) [bright_magenta] AI-Powered[/]\n"
+                f"[bold white]{company_name}[/] ([cyan]{symbol}[/]) [bright_magenta]🤖 AI-Powered[/]\n"
                 f"[white]Sector: {analysis.get('sector', 'Unknown')} | Industry: {analysis.get('industry', 'Unknown')}[/]",
-                title="[bold blue] AI Company Analysis[/]",
+                title="[bold blue]🤖 AI Company Analysis[/]",
                 border_style="blue"
             ))
             
@@ -532,7 +532,7 @@ class ConsoleManager:
                 f"[bold white]AI Investment Score: {overall_score:.1f}/100[/]\n"
                 f"[bold white]AI Recommendation: [{rec_color}]{recommendation}[/]\n"
                 f"[white]AI Confidence: {ai_confidence*100:.0f}%[/]",
-                title="[bold green] AI Investment Summary[/]",
+                title="[bold green]🎯 AI Investment Summary[/]",
                 border_style="green"
             ))
             
@@ -549,7 +549,7 @@ class ConsoleManager:
                     f"[white]Market Sentiment: [{sentiment_color}]{sentiment.upper()}[/]\n"
                     f"[white]Confidence: {confidence*100:.0f}%[/]\n"
                     f"[white]Analysis: {reasoning}[/]",
-                    title="[bold magenta] AI Sentiment Analysis[/]",
+                    title="[bold magenta]🧠 AI Sentiment Analysis[/]",
                     border_style="magenta"
                 ))
             
@@ -562,7 +562,7 @@ class ConsoleManager:
                     insights_text = "\n".join([f"• {insight}" for insight in ai_insights[:3]])
                     self.console.print(Panel(
                         insights_text,
-                        title="[bold cyan] AI Investment Insights[/]",
+                        title="[bold cyan]💡 AI Investment Insights[/]",
                         border_style="cyan"
                     ))
                 
@@ -572,7 +572,7 @@ class ConsoleManager:
                     risks_text = "\n".join([f"• {risk}" for risk in ai_risks[:3]])
                     self.console.print(Panel(
                         risks_text,
-                        title="[bold red] AI Risk Analysis[/]",
+                        title="[bold red]⚠️ AI Risk Analysis[/]",
                         border_style="red"
                     ))
                 
@@ -582,7 +582,7 @@ class ConsoleManager:
                     opps_text = "\n".join([f"• {opp}" for opp in ai_opportunities[:3]])
                     self.console.print(Panel(
                         opps_text,
-                        title="[bold green] AI Growth Opportunities[/]",
+                        title="[bold green]🚀 AI Growth Opportunities[/]",
                         border_style="green"
                     ))
             
@@ -599,7 +599,7 @@ class ConsoleManager:
                     f"[white]Risk Category: [{risk_color}]{risk_category.upper()}[/]\n"
                     f"[white]Confidence: {risk_confidence*100:.0f}%[/]\n"
                     f"[white]Summary: {risk_summary}[/]",
-                    title="[bold red] AI Risk Assessment[/]",
+                    title="[bold red]⚠️ AI Risk Assessment[/]",
                     border_style="red"
                 ))
             
@@ -616,14 +616,14 @@ class ConsoleManager:
                     f"[white]Growth Potential: [{growth_color}]{growth_category.upper()}[/]\n"
                     f"[white]Confidence: {growth_confidence*100:.0f}%[/]\n"
                     f"[white]Analysis: {growth_reasoning}[/]",
-                    title="[bold green] AI Growth Analysis[/]",
+                    title="[bold green]📈 AI Growth Analysis[/]",
                     border_style="green"
                 ))
             
             # Financial Metrics Summary
             financial_metrics = analysis.get('financial_metrics', {})
             if financial_metrics and 'error' not in financial_metrics:
-                metrics_table = Table(title=" Key Financial Metrics", box=box.SIMPLE)
+                metrics_table = Table(title="📊 Key Financial Metrics", box=box.SIMPLE)
                 metrics_table.add_column("Metric", style="white")
                 metrics_table.add_column("Value", style="cyan", justify="right")
                 metrics_table.add_column("Trend", style="green")
@@ -635,7 +635,7 @@ class ConsoleManager:
                 
                 metrics_table.add_row("Current Price", f"${current_price:.2f}", "-")
                 metrics_table.add_row("1-Year Return", f"{price_1y:.1f}%", 
-                                    "" if price_1y > 0 else "" if price_1y < 0 else "")
+                                    "📈" if price_1y > 0 else "📉" if price_1y < 0 else "➡️")
                 metrics_table.add_row("Annual Volatility", f"{volatility:.1f}%", 
                                     "High" if volatility > 30 else "Moderate" if volatility > 15 else "Low")
                 if pe_ratio > 0:
@@ -647,7 +647,7 @@ class ConsoleManager:
             # Technical Signals
             technical_signals = analysis.get('technical_signals', {})
             if technical_signals and 'error' not in technical_signals:
-                tech_table = Table(title=" Technical Signals", box=box.SIMPLE)
+                tech_table = Table(title="📈 Technical Signals", box=box.SIMPLE)
                 tech_table.add_column("Signal", style="white")
                 tech_table.add_column("Value", style="cyan")
                 tech_table.add_column("Status", style="green")
@@ -657,7 +657,7 @@ class ConsoleManager:
                 momentum = technical_signals.get('momentum', 'neutral')
                 
                 trend_color = "green" if trend == 'bullish' else "red" if trend == 'bearish' else "yellow"
-                tech_table.add_row("Trend Direction", f"[{trend_color}]{trend.upper()}[/]", "" if trend == 'bullish' else "" if trend == 'bearish' else "")
+                tech_table.add_row("Trend Direction", f"[{trend_color}]{trend.upper()}[/]", "📈" if trend == 'bullish' else "📉" if trend == 'bearish' else "➡️")
                 tech_table.add_row("RSI", f"{rsi:.1f}", momentum.upper())
                 
                 self.console.print(tech_table)
@@ -669,7 +669,7 @@ class ConsoleManager:
                     f"[white]Size Category: {market_position.get('size_category', 'Unknown')}[/]\n"
                     f"[white]Market Position: {market_position.get('position_strength', 'Unknown')}[/]\n"
                     f"[white]Competitive Position: {market_position.get('competitive_position', 'Unknown')}[/]",
-                    title="[bold blue] Market Position[/]",
+                    title="[bold blue]🏢 Market Position[/]",
                     border_style="blue"
                 ))
             
@@ -688,7 +688,7 @@ class ConsoleManager:
                         f"[white]AI Recommendation: [{rec_color}]{rec_action}[/]\n"
                         f"[white]Confidence: {rec_confidence*100:.0f}%[/]\n"
                         f"[white]Reasoning: {rec_reasoning}[/]",
-                        title="[bold yellow] AI Recommendation Details[/]",
+                        title="[bold yellow]🤖 AI Recommendation Details[/]",
                         border_style="yellow"
                     ))
                 
@@ -700,18 +700,18 @@ class ConsoleManager:
                         f"[white]Base Case: ${ai_price_targets.get('base_case', 0):.2f}[/]\n"
                         f"[white]Bear Case: ${ai_price_targets.get('bear_case', 0):.2f}[/]\n"
                         f"[white]Time Horizon: 12 months[/]",
-                        title="[bold magenta] AI Price Targets[/]",
+                        title="[bold magenta]🎯 AI Price Targets[/]",
                         border_style="magenta"
                     ))
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying AI analysis: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying AI analysis: {e}[/]")
     
     def print_ml_predictions(self, result):
         """Print ML prediction results with enhanced formatting"""
         try:
             if not result:
-                self.console.print("[red] No ML results to display[/]")
+                self.console.print("[red]❌ No ML results to display[/]")
                 return
             
             symbol = result.get('symbol', 'Unknown')
@@ -726,14 +726,14 @@ class ConsoleManager:
                 f"[white]Model Type: {model_type}[/]\n"
                 f"[green]Model Accuracy: {accuracy:.1f}%[/]\n"
                 f"[cyan]Current Price: ${current_price:.2f}[/]",
-                title="[bold blue] Machine Learning Analysis[/]",
+                title="[bold blue]🤖 Machine Learning Analysis[/]",
                 border_style="blue"
             ))
             
             if predictions:
                 # Create ML predictions table
                 table = Table(
-                    title=" ML Price Predictions",
+                    title="📈 ML Price Predictions",
                     box=box.ROUNDED,
                     show_header=True,
                     header_style="bold blue"
@@ -764,13 +764,13 @@ class ConsoleManager:
                     # Confidence color
                     if confidence >= 0.8:
                         conf_color = "green"
-                        conf_icon = ""
+                        conf_icon = "🟢"
                     elif confidence >= 0.6:
                         conf_color = "yellow"
-                        conf_icon = ""
+                        conf_icon = "🟡"
                     else:
                         conf_color = "red"
-                        conf_icon = ""
+                        conf_icon = "🔴"
                     
                     table.add_row(
                         f"Day {day}",
@@ -788,31 +788,31 @@ class ConsoleManager:
             if training_samples > 0:
                 # Accuracy rating
                 if accuracy >= 90:
-                    rating = " Excellent"
+                    rating = "🌟 Excellent"
                     rating_color = "bright_green"
                 elif accuracy >= 80:
                     rating = "⭐ Very Good"
                     rating_color = "green"
                 elif accuracy >= 70:
-                    rating = " Good"
+                    rating = "✅ Good"
                     rating_color = "cyan"
                 elif accuracy >= 60:
-                    rating = " Fair"
+                    rating = "⚠️ Fair"
                     rating_color = "yellow"
                 else:
-                    rating = " Poor"
+                    rating = "❌ Poor"
                     rating_color = "red"
                 
                 self.console.print(Panel(
                     f"[white]Training Samples: {training_samples:,}[/]\n"
                     f"[white]Model Accuracy: {accuracy:.1f}%[/]\n"
                     f"[{rating_color}]Performance Rating: {rating}[/]",
-                    title="[bold green] Model Performance[/]",
+                    title="[bold green]📊 Model Performance[/]",
                     border_style="green"
                 ))
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying ML results: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying ML results: {e}[/]")
     
     def print_header(self, title):
         """Print a formatted header"""
@@ -826,7 +826,7 @@ class ConsoleManager:
         """Print ultimate ML prediction results with all features"""
         try:
             if not result:
-                self.console.print("[red] No ultimate results to display[/]")
+                self.console.print("[red]❌ No ultimate results to display[/]")
                 return
             
             symbol = result.get('symbol', 'Unknown')
@@ -840,7 +840,7 @@ class ConsoleManager:
             hf_sentiment = result.get('hf_sentiment', {})
             
             # Header with comprehensive info
-            market_emoji = "" if market_status.get('is_open') else ""
+            market_emoji = "🟢" if market_status.get('is_open') else "🔴"
             market_text = "OPEN" if market_status.get('is_open') else "CLOSED"
             
             self.console.print(Panel(
@@ -849,7 +849,7 @@ class ConsoleManager:
                 f"[green]Accuracy: {accuracy:.1f}% | Features: {feature_count} | Models: 8[/]\n"
                 f"[cyan]Current Price: ${current_price:.2f}[/]\n"
                 f"[white]Market Status: {market_emoji} {market_text}[/]",
-                title="[bold blue] ULTIMATE Machine Learning Analysis[/]",
+                title="[bold blue]🚀 ULTIMATE Machine Learning Analysis[/]",
                 border_style="blue"
             ))
             
@@ -870,7 +870,7 @@ class ConsoleManager:
                     f"[white]Sector: [cyan]{sector}[/]\n"
                     f"[white]Industry: [cyan]{industry}[/]\n"
                     f"[white]Market Cap: [green]${market_cap:,.0f}[/] ([yellow]{cap_category}[/])",
-                    title="[bold cyan] Company Information[/]",
+                    title="[bold cyan]🏢 Company Information[/]",
                     border_style="cyan"
                 ))
             
@@ -881,18 +881,18 @@ class ConsoleManager:
                 
                 if sentiment_label == 'POSITIVE':
                     sentiment_color = "green"
-                    sentiment_emoji = ""
+                    sentiment_emoji = "😊"
                 elif sentiment_label == 'NEGATIVE':
                     sentiment_color = "red"
-                    sentiment_emoji = ""
+                    sentiment_emoji = "😟"
                 else:
                     sentiment_color = "yellow"
-                    sentiment_emoji = ""
+                    sentiment_emoji = "😐"
                 
                 self.console.print(Panel(
                     f"[{sentiment_color}]{sentiment_emoji} Sentiment: {sentiment_label}[/]\n"
                     f"[white]Confidence: {sentiment_score:.1%}[/]",
-                    title="[bold magenta] AI Sentiment Analysis[/]",
+                    title="[bold magenta]🤖 AI Sentiment Analysis[/]",
                     border_style="magenta"
                 ))
             
@@ -925,14 +925,14 @@ class ConsoleManager:
                     f"[white]Risk Assessment: [{risk_color}]{risk_grade}[/]\n"
                     f"[white]Debt/Equity: [cyan]{financial_health.get('debt_to_equity', 0):.2f}[/]\n"
                     f"[white]Current Ratio: [cyan]{financial_health.get('current_ratio', 0):.2f}[/]",
-                    title="[bold green] Financial Analysis[/]",
+                    title="[bold green]💰 Financial Analysis[/]",
                     border_style="green"
                 ))
             
             if predictions:
                 # Create ultimate predictions table
                 table = Table(
-                    title=" ULTIMATE ML Price Predictions",
+                    title="🚀 ULTIMATE ML Price Predictions",
                     box=box.ROUNDED,
                     show_header=True,
                     header_style="bold blue"
@@ -963,19 +963,19 @@ class ConsoleManager:
                     # Enhanced confidence indicators
                     if confidence >= 0.95:
                         conf_color = "bright_green"
-                        conf_icon = ""
+                        conf_icon = "🌟"
                     elif confidence >= 0.85:
                         conf_color = "green"
-                        conf_icon = ""
+                        conf_icon = "🟢"
                     elif confidence >= 0.75:
                         conf_color = "yellow"
-                        conf_icon = ""
+                        conf_icon = "🟡"
                     elif confidence >= 0.65:
                         conf_color = "orange"
-                        conf_icon = ""
+                        conf_icon = "🟠"
                     else:
                         conf_color = "red"
-                        conf_icon = ""
+                        conf_icon = "🔴"
                     
                     table.add_row(
                         f"Day {day}",
@@ -993,19 +993,19 @@ class ConsoleManager:
             
             # Enhanced accuracy rating
             if accuracy >= 98:
-                rating = " EXCEPTIONAL"
+                rating = "🌟 EXCEPTIONAL"
                 rating_color = "bright_green"
             elif accuracy >= 95:
                 rating = "⭐ EXCELLENT"
                 rating_color = "green"
             elif accuracy >= 90:
-                rating = " VERY GOOD"
+                rating = "✅ VERY GOOD"
                 rating_color = "cyan"
             elif accuracy >= 85:
-                rating = " GOOD"
+                rating = "👍 GOOD"
                 rating_color = "yellow"
             else:
-                rating = " FAIR"
+                rating = "⚠️ FAIR"
                 rating_color = "orange"
             
             self.console.print(Panel(
@@ -1014,7 +1014,7 @@ class ConsoleManager:
                 f"[white]Feature Engineering: {feature_count} advanced features[/]\n"
                 f"[white]Model Ensemble: 8 ML algorithms[/]\n"
                 f"[{rating_color}]Performance Rating: {rating}[/]",
-                title="[bold green] ULTIMATE Model Performance[/]",
+                title="[bold green]📊 ULTIMATE Model Performance[/]",
                 border_style="green"
             ))
             
@@ -1036,4 +1036,4 @@ class ConsoleManager:
                 ))
             
         except Exception as e:
-            self.console.print(f"[red] Error displaying ultimate results: {e}[/]")
+            self.console.print(f"[red]❌ Error displaying ultimate results: {e}[/]")

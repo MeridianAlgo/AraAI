@@ -96,11 +96,11 @@ class LightweightAIAnalyzer:
     def _initialize_models(self):
         """Initialize lightweight conversational AI and specialized models"""
         try:
-            print(" Initializing AI models...")
+            print("🤖 Initializing AI models...")
             
             # Main conversational AI - Try TinyLlama first, fallback to DialoGPT
             try:
-                print(" Loading TinyLlama conversational AI...")
+                print("📥 Loading TinyLlama conversational AI...")
                 self.main_ai = pipeline(
                     "text-generation",
                     model=self.model_configs['mistral_alternative']['model_name'],
@@ -115,9 +115,9 @@ class LightweightAIAnalyzer:
                     top_p=0.9,
                     repetition_penalty=1.1
                 )
-                print(" TinyLlama conversational AI loaded (2.2GB)")
+                print("✅ TinyLlama conversational AI loaded (2.2GB)")
             except Exception as e:
-                print(f"  TinyLlama failed, trying DialoGPT: {e}")
+                print(f"⚠️  TinyLlama failed, trying DialoGPT: {e}")
                 try:
                     self.main_ai = pipeline(
                         "text-generation",
@@ -129,9 +129,9 @@ class LightweightAIAnalyzer:
                         temperature=0.7,
                         pad_token_id=50256
                     )
-                    print(" DialoGPT conversational AI loaded (350MB)")
+                    print("✅ DialoGPT conversational AI loaded (350MB)")
                 except Exception as e2:
-                    print(f" Both conversational AIs failed: {e2}")
+                    print(f"❌ Both conversational AIs failed: {e2}")
             
             # Financial sentiment specialist
             try:
@@ -142,9 +142,9 @@ class LightweightAIAnalyzer:
                     model_kwargs={"torch_dtype": torch.float16} if self.use_gpu else {},
                     return_all_scores=True
                 )
-                print(" FinBERT financial specialist loaded (440MB)")
+                print("✅ FinBERT financial specialist loaded (440MB)")
             except Exception as e:
-                print(f"  FinBERT failed: {e}")
+                print(f"⚠️  FinBERT failed: {e}")
             
             # Zero-shot classifier for categorization
             try:
@@ -154,14 +154,14 @@ class LightweightAIAnalyzer:
                     device=self.device,
                     model_kwargs={"torch_dtype": torch.float16} if self.use_gpu else {}
                 )
-                print(" BART classifier loaded (1.6GB)")
+                print("✅ BART classifier loaded (1.6GB)")
             except Exception as e:
-                print(f"  BART classifier failed: {e}")
+                print(f"⚠️  BART classifier failed: {e}")
             
-            print(f" Using device: {self.device}")
+            print(f"🎮 Using device: {self.device}")
             
         except Exception as e:
-            print(f" Model initialization failed: {e}")
+            print(f"❌ Model initialization failed: {e}")
             self.main_ai = None
             self.sentiment_analyzer = None
             self.financial_classifier = None
