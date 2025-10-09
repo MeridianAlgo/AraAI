@@ -1,0 +1,118 @@
+MIT License
+
+Copyright (c) 2025 ARA AI - Ultimate Stock Prediction System
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+ADDITIONAL TERMS AND CONDITIONS
+
+1. FINANCIAL DISCLAIMER
+   This software provides stock price predictions based on historical data and
+   machine learning models. These predictions are for informational purposes
+   only and should not be considered as financial advice, investment
+   recommendations, or guarantees of future performance.
+
+2. NO INVESTMENT ADVICE
+   The authors and contributors of this software are not licensed financial
+   advisors. Users should consult with qualified financial professionals
+   before making any investment decisions.
+
+3. RISK ACKNOWLEDGMENT
+   Stock market investments carry inherent risks, including the potential loss
+   of principal. Past performance does not guarantee future results. Users
+   acknowledge that they use this software at their own risk.
+
+4. ACCURACY DISCLAIMER
+   While the software aims for high accuracy in predictions, no prediction
+   system is 100% accurate. Market conditions, unforeseen events, and other
+   factors can affect actual stock performance.
+
+5. DATA SOURCES
+   This software uses publicly available market data from third-party sources.
+   The accuracy and availability of this data is not guaranteed by the
+   software authors.
+
+6. PRIVACY PROTECTION
+   This software is designed to protect user privacy by processing all data
+   locally. However, users are responsible for their own data security and
+   privacy practices.
+
+7. THIRD-PARTY COMPONENTS
+   This software includes third-party libraries and models (including Hugging
+   Face models) that are subject to their own licenses and terms of use.
+
+8. COMPLIANCE
+   Users are responsible for ensuring their use of this software complies
+   with all applicable laws and regulations in their jurisdiction.
+
+9. MODIFICATION AND DISTRIBUTION
+   Users may modify and distribute this software under the terms of the MIT
+   License, but must include appropriate disclaimers about the nature of
+   financial predictions and investment risks.
+
+10. LIMITATION OF LIABILITY
+    In no event shall the authors or contributors be liable for any financial
+    losses, investment decisions, or other damages arising from the use of
+    this software, even if advised of the possibility of such damages.
+
+================================================================================
+
+THIRD-PARTY LICENSES
+
+This software incorporates the following third-party components:
+
+1. Scikit-learn (BSD License)
+2. XGBoost (Apache License 2.0)
+3. LightGBM (MIT License)
+4. PyTorch (BSD License)
+5. Transformers by Hugging Face (Apache License 2.0)
+6. Pandas (BSD License)
+7. NumPy (BSD License)
+8. yfinance (Apache License 2.0)
+9. Rich (MIT License)
+
+Each component is subject to its respective license terms. Users should
+review the individual licenses for complete terms and conditions.
+
+================================================================================
+
+HUGGING FACE MODEL LICENSES
+
+This software downloads and uses AI models from Hugging Face:
+
+1. ProsusAI/finbert - Used under Apache License 2.0
+2. cardiffnlp/twitter-roberta-base-sentiment-latest - Used under MIT License
+
+These models are downloaded to the user's local machine and are subject to
+their respective licenses and terms of use as published by their creators.
+
+================================================================================
+
+CONTACT INFORMATION
+
+For questions about this license or the software:
+- GitHub Issues: https://github.com/yourusername/araai/issues
+- GitHub Discussions: https://github.com/yourusername/araai/discussions
+
+================================================================================
+
+By using this software, you acknowledge that you have read, understood, and
+agree to be bound by the terms of this license and all applicable disclaimers.
