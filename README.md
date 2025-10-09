@@ -1,3 +1,309 @@
+# ARA AI - Stock Prediction System
+
+**Advanced AI-Powered Stock Prediction Platform**
+
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-2.2.0--Beta-orange.svg)](https://github.com/MeridianAlgo/AraAI/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **🎯 One-Command Setup • 98.5% Accuracy • Works Completely Offline • No API Keys Required**
+
+## 📚 Documentation
+
+For detailed documentation, please refer to:
+
+- [📖 User Manual](docs/USER_MANUAL.md) - Complete guide to using ARA AI
+- [⚡ Quick Start](docs/QUICK_START.md) - Get up and running in minutes
+- [📋 Release Notes](docs/release_notes/RELEASE_NOTES_v2.2.0-Beta.md) - What's new in this version
+- [🔧 Installation Guide](docs/INSTALLATION.md) - Setup and configuration
+- [🚀 Contributing](docs/CONTRIBUTING.md) - How to contribute to the project
+- [🔒 Security](docs/SECURITY.md) - Security policies and reporting
+
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/MeridianAlgo/AraAI.git
+cd AraAI
+
+# Run the setup script
+python setup/setup_araai.py
+
+# Make your first prediction
+python bin/ara_fast.py AAPL
+```
+
+## 📁 Project Structure
+
+```
+AraAI/
+├── ara.py               # Main entry point
+├── bin/                 # Command-line tools
+├── docs/                # Documentation
+├── examples/            # Example usage
+├── meridianalgo/        # Core package
+├── models/              # Pretrained models
+├── scripts/             # Utility scripts
+├── setup/               # Installation files
+├── tests/               # Test suite
+└── tools/               # Development tools
+```
+
+## 📖 Documentation
+
+### User Guides
+- [📋 User Manual](docs/USER_MANUAL.md) - Complete guide to all features
+- [⚡ Quick Start](docs/QUICK_START.md) - Get started in minutes
+- [🔧 Installation Guide](docs/INSTALLATION.md) - Setup and configuration
+
+### Advanced Topics
+- [🤖 Model Architecture](docs/TECHNICAL.md) - Technical details
+- [🔍 Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [📈 Performance](docs/SYSTEM_SUMMARY.md) - System capabilities and benchmarks
+
+### Project Information
+- [📝 Changelog](docs/CHANGELOG.md) - Version history
+- [📋 Release Notes](docs/release_notes/RELEASE_NOTES_v2.2.0-Beta.md) - Latest updates
+- [🚀 Contributing](docs/CONTRIBUTING.md) - How to contribute
+- [🔒 Security](docs/SECURITY.md) - Security policies
+- [📄 Privacy Policy](docs/PRIVACY.md) - Data handling and privacy
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](docs/CONTRIBUTING.md) for details on how to contribute to this project.
+
+## 📝 Code of Conduct
+
+This project adheres to the Contributor Covenant [code of conduct](docs/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+## 🛠️ **Technical Architecture (For Developers)**
+
+### **8-Model Ensemble System**
+```python
+Ultimate ML Pipeline:
+├── XGBoost (20% weight)        # 99.4% accuracy - Primary model
+├── LightGBM (20% weight)       # 97.7% accuracy - Speed + accuracy
+├── Random Forest (15% weight)  # 97.6% accuracy - Robust predictions
+├── Extra Trees (15% weight)    # 97.3% accuracy - Variance reduction
+├── Gradient Boosting (10%)     # 99.0% accuracy - Pattern recognition
+├── Ridge Regression (8%)       # 96.7% accuracy - Linear patterns
+├── Elastic Net (7%)            # 96.6% accuracy - Feature selection
+└── Lasso Regression (5%)       # 96.6% accuracy - Sparse features
+```
+
+### **44 Engineered Features**
+1. **Price Analysis (5)**: Normalized price, trend, volatility, range, daily range
+2. **Volume Analysis (3)**: Volume trend, normalized volume, volume volatility
+3. **Technical Indicators (15)**: RSI, MACD (3), Bollinger Bands (2), Stochastic (2), Williams %R, CCI, ATR, OBV, SMA ratios (3)
+4. **Moving Averages (4)**: SMA/EMA ratios, trend crossovers
+5. **Momentum (3)**: 5-day, 10-day, 20-day momentum
+6. **Statistical (4)**: Volatility, skewness, kurtosis, trend strength
+7. **Support/Resistance (2)**: Distance to key levels
+8. **Sector Intelligence (5)**: Technology, Finance, Healthcare, Energy, Consumer
+9. **Market Cap (3)**: Large cap, mid cap, small cap classification
+
+### **Real-Time Features**
+- **Market Hours**: NYSE trading hours with timezone awareness
+- **Sector Classification**: Automatic industry categorization
+- **Model Persistence**: Save/load trained models locally
+- **Parallel Processing**: Multi-threaded data collection
+- **Error Handling**: Robust fallback mechanisms
+
+## 📈 **Supported Stocks & Markets**
+
+### **162+ Stocks Across All Sectors**
+- **Technology**: AAPL, MSFT, GOOGL, AMZN, TSLA, NVDA, META, NFLX
+- **Finance**: JPM, BAC, WFC, GS, MS, C, USB, PNC, TFC, COF
+- **Healthcare**: JNJ, PFE, UNH, ABBV, MRK, TMO, ABT, LLY, MDT
+- **Energy**: XOM, CVX, COP, EOG, SLB, PSX, VLO, MPC, OXY
+- **Consumer**: WMT, HD, PG, KO, PEP, COST, NKE, SBUX, MCD
+- **ETFs**: SPY, QQQ, IWM, VTI, VOO, VEA, VWO, BND, AGG
+
+### **Prediction Capabilities**
+- **Timeframe**: 1-30 days ahead
+- **Accuracy**: 97.9% ensemble accuracy
+- **Confidence**: 50-98% confidence scores
+- **Market Timing**: Business day awareness
+- **Sector Analysis**: Industry-specific insights
+
+## 🔧 **Advanced Configuration**
+
+### **Model Training Options**
+```bash
+# Full dataset training (recommended for best accuracy)
+python bin/ara_fast.py AAPL --retrain --period 2y
+
+# Quick training (faster, slightly lower accuracy)
+python bin/ara_fast.py AAPL --retrain --period 6mo
+
+# Verbose output (see all training details)
+python bin/ara_fast.py AAPL --retrain --verbose
+```
+
+### **Model Storage & Persistence**
+All models are automatically saved locally:
+```
+models/
+├── xgb_model.pkl          # XGBoost (99.4% accuracy)
+├── lgb_model.pkl          # LightGBM (97.7% accuracy)
+├── rf_model.pkl           # Random Forest (97.6% accuracy)
+├── et_model.pkl           # Extra Trees (97.3% accuracy)
+├── gb_model.pkl           # Gradient Boosting (99.0% accuracy)
+├── ridge_model.pkl        # Ridge regression
+├── elastic_model.pkl      # Elastic Net
+├── lasso_model.pkl        # Lasso regression
+├── robust_scaler.pkl      # Feature scaler for tree models
+├── standard_scaler.pkl    # Feature scaler for linear models
+└── metadata.pkl           # Model weights and accuracy scores
+```
+
+**Benefits:**
+- **Train Once, Use Forever**: Models persist between sessions
+- **Instant Loading**: No retraining required after first setup
+- **Offline Operation**: Works without internet after initial training
+- **Consistent Accuracy**: Same 97.9% accuracy every time
+
+## 🐍 **Python API (For Developers)**
+
+### **Simple Usage**
+```python
+from meridianalgo.ultimate_ml import UltimateStockML
+
+# Initialize system (loads models if available)
+ml_system = UltimateStockML()
+
+# Get comprehensive prediction
+result = ml_system.predict_ultimate("AAPL", days=5)
+
+# Display results
+print(f"Accuracy: {result['model_accuracy']:.1f}%")
+print(f"Sector: {result['sector_info']['sector']}")
+print(f"Market: {'OPEN' if result['market_status']['is_open'] else 'CLOSED'}")
+
+for pred in result['predictions']:
+    print(f"Day {pred['day']}: ${pred['predicted_price']:.2f} ({pred['predicted_return']*100:+.2f}%)")
+```
+
+### **Advanced Usage**
+```python
+# Check model status
+status = ml_system.get_model_status()
+print(f"Models trained: {status['is_trained']}")
+print(f"Accuracy scores: {status['accuracy_scores']}")
+
+# Train models on custom dataset
+success = ml_system.train_ultimate_models(
+    max_symbols=100,    # Number of stocks to train on
+    period="1y",        # Training period
+    use_parallel=True   # Use parallel processing
+)
+
+# Get market status
+market_status = ml_system.get_market_status()
+print(f"Market open: {market_status['is_open']}")
+print(f"Next open: {market_status['next_open']}")
+
+# Get sector information
+sector_info = ml_system.get_stock_sector("AAPL")
+print(f"Sector: {sector_info['sector']}")
+print(f"Industry: {sector_info['industry']}")
+```
+
+## 📊 **Performance Metrics**
+
+### **Accuracy Achievements**
+- **Individual Models**: 96.6% - 99.4%
+- **Ensemble Performance**: 97.9%
+- **Training Speed**: 34K+ samples in 4 minutes
+- **Prediction Speed**: <2 seconds per stock
+
+### **Real-World Validation**
+- **Training Dataset**: 159 stocks, 34,186 samples
+- **Feature Engineering**: 44 technical indicators
+- **Cross-Validation**: 80/20 train/test split
+- **Performance Tracking**: R² scores, MAE, accuracy rates
+
+### **System Requirements**
+- **Python**: 3.8 or higher
+- **RAM**: 4GB minimum, 8GB recommended
+- **Storage**: 3GB free space
+- **Internet**: Required only for initial setup
+- **OS**: Windows, macOS, Linux
+
+## 🛡️ **Security & Privacy**
+
+### **Data Privacy**
+✅ **Local Processing**: All analysis happens on your machine
+✅ **No Cloud Dependencies**: No external API calls after setup
+✅ **No Data Collection**: We don't collect or store your data
+✅ **No Tracking**: No analytics or usage monitoring
+✅ **Open Source**: Full transparency in code
+
+### **Security Features**
+✅ **No API Keys**: No authentication credentials required
+✅ **Offline Operation**: Works without internet connection
+✅ **Local Storage**: All models and data stored locally
+✅ **No Network Calls**: No external dependencies during operation
+✅ **MIT License**: Free to use, modify, and distribute
+
+## 🆘 **Troubleshooting & Support**
+### **Common Issues**
+
+#### **Installation Problems**
+```bash
+# If installation fails, try:
+pip install --upgrade pip
+python setup/install_ultimate_requirements.py
+
+# For Windows users with permission issues:
+pip install --user -r requirements.txt
+```
+
+#### **Model Loading Issues**
+```bash
+# If models fail to load, retrain them:
+python bin/ara_fast.py AAPL --retrain
+
+# Clear cache and restart:
+python -c "import shutil; shutil.rmtree('models', ignore_errors=True)"
+python bin/ara_fast.py AAPL --retrain
+```
+
+#### **Hugging Face Download Issues**
+```bash
+# If Hugging Face models fail to download:
+pip install --upgrade transformers torch
+
+# Test Hugging Face connection:
+python setup/check_hf_models.py
+```
+
+### **Getting Help**
+- **Documentation**: See [docs/](docs/) folder for detailed guides
+- **Issues**: Report bugs on GitHub Issues
+{{ ... }}
+
+## 🎉 **Ready to Get Started?**
+
+### **One-Command Setup**
+```bash
+git clone https://github.com/yourusername/araai.git
+cd araai
+python setup/install_ultimate_requirements.py
+```
+
+### **First Prediction**
+```bash
+python bin/ara_fast.py AAPL --verbose
+{{ ... }}
+
+**🚀 Welcome to the future of stock prediction with 97.9% accuracy!**
+
+**🔒 Your data stays private • 🤖 AI models work offline • 📈 Institutional-grade accuracy**
 # 🚀 ARA AI - ULTIMATE Stock Prediction System v2.2.0-Beta
 
 **The World's Most Advanced AI Stock Prediction Platform - 98.5% Accuracy**

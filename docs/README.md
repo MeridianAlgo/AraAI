@@ -1,6 +1,10 @@
 # 📚 ARA AI Documentation
 
+<<<<<<< HEAD
 **Complete documentation for the world's most advanced stock prediction system :) (We dream lol)**
+=======
+**Complete documentation for the world's most advanced stock prediction system**
+>>>>>>> 5b02cd9 (Restructure project and document new layout)
 
 ## 🚀 **Getting Started**
 
@@ -251,4 +255,8 @@ python ara_fast.py AAPL --verbose
 
 **🚀 Welcome to institutional-grade stock prediction with complete privacy protection!**
 
+<<<<<<< HEAD
 **📚 This documentation covers everything you need to know about ARA AI.**
+=======
+**📚 This documentation covers everything you need to know about ARA AI.**
+>>>>>>> 5b02cd9 (Restructure project and document new layout)
