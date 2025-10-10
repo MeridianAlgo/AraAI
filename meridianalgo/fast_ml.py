@@ -128,7 +128,6 @@ class FastMLPredictor:
             
             for day in range(days):
                 try:
-                    # Scale features
                     X_scaled = self.scalers['features'].transform([processed_features])
                     
                     # Predict scaled target
@@ -137,20 +136,20 @@ class FastMLPredictor:
                     # Inverse transform to get actual price
                     y_pred = self.scalers['target'].inverse_transform([[y_pred_scaled]])[0][0]
                     
-                    # Apply trend and ensure reasonable prediction
-                    trend_factor = 1 + (day * 0.001)  # Small daily trend
-                    predicted_price = max(current_price * 0.8, 
-                                        min(current_price * 1.2, 
+                    # Apply neutral trend and ensure reasonable prediction (no upward bias)
+                    trend_factor = 1.0  # Remove daily upward drift
+                    predicted_price = max(current_price * 0.95, 
+                                        min(current_price * 1.05, 
                                             y_pred * trend_factor))
                     
                     predictions.append(predicted_price)
                     
                     # Update features for next day prediction
-                    processed_features[0] = predicted_price / current_price  # Normalized price
+                    processed_features[0] = 1.0  # Keep normalized price anchored to current
                     
                 except Exception as e:
                     # Fallback for individual prediction
-                    trend = 1 + (day * 0.002)
+                    trend = 1.0  # Neutral fallback
                     predictions.append(current_price * trend)
             
             return {
@@ -160,84 +159,24 @@ class FastMLPredictor:
                 'processing_time': 'fast'
             }
             
-        except Exception as e:
-            return self._fallback_prediction(current_price, days)
-    
-    def _prepare_features_fast(self, data, current_price):
-        """Quickly prepare features from market data"""
-        try:
-            if data is None or data.empty:
-                return None
-            
-            # Get latest values quickly
-            close = data['Close'].iloc[-1] if 'Close' in data.columns else current_price
-            volume = data['Volume'].iloc[-1] if 'Volume' in data.columns else 1000000
-            high = data['High'].iloc[-1] if 'High' in data.columns else close * 1.02
-            low = data['Low'].iloc[-1] if 'Low' in data.columns else close * 0.98
-            
-            # Calculate simple technical indicators
-            if len(data) >= 20:
-                sma_20 = data['Close'].tail(20).mean()
-                rsi = self._calculate_rsi_fast(data['Close'].tail(14))
-            else:
-                sma_20 = close
-                rsi = 50
-            
-            # Create feature vector (normalized)
-            features = [
-                close / current_price,           # Normalized price
-                volume / 1e6,                   # Volume in millions
-                rsi / 100,                      # RSI (0-1)
-                (close - sma_20) / sma_20,      # Price vs SMA
-                (high - low) / close,           # Daily range
-                np.random.normal(0, 0.1),       # Noise features
-                np.random.normal(0, 0.1),
-                np.random.normal(0, 0.1),
-                np.random.normal(0, 0.1),
-                np.random.normal(0, 0.1)
-            ]
-            
-            return features
-            
-        except Exception as e:
-            return None
-    
-    def _calculate_rsi_fast(self, prices):
-        """Fast RSI calculation"""
-        try:
-            if len(prices) < 14:
-                return 50
-            
-            delta = prices.diff()
-            gain = (delta.where(delta > 0, 0)).mean()
-            loss = (-delta.where(delta < 0, 0)).mean()
-            
-            if loss == 0:
-                return 100
-            
-            rs = gain / loss
-            rsi = 100 - (100 / (1 + rs))
-            
-            return max(0, min(100, rsi))
-            
         except Exception:
             return 50
     
     def _fallback_prediction(self, current_price, days):
         """Ultra-fast fallback prediction"""
         try:
-            # Simple trend-based prediction
-            base_trend = np.random.normal(0.001, 0.005)  # Small random trend
+            # Neutral prediction centered around current price
+            base_trend = 0.0
             
             predictions = []
             for day in range(days):
                 # Add some randomness but keep it reasonable
-                daily_change = base_trend + np.random.normal(0, 0.01)
-                predicted_price = current_price * (1 + daily_change * (day + 1))
+                daily_change = np.random.normal(0, 0.01)
+                predicted_price = current_price * (1 + daily_change)
                 
                 # Ensure reasonable bounds
-                predicted_price = max(current_price * 0.9, 
-                                    min(current_price * 1.1, predicted_price))
+                predicted_price = max(current_price * 0.95, 
+                                    min(current_price * 1.05, predicted_price))
                 
                 predictions.append(predicted_price)
             

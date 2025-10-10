@@ -37,16 +37,15 @@ python bin/ara_fast.py AAPL
 
 ```
 AraAI/
-├── ara.py               # Main entry point
-├── bin/                 # Command-line tools
-├── docs/                # Documentation
-├── examples/            # Example usage
-├── meridianalgo/        # Core package
-├── models/              # Pretrained models
-├── scripts/             # Utility scripts
-├── setup/               # Installation files
-├── tests/               # Test suite
-└── tools/               # Development tools
+├── bin/
+│   └── ara_fast.py            # Main prediction CLI with local ensemble
+├── meridianalgo/              # Core Python package (lightweight)
+├── data/                      # Optional local data (news files)
+│   └── news/                  # Symbol news files (optional)
+├── models/                    # Cached trained models (optional)
+├── archive/                   # Legacy files (ara_old.py)
+├── requirements.txt           # Runtime dependencies
+└── README.md                  # This file
 ```
 
 ## 📖 Documentation
@@ -78,7 +77,62 @@ Contributions are welcome! Please read our [Contributing Guide](docs/CONTRIBUTIN
 
 ## 📝 Code of Conduct
 
-This project adheres to the Contributor Covenant [code of conduct](docs/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+# Full analysis with details
+python bin/ara_fast.py MSFT --verbose
+```
+
+### **Advanced Options**
+```bash
+# Retrain models on fresh data
+python bin/ara_fast.py GOOGL --retrain
+
+# Use 2-year training data
+python bin/ara_fast.py AMZN --retrain --period 2y
+
+# Quick training (6 months data)
+python bin/ara_fast.py NVDA --retrain --period 6mo
+```
+
+## 📊 **What You Get - Sample Output**
+
+```
+🚀 AAPL ULTIMATE ML Predictions
+═══════════════════════════════════════════════════════════════
+Model: ultimate_ensemble_8_models
+Accuracy: 97.9% | Features: 44 | Models: 8
+Current Price: $245.50
+Market Status: 🔴 CLOSED
+
+🏢 Company Information
+Sector: Technology
+Industry: Consumer Electronics  
+Market Cap: $3,643,315,585,024 (Large Cap)
+
+🤖 AI Sentiment Analysis
+😊 Sentiment: positive
+Confidence: 89.4%
+
+🚀 ULTIMATE ML Price Predictions
+┌───────┬────────────┬─────────────────┬────────┬──────────┬────────────┐
+│ Day   │ Date       │ Predicted Price │ Change │ Return % │ Confidence │
+├───────┼────────────┼─────────────────┼────────┼──────────┼────────────┤
+│ Day 1 │ 2025-09-22 │         $248.75 │ $+3.25 │   +1.32% │   🟢 94.8% │
+│ Day 2 │ 2025-09-23 │         $252.14 │ $+6.64 │   +2.71% │   🟢 92.1% │
+│ Day 3 │ 2025-09-24 │         $255.67 │ $+10.17│   +4.14% │   🟢 89.5% │
+└───────┴────────────┴─────────────────┴────────┴──────────┴────────────┘
+
+📊 ULTIMATE Model Performance
+Training Samples: 34,186
+Model Accuracy: 97.9%
+Feature Engineering: 44 advanced features
+Model Ensemble: 8 ML algorithms
+Performance Rating: 🌟 EXCEPTIONAL
+
+⏰ Market Timing
+Current Time: 2025-09-21 14:49:39 EDT
+Market Closed
+Next Open: 2025-09-22 09:30:00 EDT
+```
 
 ## 🛠️ **Technical Architecture (For Developers)**
 
@@ -263,23 +317,14 @@ python setup/install_ultimate_requirements.py
 pip install --user -r requirements.txt
 ```
 
-#### **Model Loading Issues**
+#### **Model Issues**
 ```bash
-# If models fail to load, retrain them:
+# If models fail, retrain them:
 python bin/ara_fast.py AAPL --retrain
 
 # Clear cache and restart:
 python -c "import shutil; shutil.rmtree('models', ignore_errors=True)"
 python bin/ara_fast.py AAPL --retrain
-```
-
-#### **Hugging Face Download Issues**
-```bash
-# If Hugging Face models fail to download:
-pip install --upgrade transformers torch
-
-# Test Hugging Face connection:
-python setup/check_hf_models.py
 ```
 
 ### **Getting Help**
