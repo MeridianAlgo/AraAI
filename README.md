@@ -55,20 +55,15 @@
 
 ```
 AraAI/
-├── ara.py                     # Primary CLI entry point
 ├── bin/
-│   └── ara_fast.py            # High-speed inference CLI
-├── docs/                      # All documentation (.md/.in)
-├── examples/                  # Example workflows and demos
-├── meridianalgo/              # Core Python package
-├── models/                    # Persisted ML models (keep!)
-├── setup/                     # Installation & environment scripts
-├── src/                       # Enhanced modules
-├── tests/                     # Automated tests
-├── tools/                     # Packaging & deployment utilities
+│   └── ara_fast.py            # Main prediction CLI with local ensemble
+├── meridianalgo/              # Core Python package (lightweight)
+├── data/                      # Optional local data (news files)
+│   └── news/                  # Symbol news files (optional)
+├── models/                    # Cached trained models (optional)
+├── archive/                   # Legacy files (ara_old.py)
 ├── requirements.txt           # Runtime dependencies
-├── pyproject.toml             # Build configuration
-└── .ara_cache/                # Local caches (retain for reuse)
+└── README.md                  # This file
 ```
 
 ## 🚀 **Super Easy Setup (One Command!)**
@@ -164,45 +159,6 @@ Current Time: 2025-09-21 14:49:39 EDT
 Market Closed
 Next Open: 2025-09-22 09:30:00 EDT
 ```
-
-## 🤖 **How Hugging Face Models Work (Completely Local!)**
-
-### **🔒 Your Privacy is Protected**
-
-**ARA AI downloads AI models to YOUR computer - no cloud, no API, no data sharing!**
-
-#### **What Happens During Setup:**
-1. **First Time**: Hugging Face models download to your local cache (~1GB)
-2. **Every Other Time**: Models load instantly from your computer
-3. **No Internet Needed**: Works completely offline after setup
-4. **Your Data Stays Private**: Nothing sent to external servers
-
-#### **Local Storage Location:**
-```
-Windows: C:\Users\[YourName]\.cache\huggingface\
-Mac/Linux: ~/.cache/huggingface/
-
-Your AI Models (Downloaded Once, Yours Forever):
-├── FinBERT (Financial Analysis): 437 MB
-├── RoBERTa (Sentiment Analysis): 501 MB
-├── ARA ML Models (8 models): 50 MB
-└── Total Storage: ~1 GB (one-time download)
-```
-
-#### **What Happens During Setup:**
-1. **setup/setup_araai.py checks** your system compatibility
-2. **Downloads Python packages** (~2GB, standard ML libraries)
-3. **Downloads AI models** (~1GB, stored locally forever)
-4. **Tests everything** to ensure it works perfectly
-5. **Shows you** exactly how to use the system
-
-#### **Privacy Benefits:**
-✅ **Complete Privacy**: All processing on your machine
-✅ **No API Keys**: No accounts or authentication required
-✅ **Offline Capable**: Works without internet after setup
-✅ **No Rate Limits**: Use as much as you want
-✅ **No Tracking**: No usage analytics or monitoring
-✅ **Your Models**: Downloaded models belong to you forever
 
 ## 🛠️ **Technical Architecture (For Developers)**
 
@@ -387,23 +343,14 @@ python setup/install_ultimate_requirements.py
 pip install --user -r requirements.txt
 ```
 
-#### **Model Loading Issues**
+#### **Model Issues**
 ```bash
-# If models fail to load, retrain them:
+# If models fail, retrain them:
 python bin/ara_fast.py AAPL --retrain
 
 # Clear cache and restart:
 python -c "import shutil; shutil.rmtree('models', ignore_errors=True)"
 python bin/ara_fast.py AAPL --retrain
-```
-
-#### **Hugging Face Download Issues**
-```bash
-# If Hugging Face models fail to download:
-pip install --upgrade transformers torch
-
-# Test Hugging Face connection:
-python setup/check_hf_models.py
 ```
 
 ### **Getting Help**
