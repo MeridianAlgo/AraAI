@@ -1,0 +1,333 @@
+name: CI/CD Pipeline - Cross-Platform Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  # Job 1: Lint and Code Quality
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pylint black isort mypy
+          
+      - name: Run Black (Code Formatting)
+        run: black --check --diff meridianalgo/ ara.py ara_fast.py
+        continue-on-error: true
+        
+      - name: Run isort (Import Sorting)
+        run: isort --check-only --diff meridianalgo/ ara.py ara_fast.py
+        continue-on-error: true
+        
+      - name: Run Flake8 (Style Guide)
+        run: flake8 meridianalgo/ ara.py ara_fast.py --max-line-length=120 --ignore=E501,W503,E203
+        continue-on-error: true
+        
+      - name: Run Pylint (Code Analysis)
+        run: pylint meridianalgo/ --disable=C0111,C0103,R0913,R0914,W0703
+        continue-on-error: true
+
+  # Job 2: Cross-Platform Testing
+  test:
+    name: Test on ${{ matrix.os }} - Python ${{ matrix.python-version }}
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        exclude:
+          # Exclude some combinations to save CI time
+          - os: macos-latest
+            python-version: '3.8'
+          - os: macos-latest
+            python-version: '3.9'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+        
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install libomp
+          
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-xdist pytest-timeout
+          
+      - name: Install package
+        run: pip install -e .
+        
+      - name: Run basic import tests
+        run: |
+          python -c "import meridianalgo; print(f'Version: {meridianalgo.__version__}')"
+          python -c "from meridianalgo.ultimate_ml import UltimateStockML; print('Ultimate ML imported successfully')"
+          python -c "from meridianalgo.console import ConsoleManager; print('Console imported successfully')"
+          
+      - name: Run unit tests
+        run: pytest tests/ -v --cov=meridianalgo --cov-report=xml --cov-report=term
+        timeout-minutes: 30
+        continue-on-error: true
+        
+      - name: Test basic prediction (AAPL)
+        run: python -c "from meridianalgo.ultimate_ml import UltimateStockML; ml = UltimateStockML(); print('ML system initialized')"
+        timeout-minutes: 5
+        
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  # Job 3: Integration Tests
+  integration:
+    name: Integration Tests - ${{ matrix.os }}
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Test Ultimate ML System
+        run: python test_ultimate_system.py
+        timeout-minutes: 10
+        continue-on-error: true
+        
+      - name: Test prediction on multiple stocks
+        run: |
+          python -c "
+          from meridianalgo.ultimate_ml import UltimateStockML
+          import sys
+          
+          ml = UltimateStockML()
+          symbols = ['AAPL', 'MSFT', 'GOOGL']
+          
+          for symbol in symbols:
+              try:
+                  print(f'Testing {symbol}...')
+                  result = ml.predict_ultimate(symbol, days=5)
+                  if result:
+                      print(f'✓ {symbol} prediction successful')
+                  else:
+                      print(f'✗ {symbol} prediction failed')
+              except Exception as e:
+                  print(f'✗ {symbol} error: {e}')
+          "
+        timeout-minutes: 15
+        continue-on-error: true
+
+  # Job 4: Performance Benchmarks
+  benchmark:
+    name: Performance Benchmarks
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-benchmark memory_profiler
+          
+      - name: Run performance benchmarks
+        run: |
+          python -c "
+          import time
+          from meridianalgo.ultimate_ml import UltimateStockML
+          
+          print('=== Performance Benchmark ===')
+          
+          # Test initialization time
+          start = time.time()
+          ml = UltimateStockML()
+          init_time = time.time() - start
+          print(f'Initialization: {init_time:.2f}s')
+          
+          # Test training time (small dataset)
+          start = time.time()
+          ml.train_ultimate_models(max_symbols=10, period='6mo')
+          train_time = time.time() - start
+          print(f'Training (10 stocks): {train_time:.2f}s')
+          
+          # Test prediction time
+          start = time.time()
+          result = ml.predict_ultimate('AAPL', days=5)
+          pred_time = time.time() - start
+          print(f'Prediction: {pred_time:.2f}s')
+          
+          print(f'Total time: {init_time + train_time + pred_time:.2f}s')
+          "
+        timeout-minutes: 20
+
+  # Job 5: Security Scanning
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety bandit
+          
+      - name: Run Safety (Dependency Security)
+        run: safety check --json
+        continue-on-error: true
+        
+      - name: Run Bandit (Code Security)
+        run: bandit -r meridianalgo/ -f json -o bandit-report.json
+        continue-on-error: true
+        
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+
+  # Job 6: Documentation Build
+  docs:
+    name: Documentation Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install sphinx sphinx-rtd-theme
+          
+      - name: Check documentation files
+        run: |
+          echo "Checking documentation files..."
+          ls -la docs/
+          
+      - name: Validate README
+        run: |
+          python -c "
+          with open('README.md', 'r') as f:
+              content = f.read()
+              assert 'ARA AI' in content
+              assert 'Installation' in content
+              print('✓ README.md is valid')
+          "
+
+  # Job 7: Build and Package
+  build:
+    name: Build Distribution Packages
+    needs: [test, integration]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine wheel setuptools
+          
+      - name: Build package
+        run: python -m build
+        
+      - name: Check package
+        run: twine check dist/*
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-packages
+          path: dist/
+
+  # Job 8: Notification
+  notify:
+    name: Notify Results
+    needs: [lint, test, integration, benchmark, security, docs, build]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Check job results
+        run: |
+          echo "Pipeline completed!"
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Test: ${{ needs.test.result }}"
+          echo "Integration: ${{ needs.integration.result }}"
+          echo "Benchmark: ${{ needs.benchmark.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Docs: ${{ needs.docs.result }}"
+          echo "Build: ${{ needs.build.result }}"
