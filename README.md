@@ -51,6 +51,29 @@
 - **Works completely offline**
 - **No API keys or accounts required**
 
+## 📚 **Documentation**
+
+### 📖 Quick Links
+- **[Installation Guide](docs/INSTALLATION.md)** - Detailed installation instructions
+- **[Quick Start Guide](docs/QUICK_START.md)** - Get started in 5 minutes
+- **[User Manual](docs/USER_MANUAL.md)** - Complete feature documentation
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
+
+### 🔐 Security & Privacy
+- **[Security Policy](docs/SECURITY.md)** - Security best practices
+- **[Privacy Policy](docs/PRIVACY.md)** - How we handle your data
+
+### 👨‍💻 Developer Documentation
+- **[CI/CD Setup](docs/CI_CD_SETUP.md)** - Continuous integration and deployment
+- **[CI/CD Status](docs/CI_CD_STATUS.md)** - Current pipeline status
+- **[Deployment Guide](docs/DEPLOYMENT_SUMMARY.md)** - Deployment information
+
+### 📝 Release Information
+- **[Changelog](docs/CHANGELOG.md)** - Version history and changes
+- **[Release Notes v2.2.0-Beta](docs/RELEASE_NOTES_v2.2.0-Beta.md)** - Latest release details
+- **[License](LICENSE)** - MIT License
+
 ## 📂 **Project Structure**
 
 ```
