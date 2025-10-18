@@ -34,6 +34,17 @@ import logging
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 logging.getLogger('transformers').setLevel(logging.ERROR)
 
+# Windows-compatible print function
+import sys
+def safe_print(message):
+    """Print with Windows encoding compatibility"""
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        # Replace Unicode characters for Windows compatibility
+        safe_message = message.replace('✓', '[OK]').replace('⚠️', '[WARNING]').replace('🎯', '[TARGET]')
+        print(safe_message)
+
 # Try to import Hugging Face transformers
 try:
     from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
@@ -100,10 +111,10 @@ class UltimateStockML:
                 model="cardiffnlp/twitter-roberta-base-sentiment-latest"
             )
             
-            print("✓ Hugging Face models initialized")
+            safe_print("[OK] Hugging Face models initialized")
             
         except Exception as e:
-            print(f"⚠️ Hugging Face model initialization failed: {e}")
+            safe_print(f"[WARNING] Hugging Face model initialization failed: {e}")
             self.hf_models = {}
     
     def _initialize_models(self):
@@ -194,7 +205,7 @@ class UltimateStockML:
             self.scalers['standard'] = StandardScaler()
             self.scalers['minmax'] = MinMaxScaler()
             
-            print("✓ Ultimate ML models initialized (8 models)")
+            safe_print("[OK] Ultimate ML models initialized (8 models)")
             
         except Exception as e:
             print(f"✗ Model initialization failed: {e}")
@@ -257,7 +268,7 @@ class UltimateStockML:
                     sp500_url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
                     sp500_table = pd.read_html(sp500_url, header=0)[0]
                     sp500_symbols = sp500_table['Symbol'].tolist()
-                    print(f"✓ Fetched {len(sp500_symbols)} S&P 500 symbols from Wikipedia")
+                    safe_print(f"[OK] Fetched {len(sp500_symbols)} S&P 500 symbols from Wikipedia")
                 except:
                     # Method 2: Use yfinance to get some major symbols
                     try:
@@ -272,7 +283,7 @@ class UltimateStockML:
                             'NKE', 'LIN', 'CMCSA', 'ACN', 'TXN', 'QCOM', 'HON', 'NEE', 'UPS', 'PM', 'RTX',
                             'LOW', 'ORCL', 'CVX', 'AMD', 'SPGI', 'INTU', 'GS', 'CAT', 'AXP', 'BKNG'
                         ]
-                        print(f"✓ Using curated list of {len(sp500_symbols)} major stocks")
+                        safe_print(f"[OK] Using curated list of {len(sp500_symbols)} major stocks")
                     except:
                         sp500_symbols = []
                 
@@ -281,12 +292,12 @@ class UltimateStockML:
                     
             except Exception as e:
                 print(f"Could not fetch S&P 500 list: {e}")
-                print("✓ Using fallback stock list")
+                safe_print("[OK] Using fallback stock list")
             
             # Remove duplicates and clean symbols
             self.all_symbols = list(set([s.replace('.', '-') for s in major_stocks if s]))
             
-            print(f"✓ Loaded {len(self.all_symbols)} stock symbols for training")
+            safe_print(f"[OK] Loaded {len(self.all_symbols)} stock symbols for training")
             
         except Exception as e:
             print(f"✗ Failed to load stock symbols: {e}")
@@ -467,7 +478,7 @@ class UltimateStockML:
                                     successful_symbols.append(symbol)
                                     
                                     if len(successful_symbols) % 50 == 0:
-                                        print(f"✓ Processed {len(successful_symbols)} symbols...")
+                                        safe_print(f"[OK] Processed {len(successful_symbols)} symbols...")
                                         
                         except Exception as e:
                             print(f"✗ Failed to process {symbol}: {e}")
@@ -497,8 +508,8 @@ class UltimateStockML:
             X = np.array(all_features)
             y = np.array(all_targets)
             
-            print(f"🎯 Training dataset: {len(X):,} samples with {X.shape[1]} features")
-            print(f"✓ Successfully processed {len(successful_symbols)} symbols")
+            safe_print(f"[TARGET] Training dataset: {len(X):,} samples with {X.shape[1]} features")
+            safe_print(f"[OK] Successfully processed {len(successful_symbols)} symbols")
             
             # Train all models
             self._train_ultimate_ensemble(X, y)
@@ -853,7 +864,7 @@ class UltimateStockML:
                 print(f"Training {name}...")
                 self.models[name].fit(X_standard, y)
             
-            print("✓ All 8 models trained successfully")
+            safe_print("[OK] All 8 models trained successfully")
             
         except Exception as e:
             print(f"Ultimate ensemble training failed: {e}")
@@ -975,7 +986,7 @@ class UltimateStockML:
             metadata_path = self.model_dir / "metadata.pkl"
             joblib.dump(metadata, metadata_path)
             
-            print(f"✓ Models saved to {self.model_dir}")
+            safe_print(f"[OK] Models saved to {self.model_dir}")
             
         except Exception as e:
             print(f"Failed to save models: {e}")
@@ -1006,7 +1017,7 @@ class UltimateStockML:
                 self.sector_data = metadata.get('sector_data', {})
             
             self.is_trained = True
-            print("✓ Models loaded successfully")
+            safe_print("[OK] Models loaded successfully")
             return True
             
         except Exception as e:
