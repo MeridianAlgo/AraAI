@@ -49,6 +49,9 @@ bitsandbytes>=0.39.0            # Memory optimization for large models (optional
 # - Advanced technical indicators and market intelligence
 # - Real-time error correction and model improvement
 
-# Minimum Python version: 3.8+
-# Recommended Python version: 3.9+ for best performance
+# Minimum Python version: 3.9+ (Python 3.8 has compatibility issues with multitasking package)
+# Recommended Python version: 3.11+ for best performance
 # GPU recommended for optimal LSTM training speed
+
+# Python 3.9+ specific dependencies
+typing-extensions>=4.0.0        # Type hints for Python 3.9+

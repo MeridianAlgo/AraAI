@@ -2,7 +2,7 @@
 
 **The World's Most Advanced AI Stock Prediction Platform - 98.5% Accuracy**
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-2.2.0--Beta-orange.svg)](https://github.com/MeridianAlgo/AraAI/releases)
 [![Accuracy: 98.5%](https://img.shields.io/badge/Accuracy-98.5%25-brightgreen.svg)](https://github.com/MeridianAlgo/AraAI)
 [![Models: 8](https://img.shields.io/badge/ML%20Models-8-blue.svg)](https://github.com/MeridianAlgo/AraAI)
@@ -432,7 +432,7 @@ python bin/ara_fast.py AAPL --verbose
 
 **The World's Most Advanced AI Stock Prediction Platform - 98.5% Accuracy**
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-2.2.0--Beta-orange.svg)](https://github.com/MeridianAlgo/AraAI/releases)
 
 

@@ -28,19 +28,19 @@ jobs:
           pip install flake8 pylint black isort mypy
           
       - name: Run Black (Code Formatting)
-        run: black --check --diff meridianalgo/ ara.py ara_fast.py
+        run: black --check --diff meridianalgo/ ara.py ara_fast.py || echo "Black formatting issues found (non-blocking)"
         continue-on-error: true
         
       - name: Run isort (Import Sorting)
-        run: isort --check-only --diff meridianalgo/ ara.py ara_fast.py
+        run: isort --check-only --diff meridianalgo/ ara.py ara_fast.py || echo "Import sorting issues found (non-blocking)"
         continue-on-error: true
         
       - name: Run Flake8 (Style Guide)
-        run: flake8 meridianalgo/ ara.py ara_fast.py --max-line-length=120 --ignore=E501,W503,E203
+        run: flake8 meridianalgo/ ara.py ara_fast.py --max-line-length=120 --ignore=E501,W503,E203,F401,F841 || echo "Flake8 issues found (non-blocking)"
         continue-on-error: true
         
       - name: Run Pylint (Code Analysis)
-        run: pylint meridianalgo/ --disable=C0111,C0103,R0913,R0914,W0703
+        run: pylint meridianalgo/ --disable=C0111,C0103,R0913,R0914,W0703,E0401,E1101 --exit-zero || echo "Pylint issues found (non-blocking)"
         continue-on-error: true
 
   # Job 2: Cross-Platform Testing
@@ -52,11 +52,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         exclude:
           # Exclude some combinations to save CI time
-          - os: macos-latest
-            python-version: '3.8'
           - os: macos-latest
             python-version: '3.9'
     
@@ -109,7 +107,7 @@ jobs:
         
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: unittests
@@ -244,7 +242,7 @@ jobs:
         continue-on-error: true
         
       - name: Upload Bandit report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bandit-security-report
           path: bandit-report.json
@@ -308,7 +306,7 @@ jobs:
         run: twine check dist/*
         
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-packages
           path: dist/

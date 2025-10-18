@@ -53,7 +53,7 @@ VERSION_INFO = {
         'Intel XPU',
         'Apple MPS'
     ],
-    'python_versions': ['3.8+', '3.9+', '3.10+', '3.11+', '3.12+']
+    'python_versions': ['3.9+', '3.10+', '3.11+', '3.12+']
 }
 
 def get_version_info():
