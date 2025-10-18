@@ -5,11 +5,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-2.2.0--Beta-orange.svg)](https://github.com/MeridianAlgo/AraAI/releases)
 [![Accuracy: 98.5%](https://img.shields.io/badge/Accuracy-98.5%25-brightgreen.svg)](https://github.com/MeridianAlgo/AraAI)
-[![Models: 8](https://img.shields.io/badge/ML%20Models-8-blue.svg)](https://github.com/MeridianAlgo/AraAI)
-[![Features: 44](https://img.shields.io/badge/Features-44-orange.svg)](https://github.com/MeridianAlgo/AraAI)
-[![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face-yellow.svg)](https://huggingface.co/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Offline](https://img.shields.io/badge/Works-Offline-green.svg)](https://github.com/MeridianAlgo/AraAI)
 [![No API Keys](https://img.shields.io/badge/No%20API%20Keys-Required-brightgreen.svg)](https://github.com/MeridianAlgo/AraAI)
 
 > **🎯 One-Command Setup • 98.5% Accuracy • Works Completely Offline • No API Keys Required**
