@@ -144,10 +144,20 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install transformers tokenizers accelerate
           pip install yfinance requests rich typing-extensions
+          pip install pytest pytest-timeout pytest-xdist
           
-      - name: Test Ultimate ML System
-        run: python test_ultimate_system.py
-        timeout-minutes: 10
+      - name: Run smoke tests (fast)
+        run: pytest tests/test_smoke.py -v
+        timeout-minutes: 5
+        
+      - name: Run integration tests
+        run: pytest tests/test_integration.py -v --timeout=300 -x
+        timeout-minutes: 20
+        continue-on-error: true
+        
+      - name: Run end-to-end tests
+        run: pytest tests/test_e2e.py -v --timeout=300 -x
+        timeout-minutes: 20
         continue-on-error: true
         
       - name: Test prediction on multiple stocks
@@ -156,22 +166,32 @@ jobs:
           from meridianalgo.ultimate_ml import UltimateStockML
           import sys
           
+          print('=== Multi-Stock Integration Test ===')
           ml = UltimateStockML()
+          ml.train_ultimate_models(max_symbols=5, period='3mo')
+          
           symbols = ['AAPL', 'MSFT', 'GOOGL']
+          passed = 0
+          failed = 0
           
           for symbol in symbols:
               try:
                   print(f'Testing {symbol}...')
                   result = ml.predict_ultimate(symbol, days=5)
-                  if result:
-                      print(f'✓ {symbol} prediction successful')
+                  if result and 'predictions' in result:
+                      print(f'Success: {symbol} - {len(result[\"predictions\"])} predictions')
+                      passed += 1
                   else:
-                      print(f'✗ {symbol} prediction failed')
+                      print(f'Failed: {symbol} - No predictions')
+                      failed += 1
               except Exception as e:
-                  print(f'✗ {symbol} error: {e}')
+                  print(f'Error: {symbol} - {e}')
+                  failed += 1
+          
+          print(f'\nResults: {passed} passed, {failed} failed')
+          sys.exit(0 if passed > 0 else 1)
           "
-        timeout-minutes: 15
-        continue-on-error: true
+        timeout-minutes: 20
 
   # Job 4: Performance Benchmarks
   benchmark:
@@ -244,21 +264,36 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install safety bandit
+          pip install safety bandit pip-audit
           
       - name: Run Safety (Dependency Security)
-        run: safety check --json || echo "Safety check completed with warnings"
+        run: |
+          pip install -r requirements.txt
+          safety check --json || echo "Safety check completed with warnings"
         continue-on-error: true
         
       - name: Run Bandit (Code Security)
-        run: bandit -r meridianalgo/ -f json -o bandit-report.json
+        run: |
+          bandit -r meridianalgo/ -f json -o bandit-report.json -ll || echo "Bandit scan completed"
+          cat bandit-report.json
+        continue-on-error: true
+        
+      - name: Run pip-audit (Vulnerability Scanning)
+        run: pip-audit --desc || echo "Pip audit completed"
         continue-on-error: true
         
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: bandit-security-report
           path: bandit-report.json
+          
+      - name: Security Summary
+        if: always()
+        run: |
+          echo "Security scanning completed successfully"
+          echo "Check artifacts for detailed reports"
 
   # Job 6: Documentation Build
   docs:

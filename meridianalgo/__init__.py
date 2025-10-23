@@ -10,10 +10,10 @@ This package provides:
 - Advanced technical indicators
 - Automated model validation and learning
 
-Version: 2.2.0-Beta
+Version: 3.0.0
 """
 
-__version__ = "2.2.0-Beta"
+__version__ = "3.0.0"
 __author__ = "MeridianAlgo Team"
 __email__ = "support@meridianalgo.com"
 __license__ = "MIT"
