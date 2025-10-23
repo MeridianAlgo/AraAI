@@ -47,10 +47,9 @@ class TestUltimateML:
         
     def test_prediction_bounds(self, ml_system):
         """Test that predictions have realistic bounds"""
-        # This test requires trained models
-        # Skip if models not trained
+        # Train models if not trained
         if not ml_system.is_trained:
-            pytest.skip("Models not trained")
+            ml_system.train_ultimate_models(max_symbols=5, period='6mo', use_parallel=False)
             
         result = ml_system.predict_ultimate('AAPL', days=5)
         
@@ -67,8 +66,9 @@ class TestUltimateML:
                 
     def test_prediction_variation(self, ml_system):
         """Test that predictions vary across days"""
+        # Train models if not trained
         if not ml_system.is_trained:
-            pytest.skip("Models not trained")
+            ml_system.train_ultimate_models(max_symbols=5, period='6mo', use_parallel=False)
             
         result = ml_system.predict_ultimate('AAPL', days=5)
         
@@ -81,8 +81,9 @@ class TestUltimateML:
             
     def test_confidence_scores(self, ml_system):
         """Test confidence score calculation"""
+        # Train models if not trained
         if not ml_system.is_trained:
-            pytest.skip("Models not trained")
+            ml_system.train_ultimate_models(max_symbols=5, period='6mo', use_parallel=False)
             
         result = ml_system.predict_ultimate('AAPL', days=5)
         
