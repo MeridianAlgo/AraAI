@@ -11,7 +11,9 @@
 
 ## Overview
 
-ARA AI is a comprehensive stock prediction system powered by an ensemble of 8 machine learning models, delivering high-accuracy predictions with realistic bounds and comprehensive financial analysis.
+ARA AI is a comprehensive stock prediction system developed by MeridianAlgo, powered by an ensemble of 8 machine learning models, delivering high-accuracy predictions with realistic bounds and comprehensive financial analysis.
+
+**Developed by MeridianAlgo** - Specialists in algorithmic trading and machine learning solutions for financial markets.
 
 ### Key Features
 
@@ -85,10 +87,12 @@ AraAI/
 ├── ara_fast.py                 # Fast inference mode
 ├── setup_araai.py              # Setup and installation script
 ├── requirements.txt            # Python dependencies
+├── README.md                   # This file
 ├── CONTRIBUTING.md             # Contribution guidelines
+├── CREDITS.md                  # Credits and acknowledgments
 ├── LICENSE                     # MIT License
 │
-├── meridianalgo/               # Core package
+├── meridianalgo/               # Core package (MeridianAlgo)
 │   ├── __init__.py
 │   ├── ultimate_ml.py          # Ultimate ML system (8 models)
 │   ├── core.py                 # Core prediction engine
@@ -115,6 +119,9 @@ AraAI/
 │   └── [other tests]
 │
 ├── examples/                   # Example scripts
+├── scripts/                    # Utility scripts
+├── setup/                      # Setup and installation files
+├── tools/                      # Build and deployment tools
 ├── models/                     # Trained models (generated)
 └── .github/workflows/          # CI/CD pipelines
 ```
@@ -291,13 +298,21 @@ Please use the [issue tracker](https://github.com/MeridianAlgo/AraAI/issues) and
 
 ---
 
-## Acknowledgments
+## Credits and Acknowledgments
 
-- **XGBoost Team** - High-performance gradient boosting
-- **LightGBM Team** - Fast gradient boosting framework
-- **Hugging Face** - Transformer models and NLP tools
-- **scikit-learn** - Machine learning library
-- **yfinance** - Financial data API
+This project is built on the shoulders of giants. We are deeply grateful to:
+
+- **MeridianAlgo Team** - Core development and algorithmic trading expertise
+- **XGBoost Team** (DMLC) - Extreme gradient boosting (99.7% accuracy in our ensemble)
+- **Microsoft LightGBM Team** - Fast gradient boosting framework
+- **Hugging Face** - Transformer models and NLP infrastructure
+- **Meta AI (PyTorch)** - Deep learning framework
+- **scikit-learn Team** - Comprehensive machine learning library
+- **Ran Aroussi (yfinance)** - Yahoo Finance data access
+- **NumPy, pandas, SciPy Teams** - Scientific computing foundation
+- **Will McGugan (Rich)** - Beautiful console output
+
+For complete credits, contributors, and license information, see [CREDITS.md](CREDITS.md).
 
 ---
 
