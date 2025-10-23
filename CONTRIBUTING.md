@@ -29,15 +29,15 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/AraAI.git
-   cd AraAI
-   ```
+```bash
+git clone https://github.com/YOUR_USERNAME/AraAI.git
+cd AraAI
+```
 
 3. Add upstream remote:
-   ```bash
-   git remote add upstream https://github.com/MeridianAlgo/AraAI.git
-   ```
+```bash
+git remote add upstream https://github.com/MeridianAlgo/AraAI.git
+```
 
 ## 💻 Development Setup
 
@@ -45,7 +45,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate # On Windows: venv\Scripts\activate
 ```
 
 ### 2. Install Dependencies
@@ -153,10 +153,10 @@ git push origin feature/your-feature-name
 2. Click "New Pull Request"
 3. Select your fork and branch
 4. Fill in the PR template:
-   - Description of changes
-   - Related issues
-   - Testing performed
-   - Screenshots (if applicable)
+- Description of changes
+- Related issues
+- Testing performed
+- Screenshots (if applicable)
 
 ### 4. Code Review
 
@@ -170,19 +170,19 @@ git push origin feature/your-feature-name
 
 - Follow PEP 8
 - Use Black for formatting:
-  ```bash
-  black meridianalgo/ ara.py ara_fast.py
-  ```
+```bash
+black meridianalgo/ ara.py ara_fast.py
+```
 
 - Use isort for imports:
-  ```bash
-  isort meridianalgo/ ara.py ara_fast.py
-  ```
+```bash
+isort meridianalgo/ ara.py ara_fast.py
+```
 
 - Run Flake8:
-  ```bash
-  flake8 meridianalgo/ --max-line-length=120
-  ```
+```bash
+flake8 meridianalgo/ --max-line-length=120
+```
 
 ### Code Quality
 
@@ -196,21 +196,21 @@ git push origin feature/your-feature-name
 
 ```python
 def calculate_prediction(
-    data: pd.DataFrame,
-    days: int = 5
+data: pd.DataFrame,
+days: int = 5
 ) -> Dict[str, Any]:
-    """
-    Calculate stock price predictions.
-    
-    Args:
-        data: Historical stock data
-        days: Number of days to predict
-        
-    Returns:
-        Dictionary containing predictions and metadata
-    """
-    # Implementation
-    pass
+"""
+Calculate stock price predictions.
+
+Args:
+data: Historical stock data
+days: Number of days to predict
+
+Returns:
+Dictionary containing predictions and metadata
+"""
+# Implementation
+pass
 ```
 
 ## 📚 Documentation
@@ -290,12 +290,12 @@ Any other relevant information
 
 ### What We Look For
 
-- ✅ Code quality and readability
-- ✅ Test coverage
-- ✅ Documentation updates
-- ✅ Performance impact
-- ✅ Security considerations
-- ✅ Backward compatibility
+- Code quality and readability
+- Test coverage
+- Documentation updates
+- Performance impact
+- Security considerations
+- Backward compatibility
 
 ### Review Timeline
 
@@ -307,23 +307,23 @@ Any other relevant information
 
 ### High Priority
 
-- 🔴 Bug fixes
-- 🔴 Performance improvements
-- 🔴 Test coverage improvements
-- 🔴 Documentation enhancements
+- Bug fixes
+- Performance improvements
+- Test coverage improvements
+- Documentation enhancements
 
 ### Medium Priority
 
-- 🟡 New ML models
-- 🟡 Additional technical indicators
-- 🟡 UI/UX improvements
-- 🟡 Platform-specific optimizations
+- New ML models
+- Additional technical indicators
+- UI/UX improvements
+- Platform-specific optimizations
 
 ### Low Priority
 
-- 🟢 Code refactoring
-- 🟢 Style improvements
-- 🟢 Example additions
+- Code refactoring
+- Style improvements
+- Example additions
 
 ## 📞 Getting Help
 
@@ -352,6 +352,26 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-**Thank you for contributing to ARA AI!** 🚀
+**Thank you for contributing to ARA AI!**
 
 Your contributions help make stock prediction more accessible and accurate for everyone.
+
+
+---
+
+## Disclaimer
+
+By contributing to this project, you agree that:
+
+- Your contributions will be licensed under the MIT License
+- You have the right to submit the contributions
+- Your contributions are your own original work
+- You understand this is open-source software provided AS IS
+- You will not hold the project maintainers liable for any issues
+- You have read and agree to follow the Code of Conduct
+
+This project is for educational purposes. Contributors are not responsible for how users apply the software or any financial outcomes.
+
+---
+
+**Last Updated**: September 21, 2025
