@@ -37,7 +37,7 @@ jobs:
       - name: Get current version
         id: get_version
         run: |
-          VERSION=$(python -c "import re; content = open('meridianalgo/__init__.py').read(); print(re.search(r'__version__\s*=\s*[\"']([^\"']+)[\"']', content).group(1))")
+          VERSION=$(python -c "import meridianalgo; print(meridianalgo.__version__)")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Current version: $VERSION"
           
@@ -94,7 +94,7 @@ jobs:
       - name: Get version
         id: version
         run: |
-          VERSION=$(python -c "import re; content = open('meridianalgo/__init__.py').read(); print(re.search(r'__version__\s*=\s*[\"']([^\"']+)[\"']', content).group(1))")
+          VERSION=$(python -c "import meridianalgo; print(meridianalgo.__version__)")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
           
