@@ -65,12 +65,12 @@ def main():
         if result and 'predictions' in result:
             # Display results
             print("\n" + "=" * 70)
-            print(f"📊 {args.symbol} - Stock Prediction Results")
+            print(f"{args.symbol} - Stock Prediction Results")
             print("=" * 70)
             
-            print(f"\n💰 Current Price: ${result.get('current_price', 0):.2f}")
+            print(f"\nCurrent Price: ${result.get('current_price', 0):.2f}")
             if 'ensemble_accuracy' in result:
-                print(f"🎯 Ensemble Accuracy: {result['ensemble_accuracy']:.1f}%")
+                print(f"Ensemble Accuracy: {result['ensemble_accuracy']:.1f}%")
             
             # Financial health
             if 'financial_health' in result:
@@ -79,25 +79,15 @@ def main():
                 score = health['health_score']
                 risk = health['risk_grade']
                 
-                # Color code based on grade
-                if grade.startswith('A'):
-                    grade_emoji = "🟢"
-                elif grade.startswith('B'):
-                    grade_emoji = "🟡"
-                elif grade.startswith('C'):
-                    grade_emoji = "🟠"
-                else:
-                    grade_emoji = "🔴"
-                
-                print(f"\n{grade_emoji} Financial Health: {grade} (Score: {score:.1f}/100)")
-                print(f"⚠️  Risk Grade: {risk}")
+                print(f"\nFinancial Health: {grade} (Score: {score:.1f}/100)")
+                print(f"Risk Grade: {risk}")
             
             # Sector info
             if 'sector' in result:
-                print(f"🏢 Sector: {result['sector']}")
+                print(f"Sector: {result['sector']}")
             
             # Predictions
-            print(f"\n📈 {args.days}-Day Forecast:")
+            print(f"\n{args.days}-Day Forecast:")
             print("-" * 70)
             print(f"{'Date':<12} {'Price':<12} {'Change':<12} {'Confidence':<12}")
             print("-" * 70)
@@ -108,13 +98,13 @@ def main():
                 pred_return = pred.get('predicted_return', 0) * 100  # Convert to percentage
                 conf = pred['confidence']
                 
-                # Format change with color indicator
+                # Format change
                 if pred_return > 0:
-                    change_str = f"+{pred_return:.2f}% 📈"
+                    change_str = f"+{pred_return:.2f}%"
                 elif pred_return < 0:
-                    change_str = f"{pred_return:.2f}% 📉"
+                    change_str = f"{pred_return:.2f}%"
                 else:
-                    change_str = f"{pred_return:.2f}% ➡️"
+                    change_str = f"{pred_return:.2f}%"
                 
                 print(f"{date:<12} ${price:<10.2f} {change_str:<12} {conf:.1%}")
             
@@ -125,22 +115,22 @@ def main():
             final_price = result['predictions'][-1]['predicted_price']
             total_change = ((final_price - result.get('current_price', final_price)) / result.get('current_price', final_price)) * 100
             
-            print(f"\n📊 Summary:")
+            print(f"\nSummary:")
             print(f"   Average Daily Change: {avg_change:+.2f}%")
             print(f"   Final Predicted Price: ${final_price:.2f}")
             print(f"   Total Change: {total_change:+.2f}%")
             
             # Recommendation
             if total_change > 5:
-                print(f"\n💡 Outlook: Strong Bullish 🚀")
+                print(f"\nOutlook: Strong Bullish")
             elif total_change > 2:
-                print(f"\n💡 Outlook: Bullish 📈")
+                print(f"\nOutlook: Bullish")
             elif total_change > -2:
-                print(f"\n💡 Outlook: Neutral ➡️")
+                print(f"\nOutlook: Neutral")
             elif total_change > -5:
-                print(f"\n💡 Outlook: Bearish 📉")
+                print(f"\nOutlook: Bearish")
             else:
-                print(f"\n💡 Outlook: Strong Bearish ⚠️")
+                print(f"\nOutlook: Strong Bearish")
             
             print("\n" + "=" * 70)
             console.print_success("Prediction completed successfully!")

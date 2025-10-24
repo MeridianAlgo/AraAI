@@ -17,9 +17,10 @@ ARA AI is a comprehensive stock prediction system developed by MeridianAlgo, pow
 
 ### Key Features
 
-- **8-Model Ensemble**: XGBoost (99.7%), LightGBM, Random Forest, Extra Trees, Gradient Boosting, Ridge, Elastic Net, Lasso
+- **9-10 Model Ensemble**: XGBoost, LightGBM, CatBoost, Random Forest, Extra Trees, Gradient Boosting, AdaBoost, Ridge, Elastic Net, Lasso
 - **98.5% Accuracy**: Ensemble model with validated performance metrics
-- **Realistic Predictions**: Proper bounds (±5% daily, ±15% total) prevent unrealistic forecasts
+- **Stock & Forex Support**: Predict stocks and 20+ currency pairs
+- **Realistic Predictions**: Proper bounds prevent unrealistic forecasts
 - **Financial Health Analysis**: A+ to F grades based on debt, liquidity, profitability metrics
 - **AI Sentiment Analysis**: Hugging Face RoBERTa for market sentiment
 - **44 Technical Indicators**: Comprehensive feature engineering
@@ -46,18 +47,28 @@ python setup_araai.py
 
 ### Basic Usage
 
+**Stock Predictions:**
 ```bash
 # Quick prediction
 python ara.py AAPL
 
-# Detailed analysis
-python ara.py MSFT --verbose
-
 # 7-day forecast
 python ara.py GOOGL --days 7
 
-# Fast mode
-python ara_fast.py TSLA
+# Force retraining
+python ara.py TSLA --train
+```
+
+**Forex Predictions:**
+```bash
+# Currency pair prediction
+python ara_forex.py EURUSD
+
+# 7-day forex forecast
+python ara_forex.py GBPUSD --days 7
+
+# Train on specific pair
+python ara_forex.py USDJPY --train
 ```
 
 ### Example Output
@@ -225,20 +236,37 @@ AraAI/
 
 ## Command Line Options
 
+**Stock Predictions (ara.py):**
 ```bash
-# Basic usage
-python ara.py SYMBOL
+python ara.py SYMBOL [OPTIONS]
 
-# Options
---days, -d          Number of days to predict (default: 5)
---verbose, -v       Verbose output with detailed information
---retrain           Force model retraining
---period            Training period: 6mo, 1y, 2y, 5y (default: 1y)
+Options:
+  --days N        Number of days to predict (default: 5)
+  --train         Force model retraining
+  --period PERIOD Training period: 6mo, 1y, 2y, 5y (default: 6mo)
 
-# Examples
-python ara.py AAPL --days 7 --verbose
-python ara.py MSFT --retrain --period 2y
-python ara_fast.py GOOGL --days 10
+Examples:
+  python ara.py AAPL --days 7
+  python ara.py MSFT --train --period 2y
+```
+
+**Forex Predictions (ara_forex.py):**
+```bash
+python ara_forex.py PAIR [OPTIONS]
+
+Options:
+  --days N        Number of days to predict (default: 5)
+  --train         Force model retraining
+  --period PERIOD Training period: 6mo, 1y, 2y, 5y (default: 2y)
+
+Supported Pairs:
+  Major: EURUSD, GBPUSD, USDJPY, USDCHF, AUDUSD, USDCAD, NZDUSD
+  Cross: EURJPY, GBPJPY, EURGBP, EURAUD, EURCHF, AUDJPY
+  Exotic: USDMXN, USDZAR, USDTRY, USDBRL
+
+Examples:
+  python ara_forex.py EURUSD --days 7
+  python ara_forex.py GBPJPY --train
 ```
 
 ---

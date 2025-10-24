@@ -51,22 +51,22 @@ def main():
         if result and 'predictions' in result:
             # Display results
             print("\n" + "=" * 70)
-            print(f"💱 {result['pair']} - Forex Prediction Results")
+            print(f"{result['pair']} - Forex Prediction Results")
             print("=" * 70)
             
             pair_info = result['pair_info']
-            print(f"\n📊 Pair Information:")
+            print(f"\nPair Information:")
             print(f"   Base: {pair_info['base_name']} ({pair_info['base_currency']})")
             print(f"   Quote: {pair_info['quote_name']} ({pair_info['quote_currency']})")
             print(f"   Type: {pair_info['type']} Pair")
             print(f"   Regions: {pair_info['base_region']} / {pair_info['quote_region']}")
             
-            print(f"\n💰 Current Rate: {result['current_price']:.5f}")
-            print(f"📈 Trend: {result['trend']}")
-            print(f"📊 Volatility: {result['volatility']:.2f}%")
+            print(f"\nCurrent Rate: {result['current_price']:.5f}")
+            print(f"Trend: {result['trend']}")
+            print(f"Volatility: {result['volatility']:.2f}%")
             
             # Predictions
-            print(f"\n📈 {args.days}-Day Forecast:")
+            print(f"\n{args.days}-Day Forecast:")
             print("-" * 70)
             print(f"{'Date':<12} {'Rate':<12} {'Pips':<12} {'Change':<12} {'Confidence':<12}")
             print("-" * 70)
@@ -78,15 +78,15 @@ def main():
                 pred_return = pred['predicted_return'] * 100
                 conf = pred['confidence']
                 
-                # Format change with indicator
+                # Format change
                 if pred_return > 0:
-                    change_str = f"+{pred_return:.2f}% 📈"
+                    change_str = f"+{pred_return:.2f}%"
                     pips_str = f"+{pips:.1f}"
                 elif pred_return < 0:
-                    change_str = f"{pred_return:.2f}% 📉"
+                    change_str = f"{pred_return:.2f}%"
                     pips_str = f"{pips:.1f}"
                 else:
-                    change_str = f"{pred_return:.2f}% ➡️"
+                    change_str = f"{pred_return:.2f}%"
                     pips_str = f"{pips:.1f}"
                 
                 print(f"{date:<12} {price:<12.5f} {pips_str:<12} {change_str:<12} {conf:.1%}")
@@ -99,7 +99,7 @@ def main():
             total_change = ((final_price - result['current_price']) / result['current_price']) * 100
             total_pips = result['predictions'][-1]['pips']
             
-            print(f"\n📊 Summary:")
+            print(f"\nSummary:")
             print(f"   Average Daily Change: {avg_change:+.2f}%")
             print(f"   Final Predicted Rate: {final_price:.5f}")
             print(f"   Total Change: {total_change:+.2f}%")
@@ -107,24 +107,24 @@ def main():
             
             # Market outlook
             if total_change > 2:
-                print(f"\n💡 Outlook: Strong Bullish 🚀")
+                print(f"\nOutlook: Strong Bullish")
                 print(f"   {pair_info['base_currency']} expected to strengthen vs {pair_info['quote_currency']}")
             elif total_change > 0.5:
-                print(f"\n💡 Outlook: Bullish 📈")
+                print(f"\nOutlook: Bullish")
                 print(f"   {pair_info['base_currency']} likely to gain vs {pair_info['quote_currency']}")
             elif total_change > -0.5:
-                print(f"\n💡 Outlook: Neutral ➡️")
+                print(f"\nOutlook: Neutral")
                 print(f"   {pair_info['base_currency']} stable vs {pair_info['quote_currency']}")
             elif total_change > -2:
-                print(f"\n💡 Outlook: Bearish 📉")
+                print(f"\nOutlook: Bearish")
                 print(f"   {pair_info['base_currency']} likely to weaken vs {pair_info['quote_currency']}")
             else:
-                print(f"\n💡 Outlook: Strong Bearish ⚠️")
+                print(f"\nOutlook: Strong Bearish")
                 print(f"   {pair_info['base_currency']} expected to weaken vs {pair_info['quote_currency']}")
             
             # Market status
             market_status = forex.get_forex_market_status()
-            print(f"\n🌍 Market Status: {market_status['status']}")
+            print(f"\nMarket Status: {market_status['status']}")
             
             print("\n" + "=" * 70)
             console.print_success("Prediction completed successfully!")
