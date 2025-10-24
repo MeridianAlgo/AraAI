@@ -6,12 +6,20 @@ Maximum accuracy with comprehensive market data and AI integration
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, ExtraTreesRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, ExtraTreesRegressor, AdaBoostRegressor
 from sklearn.linear_model import Ridge, ElasticNet, Lasso
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
 from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 import xgboost as xgb
 import lightgbm as lgb
+
+# Try to import CatBoost
+try:
+    import catboost as cb
+    CATBOOST_AVAILABLE = True
+except ImportError:
+    CATBOOST_AVAILABLE = False
+    print("[INFO] CatBoost not available. Install with: pip install catboost")
 from datetime import datetime, timedelta
 import pytz
 import warnings
@@ -70,16 +78,18 @@ class UltimateStockML:
         self.sector_data = {}
         self.is_trained = False
         
-        # Enhanced model ensemble (more models for higher accuracy)
+        # Enhanced model ensemble with MORE models for higher accuracy
         self.model_weights = {
-            'xgb': 0.20,
-            'lgb': 0.20,
-            'rf': 0.15,
-            'et': 0.15,
-            'gb': 0.10,
-            'ridge': 0.08,
-            'elastic': 0.07,
-            'lasso': 0.05
+            'xgb': 0.18,
+            'lgb': 0.18,
+            'catboost': 0.15,  # NEW: CatBoost
+            'rf': 0.12,
+            'et': 0.12,
+            'gb': 0.08,
+            'adaboost': 0.07,  # NEW: AdaBoost
+            'ridge': 0.05,
+            'elastic': 0.03,
+            'lasso': 0.02
         }
         
         # Market hours and timezone info
@@ -200,12 +210,31 @@ class UltimateStockML:
                 max_iter=2000
             )
             
+            # AdaBoost - Boosting ensemble
+            self.models['adaboost'] = AdaBoostRegressor(
+                n_estimators=100,
+                learning_rate=0.1,
+                random_state=42
+            )
+            
+            # CatBoost - Categorical features (if available)
+            if CATBOOST_AVAILABLE:
+                self.models['catboost'] = cb.CatBoostRegressor(
+                    iterations=300,
+                    depth=10,
+                    learning_rate=0.08,
+                    random_state=42,
+                    verbose=False,
+                    thread_count=-1
+                )
+            
             # Multiple scalers for different model types
             self.scalers['robust'] = RobustScaler()
             self.scalers['standard'] = StandardScaler()
             self.scalers['minmax'] = MinMaxScaler()
             
-            safe_print("[OK] Ultimate ML models initialized (8 models)")
+            model_count = len(self.models)
+            safe_print(f"[OK] Ultimate ML models initialized ({model_count} models)")
             
         except Exception as e:
             print(f"✗ Model initialization failed: {e}")
@@ -436,7 +465,24 @@ class UltimateStockML:
                 'country': 'US'
             }
     
-    def train_ultimate_models(self, max_symbols=None, period="2y", use_parallel=True):
+    def _get_sector_stocks(self, sector):
+        """Get stocks from the same sector for better training"""
+        sector_mapping = {
+            'Technology': ['AAPL', 'MSFT', 'NVDA', 'ORCL', 'CSCO', 'INTC', 'AMD', 'QCOM', 'TXN', 'AVGO'],
+            'Financial Services': ['JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'BLK', 'SCHW', 'AXP', 'USB'],
+            'Healthcare': ['JNJ', 'PFE', 'UNH', 'ABBV', 'TMO', 'ABT', 'DHR', 'BMY', 'AMGN', 'GILD'],
+            'Consumer Cyclical': ['AMZN', 'TSLA', 'HD', 'NKE', 'MCD', 'SBUX', 'TGT', 'LOW', 'BKNG', 'MAR'],
+            'Communication Services': ['GOOGL', 'META', 'NFLX', 'DIS', 'CMCSA', 'T', 'VZ', 'TMUS', 'CHTR'],
+            'Energy': ['XOM', 'CVX', 'COP', 'SLB', 'EOG', 'MPC', 'PSX', 'VLO', 'OXY', 'HAL'],
+            'Consumer Defensive': ['WMT', 'PG', 'KO', 'PEP', 'COST', 'PM', 'MO', 'CL', 'MDLZ', 'GIS'],
+            'Industrials': ['BA', 'HON', 'UPS', 'CAT', 'GE', 'MMM', 'LMT', 'RTX', 'DE', 'EMR'],
+            'Utilities': ['NEE', 'DUK', 'SO', 'D', 'AEP', 'EXC', 'SRE', 'PEG', 'XEL', 'ED'],
+            'Real Estate': ['AMT', 'PLD', 'CCI', 'EQIX', 'PSA', 'EXR', 'AVB', 'EQR', 'DLR', 'SBAC']
+        }
+        
+        return sector_mapping.get(sector, [])
+    
+    def train_ultimate_models(self, max_symbols=None, period="2y", use_parallel=True, target_symbol=None):
         """
         Train on ALL available stocks with maximum accuracy
         
@@ -444,15 +490,31 @@ class UltimateStockML:
             max_symbols: Maximum number of symbols to train on (None = all)
             period: Training period (6mo, 1y, 2y, 5y, max)
             use_parallel: Use parallel processing for data collection
+            target_symbol: If specified, prioritize training on this symbol and its sector
         """
         try:
-            print(f"🚀 Starting ULTIMATE ML training on ALL stocks")
+            print(f"🚀 Starting ULTIMATE ML training")
             print(f"📊 Training period: {period}")
-            print(f"🔢 Available symbols: {len(self.all_symbols)}")
             
-            # Limit symbols if specified
-            training_symbols = self.all_symbols[:max_symbols] if max_symbols else self.all_symbols
-            print(f"🎯 Training on {len(training_symbols)} symbols")
+            # If target symbol specified, prioritize it and its sector
+            if target_symbol:
+                print(f"🎯 Target symbol: {target_symbol}")
+                sector_info = self.get_stock_sector(target_symbol)
+                print(f"📊 Sector: {sector_info.get('sector', 'Unknown')}")
+                
+                # Get similar stocks in same sector
+                training_symbols = [target_symbol]  # Start with target
+                
+                # Add sector-related stocks
+                sector_stocks = self._get_sector_stocks(sector_info.get('sector', ''))
+                training_symbols.extend(sector_stocks[:max_symbols-1] if max_symbols else sector_stocks)
+                
+                print(f"🎯 Training on {len(training_symbols)} symbols (target + sector)")
+            else:
+                print(f"🔢 Available symbols: {len(self.all_symbols)}")
+                # Limit symbols if specified
+                training_symbols = self.all_symbols[:max_symbols] if max_symbols else self.all_symbols
+                print(f"🎯 Training on {len(training_symbols)} symbols")
             
             all_features = []
             all_targets = []
@@ -849,22 +911,28 @@ class UltimateStockML:
             X_minmax = self.scalers['minmax'].fit_transform(X)
             
             # Train tree-based models (use robust scaling)
-            tree_models = ['xgb', 'lgb', 'rf', 'et', 'gb']
+            tree_models = ['xgb', 'lgb', 'rf', 'et', 'gb', 'adaboost']
+            if 'catboost' in self.models:
+                tree_models.append('catboost')
+            
             for name in tree_models:
-                print(f"Training {name}...")
-                self.models[name].fit(X_robust, y)
-                
-                # Store feature importance
-                if hasattr(self.models[name], 'feature_importances_'):
-                    self.feature_importance[name] = self.models[name].feature_importances_
+                if name in self.models:
+                    print(f"Training {name}...")
+                    self.models[name].fit(X_robust, y)
+                    
+                    # Store feature importance
+                    if hasattr(self.models[name], 'feature_importances_'):
+                        self.feature_importance[name] = self.models[name].feature_importances_
             
             # Train linear models (use standard scaling)
             linear_models = ['ridge', 'elastic', 'lasso']
             for name in linear_models:
-                print(f"Training {name}...")
-                self.models[name].fit(X_standard, y)
+                if name in self.models:
+                    print(f"Training {name}...")
+                    self.models[name].fit(X_standard, y)
             
-            safe_print("[OK] All 8 models trained successfully")
+            model_count = len([m for m in self.models if m in tree_models + linear_models])
+            safe_print(f"[OK] All {model_count} models trained successfully")
             
         except Exception as e:
             print(f"Ultimate ensemble training failed: {e}")

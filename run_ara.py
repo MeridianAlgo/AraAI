@@ -43,7 +43,8 @@ def main():
             success = ml.train_ultimate_models(
                 max_symbols=args.stocks,
                 period=args.period,
-                use_parallel=False
+                use_parallel=False,
+                target_symbol=args.symbol  # Train on target symbol and its sector
             )
             
             if success:
