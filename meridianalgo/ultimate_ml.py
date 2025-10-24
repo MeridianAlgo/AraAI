@@ -484,32 +484,28 @@ class UltimateStockML:
     
     def train_ultimate_models(self, max_symbols=None, period="2y", use_parallel=True, target_symbol=None):
         """
-        Train on ALL available stocks with maximum accuracy
+        Train on specific stock with maximum historical data
         
         Args:
-            max_symbols: Maximum number of symbols to train on (None = all)
+            max_symbols: Ignored if target_symbol is specified
             period: Training period (6mo, 1y, 2y, 5y, max)
             use_parallel: Use parallel processing for data collection
-            target_symbol: If specified, prioritize training on this symbol and its sector
+            target_symbol: Train ONLY on this specific stock with all its historical data
         """
         try:
             print(f"🚀 Starting ULTIMATE ML training")
             print(f"📊 Training period: {period}")
             
-            # If target symbol specified, prioritize it and its sector
+            # If target symbol specified, train ONLY on that stock
             if target_symbol:
                 print(f"🎯 Target symbol: {target_symbol}")
+                print(f"📊 Training exclusively on {target_symbol} with maximum historical data")
                 sector_info = self.get_stock_sector(target_symbol)
                 print(f"📊 Sector: {sector_info.get('sector', 'Unknown')}")
                 
-                # Get similar stocks in same sector
-                training_symbols = [target_symbol]  # Start with target
-                
-                # Add sector-related stocks
-                sector_stocks = self._get_sector_stocks(sector_info.get('sector', ''))
-                training_symbols.extend(sector_stocks[:max_symbols-1] if max_symbols else sector_stocks)
-                
-                print(f"🎯 Training on {len(training_symbols)} symbols (target + sector)")
+                # Train ONLY on the target stock
+                training_symbols = [target_symbol]
+                print(f"🎯 Training on 1 stock: {target_symbol}")
             else:
                 print(f"🔢 Available symbols: {len(self.all_symbols)}")
                 # Limit symbols if specified
@@ -592,13 +588,29 @@ class UltimateStockML:
             return False
     
     def _process_symbol_data(self, symbol, period):
-        """Process individual symbol data"""
+        """Process individual symbol data with maximum historical depth"""
         try:
             ticker = yf.Ticker(symbol)
-            data = ticker.history(period=period)
+            
+            # For single stock training, use maximum available data
+            # Try to get as much historical data as possible
+            try:
+                # First try with specified period
+                data = ticker.history(period=period)
+                
+                # If training on single stock and we have limited data, try to get more
+                if len(data) < 500:
+                    print(f"📊 Fetching maximum historical data for {symbol}...")
+                    data = ticker.history(period="max")
+                    
+            except:
+                data = ticker.history(period=period)
             
             if len(data) < 100:  # Skip if insufficient data
+                print(f"⚠️  Insufficient data for {symbol}: {len(data)} days")
                 return None
+            
+            print(f"✓ Loaded {len(data)} days of data for {symbol}")
             
             # Get sector information
             sector_info = self.get_stock_sector(symbol)
@@ -609,6 +621,7 @@ class UltimateStockML:
             return features, targets
             
         except Exception as e:
+            print(f"✗ Error processing {symbol}: {e}")
             return None
     
     def _extract_ultimate_features(self, data, symbol, sector_info):

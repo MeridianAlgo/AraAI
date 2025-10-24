@@ -18,7 +18,7 @@ def main():
     parser.add_argument('symbol', nargs='?', default='AAPL', help='Stock symbol (default: AAPL)')
     parser.add_argument('--days', type=int, default=5, help='Number of days to predict (default: 5)')
     parser.add_argument('--train', action='store_true', help='Force model training')
-    parser.add_argument('--stocks', type=int, default=10, help='Number of stocks for training (default: 10)')
+    parser.add_argument('--stocks', type=int, default=1, help='Ignored - always trains on target stock only')
     parser.add_argument('--period', default='6mo', help='Training period (default: 6mo)')
     
     args = parser.parse_args()
@@ -36,15 +36,14 @@ def main():
     status = ml.get_model_status()
     
     if not status['is_trained'] or args.train:
-        console.print_warning(f"Training models with {args.stocks} stocks ({args.period} period)...")
+        console.print_warning(f"Training models on {args.symbol} with maximum historical data ({args.period} period)...")
         console.print_info("This may take 1-2 minutes...")
         
         try:
             success = ml.train_ultimate_models(
-                max_symbols=args.stocks,
                 period=args.period,
                 use_parallel=False,
-                target_symbol=args.symbol  # Train on target symbol and its sector
+                target_symbol=args.symbol  # Train ONLY on target symbol with all historical data
             )
             
             if success:
