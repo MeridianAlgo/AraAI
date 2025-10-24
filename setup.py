@@ -28,7 +28,7 @@ except FileNotFoundError:
 
 setup(
     name='ara-ai',
-    version='3.0.1',
+    version='3.0.2',
     author='MeridianAlgo Team',
     author_email='support@meridianalgo.com',
     description='Ultimate AI Stock Prediction System with 98.5% Accuracy',

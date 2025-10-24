@@ -13,7 +13,7 @@ This package provides:
 Version: 3.0.0
 """
 
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 __author__ = "MeridianAlgo Team"
 __email__ = "support@meridianalgo.com"
 __license__ = "MIT"
