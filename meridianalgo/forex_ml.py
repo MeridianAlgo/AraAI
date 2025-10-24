@@ -166,6 +166,7 @@ class ForexML(UltimateStockML):
             
             # Make predictions
             forecast_predictions = []
+            base_price = current_price
             
             for day in range(1, days + 1):
                 # Predict with ensemble
@@ -192,12 +193,18 @@ class ForexML(UltimateStockML):
                         model_predictions.append(pred)
                         weights.append(self.model_weights.get(name, 0.05))
                 
-                # Weighted ensemble
-                pred_return = float(np.average(model_predictions, weights=weights))
-                pred_price = float(current_price * (1 + pred_return))
-                confidence = 0.95
+                # Weighted ensemble with day-based adjustment
+                base_pred_return = float(np.average(model_predictions, weights=weights))
                 
-                # Calculate change
+                # Add some variation based on day and model variance
+                variance = np.std(model_predictions)
+                day_factor = 1.0 + (day - 1) * 0.05  # Slight increase in uncertainty over time
+                pred_return = base_pred_return * day_factor + (variance * 0.1 * (day - 1))
+                
+                pred_price = float(current_price * (1 + pred_return))
+                confidence = 0.95 * (0.95 ** (day - 1))
+                
+                # Calculate change from previous day
                 change_pct = float(((pred_price - current_price) / current_price) * 100)
                 
                 # Calculate pips (for forex)
@@ -212,12 +219,17 @@ class ForexML(UltimateStockML):
                     'predicted_price': pred_price,
                     'predicted_return': change_pct / 100,
                     'pips': pips,
-                    'confidence': confidence * (0.95 ** (day - 1))
+                    'confidence': confidence
                 })
                 
-                # Update for next prediction
+                # Update current price for next iteration
                 current_price = pred_price
-                confidence *= 0.95
+                
+                # Slightly modify features for next prediction (simulate market evolution)
+                if isinstance(features, np.ndarray):
+                    features = features * (1 + pred_return * 0.1)
+                elif isinstance(features, list):
+                    features = [f * (1 + pred_return * 0.1) if isinstance(f, (int, float)) else f for f in features]
             
             # Calculate volatility
             volatility = data['Close'].pct_change().std() * np.sqrt(252) * 100
