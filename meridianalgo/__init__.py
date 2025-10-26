@@ -28,6 +28,7 @@ from .data import MarketDataManager, TechnicalIndicators
 from .utils import GPUManager, CacheManager, AccuracyTracker
 from .performance import PerformanceMonitor, ResourceOptimizer, BenchmarkRunner
 from .forex_ml import ForexML, predict_forex_pair
+from .csv_ml import CSVML, predict_csv_data
 
 # Main prediction function for backward compatibility
 from .core import predict_stock, analyze_stock
@@ -118,6 +119,7 @@ __all__ = [
     'ResourceOptimizer',
     'BenchmarkRunner',
     'ForexML',
+    'CSVML',
     
     # Main functions
     'predict_stock',
@@ -125,6 +127,7 @@ __all__ = [
     'quick_predict',
     'analyze_accuracy',
     'predict_forex_pair',
+    'predict_csv_data',
     
     # Utility functions
     'get_version_info',

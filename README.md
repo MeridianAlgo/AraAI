@@ -19,7 +19,7 @@ ARA AI is a comprehensive stock prediction system developed by MeridianAlgo, pow
 
 - **9-10 Model Ensemble**: XGBoost, LightGBM, CatBoost, Random Forest, Extra Trees, Gradient Boosting, AdaBoost, Ridge, Elastic Net, Lasso
 - **98.5% Accuracy**: Ensemble model with validated performance metrics
-- **Stock & Forex Support**: Predict stocks and 20+ currency pairs
+- **Stock, Forex & CSV Support**: Predict stocks, 20+ currency pairs, and your own CSV data
 - **Realistic Predictions**: Proper bounds prevent unrealistic forecasts
 - **Financial Health Analysis**: A+ to F grades based on debt, liquidity, profitability metrics
 - **AI Sentiment Analysis**: Hugging Face RoBERTa for market sentiment
@@ -69,6 +69,18 @@ python ara_forex.py GBPUSD --days 7
 
 # Train on specific pair
 python ara_forex.py USDJPY --train
+```
+
+**CSV Data Predictions:**
+```bash
+# Predict on your own CSV data
+python ara_csv.py data.csv
+
+# 7-day forecast on CSV data
+python ara_csv.py data.csv --days 7
+
+# Specify data type
+python ara_csv.py data.csv --type forex --name "MY_PAIR"
 ```
 
 ### Example Output
@@ -267,6 +279,27 @@ Supported Pairs:
 Examples:
   python ara_forex.py EURUSD --days 7
   python ara_forex.py GBPJPY --train
+```
+
+**CSV Data Predictions (ara_csv.py):**
+```bash
+python ara_csv.py CSV_FILE [OPTIONS]
+
+Options:
+  --days N        Number of days to predict (default: 5)
+  --type TYPE     Data type: stock, forex, auto (default: auto)
+  --name NAME     Custom name for the data
+  --train         Force model training
+
+CSV Format:
+  Date,Open,High,Low,Close,Volume
+  2023-01-01,100.0,105.0,99.0,104.0,1000000
+  2023-01-02,104.0,106.0,103.0,105.0,1200000
+  (Volume column is optional)
+
+Examples:
+  python ara_csv.py my_data.csv --days 7
+  python ara_csv.py forex_data.csv --type forex --name "CUSTOM_PAIR"
 ```
 
 ---
