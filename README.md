@@ -304,6 +304,95 @@ Examples:
 
 ---
 
+## CSV Data Import
+
+### Train on Your Own Data
+
+ARA AI can now train on your custom CSV data files, supporting both stock and forex data with the same powerful ML ensemble.
+
+#### CSV Format Required
+
+```csv
+Date,Open,High,Low,Close,Volume
+2023-01-01,100.0,105.0,99.0,104.0,1000000
+2023-01-02,104.0,106.0,103.0,105.0,1200000
+2023-01-03,106.0,108.0,105.5,107.5,1300000
+...
+```
+
+**Notes:**
+- `Date` column is required (YYYY-MM-DD format)
+- `Open`, `High`, `Low`, `Close` columns are required
+- `Volume` column is optional (will use default if missing)
+- Data should be sorted by date (oldest first)
+
+#### Usage Examples
+
+```bash
+# Basic CSV prediction
+python ara_csv.py my_data.csv
+
+# 7-day forecast
+python ara_csv.py my_data.csv --days 7
+
+# Specify data type (auto-detects by default)
+python ara_csv.py forex_data.csv --type forex
+
+# Custom name for your data
+python ara_csv.py data.csv --name "MY_CUSTOM_STOCK"
+
+# Force model retraining
+python ara_csv.py data.csv --train
+```
+
+#### Features
+
+- **Auto-Detection**: Automatically detects if data is stock or forex based on price range
+- **Full Dataset Training**: Uses your entire CSV dataset for training (not just recent data)
+- **Same ML Power**: 9-10 model ensemble (XGBoost, LightGBM, CatBoost, etc.)
+- **Realistic Predictions**: Feature evolution between prediction days
+- **Professional Output**: Clean formatting with trend analysis
+
+#### Example Output
+
+```
+CUSTOM_STOCK - CSV Prediction Results
+=====================================
+
+Data Information:
+   Type: Stock
+   Data Points: 51
+   Date Range: 2023-01-01 to 2023-02-20
+
+Current Price: $155.70
+Trend: Bullish
+Volatility: 4.51%
+
+5-Day Forecast:
+Date         Price        Change       Confidence
+2025-10-27   $162.16      +4.15%       95.0%
+2025-10-28   $168.71      +4.04%       90.2%
+2025-10-29   $175.45      +3.99%       85.7%
+2025-10-30   $182.37      +3.94%       81.5%
+2025-10-31   $189.42      +3.87%       77.4%
+
+Summary:
+   Average Daily Change: +4.00%
+   Final Predicted Price: $189.42
+   Total Change: +21.65%
+
+Outlook: Strong Bullish
+```
+
+#### Test with Sample Data
+
+```bash
+# Use included sample data
+python ara_csv.py sample_data.csv --days 5
+```
+
+---
+
 ## Testing
 
 ### Run Tests
