@@ -7,6 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI/CD](https://github.com/MeridianAlgo/AraAI/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions)
 
+> **⚠️ IMPORTANT DISCLAIMER**  
+> This software is for **educational and research purposes only**. It is **NOT financial advice** and should **NOT be used for actual trading or investment decisions**. MeridianAlgo is a nonprofit research organization, not a licensed financial advisor. Past performance does not guarantee future results. **You are solely responsible for your investment decisions and any financial losses.**
+
 ---
 
 ## Overview
@@ -470,83 +473,110 @@ For complete credits, contributors, and license information, see [CREDITS.md](do
 
 ---
 
-## Disclaimer
+## Important Disclaimers
 
-**IMPORTANT: Please read carefully before using this software.**
+### 🚨 Educational and Research Use Only
 
-### Investment Risk Warning
+**This software is strictly for educational and research purposes only.**
 
-This software is provided for educational and research purposes only. Stock market predictions are inherently uncertain and past performance does not guarantee future results.
+- **NOT FINANCIAL ADVICE**: This software does not provide financial, investment, or trading advice
+- **NOT FOR TRADING**: Do not use this software to make actual investment or trading decisions
+- **RESEARCH TOOL**: This is a machine learning research project to explore prediction algorithms
+- **NO GUARANTEES**: Past performance does not guarantee future results
 
-**Key Points:**
-- NOT financial advice or investment recommendations
-- NOT guaranteed to be accurate or profitable
-- Stock trading involves substantial risk of loss
+### 🏛️ About MeridianAlgo
+
+MeridianAlgo is a **nonprofit research organization** focused on:
+- Machine learning research and development
+- Open-source financial technology tools
+- Educational resources for data science
+- **We are NOT a licensed financial advisor, broker, or investment firm**
+
+### ⚠️ Investment Risk Warning
+
+**Stock and forex trading involves substantial risk of loss:**
 - You may lose some or all of your invested capital
-- Consult a licensed financial advisor before making investment decisions
+- Market predictions are inherently uncertain and speculative
+- Historical data does not predict future performance
+- External factors can dramatically affect market outcomes
+- **Consult a licensed financial advisor before making any investment decisions**
 
-### No Warranty
+### 🔬 Research and Educational Applications
 
-This software is provided "AS IS" without warranty of any kind, either express or implied, including but not limited to:
-- Merchantability
-- Fitness for a particular purpose
-- Non-infringement
-- Accuracy of predictions
-- Reliability of data
+**Appropriate uses of this software:**
+- Learning about machine learning algorithms
+- Studying technical analysis and market patterns
+- Academic research and coursework
+- Developing and testing prediction models
+- Understanding financial data processing
 
-### Limitation of Liability
+**Inappropriate uses:**
+- Making actual investment decisions
+- Trading with real money based on predictions
+- Providing financial advice to others
+- Commercial trading operations
 
-The developers and contributors of this software shall not be liable for any:
-- Financial losses
-- Investment decisions
-- Trading outcomes
-- Data inaccuracies
-- System failures
-- Consequential damages
+### 📋 Legal Compliance
 
-### User Responsibility
+**Users are responsible for:**
+- Complying with all local and international laws
+- Understanding securities regulations in their jurisdiction
+- Obtaining proper licenses if using for commercial purposes
+- Consulting legal counsel regarding regulatory compliance
+- Understanding tax implications of any trading activities
 
-By using this software, you acknowledge that:
-- You use it at your own risk
-- You are responsible for your own investment decisions
-- You will not hold the developers liable for any losses
-- You understand the risks of stock market trading
-- You will comply with all applicable laws and regulations
+### 🛡️ Limitation of Liability
 
-### Data Accuracy
+**MeridianAlgo and contributors are not liable for:**
+- Any financial losses or damages
+- Investment decisions made by users
+- Accuracy or reliability of predictions
+- System failures or data errors
+- Consequential or indirect damages
 
-While we strive for accuracy:
-- Market data may be delayed or inaccurate
-- Predictions are based on historical patterns
-- Past performance does not indicate future results
-- External factors may affect accuracy
-- Models require periodic retraining
+### 📊 Data and Model Limitations
 
-### Regulatory Compliance
+**Important technical limitations:**
+- Market data may be delayed, incomplete, or inaccurate
+- Models are trained on historical data only
+- Predictions do not account for breaking news or events
+- System performance may vary across different market conditions
+- Models require periodic retraining and validation
 
-Users are responsible for:
-- Complying with local securities laws
-- Understanding tax implications
-- Following trading regulations
-- Obtaining necessary licenses
-- Consulting legal counsel if needed
+### 🔄 Third-Party Dependencies
 
-### Third-Party Services
+This software relies on third-party services:
+- **Yahoo Finance (yfinance)**: Market data provider
+- **Hugging Face**: AI model infrastructure
+- **Various ML libraries**: Prediction algorithms
 
-This software uses third-party services (yfinance, Hugging Face, etc.) which:
-- Have their own terms of service
+These services:
+- Have their own terms of service and limitations
 - May change or discontinue without notice
-- Are not under our control
-- May have their own limitations
+- Are not under MeridianAlgo's control
+- May have their own accuracy limitations
 
-### Beta Software Notice
+### 📝 User Agreement
 
-This is beta software (v2.2.0-Beta):
-- May contain bugs or errors
-- Features may change without notice
-- Not recommended for production trading
-- Use in test/paper trading environments first
-- Report issues via GitHub
+**By using this software, you acknowledge and agree that:**
+- You understand this is for educational/research purposes only
+- You will not use it for actual trading or investment decisions
+- You assume all risks associated with any use of this software
+- You will not hold MeridianAlgo liable for any losses or damages
+- You will comply with all applicable laws and regulations
+- You understand the limitations and risks described above
+
+### 🆘 Getting Help
+
+**For technical support only:**
+- GitHub Issues: Report bugs and technical problems
+- GitHub Discussions: Ask questions about the software
+- Documentation: Read the technical documentation
+
+**For financial advice:**
+- Consult a licensed financial advisor
+- Contact a registered investment advisor
+- Speak with your bank or brokerage firm
 
 ---
 
