@@ -2,7 +2,6 @@
 # Production-ready requirements for advanced ensemble ML stock prediction with self-learning
 
 # Core ML and Data Science
-torch>=1.12.0                  # Deep learning framework (Enhanced LSTM with attention)
 scikit-learn>=1.1.0             # Machine learning models (Enhanced RF, GB)
 pandas>=1.5.0                   # Data manipulation and analysis
 numpy>=1.21.0                   # Numerical computing and array operations
@@ -37,10 +36,9 @@ bitsandbytes>=0.39.0            # Memory optimization for large models (optional
 # jupyter>=1.0.0                # Jupyter notebooks for analysis
 
 # Platform-specific GPU acceleration (install separately if needed)
-# For NVIDIA GPUs: torch with CUDA support (automatically detected)
-# For AMD GPUs: pip install torch-directml (Windows)
-# For Intel GPUs: pip install intel-extension-for-pytorch
-# For Apple Silicon: MPS support included in torch>=1.12.0
+# For NVIDIA GPUs: CUDA support (automatically detected by transformers)
+# For AMD GPUs: ROCm support (automatically detected)
+# For Apple Silicon: MPS support (automatically detected)
 
 # Advanced Features:
 # - Self-learning LSTM with attention mechanisms

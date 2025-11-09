@@ -1,17 +1,17 @@
-# 🔒 Privacy Policy - ARA AI
+#  Privacy Policy - ARA AI
 
 **Your privacy is our top priority. ARA AI is designed for complete privacy protection.**
 
-## 🛡️ **Privacy-First Design**
+##  **Privacy-First Design**
 
 ### **Core Privacy Principles**
-- ✅ **Local Processing Only**: All analysis happens on your machine
-- ✅ **No Data Collection**: We don't collect, store, or transmit your data
-- ✅ **No External Dependencies**: Works completely offline after setup
-- ✅ **No Tracking**: No analytics, telemetry, or usage monitoring
-- ✅ **Open Source**: Full transparency in our code
+-  **Local Processing Only**: All analysis happens on your machine
+-  **No Data Collection**: We don't collect, store, or transmit your data
+-  **No External Dependencies**: Works completely offline after setup
+-  **No Tracking**: No analytics, telemetry, or usage monitoring
+-  **Open Source**: Full transparency in our code
 
-## 📊 **What Data ARA AI Uses**
+##  **What Data ARA AI Uses**
 
 ### **Public Market Data**
 ARA AI only uses publicly available market data:
@@ -22,30 +22,30 @@ ARA AI only uses publicly available market data:
 
 ### **No Personal Data**
 ARA AI **NEVER** accesses:
-- ❌ Your personal information
-- ❌ Your trading accounts
-- ❌ Your portfolio holdings
-- ❌ Your financial data
-- ❌ Your browsing history
-- ❌ Your location data
-- ❌ Your device information
+-  Your personal information
+-  Your trading accounts
+-  Your portfolio holdings
+-  Your financial data
+-  Your browsing history
+-  Your location data
+-  Your device information
 
-## 🖥️ **Local Processing Architecture**
+##  **Local Processing Architecture**
 
 ### **Everything Runs Locally**
 ```
 Your Computer
-├── ARA AI Software ✅ (Local)
-├── ML Models ✅ (Local - models/ folder)
-├── Hugging Face AI ✅ (Local - ~/.cache/huggingface/)
-├── Market Data ✅ (Downloaded temporarily)
-└── Predictions ✅ (Generated locally)
+├── ARA AI Software  (Local)
+├── ML Models  (Local - models/ folder)
+├── Hugging Face AI  (Local - ~/.cache/huggingface/)
+├── Market Data  (Downloaded temporarily)
+└── Predictions  (Generated locally)
 
 External Servers
-├── No personal data sent ❌
-├── No predictions stored ❌
-├── No usage tracking ❌
-└── No analytics collected ❌
+├── No personal data sent 
+├── No predictions stored 
+├── No usage tracking 
+└── No analytics collected 
 ```
 
 ### **Data Flow**
@@ -54,7 +54,7 @@ External Servers
 3. **Local Storage**: Models and results stored on your computer
 4. **No Upload**: Nothing sent back to external servers
 
-## 🤖 **Hugging Face Models Privacy**
+##  **Hugging Face Models Privacy**
 
 ### **Local AI Models**
 ARA AI downloads AI models to your computer:
@@ -72,10 +72,10 @@ Linux: ~/.cache/huggingface/
 ```
 
 #### **Privacy Benefits**
-- ✅ **One-time download**: Models cached permanently
-- ✅ **Offline operation**: No internet required after download
-- ✅ **No API calls**: No external requests during analysis
-- ✅ **Your models**: Downloaded models belong to you
+-  **One-time download**: Models cached permanently
+-  **Offline operation**: No internet required after download
+-  **No API calls**: No external requests during analysis
+-  **Your models**: Downloaded models belong to you
 
 ### **Hugging Face Privacy**
 - **During download**: Standard HTTPS download (no personal data)
@@ -83,7 +83,7 @@ Linux: ~/.cache/huggingface/
 - **No accounts**: No Hugging Face account required
 - **No tracking**: No usage analytics sent to Hugging Face
 
-## 🌐 **Network Activity**
+##  **Network Activity**
 
 ### **What ARA AI Connects To**
 
@@ -97,15 +97,15 @@ Linux: ~/.cache/huggingface/
 - **No other connections**: No analytics, tracking, or telemetry
 
 ### **What We DON'T Connect To**
-- ❌ Analytics services (Google Analytics, etc.)
-- ❌ Tracking services
-- ❌ Advertising networks
-- ❌ Social media platforms
-- ❌ Cloud storage services
-- ❌ Remote logging services
-- ❌ Update servers (no auto-updates)
+-  Analytics services (Google Analytics, etc.)
+-  Tracking services
+-  Advertising networks
+-  Social media platforms
+-  Cloud storage services
+-  Remote logging services
+-  Update servers (no auto-updates)
 
-## 🔐 **Data Security**
+##  **Data Security**
 
 ### **Local Data Protection**
 - **File permissions**: Standard OS file permissions protect your data
@@ -119,7 +119,7 @@ Linux: ~/.cache/huggingface/
 - **No authentication**: No passwords or API keys stored
 - **Minimal attack surface**: Very limited network activity
 
-## 📱 **Platform-Specific Privacy**
+##  **Platform-Specific Privacy**
 
 ### **Windows**
 - **Data location**: User profile directory
@@ -139,7 +139,7 @@ Linux: ~/.cache/huggingface/
 - **System files**: No system-wide modifications
 - **Daemons**: No system daemons installed
 
-## 🔍 **Third-Party Services**
+##  **Third-Party Services**
 
 ### **Yahoo Finance**
 - **Purpose**: Download public stock market data
@@ -159,30 +159,30 @@ Linux: ~/.cache/huggingface/
 - **Data received**: Python packages
 - **Privacy**: PyPI privacy policy applies during installation
 
-## 🚫 **What We DON'T Do**
+##  **What We DON'T Do**
 
 ### **No Data Collection**
-- ❌ We don't collect usage statistics
-- ❌ We don't track which stocks you analyze
-- ❌ We don't store your predictions
-- ❌ We don't monitor your activity
-- ❌ We don't collect error reports automatically
+-  We don't collect usage statistics
+-  We don't track which stocks you analyze
+-  We don't store your predictions
+-  We don't monitor your activity
+-  We don't collect error reports automatically
 
 ### **No Data Sharing**
-- ❌ We don't share data with third parties
-- ❌ We don't sell data to advertisers
-- ❌ We don't provide data to researchers
-- ❌ We don't integrate with social media
-- ❌ We don't report to government agencies
+-  We don't share data with third parties
+-  We don't sell data to advertisers
+-  We don't provide data to researchers
+-  We don't integrate with social media
+-  We don't report to government agencies
 
 ### **No Tracking**
-- ❌ No cookies or tracking pixels
-- ❌ No device fingerprinting
-- ❌ No behavioral analytics
-- ❌ No cross-device tracking
-- ❌ No advertising tracking
+-  No cookies or tracking pixels
+-  No device fingerprinting
+-  No behavioral analytics
+-  No cross-device tracking
+-  No advertising tracking
 
-## 🛠️ **Privacy Controls**
+##  **Privacy Controls**
 
 ### **User Controls**
 You have complete control over your privacy:
@@ -226,7 +226,7 @@ lsof -p $(pgrep python)           # Monitor file access (Linux/Mac)
 python check_hf_models.py         # See what models are cached
 ```
 
-## 📋 **Privacy Compliance**
+##  **Privacy Compliance**
 
 ### **GDPR Compliance**
 - **No personal data**: GDPR doesn't apply (no personal data processed)
@@ -244,7 +244,7 @@ python check_hf_models.py         # See what models are cached
 - **LGPD** (Brazil): No personal data processed
 - **Privacy Act** (Australia): No personal information collected
 
-## 🔄 **Privacy Updates**
+##  **Privacy Updates**
 
 ### **Policy Changes**
 - **Notification**: Major changes will be announced on GitHub
@@ -256,7 +256,7 @@ python check_hf_models.py         # See what models are cached
 - **Privacy preserved**: Updates don't change privacy model
 - **Local control**: You control when and if to update
 
-## 📞 **Privacy Contact**
+##  **Privacy Contact**
 
 ### **Questions or Concerns**
 If you have privacy questions:
@@ -271,15 +271,15 @@ ARA AI is built with privacy as the foundation:
 - **No tracking**: No analytics or monitoring
 - **Open source**: Full transparency and auditability
 
-## ✅ **Privacy Summary**
+##  **Privacy Summary**
 
 ### **What This Means for You**
-- 🔒 **Complete Privacy**: Your analysis is completely private
-- 🏠 **Local Control**: Everything runs on your machine
-- 🌐 **Offline Capable**: Works without internet after setup
-- 👁️ **No Tracking**: No monitoring or analytics
-- 🔓 **Open Source**: Full transparency in our code
-- 🛡️ **Secure**: Minimal attack surface and network activity
+-  **Complete Privacy**: Your analysis is completely private
+-  **Local Control**: Everything runs on your machine
+-  **Offline Capable**: Works without internet after setup
+-  **No Tracking**: No monitoring or analytics
+-  **Open Source**: Full transparency in our code
+-  **Secure**: Minimal attack surface and network activity
 
 ### **Your Guarantees**
 1. **No personal data collection** - We don't collect any personal information
@@ -291,6 +291,6 @@ ARA AI is built with privacy as the foundation:
 
 ---
 
-**🔒 ARA AI: Maximum accuracy with maximum privacy protection.**
+** ARA AI: Maximum accuracy with maximum privacy protection.**
 
 **Your financial analysis stays private, secure, and under your complete control.**

@@ -9,7 +9,7 @@ from meridianalgo.utils import GPUManager, CacheManager, AccuracyTracker
 def main():
     """Advanced usage examples"""
     
-    print("🚀 Ara AI Advanced Usage Examples")
+    print(" Ara AI Advanced Usage Examples")
     print("=" * 40)
     
     # Initialize full system

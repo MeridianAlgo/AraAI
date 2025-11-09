@@ -17,7 +17,7 @@ import time
 def demo_basic_prediction():
     """Demo basic stock prediction"""
     print("\n" + "="*60)
-    print("🔮 BASIC STOCK PREDICTION DEMO")
+    print(" BASIC STOCK PREDICTION DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -44,7 +44,7 @@ def demo_basic_prediction():
 def demo_advanced_analysis():
     """Demo advanced analysis with AI insights"""
     print("\n" + "="*60)
-    print("🤖 ADVANCED AI ANALYSIS DEMO")
+    print(" ADVANCED AI ANALYSIS DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -66,7 +66,7 @@ def demo_advanced_analysis():
                 if 'ai_insights' in company_analysis:
                     console.print_info("AI Insights:")
                     for insight in company_analysis['ai_insights']:
-                        print(f"  💡 {insight}")
+                        print(f"   {insight}")
         else:
             console.print_error(f"Failed to analyze {symbol}")
             
@@ -76,7 +76,7 @@ def demo_advanced_analysis():
 def demo_pattern_recognition():
     """Demo chart pattern recognition"""
     print("\n" + "="*60)
-    print("📊 CHART PATTERN RECOGNITION DEMO")
+    print(" CHART PATTERN RECOGNITION DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -120,7 +120,7 @@ def demo_pattern_recognition():
 def demo_ai_company_analysis():
     """Demo AI-powered company analysis"""
     print("\n" + "="*60)
-    print("🧠 AI COMPANY ANALYSIS DEMO")
+    print(" AI COMPANY ANALYSIS DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -147,7 +147,7 @@ def demo_ai_company_analysis():
 def demo_accuracy_tracking():
     """Demo accuracy tracking system"""
     print("\n" + "="*60)
-    print("📈 ACCURACY TRACKING DEMO")
+    print(" ACCURACY TRACKING DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -178,7 +178,7 @@ def demo_accuracy_tracking():
 def demo_gpu_acceleration():
     """Demo GPU acceleration capabilities"""
     print("\n" + "="*60)
-    print("🎮 GPU ACCELERATION DEMO")
+    print(" GPU ACCELERATION DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -193,12 +193,12 @@ def demo_gpu_acceleration():
         system_info = ara.get_system_info()
         
         console.print_info("System Information:")
-        print(f"  🖥️  Device: {system_info.get('device', 'Unknown')}")
-        print(f"  🧠 GPU Vendor: {gpu_info.get('vendor', 'Unknown')}")
-        print(f"  📊 GPU Available: {'Yes' if gpu_info.get('available') else 'No'}")
+        print(f"    Device: {system_info.get('device', 'Unknown')}")
+        print(f"   GPU Vendor: {gpu_info.get('vendor', 'Unknown')}")
+        print(f"   GPU Available: {'Yes' if gpu_info.get('available') else 'No'}")
         
         if gpu_info.get('details'):
-            print("  📋 GPU Details:")
+            print("   GPU Details:")
             for detail in gpu_info['details']:
                 print(f"    • {detail}")
         
@@ -208,7 +208,7 @@ def demo_gpu_acceleration():
 def demo_caching_system():
     """Demo intelligent caching system"""
     print("\n" + "="*60)
-    print("💾 INTELLIGENT CACHING DEMO")
+    print(" INTELLIGENT CACHING DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -219,10 +219,10 @@ def demo_caching_system():
         cache_stats = ara.cache_manager.get_cache_stats()
         
         console.print_info("Cache Statistics:")
-        print(f"  📊 Total Predictions Cached: {cache_stats.get('total_predictions', 0)}")
-        print(f"  🏢 Symbols Cached: {cache_stats.get('symbols', 0)}")
-        print(f"  💾 Cache File Size: {cache_stats.get('file_size', 0)} bytes")
-        print(f"  📁 Market Data Files: {cache_stats.get('market_data_files', 0)}")
+        print(f"   Total Predictions Cached: {cache_stats.get('total_predictions', 0)}")
+        print(f"   Symbols Cached: {cache_stats.get('symbols', 0)}")
+        print(f"   Cache File Size: {cache_stats.get('file_size', 0)} bytes")
+        print(f"   Market Data Files: {cache_stats.get('market_data_files', 0)}")
         
         # Test caching with a prediction
         symbol = 'AAPL'
@@ -252,7 +252,7 @@ def demo_caching_system():
 def demo_self_learning():
     """Demo self-learning capabilities"""
     print("\n" + "="*60)
-    print("🧠 SELF-LEARNING SYSTEM DEMO")
+    print(" SELF-LEARNING SYSTEM DEMO")
     print("="*60)
     
     console = ConsoleManager(verbose=True)
@@ -268,19 +268,19 @@ def demo_self_learning():
                 
                 if 'ensemble' in insights:
                     ensemble_info = insights['ensemble']
-                    print(f"  📊 Total Predictions: {ensemble_info.get('total_predictions', 0)}")
-                    print(f"  📈 Average Error: {ensemble_info.get('avg_error', 0):.3f}")
-                    print(f"  📉 Error Trend: {ensemble_info.get('error_trend', 0):.6f}")
+                    print(f"   Total Predictions: {ensemble_info.get('total_predictions', 0)}")
+                    print(f"   Average Error: {ensemble_info.get('avg_error', 0):.3f}")
+                    print(f"   Error Trend: {ensemble_info.get('error_trend', 0):.6f}")
                     
                     weights = ensemble_info.get('current_weights', {})
-                    print("  ⚖️  Current Model Weights:")
+                    print("    Current Model Weights:")
                     for model, weight in weights.items():
                         print(f"    • {model.upper()}: {weight:.3f}")
                 
                 if 'lstm' in insights:
                     lstm_info = insights['lstm']
-                    print(f"  🧠 LSTM Average Error: {lstm_info.get('avg_error', 0):.3f}")
-                    print(f"  📈 LSTM Improvement Rate: {lstm_info.get('improvement_rate', 0):.6f}")
+                    print(f"   LSTM Average Error: {lstm_info.get('avg_error', 0):.3f}")
+                    print(f"   LSTM Improvement Rate: {lstm_info.get('improvement_rate', 0):.6f}")
             else:
                 console.print_warning("No learning insights available yet")
         else:
@@ -291,7 +291,7 @@ def demo_self_learning():
 
 def main():
     """Run comprehensive demo"""
-    print("🚀 ARA AI COMPREHENSIVE DEMO")
+    print(" ARA AI COMPREHENSIVE DEMO")
     print("Advanced Stock Analysis with Self-Learning AI")
     print("=" * 60)
     
@@ -314,18 +314,18 @@ def main():
     
     for name, demo_func in demos:
         try:
-            print(f"\n🎯 Starting: {name}")
+            print(f"\n Starting: {name}")
             demo_func()
-            print(f"✅ Completed: {name}")
+            print(f" Completed: {name}")
         except KeyboardInterrupt:
-            print(f"\n⏹️  Demo interrupted by user")
+            print(f"\n⏹  Demo interrupted by user")
             break
         except Exception as e:
-            print(f"❌ Error in {name}: {e}")
+            print(f" Error in {name}: {e}")
             continue
     
     print("\n" + "="*60)
-    print("🎉 DEMO COMPLETED!")
+    print(" DEMO COMPLETED!")
     print("="*60)
     print("\nFor more information:")
     print("• Check README.md for detailed documentation")

@@ -23,12 +23,11 @@ except FileNotFoundError:
         'lightgbm>=3.3.0',
         'rich>=10.0.0',
         'transformers>=4.20.0',
-        'torch>=1.10.0',
     ]
 
 setup(
     name='ara-ai',
-    version='3.0.2',
+    version='3.1.1',
     author='MeridianAlgo Team',
     author_email='support@meridianalgo.com',
     description='Ultimate AI Stock Prediction System with 98.5% Accuracy',

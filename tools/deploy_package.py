@@ -11,7 +11,7 @@ from pathlib import Path
 
 def run_command(command, description, capture_output=True):
     """Run a command and handle errors"""
-    print(f"\n🔄 {description}...")
+    print(f"\n {description}...")
     try:
         result = subprocess.run(
             command, 
@@ -20,12 +20,12 @@ def run_command(command, description, capture_output=True):
             capture_output=capture_output, 
             text=True
         )
-        print(f"✅ {description} completed successfully")
+        print(f" {description} completed successfully")
         if capture_output and result.stdout:
             print(result.stdout)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ {description} failed:")
+        print(f" {description} failed:")
         print(f"Error: {e}")
         if capture_output:
             if e.stdout:
@@ -36,20 +36,20 @@ def run_command(command, description, capture_output=True):
 
 def check_prerequisites():
     """Check deployment prerequisites"""
-    print("\n🔍 Checking deployment prerequisites...")
+    print("\n Checking deployment prerequisites...")
     
     # Check if dist directory exists
     if not os.path.exists('dist'):
-        print("❌ dist directory not found. Run build_package.py first.")
+        print(" dist directory not found. Run build_package.py first.")
         return False
     
     # Check if there are files to upload
     dist_files = [f for f in os.listdir('dist') if f.endswith(('.whl', '.tar.gz'))]
     if not dist_files:
-        print("❌ No distribution files found in dist/")
+        print(" No distribution files found in dist/")
         return False
     
-    print(f"📦 Found {len(dist_files)} distribution files:")
+    print(f" Found {len(dist_files)} distribution files:")
     for file_name in dist_files:
         file_path = os.path.join('dist', file_name)
         file_size = os.path.getsize(file_path)
@@ -58,9 +58,9 @@ def check_prerequisites():
     # Check if twine is installed
     try:
         subprocess.run(['twine', '--version'], check=True, capture_output=True)
-        print("✅ twine is available")
+        print(" twine is available")
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("❌ twine not found. Installing...")
+        print(" twine not found. Installing...")
         if not run_command("python -m pip install twine", "Installing twine"):
             return False
     
@@ -68,13 +68,13 @@ def check_prerequisites():
 
 def validate_package():
     """Validate package before upload"""
-    print("\n✅ Validating package...")
+    print("\n Validating package...")
     
     return run_command("twine check dist/*", "Validating package with twine")
 
 def get_deployment_choice():
     """Get user choice for deployment target"""
-    print("\n🎯 Choose deployment target:")
+    print("\n Choose deployment target:")
     print("1. Test PyPI (recommended for testing)")
     print("2. Production PyPI (live deployment)")
     print("3. Both (Test PyPI first, then Production)")
@@ -85,47 +85,47 @@ def get_deployment_choice():
             if choice in ['1', '2', '3']:
                 return int(choice)
             else:
-                print("❌ Invalid choice. Please enter 1, 2, or 3.")
+                print(" Invalid choice. Please enter 1, 2, or 3.")
         except KeyboardInterrupt:
-            print("\n⚠️ Deployment cancelled by user")
+            print("\n Deployment cancelled by user")
             return None
 
 def deploy_to_test_pypi():
     """Deploy to Test PyPI"""
-    print("\n🧪 Deploying to Test PyPI...")
+    print("\n Deploying to Test PyPI...")
     
     # Test PyPI repository URL
     test_pypi_url = "https://test.pypi.org/legacy/"
     
     command = f"twine upload --repository-url {test_pypi_url} dist/*"
     
-    print("📝 You will be prompted for your Test PyPI credentials")
+    print(" You will be prompted for your Test PyPI credentials")
     print("   If you don't have an account, create one at: https://test.pypi.org/account/register/")
     
     return run_command(command, "Uploading to Test PyPI", capture_output=False)
 
 def deploy_to_production_pypi():
     """Deploy to Production PyPI"""
-    print("\n🚀 Deploying to Production PyPI...")
+    print("\n Deploying to Production PyPI...")
     
-    print("⚠️  WARNING: This will deploy to the live PyPI repository!")
+    print("  WARNING: This will deploy to the live PyPI repository!")
     print("   Make sure you have tested the package thoroughly.")
     
     confirm = input("\nAre you sure you want to deploy to Production PyPI? (yes/no): ").strip().lower()
     if confirm != 'yes':
-        print("❌ Production deployment cancelled")
+        print(" Production deployment cancelled")
         return False
     
     command = "twine upload dist/*"
     
-    print("📝 You will be prompted for your PyPI credentials")
+    print(" You will be prompted for your PyPI credentials")
     print("   If you don't have an account, create one at: https://pypi.org/account/register/")
     
     return run_command(command, "Uploading to Production PyPI", capture_output=False)
 
 def verify_deployment(target):
     """Verify deployment was successful"""
-    print(f"\n🔍 Verifying deployment to {target}...")
+    print(f"\n Verifying deployment to {target}...")
     
     if target == "Test PyPI":
         url = "https://test.pypi.org/project/meridianalgo/"
@@ -134,12 +134,12 @@ def verify_deployment(target):
         url = "https://pypi.org/project/meridianalgo/"
         install_command = "pip install meridianalgo"
     
-    print(f"📦 Package should be available at: {url}")
-    print(f"🔧 Install command: {install_command}")
+    print(f" Package should be available at: {url}")
+    print(f" Install command: {install_command}")
     
     # Also show python -m pip version for Windows compatibility
     if "test.pypi.org" not in install_command:
-        print(f"🔧 Alternative: python -m pip install meridianalgo")
+        print(f" Alternative: python -m pip install meridianalgo")
     
     # Wait for user confirmation
     input("\nPress Enter after verifying the package is available online...")
@@ -148,35 +148,35 @@ def verify_deployment(target):
 
 def post_deployment_instructions():
     """Show post-deployment instructions"""
-    print("\n🎉 Deployment completed successfully!")
-    print("\n📋 Post-deployment checklist:")
-    print("  ✅ Verify package is available on PyPI")
-    print("  ✅ Test installation: pip install meridianalgo")
-    print("  ✅ Test CLI: ara --version")
-    print("  ✅ Update GitHub repository with new version tag")
-    print("  ✅ Update documentation if needed")
+    print("\n Deployment completed successfully!")
+    print("\n Post-deployment checklist:")
+    print("   Verify package is available on PyPI")
+    print("   Test installation: pip install meridianalgo")
+    print("   Test CLI: ara --version")
+    print("   Update GitHub repository with new version tag")
+    print("   Update documentation if needed")
     
-    print("\n🔗 Useful links:")
+    print("\n Useful links:")
     print("  - PyPI Package: https://pypi.org/project/meridianalgo/")
     print("  - Test PyPI: https://test.pypi.org/project/meridianalgo/")
     print("  - GitHub Repo: https://github.com/MeridianAlgo/Ara")
     
-    print("\n📊 Package statistics:")
+    print("\n Package statistics:")
     print("  - Check download stats at: https://pypistats.org/packages/meridianalgo")
 
 def main():
     """Main deployment process"""
-    print("🚀 MeridianAlgo Package Deployment")
+    print(" MeridianAlgo Package Deployment")
     print("=" * 50)
     
     # Step 1: Check prerequisites
     if not check_prerequisites():
-        print("\n❌ Deployment failed: Prerequisites not met")
+        print("\n Deployment failed: Prerequisites not met")
         return 1
     
     # Step 2: Validate package
     if not validate_package():
-        print("\n❌ Deployment failed: Package validation error")
+        print("\n Deployment failed: Package validation error")
         return 1
     
     # Step 3: Get deployment choice
@@ -209,16 +209,16 @@ def main():
                 if success:
                     verify_deployment("Production PyPI")
             else:
-                print("✅ Test PyPI deployment completed. Production deployment skipped.")
+                print(" Test PyPI deployment completed. Production deployment skipped.")
         else:
             success = False
     
     if success:
         post_deployment_instructions()
-        print("\n🎉 All deployments completed successfully!")
+        print("\n All deployments completed successfully!")
         return 0
     else:
-        print("\n❌ Deployment failed")
+        print("\n Deployment failed")
         return 1
 
 if __name__ == "__main__":

@@ -12,15 +12,15 @@ def install_package(package):
     try:
         print(f"Installing {package}...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-        print(f"✓ {package} installed successfully")
+        print(f" {package} installed successfully")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"✗ Failed to install {package}: {e}")
+        print(f" Failed to install {package}: {e}")
         return False
 
 def main():
     """Install all required packages for ultimate ML system"""
-    print("🚀 Installing ULTIMATE ML Requirements")
+    print(" Installing ULTIMATE ML Requirements")
     print("=" * 50)
 
     # Core ML packages (enhanced versions)
@@ -70,13 +70,13 @@ def main():
             success_count += 1
 
     print("=" * 50)
-    print(f"✅ Successfully installed {success_count}/{len(all_packages)} packages")
-    print("📦 All packages are ready for the ULTIMATE ML system")
+    print(f" Successfully installed {success_count}/{len(all_packages)} packages")
+    print(" All packages are ready for the ULTIMATE ML system")
 
     # Optional: download Hugging Face models
     try:
         from transformers import AutoModel, AutoTokenizer
-        print("🤖 Downloading Hugging Face models...")
+        print(" Downloading Hugging Face models...")
         models = [
             "ProsusAI/finbert",
             "cardiffnlp/twitter-roberta-base-sentiment",
@@ -84,18 +84,18 @@ def main():
         ]
 
         for model in models:
-            print(f"⬇️  Downloading {model}...")
+            print(f"⬇  Downloading {model}...")
             AutoModel.from_pretrained(model)
             AutoTokenizer.from_pretrained(model)
-            print(f"✓ {model} downloaded")
+            print(f" {model} downloaded")
 
-        print("🤝 Hugging Face models ready")
+        print(" Hugging Face models ready")
     except Exception as e:
-        print(f"⚠️  Could not download Hugging Face models automatically: {e}")
+        print(f"  Could not download Hugging Face models automatically: {e}")
         print("   You can download them manually later")
 
     # Test critical imports
-    print("\n🧪 Testing critical imports...")
+    print("\n Testing critical imports...")
     test_ultimate_imports()
 
 def test_ultimate_imports():
@@ -115,24 +115,24 @@ def test_ultimate_imports():
     for import_name, package_name in test_packages:
         try:
             __import__(import_name)
-            print(f"✓ {package_name} import successful")
+            print(f" {package_name} import successful")
         except ImportError as e:
-            print(f"✗ {package_name} import failed: {e}")
+            print(f" {package_name} import failed: {e}")
     
     # Test Hugging Face models
     try:
         from transformers import pipeline
-        print("✓ Hugging Face transformers ready")
+        print(" Hugging Face transformers ready")
         
         # Test if we can load a simple model
         try:
             sentiment_pipeline = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
-            print("✓ Hugging Face models can be loaded")
+            print(" Hugging Face models can be loaded")
         except Exception as e:
-            print(f"⚠️ Hugging Face model loading may require internet: {e}")
+            print(f" Hugging Face model loading may require internet: {e}")
             
     except ImportError:
-        print("✗ Hugging Face transformers not available")
+        print(" Hugging Face transformers not available")
 
 if __name__ == "__main__":
     main()

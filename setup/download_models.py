@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 def download_models():
     """Download all required AI models"""
-    print("🤖 Downloading Lightweight AI Models for Ara AI")
+    print(" Downloading Lightweight AI Models for Ara AI")
     print("=" * 60)
     
     try:
@@ -24,8 +24,8 @@ def download_models():
         gpu_available = torch.cuda.is_available()
         device = 0 if gpu_available else -1
         
-        print(f"🎮 GPU Available: {gpu_available}")
-        print(f"📱 Device: {'GPU' if gpu_available else 'CPU'}")
+        print(f" GPU Available: {gpu_available}")
+        print(f" Device: {'GPU' if gpu_available else 'CPU'}")
         print()
         
         # Model configurations (lightweight and accurate)
@@ -65,7 +65,7 @@ def download_models():
         
         for model_info in models:
             try:
-                print(f"📦 Downloading {model_info['name']}...")
+                print(f" Downloading {model_info['name']}...")
                 print(f"   Model: {model_info['model_id']}")
                 print(f"   Size: {model_info['size']} | Accuracy: {model_info['accuracy']}")
                 
@@ -105,31 +105,31 @@ def download_models():
                             max_length=300
                         )
                 
-                print(f"   ✅ Downloaded successfully")
+                print(f"    Downloaded successfully")
                 downloaded += 1
                 
             except Exception as e:
-                print(f"   ❌ Failed: {e}")
+                print(f"    Failed: {e}")
                 failed += 1
             
             print()
         
         print("=" * 60)
-        print("📊 DOWNLOAD SUMMARY")
+        print(" DOWNLOAD SUMMARY")
         print("=" * 60)
-        print(f"✅ Successfully downloaded: {downloaded}")
-        print(f"❌ Failed downloads: {failed}")
-        print(f"📊 Total models: {len(models)}")
+        print(f" Successfully downloaded: {downloaded}")
+        print(f" Failed downloads: {failed}")
+        print(f" Total models: {len(models)}")
         
         if downloaded > 0:
-            print("\n🎉 Models ready for use!")
+            print("\n Models ready for use!")
             print("Ara AI will now load faster on first use.")
         
         if failed > 0:
-            print(f"\n⚠️  {failed} models failed to download.")
+            print(f"\n  {failed} models failed to download.")
             print("Ara AI will attempt to download them during first use.")
         
-        print("\n💡 Tips:")
+        print("\n Tips:")
         print("• Models are cached locally for faster loading")
         print("• GPU acceleration will be used automatically if available")
         print("• You can run this script again to update models")
@@ -137,11 +137,11 @@ def download_models():
         return downloaded > 0
         
     except ImportError:
-        print("❌ Transformers library not installed")
+        print(" Transformers library not installed")
         print("Run: pip install transformers torch")
         return False
     except Exception as e:
-        print(f"❌ Download failed: {e}")
+        print(f" Download failed: {e}")
         return False
 
 def check_model_cache():
@@ -156,28 +156,28 @@ def check_model_cache():
             'microsoft/DialoGPT-medium'
         ]
         
-        print("🔍 Checking cached models...")
+        print(" Checking cached models...")
         
         cached = 0
         for model_id in models_to_check:
             try:
                 # Try to load tokenizer (lightweight check)
                 AutoTokenizer.from_pretrained(model_id, local_files_only=True)
-                print(f"✅ {model_id} - Cached")
+                print(f" {model_id} - Cached")
                 cached += 1
             except:
-                print(f"❌ {model_id} - Not cached")
+                print(f" {model_id} - Not cached")
         
-        print(f"\n📊 {cached}/{len(models_to_check)} models cached")
+        print(f"\n {cached}/{len(models_to_check)} models cached")
         return cached == len(models_to_check)
         
     except ImportError:
-        print("❌ Transformers not available")
+        print(" Transformers not available")
         return False
 
 def main():
     """Main function"""
-    print("🚀 Ara AI Model Downloader")
+    print(" Ara AI Model Downloader")
     print("Downloads lightweight, accurate AI models for enhanced analysis")
     print()
     
@@ -185,15 +185,15 @@ def main():
     all_cached = check_model_cache()
     
     if all_cached:
-        print("\n✅ All models already cached!")
+        print("\n All models already cached!")
         print("No download needed.")
         return True
     
-    print("\n📥 Starting model download...")
+    print("\n Starting model download...")
     success = download_models()
     
     if success:
-        print("\n🎯 Next steps:")
+        print("\n Next steps:")
         print("• Run 'python ara.py AAPL' to test predictions")
         print("• Run 'python ara.py --ai-analysis MSFT' for AI analysis")
         print("• Models will load faster now!")

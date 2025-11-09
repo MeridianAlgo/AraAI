@@ -37,6 +37,19 @@ def main():
     if not status['is_trained'] or args.train:
         console.print_warning(f"Training models on {args.pair} with maximum historical data ({args.period} period)...")
         console.print_info("This may take 1-2 minutes...")
+        try:
+            target_symbol = forex.get_forex_symbol(args.pair)
+            success = forex.train_ultimate_models(
+                target_symbol=target_symbol,
+                period=args.period,
+                use_parallel=False
+            )
+            if success:
+                console.print_success("Training completed!")
+            else:
+                console.print_warning("Training completed with warnings")
+        except Exception as e:
+            console.print_error(f"Training failed: {e}")
     
     # Make prediction
     console.print_info(f"Predicting {args.pair} for next {args.days} days...")

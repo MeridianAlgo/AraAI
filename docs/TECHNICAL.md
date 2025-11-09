@@ -1,12 +1,12 @@
 # ARA AI Real-Time ML Stock Prediction System
 
-## 🚀 Overview
+##  Overview
 
 The ARA AI system has been completely transformed into a **primary ML-focused platform** that trains on real stock market data and delivers **ultra-high accuracy predictions** in seconds, not minutes.
 
-## ✨ Key Features
+##  Key Features
 
-### 🎯 **99%+ Accuracy**
+###  **99%+ Accuracy**
 - **XGBoost**: 99.6% accuracy
 - **LightGBM**: 98.9% accuracy  
 - **Random Forest**: 98.3% accuracy
@@ -14,18 +14,18 @@ The ARA AI system has been completely transformed into a **primary ML-focused pl
 - **Gradient Boosting**: 99.3% accuracy
 - **Ensemble Model**: 99.0% accuracy
 
-### ⚡ **Lightning Fast Performance**
+###  **Lightning Fast Performance**
 - **Model Training**: 15-20 seconds (comprehensive dataset)
 - **Predictions**: <1 second per stock
 - **Total Analysis**: <20 seconds including training
 
-### 📊 **Real Market Data Training**
+###  **Real Market Data Training**
 - Trains on **30+ diverse stocks** across sectors
 - **6,750+ training samples** with 22 technical features
 - **1-year historical data** for robust patterns
 - **Real-time feature extraction** from live market data
 
-## 🛠️ Technical Architecture
+##  Technical Architecture
 
 ### **ML Models Ensemble**
 ```python
@@ -64,7 +64,7 @@ Model Weights (Optimized for Accuracy):
    - Trend strength analysis
    - Market pattern recognition
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Installation
 ```bash
@@ -90,30 +90,30 @@ python ara_fast.py MSFT --verbose
 python ara_fast.py GOOGL --retrain
 ```
 
-## 📈 Sample Output
+##  Sample Output
 
 ```
-🤖 AAPL ML Predictions (Accuracy: 99.0%)
+ AAPL ML Predictions (Accuracy: 99.0%)
 ═══════════════════════════════════════════════════════════════
 Current Price: $245.50
 Model Type: real_time_ensemble
 
-📈 ML Price Predictions:
+ ML Price Predictions:
 ┌───────┬────────────┬─────────────────┬────────┬──────────┬────────────┐
 │ Day   │ Date       │ Predicted Price │ Change │ Return % │ Confidence │
 ├───────┼────────────┼─────────────────┼────────┼──────────┼────────────┤
-│ Day 1 │ 2025-09-22 │         $244.08 │ $-1.42 │   -0.58% │   🟢 86.8% │
-│ Day 2 │ 2025-09-23 │         $242.66 │ $-2.84 │   -0.58% │   🟢 86.8% │
-│ Day 3 │ 2025-09-24 │         $241.26 │ $-4.24 │   -0.58% │   🟢 86.8% │
+│ Day 1 │ 2025-09-22 │         $244.08 │ $-1.42 │   -0.58% │    86.8% │
+│ Day 2 │ 2025-09-23 │         $242.66 │ $-2.84 │   -0.58% │    86.8% │
+│ Day 3 │ 2025-09-24 │         $241.26 │ $-4.24 │   -0.58% │    86.8% │
 └───────┴────────────┴─────────────────┴────────┴──────────┴────────────┘
 
-📊 Model Performance:
+ Model Performance:
 Training Samples: 6,750
 Model Accuracy: 99.0%
 Performance Rating: ⭐ Very Good
 ```
 
-## 🎯 Performance Metrics
+##  Performance Metrics
 
 ### **Accuracy Achievements**
 - **Eliminated 75% accuracy ceiling** - now achieving 99%+
@@ -132,7 +132,7 @@ Performance Rating: ⭐ Very Good
 - **Comprehensive feature set** (22 engineered features)
 - **Cross-sector training** for robust generalization
 
-## 🔧 Advanced Features
+##  Advanced Features
 
 ### **Model Ensemble Optimization**
 - Dynamic weight adjustment based on validation performance
@@ -152,7 +152,7 @@ Performance Rating: ⭐ Very Good
 - Automatic data quality validation
 - Incremental learning capabilities
 
-## 📊 Supported Analysis
+##  Supported Analysis
 
 ### **Stock Categories**
 - **Technology**: AAPL, MSFT, GOOGL, AMZN, TSLA
@@ -168,7 +168,7 @@ Performance Rating: ⭐ Very Good
 - **Confidence Scoring**: Model certainty levels
 - **Trend Analysis**: Directional market insights
 
-## 🚀 Next Steps
+##  Next Steps
 
 The system is now optimized for:
 1. **Maximum Accuracy** (99%+ ensemble performance)

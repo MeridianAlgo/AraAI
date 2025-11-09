@@ -11,15 +11,15 @@ from pathlib import Path
 
 def run_command(command, description):
     """Run a command and handle errors"""
-    print(f"\n🔄 {description}...")
+    print(f"\n {description}...")
     try:
         result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
-        print(f"✅ {description} completed successfully")
+        print(f" {description} completed successfully")
         if result.stdout:
             print(result.stdout)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ {description} failed:")
+        print(f" {description} failed:")
         print(f"Error: {e}")
         if e.stdout:
             print(f"STDOUT: {e.stdout}")
@@ -29,7 +29,7 @@ def run_command(command, description):
 
 def clean_build_directories():
     """Clean previous build artifacts"""
-    print("\n🧹 Cleaning build directories...")
+    print("\n Cleaning build directories...")
     
     directories_to_clean = ['build', 'dist', 'meridianalgo.egg-info']
     
@@ -48,7 +48,7 @@ def clean_build_directories():
 
 def validate_package_structure():
     """Validate package structure"""
-    print("\n🔍 Validating package structure...")
+    print("\n Validating package structure...")
     
     required_files = [
         'setup.py',
@@ -70,17 +70,17 @@ def validate_package_structure():
             missing_files.append(file_path)
     
     if missing_files:
-        print("❌ Missing required files:")
+        print(" Missing required files:")
         for file_path in missing_files:
             print(f"  - {file_path}")
         return False
     
-    print("✅ Package structure is valid")
+    print(" Package structure is valid")
     return True
 
 def install_build_dependencies():
     """Install build dependencies"""
-    print("\n📦 Installing build dependencies...")
+    print("\n Installing build dependencies...")
     
     build_deps = [
         'setuptools>=45',
@@ -97,7 +97,7 @@ def install_build_dependencies():
 
 def build_package():
     """Build the package"""
-    print("\n🏗️ Building package...")
+    print("\n Building package...")
     
     # Build source distribution
     if not run_command("python -m build --sdist", "Building source distribution"):
@@ -111,19 +111,19 @@ def build_package():
 
 def validate_built_package():
     """Validate the built package"""
-    print("\n✅ Validating built package...")
+    print("\n Validating built package...")
     
     # Check if dist directory exists and has files
     if not os.path.exists('dist'):
-        print("❌ dist directory not found")
+        print(" dist directory not found")
         return False
     
     dist_files = os.listdir('dist')
     if not dist_files:
-        print("❌ No files in dist directory")
+        print(" No files in dist directory")
         return False
     
-    print(f"📦 Built files:")
+    print(f" Built files:")
     for file_name in dist_files:
         file_path = os.path.join('dist', file_name)
         file_size = os.path.getsize(file_path)
@@ -137,7 +137,7 @@ def validate_built_package():
 
 def test_installation():
     """Test package installation"""
-    print("\n🧪 Testing package installation...")
+    print("\n Testing package installation...")
     
     # Create a temporary virtual environment for testing
     test_env = "test_env"
@@ -163,7 +163,7 @@ def test_installation():
     # Install the package from dist
     wheel_files = [f for f in os.listdir('dist') if f.endswith('.whl')]
     if not wheel_files:
-        print("❌ No wheel file found for testing")
+        print(" No wheel file found for testing")
         return False
     
     wheel_file = os.path.join('dist', wheel_files[0])
@@ -198,7 +198,7 @@ print("Basic functionality test passed")
 
 def main():
     """Main build process"""
-    print("🚀 MeridianAlgo Package Build Process")
+    print(" MeridianAlgo Package Build Process")
     print("=" * 50)
     
     # Step 1: Clean build directories
@@ -206,36 +206,36 @@ def main():
     
     # Step 2: Validate package structure
     if not validate_package_structure():
-        print("\n❌ Build failed: Invalid package structure")
+        print("\n Build failed: Invalid package structure")
         return 1
     
     # Step 3: Install build dependencies
     if not install_build_dependencies():
-        print("\n❌ Build failed: Could not install build dependencies")
+        print("\n Build failed: Could not install build dependencies")
         return 1
     
     # Step 4: Build package
     if not build_package():
-        print("\n❌ Build failed: Package build error")
+        print("\n Build failed: Package build error")
         return 1
     
     # Step 5: Validate built package
     if not validate_built_package():
-        print("\n❌ Build failed: Package validation error")
+        print("\n Build failed: Package validation error")
         return 1
     
     # Step 6: Test installation
     if not test_installation():
-        print("\n❌ Build failed: Installation test error")
+        print("\n Build failed: Installation test error")
         return 1
     
-    print("\n🎉 Package build completed successfully!")
-    print("\n📦 Ready for deployment:")
+    print("\n Package build completed successfully!")
+    print("\n Ready for deployment:")
     print("  - Source distribution: dist/*.tar.gz")
     print("  - Wheel distribution: dist/*.whl")
-    print("\n🚀 To upload to PyPI:")
+    print("\n To upload to PyPI:")
     print("  twine upload dist/*")
-    print("\n🧪 To upload to Test PyPI:")
+    print("\n To upload to Test PyPI:")
     print("  twine upload --repository testpypi dist/*")
     
     return 0

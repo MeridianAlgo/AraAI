@@ -28,7 +28,7 @@ def test_ultimate_system():
         console.print_info(f"Available models: {', '.join(status['models'])}")
         console.print_info(f"Total stock symbols: {status['total_symbols']:,}")
         console.print_info(f"Feature count: {status['feature_count']}")
-        console.print_info(f"Hugging Face models: {'✓' if status['hf_models_available'] else '✗'}")
+        console.print_info(f"Hugging Face models: {'' if status['hf_models_available'] else ''}")
         
         # Test market status
         console.print_info("Testing market status detection...")
@@ -113,7 +113,7 @@ def test_ultimate_system():
         console.print_success(f"All ULTIMATE tests completed in {total_time:.2f}s")
         
         # Final summary
-        console.print_info("🎯 ULTIMATE ML System Summary:")
+        console.print_info(" ULTIMATE ML System Summary:")
         console.print_info(f"  • 8 ML models in ensemble")
         console.print_info(f"  • {status['feature_count']} engineered features")
         console.print_info(f"  • {status['total_symbols']:,} stock symbols available")
@@ -141,7 +141,7 @@ def test_specific_features():
         ml_system = UltimateStockML()
         
         # Test 1: Market timing
-        console.print_info("🕐 Testing market timing features...")
+        console.print_info(" Testing market timing features...")
         market_status = ml_system.get_market_status()
         
         console.print_info(f"Current time: {market_status.get('current_time', 'Unknown')}")
@@ -150,11 +150,11 @@ def test_specific_features():
         console.print_info(f"Next close: {market_status.get('next_close', 'Unknown')}")
         
         # Test 2: Comprehensive stock list
-        console.print_info(f"📊 Stock universe: {len(ml_system.all_symbols):,} symbols")
+        console.print_info(f" Stock universe: {len(ml_system.all_symbols):,} symbols")
         console.print_info(f"Sample symbols: {', '.join(ml_system.all_symbols[:10])}")
         
         # Test 3: Feature engineering
-        console.print_info("🔧 Testing feature engineering...")
+        console.print_info(" Testing feature engineering...")
         import yfinance as yf
         
         ticker = yf.Ticker("AAPL")
@@ -167,7 +167,7 @@ def test_specific_features():
             console.print_info(f"Added indicators: {len(enhanced_data.columns) - len(data.columns)}")
         
         # Test 4: Sector classification
-        console.print_info("🏢 Testing sector classification...")
+        console.print_info(" Testing sector classification...")
         sectors_tested = {}
         
         for symbol in ['AAPL', 'JPM', 'JNJ', 'XOM', 'WMT']:
@@ -182,7 +182,7 @@ def test_specific_features():
         
         # Test 5: Hugging Face integration
         if ml_system.hf_models:
-            console.print_info("🤖 Testing Hugging Face integration...")
+            console.print_info(" Testing Hugging Face integration...")
             try:
                 sample_text = "Apple stock shows strong performance with positive outlook"
                 sentiment = ml_system.hf_models['sentiment'](sample_text)
@@ -200,7 +200,7 @@ def test_specific_features():
         return False
 
 if __name__ == "__main__":
-    print("🚀 Starting ULTIMATE ML System Tests")
+    print(" Starting ULTIMATE ML System Tests")
     print("=" * 60)
     
     # Run main system test
@@ -214,8 +214,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     
     if success1 and success2:
-        print("🎉 ALL ULTIMATE TESTS PASSED!")
+        print(" ALL ULTIMATE TESTS PASSED!")
         exit(0)
     else:
-        print("❌ Some tests failed")
+        print(" Some tests failed")
         exit(1)

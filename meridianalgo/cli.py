@@ -260,7 +260,7 @@ def show_system_info(console):
         # Print features
         console.console.print("\n[bold blue]Features:[/]")
         for feature in version_info['features']:
-            console.console.print(f"  ✅ {feature}")
+            console.console.print(f"   {feature}")
         
         # Print GPU info
         gpu_info = system_info.get('gpu_info', {})
@@ -275,23 +275,23 @@ def show_system_info(console):
         if model_info:
             console.console.print(f"\n[bold blue]ML Models:[/]")
             for model in model_info.get('models', []):
-                console.console.print(f"  🤖 {model}")
+                console.console.print(f"   {model}")
         
         # Print cache stats
         cache_stats = system_info.get('cache_stats', {})
         if cache_stats:
             console.console.print(f"\n[bold blue]Cache Statistics:[/]")
-            console.console.print(f"  📊 Total Predictions: {cache_stats.get('total_predictions', 0)}")
-            console.console.print(f"  🏢 Symbols: {cache_stats.get('symbols', 0)}")
-            console.console.print(f"  💾 File Size: {cache_stats.get('file_size', 0)} bytes")
+            console.console.print(f"   Total Predictions: {cache_stats.get('total_predictions', 0)}")
+            console.console.print(f"   Symbols: {cache_stats.get('symbols', 0)}")
+            console.console.print(f"   File Size: {cache_stats.get('file_size', 0)} bytes")
         
         # Print accuracy stats
         accuracy_stats = system_info.get('accuracy_stats', {})
         if accuracy_stats:
             console.console.print(f"\n[bold blue]Overall Accuracy:[/]")
-            console.console.print(f"  🎯 Accuracy Rate: {accuracy_stats.get('accuracy_rate', 0):.1f}%")
-            console.console.print(f"  📈 Total Predictions: {accuracy_stats.get('total_predictions', 0)}")
-            console.console.print(f"  📉 Average Error: {accuracy_stats.get('avg_error', 0):.2f}%")
+            console.console.print(f"   Accuracy Rate: {accuracy_stats.get('accuracy_rate', 0):.1f}%")
+            console.console.print(f"   Total Predictions: {accuracy_stats.get('total_predictions', 0)}")
+            console.console.print(f"   Average Error: {accuracy_stats.get('avg_error', 0):.2f}%")
         
     except Exception as e:
         console.print_error(f"Failed to get system info: {e}")

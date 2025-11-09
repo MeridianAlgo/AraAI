@@ -8,7 +8,7 @@ from meridianalgo import quick_predict, analyze_accuracy
 def main():
     """Basic usage examples"""
     
-    print("🚀 Ara AI Basic Usage Examples")
+    print(" Ara AI Basic Usage Examples")
     print("=" * 40)
     
     # Quick prediction

@@ -1,8 +1,8 @@
-# 📦 Installation Guide - ARA AI
+#  Installation Guide - ARA AI
 
 **Complete installation instructions for all platforms**
 
-## 🖥️ **System Requirements**
+##  **System Requirements**
 
 ### **Minimum Requirements**
 - **Python**: 3.8 or higher
@@ -18,7 +18,7 @@
 - **CPU**: Multi-core processor for faster training
 - **OS**: Latest versions for best compatibility
 
-## 🐍 **Python Installation**
+##  **Python Installation**
 
 ### **Check Your Python Version**
 ```bash
@@ -52,7 +52,7 @@ sudo apt install python3 python3-pip
 sudo yum install python3 python3-pip
 ```
 
-## 🚀 **ARA AI Installation**
+##  **ARA AI Installation**
 
 ### **Method 1: One-Command Setup (Recommended)**
 
@@ -66,11 +66,11 @@ python install_ultimate_requirements.py
 ```
 
 **This single command:**
-- ✅ Installs all Python dependencies
-- ✅ Downloads Hugging Face models
-- ✅ Sets up the ML pipeline
-- ✅ Tests all components
-- ✅ Verifies installation
+-  Installs all Python dependencies
+-  Downloads Hugging Face models
+-  Sets up the ML pipeline
+-  Tests all components
+-  Verifies installation
 
 ### **Method 2: Manual Installation**
 
@@ -107,7 +107,7 @@ pip install tqdm>=4.64.0
 python test_ultimate_system.py
 ```
 
-## 🤖 **Hugging Face Models Setup**
+##  **Hugging Face Models Setup**
 
 ### **Automatic Download (Recommended)**
 Models download automatically on first use:
@@ -143,12 +143,12 @@ C:\Users\[YourName]\.cache\huggingface\hub\
 
 ### **Offline Operation**
 After initial download, models work completely offline:
-- ✅ No internet required for predictions
-- ✅ No API keys needed
-- ✅ Complete privacy protection
-- ✅ Unlimited usage
+-  No internet required for predictions
+-  No API keys needed
+-  Complete privacy protection
+-  Unlimited usage
 
-## 🔧 **Platform-Specific Instructions**
+##  **Platform-Specific Instructions**
 
 ### **Windows Installation**
 
@@ -243,7 +243,7 @@ cd araai
 python install_ultimate_requirements.py
 ```
 
-## 🧪 **Verify Installation**
+##  **Verify Installation**
 
 ### **Quick Test**
 ```bash
@@ -258,7 +258,7 @@ python ara_fast.py AAPL
 # Test all components (takes 2-3 minutes)
 python test_ultimate_system.py
 
-# Expected output: "🎉 ALL ULTIMATE TESTS PASSED!"
+# Expected output: " ALL ULTIMATE TESTS PASSED!"
 ```
 
 ### **Check Model Status**
@@ -273,7 +273,7 @@ print(f'Accuracy: {status[\"accuracy_scores\"]}')
 "
 ```
 
-## 🔍 **Troubleshooting Installation**
+##  **Troubleshooting Installation**
 
 ### **Common Issues**
 
@@ -363,7 +363,7 @@ cd araai
 python install_ultimate_requirements.py
 ```
 
-## 📊 **Storage Requirements**
+##  **Storage Requirements**
 
 ### **Disk Space Usage**
 ```
@@ -394,17 +394,17 @@ Runtime Memory: ~2-4GB
 └── ARA AI System: ~200MB
 ```
 
-## ✅ **Installation Complete!**
+##  **Installation Complete!**
 
 After successful installation, you'll have:
 
-- ✅ **8 ML models** with 97.9% accuracy
-- ✅ **Hugging Face AI** for sentiment analysis
-- ✅ **44 engineered features** for analysis
-- ✅ **Real-time market data** processing
-- ✅ **Complete offline operation** after setup
-- ✅ **No API keys required**
-- ✅ **Full privacy protection**
+-  **8 ML models** with 97.9% accuracy
+-  **Hugging Face AI** for sentiment analysis
+-  **44 engineered features** for analysis
+-  **Real-time market data** processing
+-  **Complete offline operation** after setup
+-  **No API keys required**
+-  **Full privacy protection**
 
 ### **Next Steps**
 1. **[Quick Start Guide](QUICK_START.md)**: Get your first prediction
@@ -412,4 +412,4 @@ After successful installation, you'll have:
 3. **[API Reference](API.md)**: Python programming interface
 4. **[Troubleshooting](TROUBLESHOOTING.md)**: Common issues
 
-**🚀 Welcome to institutional-grade stock prediction!**
+** Welcome to institutional-grade stock prediction!**

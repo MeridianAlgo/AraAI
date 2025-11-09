@@ -14,33 +14,33 @@ def print_banner():
     """Print ARA AI banner"""
     banner = """
     ╔══════════════════════════════════════════════════════════════╗
-    ║                    🚀 ARA AI SETUP 🚀                        ║
+    ║                     ARA AI SETUP                         ║
     ║                                                              ║
     ║        Ultimate Stock Prediction System - 97.9% Accuracy    ║
     ║                                                              ║
-    ║  ✅ 8 ML Models    ✅ Hugging Face AI    ✅ Complete Privacy ║
-    ║  ✅ Real-time      ✅ Offline Capable   ✅ No API Keys      ║
+    ║   8 ML Models     Hugging Face AI     Complete Privacy ║
+    ║   Real-time       Offline Capable    No API Keys      ║
     ╚══════════════════════════════════════════════════════════════╝
     """
     print(banner)
 
 def check_python():
     """Check Python version"""
-    print("🐍 Checking Python version...")
+    print(" Checking Python version...")
     
     version = sys.version_info
     if version.major < 3 or (version.major == 3 and version.minor < 8):
-        print(f"❌ Python {version.major}.{version.minor} detected")
-        print("⚠️  ARA AI requires Python 3.8 or higher")
-        print("📥 Please install Python 3.8+ from https://python.org")
+        print(f" Python {version.major}.{version.minor} detected")
+        print("  ARA AI requires Python 3.8 or higher")
+        print(" Please install Python 3.8+ from https://python.org")
         return False
     
-    print(f"✅ Python {version.major}.{version.minor}.{version.micro} - Compatible!")
+    print(f" Python {version.major}.{version.minor}.{version.micro} - Compatible!")
     return True
 
 def check_disk_space():
     """Check available disk space"""
-    print("💾 Checking disk space...")
+    print(" Checking disk space...")
     
     try:
         import shutil
@@ -48,41 +48,41 @@ def check_disk_space():
         free_gb = free_bytes / (1024**3)
         
         if free_gb < 3:
-            print(f"⚠️  Only {free_gb:.1f}GB free space available")
-            print("📦 ARA AI needs ~3GB for models and dependencies")
+            print(f"  Only {free_gb:.1f}GB free space available")
+            print(" ARA AI needs ~3GB for models and dependencies")
             response = input("Continue anyway? (y/N): ")
             return response.lower() == 'y'
         
-        print(f"✅ {free_gb:.1f}GB free space - Sufficient!")
+        print(f" {free_gb:.1f}GB free space - Sufficient!")
         return True
         
     except Exception as e:
-        print(f"⚠️  Could not check disk space: {e}")
+        print(f"  Could not check disk space: {e}")
         return True
 
 def install_package(package, description=""):
     """Install a package with progress indication"""
     try:
-        print(f"📦 Installing {package}... {description}")
+        print(f" Installing {package}... {description}")
         result = subprocess.run([
             sys.executable, "-m", "pip", "install", package, "--quiet"
         ], capture_output=True, text=True)
         
         if result.returncode == 0:
-            print(f"✅ {package} installed successfully")
+            print(f" {package} installed successfully")
             return True
         else:
-            print(f"❌ Failed to install {package}")
+            print(f" Failed to install {package}")
             print(f"Error: {result.stderr}")
             return False
             
     except Exception as e:
-        print(f"❌ Exception installing {package}: {e}")
+        print(f" Exception installing {package}: {e}")
         return False
 
 def install_requirements():
     """Install all required packages"""
-    print("\n📦 Installing ARA AI Requirements...")
+    print("\n Installing ARA AI Requirements...")
     print("⏳ This may take 2-3 minutes depending on your internet speed")
     
     # Core ML packages
@@ -116,66 +116,66 @@ def install_requirements():
             success_count += 1
         time.sleep(0.1)  # Small delay for readability
     
-    print(f"\n📊 Installation Summary: {success_count}/{total_packages} packages installed")
+    print(f"\n Installation Summary: {success_count}/{total_packages} packages installed")
     
     if success_count == total_packages:
-        print("🎉 All packages installed successfully!")
+        print(" All packages installed successfully!")
         return True
     else:
         failed = total_packages - success_count
-        print(f"⚠️  {failed} packages failed to install")
+        print(f"  {failed} packages failed to install")
         
         if success_count >= total_packages * 0.8:  # 80% success rate
-            print("✅ Enough packages installed to continue")
+            print(" Enough packages installed to continue")
             return True
         else:
-            print("❌ Too many packages failed - please check your internet connection")
+            print(" Too many packages failed - please check your internet connection")
             return False
 
 def download_hf_models():
     """Download Hugging Face models"""
-    print("\n🤖 Downloading Hugging Face AI Models...")
-    print("📥 Downloading ~1GB of AI models (one-time only)")
+    print("\n Downloading Hugging Face AI Models...")
+    print(" Downloading ~1GB of AI models (one-time only)")
     print("⏳ This may take 2-5 minutes depending on your internet speed")
     
     try:
         # Test import first
         from transformers import pipeline
         
-        print("📊 Downloading FinBERT (Financial Analysis)...")
+        print(" Downloading FinBERT (Financial Analysis)...")
         sentiment_pipeline = pipeline(
             "sentiment-analysis",
             model="ProsusAI/finbert",
             tokenizer="ProsusAI/finbert"
         )
-        print("✅ FinBERT downloaded and cached")
+        print(" FinBERT downloaded and cached")
         
-        print("📊 Downloading RoBERTa (General Sentiment)...")
+        print(" Downloading RoBERTa (General Sentiment)...")
         general_pipeline = pipeline(
             "sentiment-analysis",
             model="cardiffnlp/twitter-roberta-base-sentiment-latest"
         )
-        print("✅ RoBERTa downloaded and cached")
+        print(" RoBERTa downloaded and cached")
         
         # Test the models
-        print("🧪 Testing AI models...")
+        print(" Testing AI models...")
         test_result = sentiment_pipeline("Apple stock shows strong performance")
-        print(f"✅ AI models working: {test_result[0]['label']} ({test_result[0]['score']:.2f})")
+        print(f" AI models working: {test_result[0]['label']} ({test_result[0]['score']:.2f})")
         
         return True
         
     except Exception as e:
-        print(f"⚠️  Hugging Face model download failed: {e}")
-        print("🔄 Models will download automatically on first use")
+        print(f"  Hugging Face model download failed: {e}")
+        print(" Models will download automatically on first use")
         return True  # Don't fail setup for this
 
 def test_installation():
     """Test the complete installation"""
-    print("\n🧪 Testing ARA AI Installation...")
+    print("\n Testing ARA AI Installation...")
     
     try:
         # Test basic imports
-        print("📦 Testing package imports...")
+        print(" Testing package imports...")
         import sklearn
         import xgboost
         import lightgbm
@@ -183,58 +183,58 @@ def test_installation():
         import numpy
         import yfinance
         import rich
-        print("✅ All core packages imported successfully")
+        print(" All core packages imported successfully")
         
         # Test ARA AI system
-        print("🚀 Testing ARA AI system...")
+        print(" Testing ARA AI system...")
         if os.path.exists("test_ultimate_system.py"):
             result = subprocess.run([
                 sys.executable, "test_ultimate_system.py"
             ], capture_output=True, text=True, timeout=300)  # 5 minute timeout
             
             if result.returncode == 0:
-                print("✅ ARA AI system test passed!")
+                print(" ARA AI system test passed!")
                 return True
             else:
-                print("⚠️  System test had issues but installation appears complete")
-                print("🔄 You can run 'python test_ultimate_system.py' later")
+                print("  System test had issues but installation appears complete")
+                print(" You can run 'python test_ultimate_system.py' later")
                 return True
         else:
-            print("⚠️  Test file not found, but installation appears complete")
+            print("  Test file not found, but installation appears complete")
             return True
             
     except Exception as e:
-        print(f"⚠️  Testing failed: {e}")
-        print("🔄 Installation may still be successful - try running ARA AI")
+        print(f"  Testing failed: {e}")
+        print(" Installation may still be successful - try running ARA AI")
         return True
 
 def show_next_steps():
     """Show what to do next"""
-    print("\n🎉 ARA AI Setup Complete!")
+    print("\n ARA AI Setup Complete!")
     print("=" * 60)
     
-    print("\n🚀 Quick Start Commands:")
+    print("\n Quick Start Commands:")
     print("  python ara_fast.py AAPL              # Quick Apple prediction")
     print("  python ara_fast.py TSLA --days 7     # Tesla 7-day forecast")
     print("  python ara_fast.py MSFT --verbose    # Microsoft with details")
     
-    print("\n📊 Popular Stocks to Try:")
+    print("\n Popular Stocks to Try:")
     print("  AAPL (Apple)     TSLA (Tesla)     MSFT (Microsoft)")
     print("  GOOGL (Google)   AMZN (Amazon)    NVDA (NVIDIA)")
     print("  SPY (S&P 500)    QQQ (NASDAQ)     META (Facebook)")
     
-    print("\n📚 Documentation:")
+    print("\n Documentation:")
     print("  docs/QUICK_START.md     # 5-minute getting started guide")
     print("  docs/USER_MANUAL.md     # Complete user manual")
     print("  docs/TROUBLESHOOTING.md # Solutions to common issues")
     
-    print("\n🔒 Privacy & Security:")
-    print("  ✅ All models stored locally on your machine")
-    print("  ✅ No data sent to external servers")
-    print("  ✅ Works completely offline after setup")
-    print("  ✅ No API keys or accounts required")
+    print("\n Privacy & Security:")
+    print("   All models stored locally on your machine")
+    print("   No data sent to external servers")
+    print("   Works completely offline after setup")
+    print("   No API keys or accounts required")
     
-    print("\n🎯 What You Have:")
+    print("\n What You Have:")
     print("  • 97.9% accurate stock predictions")
     print("  • 8 machine learning models working together")
     print("  • Hugging Face AI for sentiment analysis")
@@ -242,13 +242,13 @@ def show_next_steps():
     print("  • Complete privacy protection")
     
     print("\n" + "=" * 60)
-    print("🚀 Ready to predict stocks with institutional-grade accuracy!")
+    print(" Ready to predict stocks with institutional-grade accuracy!")
 
 def main():
     """Main setup function"""
     print_banner()
     
-    print("🔍 Pre-installation Checks...")
+    print(" Pre-installation Checks...")
     
     # Check Python version
     if not check_python():
@@ -256,15 +256,15 @@ def main():
     
     # Check disk space
     if not check_disk_space():
-        print("❌ Insufficient disk space")
+        print(" Insufficient disk space")
         sys.exit(1)
     
-    print("✅ Pre-checks passed!")
+    print(" Pre-checks passed!")
     
     # Install packages
     if not install_requirements():
-        print("❌ Package installation failed")
-        print("🔧 Check docs/TROUBLESHOOTING.md for solutions")
+        print(" Package installation failed")
+        print(" Check docs/TROUBLESHOOTING.md for solutions")
         sys.exit(1)
     
     # Download AI models
@@ -276,16 +276,16 @@ def main():
     # Show next steps
     show_next_steps()
     
-    print("\n🎉 Setup completed successfully!")
-    print("💡 Run 'python ara_fast.py AAPL' to get your first prediction!")
+    print("\n Setup completed successfully!")
+    print(" Run 'python ara_fast.py AAPL' to get your first prediction!")
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n⏹️  Setup cancelled by user")
+        print("\n\n⏹  Setup cancelled by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n\n❌ Setup failed with error: {e}")
-        print("🔧 Check docs/TROUBLESHOOTING.md for solutions")
+        print(f"\n\n Setup failed with error: {e}")
+        print(" Check docs/TROUBLESHOOTING.md for solutions")
         sys.exit(1)

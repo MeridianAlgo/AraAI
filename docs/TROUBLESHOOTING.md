@@ -1,8 +1,8 @@
-# 🔧 Troubleshooting Guide - ARA AI
+#  Troubleshooting Guide - ARA AI
 
 **Solutions to common issues and problems**
 
-## 🚨 **Quick Fixes**
+##  **Quick Fixes**
 
 ### **Most Common Issues**
 ```bash
@@ -22,7 +22,7 @@ rm -rf models/
 python ara_fast.py AAPL --retrain
 ```
 
-## 📦 **Installation Issues**
+##  **Installation Issues**
 
 ### **Problem: Installation Fails**
 ```
@@ -96,7 +96,7 @@ sudo apt install python3 python3-pip  # Ubuntu
 brew install python                    # macOS
 ```
 
-## 🤖 **Model Issues**
+##  **Model Issues**
 
 ### **Problem: Models Not Trained**
 ```
@@ -176,7 +176,7 @@ pip download transformers torch
 pip install --no-index --find-links . transformers torch
 ```
 
-## 📊 **Prediction Issues**
+##  **Prediction Issues**
 
 ### **Problem: Symbol Not Found**
 ```
@@ -240,7 +240,7 @@ python ara_fast.py AAPL --retrain  # Retrains (slower)
 python ara_fast.py AAPL --retrain --period 6mo
 ```
 
-## 🌐 **Network Issues**
+##  **Network Issues**
 
 ### **Problem: Network Connection Fails**
 ```
@@ -298,7 +298,7 @@ Error: SSL certificate verification failed
 pip install --upgrade certifi
 ```
 
-## 💾 **Performance Issues**
+##  **Performance Issues**
 
 ### **Problem: High Memory Usage**
 ```
@@ -365,7 +365,7 @@ dir                      # Windows
 # Or use faster storage for models/ directory
 ```
 
-## 🐍 **Python Issues**
+##  **Python Issues**
 
 ### **Problem: Wrong Python Version**
 ```
@@ -428,7 +428,7 @@ pip install -r requirements.txt
 pip install --force-reinstall transformers torch
 ```
 
-## 🖥️ **Platform-Specific Issues**
+##  **Platform-Specific Issues**
 
 ### **Windows Issues**
 
@@ -510,7 +510,7 @@ pip install --user transformers
 sudo chown -R $USER:$USER ~/.local/
 ```
 
-## 🔍 **Debugging Tools**
+##  **Debugging Tools**
 
 ### **Diagnostic Commands**
 ```bash
@@ -556,7 +556,7 @@ curl -I https://query1.finance.yahoo.com/v8/finance/chart/AAPL
 curl -I https://huggingface.co
 ```
 
-## 📞 **Getting Help**
+##  **Getting Help**
 
 ### **Before Asking for Help**
 1. **Check this guide**: Look for your specific issue above
@@ -600,7 +600,7 @@ pip list | grep -E "(transformers|torch|scikit|pandas|numpy)"
 - **Documentation**: Check all docs in [docs/](.) folder
 - **Code Review**: Examine source code for understanding
 
-## ✅ **Prevention Tips**
+##  **Prevention Tips**
 
 ### **Avoid Common Issues**
 1. **Keep updated**: Regular updates prevent many issues
@@ -618,6 +618,6 @@ pip list | grep -E "(transformers|torch|scikit|pandas|numpy)"
 
 ---
 
-**🔧 Still having issues? Don't hesitate to ask for help on GitHub!**
+** Still having issues? Don't hesitate to ask for help on GitHub!**
 
 **Most problems have simple solutions - we're here to help you succeed.**

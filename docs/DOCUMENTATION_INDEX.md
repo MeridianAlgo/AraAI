@@ -1,201 +1,183 @@
-# 📚 ARA AI Documentation Index
+# ARA AI Documentation Index
 
-Complete guide to all ARA AI documentation.
-
-## 🚀 Getting Started
-
-### For Users
-1. **[Installation Guide](INSTALLATION.md)** - Step-by-step installation
-2. **[Quick Start Guide](QUICK_START.md)** - Get started in 5 minutes
-3. **[User Manual](USER_MANUAL.md)** - Complete feature documentation
-
-### For Developers
-1. **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute
-2. **[CI/CD Setup](CI_CD_SETUP.md)** - Development environment setup
-3. **[CI/CD Status](CI_CD_STATUS.md)** - Current pipeline status
-
-## 📖 User Documentation
-
-### Core Guides
-- **[Installation](INSTALLATION.md)** - Installation instructions for all platforms
-- **[Quick Start](QUICK_START.md)** - Quick start guide with examples
-- **[User Manual](USER_MANUAL.md)** - Comprehensive user documentation
-- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
-
-### Reference
-- **[README](README.md)** - Project overview and features
-- **[Changelog](CHANGELOG.md)** - Version history and changes
-- **[Release Notes v2.2.0-Beta](RELEASE_NOTES_v2.2.0-Beta.md)** - Latest release
-
-## 🔐 Security & Privacy
-
-- **[Security Policy](SECURITY.md)** - Security best practices and reporting
-- **[Privacy Policy](PRIVACY.md)** - Data handling and privacy information
-
-## 👨‍💻 Developer Documentation
-
-### Development
-- **[Contributing Guide](../CONTRIBUTING.md)** - Contribution guidelines
-- **[CI/CD Setup](CI_CD_SETUP.md)** - CI/CD pipeline setup and usage
-- **[CI/CD Status](CI_CD_STATUS.md)** - Current CI/CD status and monitoring
-- **[CI/CD Fixes](CI_CD_FIXES.md)** - Recent CI/CD fixes and improvements
-
-### Deployment
-- **[Deployment Summary](DEPLOYMENT_SUMMARY.md)** - Deployment information and status
-
-## 📂 Documentation Structure
-
-```
-AraAI/
-├── README.md                          # Main project documentation
-├── CONTRIBUTING.md                    # Contribution guidelines
-├── LICENSE                            # MIT License
-│
-└── docs/
-    ├── DOCUMENTATION_INDEX.md         # This file
-    │
-    ├── User Documentation
-    │   ├── INSTALLATION.md            # Installation guide
-    │   ├── QUICK_START.md             # Quick start guide
-    │   ├── USER_MANUAL.md             # User manual
-    │   ├── TROUBLESHOOTING.md         # Troubleshooting guide
-    │   └── README.md                  # Docs overview
-    │
-    ├── Security & Privacy
-    │   ├── SECURITY.md                # Security policy
-    │   └── PRIVACY.md                 # Privacy policy
-    │
-    ├── Developer Documentation
-    │   ├── CI_CD_SETUP.md             # CI/CD setup guide
-    │   ├── CI_CD_STATUS.md            # CI/CD status
-    │   └── CI_CD_FIXES.md             # CI/CD fixes
-    │
-    └── Release Information
-        ├── CHANGELOG.md               # Version history
-        ├── RELEASE_NOTES_v2.2.0-Beta.md  # Release notes
-        └── DEPLOYMENT_SUMMARY.md      # Deployment info
-```
-
-## 🔍 Quick Reference
-
-### Installation
-```bash
-git clone https://github.com/MeridianAlgo/AraAI.git
-cd AraAI
-python setup_araai.py
-```
-
-### Basic Usage
-```bash
-# Quick prediction
-python ara.py AAPL
-
-# Detailed analysis
-python ara.py MSFT --verbose
-
-# Fast mode
-python ara_fast.py GOOGL
-```
-
-### Testing
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run with coverage
-pytest tests/ -v --cov=meridianalgo
-```
-
-### Development
-```bash
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Format code
-black meridianalgo/
-
-# Run linters
-flake8 meridianalgo/
-pylint meridianalgo/
-```
-
-## 📞 Getting Help
-
-### Resources
-- **Documentation**: This folder
-- **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/AraAI/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/AraAI/discussions)
-- **Email**: support@meridianalgo.com
-
-### Common Questions
-
-**Q: How do I install ARA AI?**  
-A: See [Installation Guide](INSTALLATION.md)
-
-**Q: How do I get started quickly?**  
-A: See [Quick Start Guide](QUICK_START.md)
-
-**Q: I'm having issues, what should I do?**  
-A: Check [Troubleshooting Guide](TROUBLESHOOTING.md)
-
-**Q: How can I contribute?**  
-A: See [Contributing Guide](../CONTRIBUTING.md)
-
-**Q: Is my data private?**  
-A: Yes! See [Privacy Policy](PRIVACY.md)
-
-## 🔄 Documentation Updates
-
-### How to Update Documentation
-
-1. **Edit the relevant file** in the `docs/` folder
-2. **Test your changes** locally
-3. **Submit a pull request** with your updates
-4. **Update this index** if adding new documentation
-
-### Documentation Standards
-
-- Use Markdown format
-- Include code examples
-- Add screenshots where helpful
-- Keep language clear and concise
-- Update the index when adding new docs
-
-## 📊 Documentation Status
-
-| Document | Status | Last Updated |
-|----------|--------|--------------|
-| Installation | ✅ Complete | 2025-09-21 |
-| Quick Start | ✅ Complete | 2025-09-21 |
-| User Manual | ✅ Complete | 2025-09-21 |
-| Troubleshooting | ✅ Complete | 2025-09-21 |
-| Security | ✅ Complete | 2025-09-21 |
-| Privacy | ✅ Complete | 2025-09-21 |
-| Contributing | ✅ Complete | 2025-09-21 |
-| CI/CD Setup | ✅ Complete | 2025-09-21 |
-| CI/CD Status | ✅ Complete | 2025-09-21 |
-| Changelog | ✅ Complete | 2025-09-21 |
-| Release Notes | ✅ Complete | 2025-09-21 |
-
-## 🎯 Next Steps
-
-### For New Users
-1. Read [Installation Guide](INSTALLATION.md)
-2. Follow [Quick Start Guide](QUICK_START.md)
-3. Explore [User Manual](USER_MANUAL.md)
-
-### For Contributors
-1. Read [Contributing Guide](../CONTRIBUTING.md)
-2. Set up [CI/CD Environment](CI_CD_SETUP.md)
-3. Start contributing!
-
-### For Developers
-1. Review [CI/CD Setup](CI_CD_SETUP.md)
-2. Check [CI/CD Status](CI_CD_STATUS.md)
-3. Read [Deployment Summary](DEPLOYMENT_SUMMARY.md)
+Complete documentation for the ARA AI Stock & Forex Prediction System.
 
 ---
 
-**Last Updated**: September 21, 2025  
-**Version**: 2.2.0-Beta  
-**Maintained by**: MeridianAlgo Team
+## Quick Links
+
+### Getting Started
+- [README](../README.md) - Project overview and quick start
+- [Installation Guide](INSTALLATION.md) - Detailed installation instructions
+- [Quick Start Guide](QUICK_START.md) - Get started in 5 minutes
+- [User Manual](USER_MANUAL.md) - Complete feature documentation
+
+### Support & Troubleshooting
+- [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
+- [Technical Documentation](TECHNICAL.md) - Technical details and architecture
+
+### Policies & Legal
+- [Security Policy](SECURITY.md) - Security best practices
+- [Privacy Policy](PRIVACY.md) - Data handling information
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute
+- [Credits](CREDITS.md) - Acknowledgments and contributors
+- [Changelog](CHANGELOG.md) - Version history
+
+---
+
+## Documentation by Category
+
+### User Documentation
+
+#### Installation & Setup
+- **[Installation Guide](INSTALLATION.md)**
+  - System requirements
+  - Installation steps for Windows, Linux, macOS
+  - Dependency installation
+  - Troubleshooting installation issues
+
+- **[Quick Start Guide](QUICK_START.md)**
+  - 5-minute quick start
+  - Basic usage examples
+  - First predictions
+
+#### Usage & Features
+- **[User Manual](USER_MANUAL.md)**
+  - Stock predictions
+  - Forex predictions (enhanced)
+  - CSV data predictions
+  - Command-line options
+  - Advanced features
+  - Financial health analysis
+  - AI sentiment analysis
+
+- **[Troubleshooting](TROUBLESHOOTING.md)**
+  - Common errors and solutions
+  - Performance optimization
+  - Data issues
+  - Model training problems
+
+### Developer Documentation
+
+#### Technical Information
+- **[Technical Documentation](TECHNICAL.md)**
+  - System architecture
+  - Model ensemble details
+  - Feature engineering
+  - Performance metrics
+  - API reference
+
+#### Contributing
+- **[Contributing Guide](CONTRIBUTING.md)**
+  - Code of conduct
+  - Development setup
+  - Coding standards
+  - Pull request process
+  - Testing requirements
+
+- **[Credits](CREDITS.md)**
+  - Contributors
+  - Third-party libraries
+  - Acknowledgments
+
+### Legal & Compliance
+
+#### Security & Privacy
+- **[Security Policy](SECURITY.md)**
+  - Security best practices
+  - Vulnerability reporting
+  - Data protection
+  - Safe usage guidelines
+
+- **[Privacy Policy](PRIVACY.md)**
+  - Data collection
+  - Local storage
+  - Third-party services
+  - User privacy
+
+### Release Information
+
+- **[Changelog](CHANGELOG.md)**
+  - Version history
+  - Feature additions
+  - Bug fixes
+  - Breaking changes
+
+---
+
+## Documentation Structure
+
+```
+docs/
+├── DOCUMENTATION_INDEX.md      # This file
+├── INSTALLATION.md             # Installation guide
+├── QUICK_START.md              # Quick start guide
+├── USER_MANUAL.md              # Complete user manual
+├── TROUBLESHOOTING.md          # Troubleshooting guide
+├── TECHNICAL.md                # Technical documentation
+├── CONTRIBUTING.md             # Contributing guidelines
+├── CREDITS.md                  # Credits and acknowledgments
+├── SECURITY.md                 # Security policy
+├── PRIVACY.md                  # Privacy policy
+└── CHANGELOG.md                # Version history
+```
+
+---
+
+## Key Features Documentation
+
+### Stock Predictions
+- 9-model ensemble (XGBoost, LightGBM, RF, ET, GB, AdaBoost, Ridge, Elastic, Lasso)
+- 98.5% ensemble accuracy
+- Financial health analysis (A+ to F grades)
+- AI sentiment analysis
+- 44 technical indicators
+- See: [User Manual](USER_MANUAL.md)
+
+### Forex Predictions (Enhanced)
+- 20+ currency pairs supported
+- Enhanced feature evolution for multi-day forecasts
+- Volatility-based bounds for realistic predictions
+- Accurate pip calculations (JPY pairs handled correctly)
+- Multi-factor confidence scoring
+- See: [User Manual](USER_MANUAL.md) and [README](../README.md)
+
+### CSV Data Support
+- Train on your own historical data
+- Auto-detection of stock vs forex data
+- Full dataset training
+- Same 9-model ensemble power
+- See: [User Manual](USER_MANUAL.md)
+
+---
+
+## Getting Help
+
+### Documentation
+- Start with [Quick Start Guide](QUICK_START.md)
+- Check [Troubleshooting](TROUBLESHOOTING.md) for common issues
+- Read [User Manual](USER_MANUAL.md) for detailed features
+
+### Support Channels
+- **GitHub Issues**: [Report bugs](https://github.com/MeridianAlgo/AraAI/issues)
+- **Email**: support@meridianalgo.com
+
+### Before Asking for Help
+1. Check [Troubleshooting](TROUBLESHOOTING.md)
+2. Search existing [GitHub Issues](https://github.com/MeridianAlgo/AraAI/issues)
+3. Review [User Manual](USER_MANUAL.md)
+4. Check Python version (3.9+ required)
+
+---
+
+## Contributing to Documentation
+
+We welcome documentation improvements! See [Contributing Guide](CONTRIBUTING.md) for:
+- Documentation style guide
+- How to submit documentation changes
+- Documentation testing
+
+---
+
+**Last Updated**: November 8, 2025  
+**Version**: 3.0.2

@@ -1,12 +1,12 @@
-# 📖 User Manual - ARA AI
+#  User Manual - ARA AI
 
 **Complete guide to using ARA AI for stock prediction**
 
-## 🎯 **Overview**
+##  **Overview**
 
 ARA AI is the world's most advanced stock prediction system, combining 8 machine learning models with Hugging Face AI to deliver 97.9% accuracy predictions. This manual covers everything you need to know to use the system effectively.
 
-## 🚀 **Getting Started**
+##  **Getting Started**
 
 ### **Basic Command Structure**
 ```bash
@@ -25,7 +25,7 @@ python ara_fast.py AAPL
 - Confidence scores
 - Basic company information
 
-## 📊 **Command Line Interface**
+##  **Command Line Interface**
 
 ### **Basic Usage**
 ```bash
@@ -86,41 +86,41 @@ python ara_fast.py SPY     # S&P 500 ETF
 python ara_fast.py QQQ     # NASDAQ ETF
 ```
 
-## 📈 **Understanding the Output**
+##  **Understanding the Output**
 
 ### **Standard Output Format**
 ```
-🚀 AAPL ULTIMATE ML Predictions
+ AAPL ULTIMATE ML Predictions
 ═══════════════════════════════════════════════════════════════
 Model: ultimate_ensemble_8_models
 Accuracy: 97.9% | Features: 44 | Models: 8
 Current Price: $245.50
-Market Status: 🔴 CLOSED
+Market Status:  CLOSED
 
-🏢 Company Information
+ Company Information
 Sector: Technology
 Industry: Consumer Electronics  
 Market Cap: $3,643,315,585,024 (Large Cap)
 
-🤖 AI Sentiment Analysis
-😊 Sentiment: positive
+ AI Sentiment Analysis
+ Sentiment: positive
 Confidence: 89.4%
 
-🚀 ULTIMATE ML Price Predictions
+ ULTIMATE ML Price Predictions
 ┌───────┬────────────┬─────────────────┬────────┬──────────┬────────────┐
 │ Day   │ Date       │ Predicted Price │ Change │ Return % │ Confidence │
 ├───────┼────────────┼─────────────────┼────────┼──────────┼────────────┤
-│ Day 1 │ 2025-09-22 │         $248.75 │ $+3.25 │   +1.32% │   🟢 94.8% │
-│ Day 2 │ 2025-09-23 │         $252.14 │ $+6.64 │   +2.71% │   🟢 92.1% │
-│ Day 3 │ 2025-09-24 │         $255.67 │ $+10.17│   +4.14% │   🟢 89.5% │
+│ Day 1 │ 2025-09-22 │         $248.75 │ $+3.25 │   +1.32% │    94.8% │
+│ Day 2 │ 2025-09-23 │         $252.14 │ $+6.64 │   +2.71% │    92.1% │
+│ Day 3 │ 2025-09-24 │         $255.67 │ $+10.17│   +4.14% │    89.5% │
 └───────┴────────────┴─────────────────┴────────┴──────────┴────────────┘
 
-📊 ULTIMATE Model Performance
+ ULTIMATE Model Performance
 Training Samples: 34,186
 Model Accuracy: 97.9%
 Feature Engineering: 44 advanced features
 Model Ensemble: 8 ML algorithms
-Performance Rating: 🌟 EXCEPTIONAL
+Performance Rating:  EXCEPTIONAL
 
 ⏰ Market Timing
 Current Time: 2025-09-21 14:49:39 EDT
@@ -167,19 +167,19 @@ Next Open: 2025-09-22 09:30:00 EDT
 - **Next Open/Close**: When market opens or closes next
 
 ### **Confidence Score Interpretation**
-- 🟢 **90-98%**: Very High Confidence - Strong prediction
-- 🟡 **80-89%**: High Confidence - Reliable prediction
-- 🟠 **70-79%**: Medium Confidence - Moderate reliability
-- 🔴 **50-69%**: Low Confidence - Use with caution
+-  **90-98%**: Very High Confidence - Strong prediction
+-  **80-89%**: High Confidence - Reliable prediction
+-  **70-79%**: Medium Confidence - Moderate reliability
+-  **50-69%**: Low Confidence - Use with caution
 
 ### **Performance Rating Scale**
-- 🌟 **EXCEPTIONAL**: 98%+ accuracy
+-  **EXCEPTIONAL**: 98%+ accuracy
 - ⭐ **EXCELLENT**: 95-97% accuracy
-- ✅ **VERY GOOD**: 90-94% accuracy
-- 👍 **GOOD**: 85-89% accuracy
-- ⚠️ **FAIR**: 80-84% accuracy
+-  **VERY GOOD**: 90-94% accuracy
+-  **GOOD**: 85-89% accuracy
+-  **FAIR**: 80-84% accuracy
 
-## 🎛️ **Advanced Features**
+##  **Advanced Features**
 
 ### **Model Retraining**
 ```bash
@@ -197,10 +197,10 @@ python ara_fast.py AAPL --retrain --period 5y
 ```
 
 **When to Retrain:**
-- ✅ **Weekly**: For maximum accuracy
-- ✅ **After major market events**: Earnings, splits, major news
-- ✅ **Poor predictions**: If accuracy seems lower than usual
-- ✅ **New stocks**: First time analyzing a stock
+-  **Weekly**: For maximum accuracy
+-  **After major market events**: Earnings, splits, major news
+-  **Poor predictions**: If accuracy seems lower than usual
+-  **New stocks**: First time analyzing a stock
 
 ### **Verbose Mode**
 ```bash
@@ -231,7 +231,7 @@ python ara_fast.py AAPL --verbose
 - **2y**: Best for most stocks, captures market cycles
 - **5y**: Maximum accuracy, includes multiple market conditions
 
-## 📊 **Supported Stocks**
+##  **Supported Stocks**
 
 ### **Major Stock Categories**
 
@@ -322,18 +322,18 @@ python ara_fast.py VWO     # Emerging Markets ETF
 
 ### **Prediction Dates**
 ARA AI automatically handles market timing:
-- ✅ **Skips weekends** in predictions
-- ✅ **Accounts for holidays** (basic)
-- ✅ **Shows next market open/close**
-- ✅ **Uses market timezone** (ET)
+-  **Skips weekends** in predictions
+-  **Accounts for holidays** (basic)
+-  **Shows next market open/close**
+-  **Uses market timezone** (ET)
 
 ### **Market Status Indicators**
-- 🟢 **OPEN**: Market is currently trading
-- 🔴 **CLOSED**: Market is closed
-- 🟡 **PRE-MARKET**: Before regular hours
-- 🟠 **AFTER-HOURS**: After regular hours
+-  **OPEN**: Market is currently trading
+-  **CLOSED**: Market is closed
+-  **PRE-MARKET**: Before regular hours
+-  **AFTER-HOURS**: After regular hours
 
-## 🔧 **Model Management**
+##  **Model Management**
 
 ### **Model Storage**
 All models are stored locally in the `models/` directory:
@@ -371,7 +371,7 @@ print(f'Accuracy: {status[\"accuracy_scores\"]}')
 "
 ```
 
-## 🤖 **AI Features**
+##  **AI Features**
 
 ### **Hugging Face Integration**
 ARA AI uses advanced AI models for sentiment analysis:
@@ -389,12 +389,12 @@ ARA AI uses advanced AI models for sentiment analysis:
 - **Confidence**: 50-95% confidence scores
 
 ### **Privacy & Security**
-- ✅ **Local Processing**: All AI runs on your machine
-- ✅ **No Data Sharing**: Nothing sent to external servers
-- ✅ **Offline Capable**: Works without internet
-- ✅ **No API Keys**: No external accounts required
+-  **Local Processing**: All AI runs on your machine
+-  **No Data Sharing**: Nothing sent to external servers
+-  **Offline Capable**: Works without internet
+-  **No API Keys**: No external accounts required
 
-## 📊 **Performance Optimization**
+##  **Performance Optimization**
 
 ### **Speed Tips**
 ```bash
@@ -426,7 +426,7 @@ python ara_fast.py AAPL --verbose
 - **Disk I/O**: Moderate during model loading/saving
 - **Network**: Only during initial Hugging Face model download
 
-## 🎯 **Best Practices**
+##  **Best Practices**
 
 ### **For Maximum Accuracy**
 1. **Retrain weekly** with fresh market data
@@ -447,7 +447,7 @@ python ara_fast.py AAPL --verbose
 3. **Verify company information** - ensure correct sector/industry
 4. **Regular updates** - retrain models periodically
 
-## ❓ **Troubleshooting**
+##  **Troubleshooting**
 
 ### **Common Issues**
 
@@ -486,7 +486,7 @@ python ara_fast.py AAPL --retrain --period 2y
 - **Issues**: Report bugs on GitHub
 - **Discussions**: Ask questions on GitHub Discussions
 
-## 🎉 **Advanced Usage**
+##  **Advanced Usage**
 
 ### **Python API**
 For programmatic access, see [API Reference](API.md)
@@ -499,6 +499,6 @@ To contribute improvements, see [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ---
 
-**🚀 You're now ready to use ARA AI like a pro!**
+** You're now ready to use ARA AI like a pro!**
 
 **Remember: ARA AI provides predictions based on historical data and technical analysis. Always combine with your own research and risk management for investment decisions.**

@@ -14,7 +14,7 @@ sys.path.insert(0, str(project_root))
 def run_tests():
     """Run all tests"""
     
-    print("🧪 Running Ara AI Tests")
+    print(" Running Ara AI Tests")
     print("=" * 30)
     
     # Discover and run tests
@@ -25,7 +25,7 @@ def run_tests():
     result = runner.run(suite)
     
     # Print summary
-    print(f"\n📊 Test Summary:")
+    print(f"\n Test Summary:")
     print(f"Tests run: {result.testsRun}")
     print(f"Failures: {len(result.failures)}")
     print(f"Errors: {len(result.errors)}")

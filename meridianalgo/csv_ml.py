@@ -230,9 +230,16 @@ class CSVML(UltimateStockML):
                         weights.append(self.model_weights.get(name, 0.05))
                 
                 # Weighted ensemble
-                pred_return = float(np.average(model_predictions, weights=weights))
+                pred_return = float(np.average(model_predictions, weights=weights)) if model_predictions else 0.0
                 pred_price = float(current_price * (1 + pred_return))
-                confidence = 0.95 * (0.95 ** (day - 1))
+                # Confidence from model agreement (lower variance => higher confidence)
+                if len(model_predictions) >= 2:
+                    pred_std = float(np.std(model_predictions))
+                    base_conf = max(0.6, min(0.95, 1.0 - (pred_std * 5.0)))
+                else:
+                    base_conf = 0.75
+                day_decay = max(0.5, 1.0 - 0.05 * (day - 1))
+                confidence = base_conf * day_decay
                 
                 # Calculate change
                 change_pct = float(((pred_price - current_price) / current_price) * 100)

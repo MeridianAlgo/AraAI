@@ -14,7 +14,7 @@ import time
 
 def demo_ai_models():
     """Demo AI model capabilities"""
-    print("🤖 AI MODEL CAPABILITIES DEMO")
+    print(" AI MODEL CAPABILITIES DEMO")
     print("=" * 60)
     
     console = ConsoleManager(verbose=True)
@@ -27,14 +27,14 @@ def demo_ai_models():
     if hasattr(ai_analyzer, 'model_configs'):
         console.print_info("Available AI Models:")
         for model_type, config in ai_analyzer.model_configs.items():
-            print(f"  📊 {model_type.title()}: {config['model_name']}")
+            print(f"   {model_type.title()}: {config['model_name']}")
             print(f"     Size: {config['size_mb']}MB | Accuracy: {config['accuracy']}")
     
     return ai_analyzer
 
 def demo_comprehensive_analysis():
     """Demo comprehensive AI analysis"""
-    print("\n🧠 COMPREHENSIVE AI ANALYSIS DEMO")
+    print("\n COMPREHENSIVE AI ANALYSIS DEMO")
     print("=" * 60)
     
     console = ConsoleManager(verbose=True)
@@ -57,26 +57,26 @@ def demo_comprehensive_analysis():
             analysis_time = time.time() - start_time
             
             if analysis and 'error' not in analysis:
-                print(f"✅ Analysis completed in {analysis_time:.2f}s")
+                print(f" Analysis completed in {analysis_time:.2f}s")
                 
                 # Show key AI insights
                 if 'ai_insights' in analysis:
-                    print("💡 AI Insights:")
+                    print(" AI Insights:")
                     for insight in analysis['ai_insights'][:3]:
                         print(f"   • {insight}")
                 
                 # Show AI sentiment
                 if 'ai_sentiment' in analysis:
                     sentiment = analysis['ai_sentiment']
-                    print(f"📊 AI Sentiment: {sentiment.get('sentiment', 'N/A').upper()} ({sentiment.get('confidence', 0)*100:.0f}% confidence)")
+                    print(f" AI Sentiment: {sentiment.get('sentiment', 'N/A').upper()} ({sentiment.get('confidence', 0)*100:.0f}% confidence)")
                 
                 # Show AI recommendation
                 if 'ai_recommendation' in analysis:
                     rec = analysis['ai_recommendation']
-                    print(f"🎯 AI Recommendation: {rec.get('recommendation', 'N/A')} ({rec.get('confidence', 0)*100:.0f}% confidence)")
+                    print(f" AI Recommendation: {rec.get('recommendation', 'N/A')} ({rec.get('confidence', 0)*100:.0f}% confidence)")
                 
                 # Show overall score
-                print(f"📈 Overall AI Score: {analysis.get('overall_score', 0):.1f}/100")
+                print(f" Overall AI Score: {analysis.get('overall_score', 0):.1f}/100")
                 
             else:
                 error_msg = analysis.get('error', 'Unknown error') if analysis else 'Analysis failed'
@@ -90,7 +90,7 @@ def demo_comprehensive_analysis():
 
 def demo_ai_features():
     """Demo specific AI features"""
-    print("\n🔬 AI FEATURE BREAKDOWN DEMO")
+    print("\n AI FEATURE BREAKDOWN DEMO")
     print("=" * 60)
     
     console = ConsoleManager(verbose=True)
@@ -106,7 +106,7 @@ def demo_ai_features():
             # Financial Sentiment Analysis
             if 'ai_sentiment' in analysis:
                 sentiment = analysis['ai_sentiment']
-                console.print_info("🎭 Financial Sentiment Analysis:")
+                console.print_info(" Financial Sentiment Analysis:")
                 print(f"   Overall: {sentiment.get('sentiment', 'N/A').upper()}")
                 print(f"   Confidence: {sentiment.get('confidence', 0)*100:.1f}%")
                 print(f"   Reasoning: {sentiment.get('reasoning', 'N/A')}")
@@ -119,7 +119,7 @@ def demo_ai_features():
             # Risk Assessment
             if 'ai_risk_assessment' in analysis:
                 risk = analysis['ai_risk_assessment']
-                console.print_info("⚠️ AI Risk Assessment:")
+                console.print_info(" AI Risk Assessment:")
                 print(f"   Risk Score: {risk.get('risk_score', 0):.1f}/100")
                 print(f"   Primary Risk: {risk.get('primary_risk_category', 'N/A')}")
                 
@@ -131,7 +131,7 @@ def demo_ai_features():
             # Growth Analysis
             if 'ai_growth_potential' in analysis:
                 growth = analysis['ai_growth_potential']
-                console.print_info("📈 AI Growth Analysis:")
+                console.print_info(" AI Growth Analysis:")
                 print(f"   Growth Category: {growth.get('growth_category', 'N/A')}")
                 print(f"   Confidence: {growth.get('growth_confidence', 0)*100:.1f}%")
                 print(f"   Reasoning: {growth.get('growth_reasoning', 'N/A')}")
@@ -139,7 +139,7 @@ def demo_ai_features():
             # Competitive Analysis
             if 'ai_competitive_analysis' in analysis:
                 comp = analysis['ai_competitive_analysis']
-                console.print_info("🏆 AI Competitive Analysis:")
+                console.print_info(" AI Competitive Analysis:")
                 print(f"   Market Position: {comp.get('market_position', 'N/A')}")
                 print(f"   Moat Strength: {comp.get('moat_strength', 'N/A')}")
                 
@@ -151,7 +151,7 @@ def demo_ai_features():
             # ESG Analysis
             if 'ai_esg_analysis' in analysis:
                 esg = analysis['ai_esg_analysis']
-                console.print_info("🌱 AI ESG Analysis:")
+                console.print_info(" AI ESG Analysis:")
                 print(f"   ESG Score: {esg.get('esg_score', 0):.1f}/100")
                 
                 if 'governance_factors' in esg:
@@ -162,7 +162,7 @@ def demo_ai_features():
             # Market Outlook
             if 'ai_market_outlook' in analysis:
                 outlook = analysis['ai_market_outlook']
-                console.print_info("🔮 AI Market Outlook:")
+                console.print_info(" AI Market Outlook:")
                 print(f"   Market Trend: {outlook.get('market_trend', 'N/A')}")
                 print(f"   Sector Outlook: {outlook.get('sector_outlook', 'N/A')}")
                 
@@ -174,7 +174,7 @@ def demo_ai_features():
             # AI Price Targets
             if 'ai_price_targets' in analysis:
                 targets = analysis['ai_price_targets']
-                console.print_info("🎯 AI Price Targets:")
+                console.print_info(" AI Price Targets:")
                 print(f"   Bull Case: ${targets.get('bull_case_target', 0):.2f}")
                 print(f"   Base Case: ${targets.get('base_case_target', 0):.2f}")
                 print(f"   Bear Case: ${targets.get('bear_case_target', 0):.2f}")
@@ -190,7 +190,7 @@ def demo_ai_features():
 
 def demo_performance_comparison():
     """Demo performance comparison between CPU and GPU"""
-    print("\n⚡ PERFORMANCE COMPARISON DEMO")
+    print("\n PERFORMANCE COMPARISON DEMO")
     print("=" * 60)
     
     console = ConsoleManager(verbose=True)
@@ -212,27 +212,27 @@ def demo_performance_comparison():
     gpu_time = time.time() - start_time
     
     # Compare results
-    print("\n📊 Performance Results:")
+    print("\n Performance Results:")
     print(f"CPU Analysis Time: {cpu_time:.2f}s")
     print(f"GPU Analysis Time: {gpu_time:.2f}s")
     
     if gpu_time < cpu_time:
         speedup = cpu_time / gpu_time
-        print(f"🚀 GPU Speedup: {speedup:.1f}x faster")
+        print(f" GPU Speedup: {speedup:.1f}x faster")
     else:
-        print("💻 CPU performed similarly or better")
+        print(" CPU performed similarly or better")
     
     # Compare analysis quality
     cpu_score = cpu_analysis.get('overall_score', 0) if cpu_analysis else 0
     gpu_score = gpu_analysis.get('overall_score', 0) if gpu_analysis else 0
     
-    print(f"\n📈 Analysis Quality:")
+    print(f"\n Analysis Quality:")
     print(f"CPU Analysis Score: {cpu_score:.1f}/100")
     print(f"GPU Analysis Score: {gpu_score:.1f}/100")
 
 def demo_model_accuracy():
     """Demo model accuracy with known companies"""
-    print("\n🎯 MODEL ACCURACY DEMO")
+    print("\n MODEL ACCURACY DEMO")
     print("=" * 60)
     
     console = ConsoleManager(verbose=True)
@@ -277,9 +277,9 @@ def demo_model_accuracy():
                 
                 if sentiment_correct:
                     correct_predictions += 1
-                    print(f"   ✅ Sentiment: {ai_sentiment} (Expected: {expected_sentiment})")
+                    print(f"    Sentiment: {ai_sentiment} (Expected: {expected_sentiment})")
                 else:
-                    print(f"   ❌ Sentiment: {ai_sentiment} (Expected: {expected_sentiment})")
+                    print(f"    Sentiment: {ai_sentiment} (Expected: {expected_sentiment})")
                 
                 total_predictions += 1
                 
@@ -287,21 +287,21 @@ def demo_model_accuracy():
                 growth = analysis.get('ai_growth_potential', {}).get('growth_category', 'unknown')
                 risk_score = analysis.get('ai_risk_assessment', {}).get('risk_score', 50)
                 
-                print(f"   📈 Growth: {growth}")
-                print(f"   ⚠️ Risk Score: {risk_score:.1f}/100")
+                print(f"    Growth: {growth}")
+                print(f"    Risk Score: {risk_score:.1f}/100")
             
         except Exception as e:
             console.print_error(f"Accuracy test failed for {symbol}: {e}")
     
     if total_predictions > 0:
         accuracy = (correct_predictions / total_predictions) * 100
-        print(f"\n📊 Model Accuracy: {accuracy:.1f}% ({correct_predictions}/{total_predictions})")
+        print(f"\n Model Accuracy: {accuracy:.1f}% ({correct_predictions}/{total_predictions})")
     else:
-        print("\n⚠️ No predictions to evaluate")
+        print("\n No predictions to evaluate")
 
 def main():
     """Run AI analysis demo"""
-    print("🤖 ARA AI - ENHANCED AI ANALYSIS DEMO")
+    print(" ARA AI - ENHANCED AI ANALYSIS DEMO")
     print("Comprehensive AI-Powered Company Analysis")
     print("=" * 60)
     
@@ -321,20 +321,20 @@ def main():
     
     for name, demo_func in demos:
         try:
-            print(f"\n🎯 Starting: {name}")
+            print(f"\n Starting: {name}")
             demo_func()
-            print(f"✅ Completed: {name}")
+            print(f" Completed: {name}")
         except KeyboardInterrupt:
-            print(f"\n⏹️ Demo interrupted by user")
+            print(f"\n⏹ Demo interrupted by user")
             break
         except Exception as e:
-            print(f"❌ Error in {name}: {e}")
+            print(f" Error in {name}: {e}")
             continue
     
     print("\n" + "="*60)
-    print("🎉 AI ANALYSIS DEMO COMPLETED!")
+    print(" AI ANALYSIS DEMO COMPLETED!")
     print("="*60)
-    print("\n🚀 Key Features Demonstrated:")
+    print("\n Key Features Demonstrated:")
     print("• FinBERT financial sentiment analysis")
     print("• Comprehensive risk assessment")
     print("• AI-powered growth analysis")
@@ -344,7 +344,7 @@ def main():
     print("• AI-generated price targets")
     print("• GPU acceleration support")
     
-    print("\n💡 Usage Tips:")
+    print("\n Usage Tips:")
     print("• Use 'python ara.py --ai-analysis SYMBOL' for AI analysis")
     print("• GPU acceleration improves performance significantly")
     print("• Models are cached locally for faster subsequent use")

@@ -10,7 +10,7 @@ from pathlib import Path
 # Add current directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from meridianalgo.ultimate_ml import UltimateStockML
+from meridianalgo.unified_ml import UnifiedStockML as UltimateStockML
 from meridianalgo.console import ConsoleManager
 
 def main():
@@ -19,7 +19,7 @@ def main():
     parser.add_argument('--days', type=int, default=5, help='Number of days to predict (default: 5)')
     parser.add_argument('--train', action='store_true', help='Force model training')
     parser.add_argument('--stocks', type=int, default=1, help='Ignored - always trains on target stock only')
-    parser.add_argument('--period', default='6mo', help='Training period (default: 6mo)')
+    parser.add_argument('--period', default='2y', help='Training period (default: 2y)')
     
     args = parser.parse_args()
     
