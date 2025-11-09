@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ARA AI - Stock & Forex Prediction System v3.1.1
 
 **Advanced AI-powered financial prediction platform with 98.5% ensemble accuracy**
@@ -638,3 +639,6 @@ A: Yes, after initial data download, everything runs locally.
 **Maintained by**: MeridianAlgo
 
 For complete disclaimer and terms of use, please see [LICENSE](LICENSE) and [PRIVACY.md](docs/PRIVACY.md).
+=======
+{NEW_README_CONTENT_WILL_BE_PROVIDED}
+>>>>>>> dabbec32ee94d1949a0c90c9643b5d906cc6d687
