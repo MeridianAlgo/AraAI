@@ -593,6 +593,8 @@ MeridianAlgo is a **nonprofit research organization** focused on:
 - Providing financial advice to others
 - Commercial trading operations
 
+
+**For complete disclaimer and terms of use, please see [LICENSE](LICENSE) and [PRIVACY.md](docs/PRIVACY.md).**
 ---
 
 ## Support
@@ -635,9 +637,8 @@ A: Yes, after initial data download, everything runs locally.
 ---
 
 **Version**: 3.1.1  
-**Last Updated**: November 8, 2025  
+**Last Updated**: November 12, 2025  
 **Maintained by**: MeridianAlgo
 
-For complete disclaimer and terms of use, please see [LICENSE](LICENSE) and [PRIVACY.md](docs/PRIVACY.md).
 =======
 
