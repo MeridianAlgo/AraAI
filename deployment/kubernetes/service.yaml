@@ -1,0 +1,55 @@
+# Kubernetes Services for ARA AI
+---
+# API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ara-api
+  namespace: ara-ai
+  labels:
+    app: ara-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: ara-api
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ara-redis
+  namespace: ara-ai
+  labels:
+    app: ara-redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: ara-redis
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ara-postgres
+  namespace: ara-ai
+  labels:
+    app: ara-postgres
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  selector:
+    app: ara-postgres

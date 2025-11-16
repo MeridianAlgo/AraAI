@@ -1,0 +1,171 @@
+{
+  "1dbad2e4-abb4-4684-9196-468ed0e4ee0a": {
+    "id": "1dbad2e4-abb4-4684-9196-468ed0e4ee0a",
+    "name": "AAPL Price Above 200",
+    "symbol": "AAPL",
+    "condition": {
+      "field": "price",
+      "operator": ">",
+      "value": 200.0,
+      "timeframe": null
+    },
+    "channels": [
+      "email"
+    ],
+    "priority": "high",
+    "status": "active",
+    "message_template": null,
+    "created_at": "2025-11-15T20:22:09.524330",
+    "updated_at": "2025-11-15T20:22:09.547974",
+    "last_triggered": "2025-11-15T20:22:09.547966",
+    "trigger_count": 1,
+    "cooldown_minutes": 60,
+    "email_recipients": [
+      "trader@example.com"
+    ],
+    "sms_recipients": [],
+    "webhook_url": null,
+    "metadata": {}
+  },
+  "cd5ec2b9-35bd-4164-8f23-059dbb5ca954": {
+    "id": "cd5ec2b9-35bd-4164-8f23-059dbb5ca954",
+    "name": "High Price Alert",
+    "symbol": "AAPL",
+    "condition": {
+      "field": "price",
+      "operator": ">",
+      "value": 200.0,
+      "timeframe": null
+    },
+    "channels": [
+      "email"
+    ],
+    "priority": "medium",
+    "status": "active",
+    "message_template": null,
+    "created_at": "2025-11-15T20:22:09.546240",
+    "updated_at": "2025-11-15T20:22:09.549315",
+    "last_triggered": "2025-11-15T20:22:09.549305",
+    "trigger_count": 1,
+    "cooldown_minutes": 60,
+    "email_recipients": [
+      "trader@example.com"
+    ],
+    "sms_recipients": [],
+    "webhook_url": null,
+    "metadata": {}
+  },
+  "1508dc29-260e-460b-8bc5-25bf7306117e": {
+    "id": "1508dc29-260e-460b-8bc5-25bf7306117e",
+    "name": "High Confidence Alert",
+    "symbol": "AAPL",
+    "condition": {
+      "field": "confidence",
+      "operator": ">=",
+      "value": 0.85,
+      "timeframe": null
+    },
+    "channels": [
+      "email"
+    ],
+    "priority": "medium",
+    "status": "active",
+    "message_template": null,
+    "created_at": "2025-11-15T20:22:09.547014",
+    "updated_at": "2025-11-15T20:22:09.550999",
+    "last_triggered": "2025-11-15T20:22:09.550992",
+    "trigger_count": 1,
+    "cooldown_minutes": 60,
+    "email_recipients": [
+      "trader@example.com"
+    ],
+    "sms_recipients": [],
+    "webhook_url": null,
+    "metadata": {}
+  },
+  "b50ee107-062d-4913-987c-8b27ddae6e89": {
+    "id": "b50ee107-062d-4913-987c-8b27ddae6e89",
+    "name": "Critical BTC Alert",
+    "symbol": "BTC-USD",
+    "condition": {
+      "field": "price",
+      "operator": ">",
+      "value": 1000.0,
+      "timeframe": null
+    },
+    "channels": [
+      "email",
+      "webhook"
+    ],
+    "priority": "critical",
+    "status": "active",
+    "message_template": null,
+    "created_at": "2025-11-15T20:22:09.567709",
+    "updated_at": "2025-11-15T20:22:14.215223",
+    "last_triggered": "2025-11-15T20:22:14.215218",
+    "trigger_count": 1,
+    "cooldown_minutes": 30,
+    "email_recipients": [
+      "trader@example.com"
+    ],
+    "sms_recipients": [],
+    "webhook_url": "https://example.com/webhook/alerts",
+    "metadata": {}
+  },
+  "17699766-fe10-49f5-b930-8d86a16fe08f": {
+    "id": "17699766-fe10-49f5-b930-8d86a16fe08f",
+    "name": "Test Alert",
+    "symbol": "AAPL",
+    "condition": {
+      "field": "price",
+      "operator": ">",
+      "value": 100.0,
+      "timeframe": null
+    },
+    "channels": [
+      "email"
+    ],
+    "priority": "medium",
+    "status": "active",
+    "message_template": null,
+    "created_at": "2025-11-15T20:22:14.242351",
+    "updated_at": "2025-11-15T20:22:14.243415",
+    "last_triggered": "2025-11-15T20:22:14.243407",
+    "trigger_count": 1,
+    "cooldown_minutes": 1,
+    "email_recipients": [
+      "trader@example.com"
+    ],
+    "sms_recipients": [],
+    "webhook_url": null,
+    "metadata": {}
+  },
+  "2488b9f0-5e84-4d33-bed4-5c2052b683c9": {
+    "id": "2488b9f0-5e84-4d33-bed4-5c2052b683c9",
+    "name": "Stop Loss Alert",
+    "symbol": "AAPL",
+    "condition": {
+      "field": "price",
+      "operator": "<",
+      "value": 150.0,
+      "timeframe": null
+    },
+    "channels": [
+      "email"
+    ],
+    "priority": "critical",
+    "status": "active",
+    "message_template": "\n\ud83d\udea8 URGENT ALERT \ud83d\udea8\n\nSymbol: {symbol}\nCondition Met: {condition}\n\nCurrent Value: ${actual_value:.2f}\nThreshold: ${threshold_value:.2f}\n\nPriority: {priority}\nTime: {triggered_at}\n\nAction Required: Review your positions immediately!\n",
+    "created_at": "2025-11-15T20:22:14.270173",
+    "updated_at": "2025-11-15T20:22:14.270180",
+    "last_triggered": null,
+    "trigger_count": 0,
+    "cooldown_minutes": 60,
+    "email_recipients": [
+      "trader@example.com"
+    ],
+    "sms_recipients": [],
+    "webhook_url": null,
+    "metadata": {}
+  }
+}

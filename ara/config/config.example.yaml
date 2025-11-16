@@ -1,0 +1,192 @@
+# ARA AI Configuration Template
+# Copy this file to config.yaml and customize for your environment
+# Environment-specific settings for development, staging, and production
+
+development:
+  data:
+    cache_ttl: 300  # Cache TTL in seconds (5 minutes)
+    max_retries: 3  # Number of retries for failed API calls
+    timeout: 30  # Request timeout in seconds
+    providers:
+      # Yahoo Finance - Free stock and forex data
+      yfinance:
+        enabled: true
+        priority: 1
+      
+      # Binance - Cryptocurrency exchange
+      binance:
+        enabled: true
+        priority: 2
+        api_key: null  # Set via ARA_BINANCE_API_KEY environment variable
+        api_secret: null  # Set via ARA_BINANCE_API_SECRET environment variable
+      
+      # Coinbase - Cryptocurrency exchange
+      coinbase:
+        enabled: true
+        priority: 3
+        api_key: null  # Set via ARA_COINBASE_API_KEY environment variable
+      
+      # Alpha Vantage - Premium stock data (requires API key)
+      alpha_vantage:
+        enabled: false
+        priority: 4
+        api_key: null  # Set via ARA_ALPHA_VANTAGE_API_KEY environment variable
+      
+      # Polygon.io - Real-time stock and crypto data (requires API key)
+      polygon:
+        enabled: false
+        priority: 5
+        api_key: null  # Set via ARA_POLYGON_API_KEY environment variable
+  
+  model:
+    model_dir: "models"  # Directory to store trained models
+    default_ensemble_size: 12  # Number of models in ensemble
+    gpu_enabled: true  # Use GPU if available
+    batch_size: 32  # Training batch size
+    epochs: 200  # Training epochs
+    learning_rate: 0.0005  # Learning rate for training
+  
+  api:
+    host: "0.0.0.0"  # API host (0.0.0.0 for all interfaces)
+    port: 8000  # API port
+    workers: 4  # Number of worker processes
+    rate_limit: 100  # Requests per minute per user
+    enable_cors: true  # Enable CORS for web clients
+  
+  cache:
+    enabled: true  # Enable caching
+    redis_url: null  # Redis URL (null = in-memory cache)
+    ttl_l1: 10  # L1 cache TTL in seconds (in-memory)
+    ttl_l2: 300  # L2 cache TTL in seconds (Redis)
+    max_size_mb: 1000  # Maximum cache size in MB
+  
+  logging:
+    level: "INFO"  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format: "json"  # Log format: json, text, structured
+    file: null  # Log file path (null = no file logging)
+    console: true  # Enable console logging
+
+staging:
+  data:
+    cache_ttl: 120
+    max_retries: 4
+    timeout: 30
+    providers:
+      yfinance:
+        enabled: true
+        priority: 1
+      binance:
+        enabled: true
+        priority: 2
+      coinbase:
+        enabled: true
+        priority: 3
+      polygon:
+        enabled: true
+        priority: 4
+  
+  model:
+    model_dir: "/opt/ara/models"
+    default_ensemble_size: 12
+    gpu_enabled: true
+    batch_size: 48
+    epochs: 250
+    learning_rate: 0.0004
+  
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 6
+    rate_limit: 500
+    enable_cors: true
+  
+  cache:
+    enabled: true
+    redis_url: "redis://localhost:6379/1"
+    ttl_l1: 8
+    ttl_l2: 120
+    max_size_mb: 2000
+  
+  logging:
+    level: "INFO"
+    format: "json"
+    file: "/var/log/ara/ara-staging.log"
+    console: true
+
+production:
+  data:
+    cache_ttl: 60  # Shorter cache for production
+    max_retries: 5  # More retries for reliability
+    timeout: 30
+    providers:
+      yfinance:
+        enabled: true
+        priority: 1
+      binance:
+        enabled: true
+        priority: 2
+      coinbase:
+        enabled: true
+        priority: 3
+      polygon:
+        enabled: true
+        priority: 4
+      alpha_vantage:
+        enabled: true
+        priority: 5
+  
+  model:
+    model_dir: "/var/lib/ara/models"
+    default_ensemble_size: 12
+    gpu_enabled: true
+    batch_size: 64  # Larger batch for production
+    epochs: 300  # More epochs for better accuracy
+    learning_rate: 0.0003
+  
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 8  # More workers for production
+    rate_limit: 1000  # Higher rate limit
+    enable_cors: false  # Disable CORS in production
+  
+  cache:
+    enabled: true
+    redis_url: "redis://localhost:6379/0"  # Redis required for production
+    ttl_l1: 5  # Shorter L1 cache
+    ttl_l2: 60  # Shorter L2 cache
+    max_size_mb: 5000  # Larger cache for production
+  
+  logging:
+    level: "WARNING"  # Less verbose in production
+    format: "json"
+    file: "/var/log/ara/ara.log"
+    console: false  # No console logging in production
+
+# Environment Variables Override
+# The following environment variables can override config values:
+#
+# General:
+#   ARA_ENV - Environment name (development, staging, production)
+#
+# Data:
+#   ARA_CACHE_TTL - Cache TTL in seconds
+#   ARA_BINANCE_API_KEY - Binance API key
+#   ARA_BINANCE_API_SECRET - Binance API secret
+#   ARA_COINBASE_API_KEY - Coinbase API key
+#   ARA_ALPHA_VANTAGE_API_KEY - Alpha Vantage API key
+#   ARA_POLYGON_API_KEY - Polygon.io API key
+#
+# Model:
+#   ARA_MODEL_DIR - Model directory path
+#   ARA_GPU_ENABLED - Enable GPU (true/false)
+#
+# API:
+#   ARA_API_HOST - API host
+#   ARA_API_PORT - API port
+#
+# Cache:
+#   ARA_REDIS_URL - Redis connection URL
+#
+# Logging:
+#   ARA_LOG_LEVEL - Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)

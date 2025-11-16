@@ -1,0 +1,142 @@
+# ARA AI Configuration File
+# Environment-specific settings
+
+development:
+  data:
+    cache_ttl: 300  # Cache TTL in seconds
+    max_retries: 3
+    timeout: 30
+    providers:
+      yfinance:
+        enabled: true
+        priority: 1
+      binance:
+        enabled: true
+        priority: 2
+        api_key: null  # Set via environment variable
+      coinbase:
+        enabled: true
+        priority: 3
+  
+  model:
+    model_dir: "models"
+    default_ensemble_size: 12
+    gpu_enabled: true
+    batch_size: 32
+    epochs: 200
+    learning_rate: 0.0005
+  
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 4
+    rate_limit: 100  # requests per minute
+    enable_cors: true
+  
+  cache:
+    enabled: true
+    redis_url: null  # Use in-memory cache if null
+    ttl_l1: 10  # L1 cache TTL (seconds)
+    ttl_l2: 300  # L2 cache TTL (seconds)
+    max_size_mb: 1000
+  
+  logging:
+    level: "INFO"
+    format: "json"
+    file: null
+    console: true
+
+staging:
+  data:
+    cache_ttl: 120  # Cache TTL in seconds
+    max_retries: 4
+    timeout: 30
+    providers:
+      yfinance:
+        enabled: true
+        priority: 1
+      binance:
+        enabled: true
+        priority: 2
+        api_key: null  # Set via environment variable
+      coinbase:
+        enabled: true
+        priority: 3
+      polygon:
+        enabled: true
+        priority: 4
+  
+  model:
+    model_dir: "/opt/ara/models"
+    default_ensemble_size: 12
+    gpu_enabled: true
+    batch_size: 48
+    epochs: 250
+    learning_rate: 0.0004
+  
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 6
+    rate_limit: 500  # requests per minute
+    enable_cors: true
+  
+  cache:
+    enabled: true
+    redis_url: "redis://localhost:6379/1"  # Different DB than production
+    ttl_l1: 8
+    ttl_l2: 120
+    max_size_mb: 2000
+  
+  logging:
+    level: "INFO"
+    format: "json"
+    file: "/var/log/ara/ara-staging.log"
+    console: true
+
+production:
+  data:
+    cache_ttl: 60
+    max_retries: 5
+    timeout: 30
+    providers:
+      yfinance:
+        enabled: true
+        priority: 1
+      binance:
+        enabled: true
+        priority: 2
+      coinbase:
+        enabled: true
+        priority: 3
+      polygon:
+        enabled: true
+        priority: 4
+  
+  model:
+    model_dir: "/var/lib/ara/models"
+    default_ensemble_size: 12
+    gpu_enabled: true
+    batch_size: 64
+    epochs: 300
+    learning_rate: 0.0003
+  
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 8
+    rate_limit: 1000
+    enable_cors: false
+  
+  cache:
+    enabled: true
+    redis_url: "redis://localhost:6379/0"
+    ttl_l1: 5
+    ttl_l2: 60
+    max_size_mb: 5000
+  
+  logging:
+    level: "WARNING"
+    format: "json"
+    file: "/var/log/ara/ara.log"
+    console: false

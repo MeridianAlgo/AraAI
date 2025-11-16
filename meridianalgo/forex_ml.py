@@ -21,10 +21,10 @@ class ForexML:
     
     def __init__(self, model_path="models/forex_model.pt"):
         self.model_path = Path(model_path)
-        from .large_torch_model import AdvancedMLSystem
-        self.ml_system = AdvancedMLSystem(self.model_path, model_type='forex')
+        # Use UnifiedStockML as the base - it handles both stocks and forex
+        self._unified_ml = UnifiedStockML(model_path)
+        self.ml_system = self._unified_ml.ml_system  # Share the same ml_system
         self.feature_count = 44
-        self._unified_ml = UnifiedStockML(model_path)  # For shared methods
         
         # Major forex pairs (Yahoo Finance format)
         self.forex_pairs = {
@@ -195,14 +195,9 @@ class ForexML:
             print(f"{pair_info['base_name']} vs {pair_info['quote_name']}")
             print(f"Type: {pair_info['type']} Pair")
             
-            # Train models if not trained
+            # Check if model is trained (training should be done before calling predict)
             if not self.ml_system.is_trained():
-                print(f"\nTraining on {pair_info['pair']} with maximum historical data...")
-                self.train_ultimate_models(
-                    target_symbol=symbol,
-                    period=period,
-                    use_parallel=False
-                )
+                raise ValueError("Model not trained. Please train the model first using train_ultimate_models() or pass --train flag.")
             
             # Get current data
             ticker = yf.Ticker(symbol)

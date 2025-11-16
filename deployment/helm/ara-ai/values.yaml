@@ -1,0 +1,124 @@
+# Default values for ara-ai Helm chart
+
+# Global settings
+global:
+  environment: production
+
+# API deployment settings
+api:
+  replicaCount: 3
+  image:
+    repository: ara-ai
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  env:
+    ARA_ENV: production
+    ARA_LOG_LEVEL: INFO
+
+# Redis settings
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 7-alpine
+  
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+
+# PostgreSQL settings
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    tag: 15-alpine
+  
+  database: ara_ai
+  username: ara_user
+  # Password should be set via secrets
+  
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: standard
+
+# Ingress settings
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.3"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  
+  hosts:
+    - host: api.ara-ai.com
+      paths:
+        - path: /
+          pathType: Prefix
+  
+  tls:
+    - secretName: ara-tls-secret
+      hosts:
+        - api.ara-ai.com
+
+# Persistent storage
+persistence:
+  models:
+    enabled: true
+    size: 50Gi
+    storageClass: standard
+    accessMode: ReadWriteMany
+
+# Monitoring
+monitoring:
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+
+# Security
+security:
+  podSecurityPolicy:
+    enabled: false
+  networkPolicy:
+    enabled: false
