@@ -418,6 +418,6 @@ This software is provided for educational and research purposes only. It is NOT 
 
 ---
 
-**Made with ❤️ by the ARA AI Team**
+**Made with ❤️ by the ARA AI Team at MeridianAlgo**
 
-*Last Updated: November 16, 2025*
+*Last Updated: November 17, 2025*
