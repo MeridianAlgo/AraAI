@@ -1,0 +1,374 @@
+{
+  "info": {
+    "name": "ARA AI Prediction API",
+    "description": "Complete collection of ARA AI API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your-api-key-here",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"tier\": \"free\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Create API Key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My API Key\",\n  \"tier\": \"pro\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/api-keys",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "api-keys"]
+            }
+          }
+        },
+        {
+          "name": "List API Keys",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/api-keys",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "api-keys"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predictions",
+      "item": [
+        {
+          "name": "Single Prediction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"days\": 7,\n  \"analysis_level\": \"standard\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/predict",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "predict"]
+            }
+          }
+        },
+        {
+          "name": "Batch Prediction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbols\": [\"AAPL\", \"MSFT\", \"GOOGL\"],\n  \"days\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/predict/batch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "predict", "batch"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Backtesting",
+      "item": [
+        {
+          "name": "Run Backtest",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"start_date\": \"2023-01-01\",\n  \"end_date\": \"2023-12-31\",\n  \"strategy\": \"buy_and_hold\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/backtest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backtest"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Portfolio",
+      "item": [
+        {
+          "name": "Optimize Portfolio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assets\": [\"AAPL\", \"MSFT\", \"GOOGL\", \"BTC-USD\"],\n  \"risk_tolerance\": \"moderate\",\n  \"optimization_method\": \"sharpe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/portfolio/optimize",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "portfolio", "optimize"]
+            }
+          }
+        },
+        {
+          "name": "Analyze Portfolio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"positions\": {\n    \"AAPL\": 0.30,\n    \"MSFT\": 0.30,\n    \"GOOGL\": 0.40\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/portfolio/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "portfolio", "analyze"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Market Analysis",
+      "item": [
+        {
+          "name": "Market Regime",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/market/regime?symbol=AAPL",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "market", "regime"],
+              "query": [
+                {
+                  "key": "symbol",
+                  "value": "AAPL"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sentiment Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/market/sentiment?symbol=AAPL&sources=twitter,reddit,news",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "market", "sentiment"],
+              "query": [
+                {
+                  "key": "symbol",
+                  "value": "AAPL"
+                },
+                {
+                  "key": "sources",
+                  "value": "twitter,reddit,news"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Models",
+      "item": [
+        {
+          "name": "Model Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/models/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "models", "status"]
+            }
+          }
+        },
+        {
+          "name": "Train Model",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"AAPL\",\n  \"model_type\": \"transformer\",\n  \"data_period\": \"5y\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/models/train",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "models", "train"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

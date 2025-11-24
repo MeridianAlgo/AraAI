@@ -1,0 +1,212 @@
+# Kubernetes Deployment for ARA AI API
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ara-api
+  namespace: ara-ai
+  labels:
+    app: ara-api
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ara-api
+  template:
+    metadata:
+      labels:
+        app: ara-api
+        version: v1
+    spec:
+      containers:
+      - name: ara-api
+        image: ara-ai:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: ARA_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: ARA_ENV
+        - name: ARA_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: ARA_LOG_LEVEL
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: REDIS_PORT
+        - name: POSTGRES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: POSTGRES_HOST
+        - name: POSTGRES_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: POSTGRES_PORT
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: ara-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ara-secrets
+              key: POSTGRES_PASSWORD
+        - name: ARA_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ara-secrets
+              key: ARA_MASTER_KEY
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ara-secrets
+              key: JWT_SECRET_KEY
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: models
+          mountPath: /app/models
+        - name: cache
+          mountPath: /app/.ara_cache
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: ara-models-pvc
+      - name: cache
+        emptyDir: {}
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ara-redis
+  namespace: ara-ai
+  labels:
+    app: ara-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ara-redis
+  template:
+    metadata:
+      labels:
+        app: ara-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: ara-redis-pvc
+---
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ara-postgres
+  namespace: ara-ai
+  labels:
+    app: ara-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ara-postgres
+  template:
+    metadata:
+      labels:
+        app: ara-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: ara-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: ara-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ara-secrets
+              key: POSTGRES_PASSWORD
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: ara-postgres-pvc
