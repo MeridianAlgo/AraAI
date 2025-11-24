@@ -1,3 +1,0 @@
-"""
-ARA AI Test Suite
-"""

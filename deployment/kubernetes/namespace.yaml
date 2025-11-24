@@ -1,8 +1,0 @@
-# Kubernetes Namespace for ARA AI
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ara-ai
-  labels:
-    name: ara-ai
-    environment: production
