@@ -1,0 +1,64 @@
+name: Train Models
+
+on:
+  workflow_dispatch:  # Manual trigger only - no nightly runs
+    inputs:
+      mode:
+        description: 'Training mode'
+        required: true
+        default: 'quick'
+        type: choice
+        options:
+          - quick
+          - sp500
+          - all
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours max
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Train models (Quick)
+        if: github.event.inputs.mode == 'quick'
+        run: python scripts/train_all.py --quick --strict
+      
+      - name: Train models (S&P 500)
+        if: github.event.inputs.mode == 'sp500'
+        run: python scripts/train_all.py --index sp500 --strict
+      
+      - name: Train models (All)
+        if: github.event.inputs.mode == 'all'
+        run: python scripts/train_all.py --index all --strict
+      
+      - name: Upload trained models
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-models-${{ github.event.inputs.mode }}
+          path: models/*.pt
+          retention-days: 30
+      
+      - name: Upload training logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: training-logs-${{ github.event.inputs.mode }}
+          path: |
+            *.log
+            **/*.log
+          retention-days: 7
