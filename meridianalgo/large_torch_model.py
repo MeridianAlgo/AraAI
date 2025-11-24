@@ -1,94 +1,147 @@
 """
 Large PyTorch Model - 1M+ parameters for high accuracy
 Separate models for stocks and forex with proper data categorization
+Optimized with Hugging Face Accelerate and CPU limiting
 """
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
+import os
+import json
+import time
+import psutil
 from pathlib import Path
 from datetime import datetime
-import json
+from accelerate import Accelerator
 
-
-class LargeEnsembleModel(nn.Module):
-    """
-    Intelligent ensemble model with up to 1M parameters
-    Deep architecture with attention and residual connections
-    """
-    def __init__(self, input_size=44, hidden_sizes=[1024, 768, 512, 384, 256, 128], dropout=0.2):
-        super(LargeEnsembleModel, self).__init__()
+class ResidualBlock(nn.Module):
+    def __init__(self, in_features, out_features, dropout=0.2):
+        super(ResidualBlock, self).__init__()
+        self.linear1 = nn.Linear(in_features, out_features)
+        self.bn1 = nn.BatchNorm1d(out_features)
+        self.linear2 = nn.Linear(out_features, out_features)
+        self.bn2 = nn.BatchNorm1d(out_features)
+        self.dropout = nn.Dropout(dropout)
         
-        # Deep feature extraction network
+        # Shortcut connection if dimensions change
+        self.shortcut = nn.Sequential()
+        if in_features != out_features:
+            self.shortcut = nn.Sequential(
+                nn.Linear(in_features, out_features),
+                nn.BatchNorm1d(out_features)
+            )
+
+    def forward(self, x):
+        residual = self.shortcut(x)
+        out = F.relu(self.bn1(self.linear1(x)))
+        out = self.dropout(out)
+        out = self.bn2(self.linear2(out))
+        out += residual
+        out = F.relu(out)
+        return out
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, embed_dim, num_heads, dropout=0.1):
+        super(MultiHeadAttention, self).__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.head_dim = embed_dim // num_heads
+        
+        self.q_linear = nn.Linear(embed_dim, embed_dim)
+        self.k_linear = nn.Linear(embed_dim, embed_dim)
+        self.v_linear = nn.Linear(embed_dim, embed_dim)
+        
+        self.out_proj = nn.Linear(embed_dim, embed_dim)
+        self.dropout = nn.Dropout(dropout)
+        
+    def forward(self, query, key, value):
+        batch_size = query.size(0)
+        
+        # Linear projections
+        q = self.q_linear(query).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        k = self.k_linear(key).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        v = self.v_linear(value).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        
+        # Scaled Dot-Product Attention
+        scores = torch.matmul(q, k.transpose(-2, -1)) / np.sqrt(self.head_dim)
+        attn_weights = F.softmax(scores, dim=-1)
+        attn_weights = self.dropout(attn_weights)
+        
+        output = torch.matmul(attn_weights, v)
+        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.embed_dim)
+        
+        return self.out_proj(output), attn_weights
+
+class PredictionHead(nn.Module):
+    def __init__(self, input_dim, hidden_dims=[64, 32], dropout=0.2):
+        super(PredictionHead, self).__init__()
         layers = []
-        prev_size = input_size
+        prev_dim = input_dim
         
-        for hidden_size in hidden_sizes:
+        for dim in hidden_dims:
             layers.extend([
-                nn.Linear(prev_size, hidden_size),
-                nn.BatchNorm1d(hidden_size),
+                nn.Linear(prev_dim, dim),
                 nn.ReLU(),
                 nn.Dropout(dropout)
             ])
-            prev_size = hidden_size
+            prev_dim = dim
+            
+        layers.append(nn.Linear(prev_dim, 1))
+        self.network = nn.Sequential(*layers)
         
-        self.feature_extractor = nn.Sequential(*layers)
+    def forward(self, x):
+        return self.network(x)
+
+class LargeEnsembleModel(nn.Module):
+    def __init__(self, input_size=44, hidden_sizes=[1024, 768, 512, 384, 256, 128], dropout=0.2):
+        super(LargeEnsembleModel, self).__init__()
         
-        # Multiple prediction heads (ensemble)
+        # Input projection with residual
+        self.input_proj = nn.Linear(input_size, hidden_sizes[0])
+        self.input_norm = nn.LayerNorm(hidden_sizes[0])
+        
+        # Deep feature extraction with residual blocks
+        self.residual_blocks = nn.ModuleList()
+        for i in range(len(hidden_sizes) - 1):
+            self.residual_blocks.append(
+                ResidualBlock(hidden_sizes[i], hidden_sizes[i+1], dropout)
+            )
+        
+        # Multi-head attention for feature importance
         final_hidden = hidden_sizes[-1]
+        self.attention = MultiHeadAttention(final_hidden, num_heads=4, dropout=dropout)
         
-        # Primary heads (tree-based model simulation) - larger for more intelligence
-        self.xgb_head = nn.Sequential(
-            nn.Linear(final_hidden, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 1)
-        )
+        # Multiple specialized prediction heads (ensemble)
+        # 1. XGBoost-style head (Gradient Boosting focus)
+        self.xgb_head = PredictionHead(final_hidden, [64, 32], dropout)
         
-        self.lgb_head = nn.Sequential(
-            nn.Linear(final_hidden, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 1)
-        )
+        # 2. LightGBM-style head (Leaf-wise focus)
+        self.lgb_head = PredictionHead(final_hidden, [64, 32], dropout)
         
-        self.rf_head = nn.Sequential(
-            nn.Linear(final_hidden, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 1)
-        )
+        # 3. Random Forest-style head (Bagging focus)
+        self.rf_head = PredictionHead(final_hidden, [64, 32], dropout)
         
-        self.gb_head = nn.Sequential(
-            nn.Linear(final_hidden, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 1)
-        )
+        # 4. Gradient Boosting-style head (Residual focus)
+        self.gb_head = PredictionHead(final_hidden, [64, 32], dropout)
         
-        # Secondary heads (linear model simulation) - also larger
+        # 5. Ridge Regression-style head (L2 focus)
         self.ridge_head = nn.Sequential(
             nn.Linear(final_hidden, 32),
             nn.ReLU(),
             nn.Linear(32, 1)
         )
         
+        # 6. Elastic Net-style head (L1+L2 focus)
         self.elastic_head = nn.Sequential(
             nn.Linear(final_hidden, 32),
             nn.ReLU(),
             nn.Linear(32, 1)
         )
         
-        # Attention mechanism for ensemble weighting - larger
-        self.attention = nn.Sequential(
+        # Attention weights for ensemble
+        self.attention_weights = nn.Sequential(
             nn.Linear(6, 32),
             nn.ReLU(),
             nn.Dropout(dropout),
@@ -99,29 +152,49 @@ class LargeEnsembleModel(nn.Module):
         )
         
     def forward(self, x):
-        # Extract features
-        features = self.feature_extractor(x)
+        # Input projection
+        x = self.input_proj(x)
+        x = self.input_norm(x)
+        x = F.relu(x)
+        
+        # Deep residual blocks
+        for block in self.residual_blocks:
+            x = block(x)
+        
+        # Attention mechanism
+        x, _ = self.attention(x, x, x)
+        if x.dim() == 3:
+            x = x.squeeze(1)
         
         # Get predictions from all heads
-        preds = torch.stack([
-            self.xgb_head(features).squeeze(-1),
-            self.lgb_head(features).squeeze(-1),
-            self.rf_head(features).squeeze(-1),
-            self.gb_head(features).squeeze(-1),
-            self.ridge_head(features).squeeze(-1),
-            self.elastic_head(features).squeeze(-1)
-        ], dim=-1)
+        pred_xgb = self.xgb_head(x)
+        pred_lgb = self.lgb_head(x)
+        pred_rf = self.rf_head(x)
+        pred_gb = self.gb_head(x)
+        pred_ridge = self.ridge_head(x)
+        pred_elastic = self.elastic_head(x)
         
-        # Dynamic attention-based weighting
-        weights = self.attention(preds)
-        ensemble_pred = (preds * weights).sum(dim=-1)
+        # Stack predictions
+        predictions = torch.cat([
+            pred_xgb, pred_lgb, pred_rf, pred_gb, pred_ridge, pred_elastic
+        ], dim=1)
         
-        return ensemble_pred, preds
-    
+        # Debug shapes if something looks wrong
+        if predictions.shape[1] != 6:
+            print(f"DEBUG: predictions shape: {predictions.shape}")
+            print(f"DEBUG: pred_xgb shape: {pred_xgb.shape}")
+        
+        # Calculate ensemble weights
+        weights = self.attention_weights(predictions)
+        
+        # Weighted average
+        final_pred = torch.sum(predictions * weights, dim=1, keepdim=True)
+        
+        return final_pred, predictions
+
     def count_parameters(self):
         """Count total parameters"""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
-
 
 class AdvancedMLSystem:
     """
@@ -130,7 +203,6 @@ class AdvancedMLSystem:
     def __init__(self, model_path, model_type='stock', device='cpu'):
         self.model_path = Path(model_path)
         self.model_type = model_type  # 'stock' or 'forex'
-        self.device = device
         self.model = None
         self.scaler_mean = None
         self.scaler_std = None
@@ -139,6 +211,11 @@ class AdvancedMLSystem:
             'trained_symbols': [],
             'training_history': []
         }
+        
+        # Initialize Accelerator
+        self.accelerator = Accelerator(mixed_precision="fp16", cpu=True)
+        self.device = self.accelerator.device
+        print(f"Using device: {self.device} with Accelerate")
         
         # Try to load existing model
         self._load_model()
@@ -163,8 +240,8 @@ class AdvancedMLSystem:
                 self.model.to(self.device)
                 self.model.eval()
                 
-                self.scaler_mean = checkpoint['scaler_mean']
-                self.scaler_std = checkpoint['scaler_std']
+                self.scaler_mean = checkpoint['scaler_mean'].to(self.device)
+                self.scaler_std = checkpoint['scaler_std'].to(self.device)
                 self.metadata = checkpoint.get('metadata', self.metadata)
                 
                 param_count = self.model.count_parameters()
@@ -182,8 +259,11 @@ class AdvancedMLSystem:
         try:
             self.model_path.parent.mkdir(parents=True, exist_ok=True)
             
+            # Unwrap model for saving
+            unwrapped_model = self.accelerator.unwrap_model(self.model)
+            
             checkpoint = {
-                'model_state_dict': self.model.state_dict(),
+                'model_state_dict': unwrapped_model.state_dict(),
                 'model_type': self.model_type,
                 'input_size': 44,
                 'hidden_sizes': [1024, 768, 512, 384, 256, 128],
@@ -201,18 +281,9 @@ class AdvancedMLSystem:
         except Exception as e:
             print(f"Error saving model: {e}")
     
-    def train(self, X, y, symbol, epochs=200, batch_size=64, lr=0.0005, validation_split=0.2):
+    def train(self, X, y, symbol, epochs=200, batch_size=64, lr=0.0005, validation_split=0.2, cpu_limit=80):
         """
-        Train the model with validation and early stopping
-        
-        Args:
-            X: Features
-            y: Targets
-            symbol: Symbol name
-            epochs: Number of training epochs
-            batch_size: Batch size
-            lr: Learning rate
-            validation_split: Validation data split
+        Train the model with validation, early stopping, and CPU limiting
         """
         try:
             print(f"\nTraining {self.model_type} model on {symbol}...")
@@ -246,7 +317,6 @@ class AdvancedMLSystem:
                 hidden_sizes=[1024, 768, 512, 384, 256, 128],
                 dropout=0.2
             )
-            self.model.to(self.device)
             
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
@@ -256,27 +326,33 @@ class AdvancedMLSystem:
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
             criterion = nn.MSELoss()
             
-            # Training loop with early stopping
-            best_val_loss = float('inf')
-            patience = 500  # Much higher patience for 2500 steps
-            patience_counter = 0
-            
             train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
             train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
             
+            # Prepare with Accelerate
+            self.model, optimizer, train_loader = self.accelerator.prepare(
+                self.model, optimizer, train_loader
+            )
+            
+            # Training loop with early stopping
+            best_val_loss = float('inf')
+            patience = 500
+            patience_counter = 0
+            
             for epoch in range(epochs):
-                # Training
                 self.model.train()
                 train_loss = 0
+                
                 for batch_X, batch_y in train_loader:
-                    batch_X = batch_X.to(self.device)
-                    batch_y = batch_y.to(self.device)
-                    
+                    # CPU Limiter - Check every batch for smoother control
+                    if psutil.cpu_percent(interval=None) > cpu_limit:
+                        time.sleep(0.05)  # Short sleep to let CPU cool down
+                        
                     optimizer.zero_grad()
                     pred, _ = self.model(batch_X)
                     loss = criterion(pred, batch_y)
-                    loss.backward()
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                    self.accelerator.backward(loss)
+                    self.accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
                     optimizer.step()
                     
                     train_loss += loss.item()

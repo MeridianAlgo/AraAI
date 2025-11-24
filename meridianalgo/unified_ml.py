@@ -126,7 +126,7 @@ class UnifiedStockML:
             print(f"Feature extraction error: {e}")
             return np.zeros(44)
     
-    def train_from_dataset(self, dataset_path, symbol_name, epochs=200, batch_size=64, lr=0.0005, validation_split=0.2, metadata=None):
+    def train_from_dataset(self, dataset_path, symbol_name, epochs=200, batch_size=64, lr=0.0005, validation_split=0.2, metadata=None, **kwargs):
         """
         Train from CSV dataset with metadata
         
@@ -197,7 +197,14 @@ class UnifiedStockML:
                     self.ml_system.metadata[key] = value
             
             # Train large PyTorch model with validation
-            success = self.ml_system.train(X, y, symbol_name, epochs=epochs, batch_size=batch_size, lr=lr, validation_split=validation_split)
+            success = self.ml_system.train(
+                X, y, symbol_name, 
+                epochs=epochs, 
+                batch_size=batch_size, 
+                lr=lr, 
+                validation_split=validation_split,
+                cpu_limit=kwargs.get('cpu_limit', 80)
+            )
             
             return success
             
@@ -224,7 +231,7 @@ class UnifiedStockML:
             temp_csv.parent.mkdir(exist_ok=True)
             data.to_csv(temp_csv)
             
-            success = self.train_from_dataset(str(temp_csv), target_symbol)
+            success = self.train_from_dataset(str(temp_csv), target_symbol, **kwargs)
             
             # Clean up temp file
             if temp_csv.exists():

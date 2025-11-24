@@ -102,7 +102,7 @@ def print_forex_info():
         print(f"  {pair_type}: {', '.join(pairs)}")
     print(f"  Total: {len(FOREX_TO_TRAIN)} pairs")
 
-def train_all_stocks(stocks_list, epochs=1000, strict_mode=False):
+def train_all_stocks(stocks_list, epochs=1000, strict_mode=False, cpu_limit=80):
     """Train on all stocks in the list"""
     console = ConsoleManager()
     console.print_header("Training Stock Models")
@@ -127,7 +127,8 @@ def train_all_stocks(stocks_list, epochs=1000, strict_mode=False):
                 period='2y',
                 use_parallel=False,
                 target_symbol=symbol,
-                epochs=epochs
+                epochs=epochs,
+                cpu_limit=cpu_limit
             )
             
             if success:
@@ -172,7 +173,7 @@ def train_all_stocks(stocks_list, epochs=1000, strict_mode=False):
     if total_stocks > 0:
         console.print_info(f"Average time per stock: {elapsed/total_stocks:.1f} seconds")
 
-def train_all_forex(forex_list, epochs=1000, strict_mode=False):
+def train_all_forex(forex_list, epochs=1000, strict_mode=False, cpu_limit=80):
     """Train on all forex pairs in the list"""
     console = ConsoleManager()
     console.print_header("Training Forex Models")
@@ -197,7 +198,8 @@ def train_all_forex(forex_list, epochs=1000, strict_mode=False):
                 target_symbol=target_symbol,
                 period='2y',
                 use_parallel=False,
-                epochs=epochs
+                epochs=epochs,
+                cpu_limit=cpu_limit
             )
             
             if success:
@@ -259,11 +261,15 @@ def main():
                         help='Load tickers from custom file (one per line)')
     parser.add_argument('--strict', action='store_true',
                         help='Stop all training immediately if any error occurs')
+    parser.add_argument('--cpu-limit', type=int, default=80,
+                        help='Limit CPU usage percentage (default: 80)')
     
     args = parser.parse_args()
     
     console = ConsoleManager()
     console.print_header("ARA AI - Train All Models")
+    console.print_info(f"🚀 Optimized with Hugging Face Accelerate")
+    console.print_info(f"⚡ CPU Limit set to {args.cpu_limit}%")
     
     # Get stock tickers dynamically
     stocks_to_train = None
@@ -300,11 +306,11 @@ def main():
     try:
         # Train stocks
         if not args.forex_only and stocks_to_train:
-            train_all_stocks(stocks_to_train, epochs=args.epochs, strict_mode=args.strict)
+            train_all_stocks(stocks_to_train, epochs=args.epochs, strict_mode=args.strict, cpu_limit=args.cpu_limit)
         
         # Train forex
         if not args.stocks_only and forex_to_train:
-            train_all_forex(forex_to_train, epochs=args.epochs, strict_mode=args.strict)
+            train_all_forex(forex_to_train, epochs=args.epochs, strict_mode=args.strict, cpu_limit=args.cpu_limit)
         
         total_elapsed = time.time() - total_start
         
