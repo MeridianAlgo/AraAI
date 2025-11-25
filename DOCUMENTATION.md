@@ -1,6 +1,6 @@
 # ARA AI - Complete Documentation
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 ```bash
@@ -35,7 +35,7 @@ python scripts/ara_forex.py GBPUSD --days 7
 
 ---
 
-## 📊 Model Architecture
+## Model Architecture
 
 ### Intelligent Model (1.6M Parameters)
 - **Layers**: 6 deep layers [1024 → 768 → 512 → 384 → 256 → 128]
@@ -59,7 +59,7 @@ python scripts/ara_forex.py GBPUSD --days 7
 
 ---
 
-## 📈 Stock Indices
+## Stock Indices
 
 ### S&P 500 (100 stocks)
 Top companies: AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, JPM, V, WMT, etc.
@@ -87,7 +87,7 @@ python scripts/train_all.py --file my_stocks.txt
 
 ---
 
-## 💱 Forex Pairs
+## Forex Pairs
 
 ### Major Pairs
 - EURUSD - Euro/US Dollar
@@ -107,7 +107,7 @@ python scripts/train_all.py --file my_stocks.txt
 
 ---
 
-## 🎯 Training Options
+## Training Options
 
 ### Basic Commands
 ```bash
@@ -144,7 +144,7 @@ python scripts/train_all.py --index all --strict
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AraAI-main/
@@ -169,7 +169,7 @@ AraAI-main/
 
 ---
 
-## ⚙️ Advanced Usage
+## Advanced Usage
 
 ### Training Single Stock
 ```python
@@ -204,7 +204,7 @@ print(result)
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### "Module Not Found" Error
 ```bash
@@ -236,7 +236,7 @@ python scripts/train_all.py --quick
 
 ---
 
-## 📊 Performance Expectations
+## Performance Expectations
 
 ### Training Time
 - **Per Stock**: 2-3 minutes
@@ -257,7 +257,7 @@ python scripts/train_all.py --quick
 
 ---
 
-## 🎓 Understanding the Model
+## Understanding the Model
 
 ### Input Features (44 total)
 - Price returns and volatility
@@ -280,7 +280,7 @@ python scripts/train_all.py --quick
 
 ---
 
-## 🚀 CI/CD Pipeline
+## CI/CD Pipeline
 
 ### Simple GitHub Actions Workflow
 
@@ -322,7 +322,7 @@ Go to Actions tab → Train Models → Run workflow
 
 ---
 
-## 💡 Tips for Best Results
+## Tips for Best Results
 
 1. **Train Regularly**: Retrain weekly for best accuracy
 2. **Use Quick Mode First**: Test with `--quick` before full training
@@ -334,7 +334,7 @@ Go to Actions tab → Train Models → Run workflow
 
 ---
 
-## 📝 Example Outputs
+## Example Outputs
 
 ### Stock Prediction
 ```
@@ -381,13 +381,13 @@ Outlook: Strong Bullish
 
 ---
 
-## 📄 License
+## License
 
 See LICENSE file for details.
 
 ---
 
-## 🆘 Support
+## Support
 
 For issues or questions:
 1. Check this documentation
@@ -397,5 +397,5 @@ For issues or questions:
 
 ---
 
-**Status**: ✅ Ready to train and predict!
+**Status**: Ready to train and predict!
 **Last Updated**: 2025-11-24
