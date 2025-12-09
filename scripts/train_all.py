@@ -102,7 +102,7 @@ def print_forex_info():
         print(f"  {pair_type}: {', '.join(pairs)}")
     print(f"  Total: {len(FOREX_TO_TRAIN)} pairs")
 
-def train_all_stocks(stocks_list, epochs=1000, strict_mode=False, cpu_limit=80):
+def train_all_stocks(stocks_list, epochs=1000, strict_mode=False, cpu_limit=80, no_parallel=False):
     """Train on all stocks in the list"""
     console = ConsoleManager()
     console.print_header("Training Stock Models")
@@ -125,7 +125,7 @@ def train_all_stocks(stocks_list, epochs=1000, strict_mode=False, cpu_limit=80):
             ml = UnifiedStockML()
             success = ml.train_ultimate_models(
                 period='2y',
-                use_parallel=False,
+                use_parallel=not no_parallel,
                 target_symbol=symbol,
                 epochs=epochs,
                 cpu_limit=cpu_limit
@@ -173,7 +173,7 @@ def train_all_stocks(stocks_list, epochs=1000, strict_mode=False, cpu_limit=80):
     if total_stocks > 0:
         console.print_info(f"Average time per stock: {elapsed/total_stocks:.1f} seconds")
 
-def train_all_forex(forex_list, epochs=1000, strict_mode=False, cpu_limit=80):
+def train_all_forex(forex_list, epochs=1000, strict_mode=False, cpu_limit=80, no_parallel=False):
     """Train on all forex pairs in the list"""
     console = ConsoleManager()
     console.print_header("Training Forex Models")
@@ -197,7 +197,7 @@ def train_all_forex(forex_list, epochs=1000, strict_mode=False, cpu_limit=80):
             success = forex.train_ultimate_models(
                 target_symbol=target_symbol,
                 period='2y',
-                use_parallel=False,
+                use_parallel=not no_parallel,
                 epochs=epochs,
                 cpu_limit=cpu_limit
             )
@@ -263,6 +263,8 @@ def main():
                         help='Stop all training immediately if any error occurs')
     parser.add_argument('--cpu-limit', type=int, default=80,
                         help='Limit CPU usage percentage (default: 80)')
+    parser.add_argument('--no-parallel', action='store_true',
+                        help='Disable parallel processing for stability')
     
     args = parser.parse_args()
     
@@ -306,11 +308,11 @@ def main():
     try:
         # Train stocks
         if not args.forex_only and stocks_to_train:
-            train_all_stocks(stocks_to_train, epochs=args.epochs, strict_mode=args.strict, cpu_limit=args.cpu_limit)
+            train_all_stocks(stocks_to_train, epochs=args.epochs, strict_mode=args.strict, cpu_limit=args.cpu_limit, no_parallel=args.no_parallel)
         
         # Train forex
         if not args.stocks_only and forex_to_train:
-            train_all_forex(forex_to_train, epochs=args.epochs, strict_mode=args.strict, cpu_limit=args.cpu_limit)
+            train_all_forex(forex_to_train, epochs=args.epochs, strict_mode=args.strict, cpu_limit=args.cpu_limit, no_parallel=args.no_parallel)
         
         total_elapsed = time.time() - total_start
         
