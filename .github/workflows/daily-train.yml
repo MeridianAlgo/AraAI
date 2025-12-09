@@ -44,6 +44,7 @@ jobs:
               importlib.import_module(m)
             print('Smoke imports OK')
             PY
+          fi
 
   train:
     name: Daily training (timeboxed)
