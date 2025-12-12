@@ -1,21 +1,31 @@
-name: Daily Model Training
+name: Hourly Model Training
 
 on:
   schedule:
-    # Night training: 2 AM UTC (full historical data)
-    - cron: '0 2 * * *'
-    # Morning refresh: 8 AM UTC (fresh data only)
-    - cron: '0 8 * * *'
+    # Hourly training: 9 AM - 7 PM UTC (hourly data)
+    - cron: '0 9 * * *'   # 9 AM
+    - cron: '0 10 * * *'  # 10 AM
+    - cron: '0 11 * * *'  # 11 AM
+    - cron: '0 12 * * *'  # 12 PM
+    - cron: '0 13 * * *'  # 1 PM
+    - cron: '0 14 * * *'  # 2 PM
+    - cron: '0 15 * * *'  # 3 PM
+    - cron: '0 16 * * *'  # 4 PM
+    - cron: '0 17 * * *'  # 5 PM
+    - cron: '0 18 * * *'  # 6 PM
+    - cron: '0 19 * * *'  # 7 PM
+    # Full historical training: 8 PM UTC (2 years of data)
+    - cron: '0 20 * * *'  # 8 PM
   workflow_dispatch:
     inputs:
       mode:
         description: 'Training mode'
         required: true
-        default: 'full'
+        default: 'hourly'
         type: choice
         options:
+          - hourly
           - full
-          - refresh
 
 env:
   PYTHON_VERSION: '3.11'
@@ -28,24 +38,41 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       training_mode: ${{ steps.set-mode.outputs.mode }}
+      timeframe: ${{ steps.set-mode.outputs.timeframe }}
+      current_hour: ${{ steps.set-mode.outputs.current_hour }}
     steps:
       - name: Determine training mode
         id: set-mode
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "mode=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
+            if [ "${{ github.event.inputs.mode }}" = "full" ]; then
+              echo "timeframe=2y" >> $GITHUB_OUTPUT
+            else
+              echo "timeframe=1h" >> $GITHUB_OUTPUT
+            fi
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -ge 0 ] && [ "$HOUR" -lt 6 ]; then
+            echo "current_hour=$HOUR" >> $GITHUB_OUTPUT
+            
+            # 8 PM (20:00 UTC) = Full historical training
+            if [ "$HOUR" -eq 20 ]; then
               echo "mode=full" >> $GITHUB_OUTPUT
+              echo "timeframe=2y" >> $GITHUB_OUTPUT
+            # 9 AM - 7 PM = Hourly training
+            elif [ "$HOUR" -ge 9 ] && [ "$HOUR" -lt 20 ]; then
+              echo "mode=hourly" >> $GITHUB_OUTPUT
+              echo "timeframe=1h" >> $GITHUB_OUTPUT
             else
-              echo "mode=refresh" >> $GITHUB_OUTPUT
+              echo "mode=skip" >> $GITHUB_OUTPUT
+              echo "timeframe=none" >> $GITHUB_OUTPUT
             fi
           fi
 
   fetch-data:
     needs: determine-mode
     runs-on: ubuntu-latest
+    if: needs.determine-mode.outputs.training_mode != 'skip'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,27 +94,41 @@ jobs:
           mkdir -p ${{ env.DATA_DIR }}
           mkdir -p ${{ env.MODEL_DIR }}
 
+      - name: Download existing database
+        continue-on-error: true
+        run: |
+          # Try to download existing database from previous run
+          gh run download --name training-database || echo "No existing database found"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Fetch stock data
         run: |
           python scripts/fetch_market_data.py \
             --mode ${{ needs.determine-mode.outputs.training_mode }} \
-            --output ${{ env.DATA_DIR }}/stocks_$(date +%Y%m%d).csv \
-            --symbols AAPL MSFT GOOGL AMZN TSLA NVDA META NFLX AMD INTC
+            --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
+            --output ${{ env.DATA_DIR }}/stocks_$(date +%Y%m%d_%H%M).csv \
+            --symbols AAPL MSFT GOOGL AMZN TSLA NVDA META NFLX AMD INTC \
+            --interval ${{ needs.determine-mode.outputs.training_mode == 'hourly' && '1h' || '1d' }}
 
       - name: Fetch forex data
         run: |
           python scripts/fetch_market_data.py \
             --mode ${{ needs.determine-mode.outputs.training_mode }} \
-            --output ${{ env.DATA_DIR }}/forex_$(date +%Y%m%d).csv \
+            --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
+            --output ${{ env.DATA_DIR }}/forex_$(date +%Y%m%d_%H%M).csv \
             --symbols EURUSD GBPUSD USDJPY AUDUSD USDCAD \
-            --asset-type forex
+            --asset-type forex \
+            --interval ${{ needs.determine-mode.outputs.training_mode == 'hourly' && '1h' || '1d' }}
 
       - name: Store data in database
         run: |
           python scripts/store_training_data.py \
             --data-dir ${{ env.DATA_DIR }} \
             --db-file ${{ env.DB_FILE }} \
-            --mode ${{ needs.determine-mode.outputs.training_mode }}
+            --mode ${{ needs.determine-mode.outputs.training_mode }} \
+            --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
+            --hour ${{ needs.determine-mode.outputs.current_hour }}
 
       - name: Upload data artifacts
         uses: actions/upload-artifact@v4
@@ -95,8 +136,14 @@ jobs:
           name: market-data-${{ github.run_number }}
           path: |
             ${{ env.DATA_DIR }}/*.csv
-            ${{ env.DB_FILE }}
-          retention-days: 30
+          retention-days: 7
+
+      - name: Upload database
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-database
+          path: ${{ env.DB_FILE }}
+          retention-days: 90
 
   train-stock-models:
     needs: [determine-mode, fetch-data]
@@ -132,14 +179,19 @@ jobs:
               --db-file ${{ env.DB_FILE }} \
               --output ${{ env.MODEL_DIR }}/${{ matrix.symbol }}_model.pt \
               --epochs 100 \
-              --use-all-data
+              --use-all-data \
+              --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
+              --training-mode full
           else
             python scripts/train_model.py \
               --symbol ${{ matrix.symbol }} \
               --db-file ${{ env.DB_FILE }} \
               --output ${{ env.MODEL_DIR }}/${{ matrix.symbol }}_model.pt \
-              --epochs 10 \
-              --incremental
+              --epochs 5 \
+              --incremental \
+              --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
+              --training-mode hourly \
+              --hour ${{ needs.determine-mode.outputs.current_hour }}
           fi
 
       - name: Upload trained model
@@ -183,14 +235,19 @@ jobs:
               --db-file ${{ env.DB_FILE }} \
               --output ${{ env.MODEL_DIR }}/forex_${{ matrix.pair }}_model.pt \
               --epochs 100 \
-              --use-all-data
+              --use-all-data \
+              --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
+              --training-mode full
           else
             python scripts/train_forex_model.py \
               --pair ${{ matrix.pair }} \
               --db-file ${{ env.DB_FILE }} \
               --output ${{ env.MODEL_DIR }}/forex_${{ matrix.pair }}_model.pt \
-              --epochs 10 \
-              --incremental
+              --epochs 5 \
+              --incremental \
+              --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
+              --training-mode hourly \
+              --hour ${{ needs.determine-mode.outputs.current_hour }}
           fi
 
       - name: Upload trained model
@@ -250,7 +307,7 @@ jobs:
             --output $GITHUB_STEP_SUMMARY
 
   deploy-models:
-    needs: evaluate-models
+    needs: [determine-mode, evaluate-models]
     runs-on: ubuntu-latest
     if: needs.determine-mode.outputs.training_mode == 'full'
     steps:
@@ -268,21 +325,30 @@ jobs:
         with:
           name: evaluation-results-${{ github.run_number }}
 
+      - name: Download database
+        uses: actions/download-artifact@v4
+        with:
+          name: training-database
+
       - name: Commit and push models
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add ${{ env.MODEL_DIR }}/*.pt
           git add evaluation_results.json
-          git commit -m "Auto-train: Update models $(date +%Y-%m-%d)" || echo "No changes to commit"
+          git add ${{ env.DB_FILE }}
+          git commit -m "Auto-train: Full update $(date +%Y-%m-%d_%H:%M)" || echo "No changes to commit"
           git push
 
   notify:
-    needs: [evaluate-models, deploy-models]
+    needs: [determine-mode, evaluate-models, deploy-models]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Send notification
         run: |
-          echo "Training completed: ${{ needs.determine-mode.outputs.training_mode }} mode"
+          echo "🤖 Training completed"
+          echo "Mode: ${{ needs.determine-mode.outputs.training_mode }}"
+          echo "Timeframe: ${{ needs.determine-mode.outputs.timeframe }}"
+          echo "Hour: ${{ needs.determine-mode.outputs.current_hour }}"
           echo "Status: ${{ job.status }}"
