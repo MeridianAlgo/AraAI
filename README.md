@@ -782,5 +782,5 @@ Built with:
 ---
 
 **Maintained by**: [MeridianAlgo](https://github.com/MeridianAlgo)  
-**Last Updated**: 2025-11-25  
-**Version**: 4.0.0
+**Last Updated**: 2025-12-11  
+**Version**: 5.0.0
