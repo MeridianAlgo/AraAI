@@ -1,0 +1,288 @@
+name: Daily Model Training
+
+on:
+  schedule:
+    # Night training: 2 AM UTC (full historical data)
+    - cron: '0 2 * * *'
+    # Morning refresh: 8 AM UTC (fresh data only)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Training mode'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - refresh
+
+env:
+  PYTHON_VERSION: '3.11'
+  MODEL_DIR: 'models'
+  DATA_DIR: 'datasets'
+  DB_FILE: 'training_data.db'
+
+jobs:
+  determine-mode:
+    runs-on: ubuntu-latest
+    outputs:
+      training_mode: ${{ steps.set-mode.outputs.mode }}
+    steps:
+      - name: Determine training mode
+        id: set-mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
+          else
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" -ge 0 ] && [ "$HOUR" -lt 6 ]; then
+              echo "mode=full" >> $GITHUB_OUTPUT
+            else
+              echo "mode=refresh" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  fetch-data:
+    needs: determine-mode
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install sqlalchemy
+
+      - name: Create data directories
+        run: |
+          mkdir -p ${{ env.DATA_DIR }}
+          mkdir -p ${{ env.MODEL_DIR }}
+
+      - name: Fetch stock data
+        run: |
+          python scripts/fetch_market_data.py \
+            --mode ${{ needs.determine-mode.outputs.training_mode }} \
+            --output ${{ env.DATA_DIR }}/stocks_$(date +%Y%m%d).csv \
+            --symbols AAPL MSFT GOOGL AMZN TSLA NVDA META NFLX AMD INTC
+
+      - name: Fetch forex data
+        run: |
+          python scripts/fetch_market_data.py \
+            --mode ${{ needs.determine-mode.outputs.training_mode }} \
+            --output ${{ env.DATA_DIR }}/forex_$(date +%Y%m%d).csv \
+            --symbols EURUSD GBPUSD USDJPY AUDUSD USDCAD \
+            --asset-type forex
+
+      - name: Store data in database
+        run: |
+          python scripts/store_training_data.py \
+            --data-dir ${{ env.DATA_DIR }} \
+            --db-file ${{ env.DB_FILE }} \
+            --mode ${{ needs.determine-mode.outputs.training_mode }}
+
+      - name: Upload data artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-data-${{ github.run_number }}
+          path: |
+            ${{ env.DATA_DIR }}/*.csv
+            ${{ env.DB_FILE }}
+          retention-days: 30
+
+  train-stock-models:
+    needs: [determine-mode, fetch-data]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        symbol: [AAPL, MSFT, GOOGL, AMZN, TSLA]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download data artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: market-data-${{ github.run_number }}
+
+      - name: Train model
+        run: |
+          if [ "${{ needs.determine-mode.outputs.training_mode }}" = "full" ]; then
+            python scripts/train_model.py \
+              --symbol ${{ matrix.symbol }} \
+              --db-file ${{ env.DB_FILE }} \
+              --output ${{ env.MODEL_DIR }}/${{ matrix.symbol }}_model.pt \
+              --epochs 100 \
+              --use-all-data
+          else
+            python scripts/train_model.py \
+              --symbol ${{ matrix.symbol }} \
+              --db-file ${{ env.DB_FILE }} \
+              --output ${{ env.MODEL_DIR }}/${{ matrix.symbol }}_model.pt \
+              --epochs 10 \
+              --incremental
+          fi
+
+      - name: Upload trained model
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-${{ matrix.symbol }}-${{ github.run_number }}
+          path: ${{ env.MODEL_DIR }}/${{ matrix.symbol }}_model.pt
+          retention-days: 90
+
+  train-forex-models:
+    needs: [determine-mode, fetch-data]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pair: [EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download data artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: market-data-${{ github.run_number }}
+
+      - name: Train forex model
+        run: |
+          if [ "${{ needs.determine-mode.outputs.training_mode }}" = "full" ]; then
+            python scripts/train_forex_model.py \
+              --pair ${{ matrix.pair }} \
+              --db-file ${{ env.DB_FILE }} \
+              --output ${{ env.MODEL_DIR }}/forex_${{ matrix.pair }}_model.pt \
+              --epochs 100 \
+              --use-all-data
+          else
+            python scripts/train_forex_model.py \
+              --pair ${{ matrix.pair }} \
+              --db-file ${{ env.DB_FILE }} \
+              --output ${{ env.MODEL_DIR }}/forex_${{ matrix.pair }}_model.pt \
+              --epochs 10 \
+              --incremental
+          fi
+
+      - name: Upload trained model
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-forex-${{ matrix.pair }}-${{ github.run_number }}
+          path: ${{ env.MODEL_DIR }}/forex_${{ matrix.pair }}_model.pt
+          retention-days: 90
+
+  evaluate-models:
+    needs: [train-stock-models, train-forex-models]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download all models
+        uses: actions/download-artifact@v4
+        with:
+          pattern: model-*
+          path: ${{ env.MODEL_DIR }}
+
+      - name: Download data
+        uses: actions/download-artifact@v4
+        with:
+          name: market-data-${{ github.run_number }}
+
+      - name: Evaluate models
+        run: |
+          python scripts/evaluate_models.py \
+            --model-dir ${{ env.MODEL_DIR }} \
+            --db-file ${{ env.DB_FILE }} \
+            --output evaluation_results.json
+
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results-${{ github.run_number }}
+          path: evaluation_results.json
+          retention-days: 90
+
+      - name: Create summary
+        run: |
+          python scripts/create_training_summary.py \
+            --results evaluation_results.json \
+            --output $GITHUB_STEP_SUMMARY
+
+  deploy-models:
+    needs: evaluate-models
+    runs-on: ubuntu-latest
+    if: needs.determine-mode.outputs.training_mode == 'full'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all models
+        uses: actions/download-artifact@v4
+        with:
+          pattern: model-*
+          path: ${{ env.MODEL_DIR }}
+
+      - name: Download evaluation results
+        uses: actions/download-artifact@v4
+        with:
+          name: evaluation-results-${{ github.run_number }}
+
+      - name: Commit and push models
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add ${{ env.MODEL_DIR }}/*.pt
+          git add evaluation_results.json
+          git commit -m "Auto-train: Update models $(date +%Y-%m-%d)" || echo "No changes to commit"
+          git push
+
+  notify:
+    needs: [evaluate-models, deploy-models]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send notification
+        run: |
+          echo "Training completed: ${{ needs.determine-mode.outputs.training_mode }} mode"
+          echo "Status: ${{ job.status }}"
