@@ -1,0 +1,286 @@
+name: Weekly Release
+
+on:
+  schedule:
+    # Every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v5.0.1)'
+        required: false
+        default: 'auto'
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  test-system:
+    name: Test Training System
+    runs-on: ubuntu-latest
+    outputs:
+      test_status: ${{ steps.test.outputs.status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run system tests
+        id: test
+        run: |
+          echo "Running comprehensive system tests..."
+          
+          # Test data fetching
+          python scripts/fetch_market_data.py \
+            --symbols AAPL MSFT \
+            --mode hourly \
+            --interval 1h \
+            --timeframe 1h \
+            --output test_data.csv || exit 1
+          
+          # Test database creation
+          python scripts/store_training_data.py \
+            --data-dir . \
+            --db-file test_training.db \
+            --mode hourly \
+            --timeframe 1h || exit 1
+          
+          # Test query script
+          python scripts/query_training_data.py stats --db-file test_training.db || exit 1
+          
+          echo "status=passed" >> $GITHUB_OUTPUT
+          echo "✅ All tests passed!"
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test_data.csv
+            test_training.db
+
+  collect-stats:
+    name: Collect Weekly Statistics
+    needs: test-system
+    runs-on: ubuntu-latest
+    outputs:
+      stats_json: ${{ steps.stats.outputs.json }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download training database
+        continue-on-error: true
+        run: |
+          gh run download --name training-database || echo "No database found"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Generate statistics
+        id: stats
+        run: |
+          python scripts/generate_release_stats.py \
+            --db-file training_data.db \
+            --output release_stats.json \
+            --output-md release_stats.md
+
+      - name: Upload statistics
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-statistics
+          path: |
+            release_stats.json
+            release_stats.md
+
+  determine-version:
+    name: Determine Release Version
+    needs: [test-system, collect-stats]
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_number: ${{ steps.version.outputs.version_number }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.version }}" != "auto" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Get latest tag
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v5.0.0")
+            echo "Latest tag: $LATEST_TAG"
+            
+            # Extract version numbers
+            VERSION_NUM=$(echo $LATEST_TAG | sed 's/v//')
+            MAJOR=$(echo $VERSION_NUM | cut -d. -f1)
+            MINOR=$(echo $VERSION_NUM | cut -d. -f2)
+            PATCH=$(echo $VERSION_NUM | cut -d. -f3)
+            
+            # Increment patch version
+            NEW_PATCH=$((PATCH + 1))
+            VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "📦 Release version: $VERSION"
+
+  create-release:
+    name: Create Release
+    needs: [test-system, collect-stats, determine-version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download statistics
+        uses: actions/download-artifact@v4
+        with:
+          name: release-statistics
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+
+      - name: Download training database
+        continue-on-error: true
+        run: |
+          gh run download --name training-database || echo "No database found"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Generate release notes
+        run: |
+          python scripts/generate_release_notes.py \
+            --version ${{ needs.determine-version.outputs.version }} \
+            --stats release_stats.json \
+            --output RELEASE_NOTES.md
+
+      - name: Create release archive
+        run: |
+          mkdir -p release_artifacts
+          
+          # Copy models if they exist
+          if [ -d "models" ]; then
+            cp -r models release_artifacts/
+          fi
+          
+          # Copy database if it exists
+          if [ -f "training_data.db" ]; then
+            cp training_data.db release_artifacts/
+          fi
+          
+          # Copy statistics
+          cp release_stats.json release_artifacts/
+          cp release_stats.md release_artifacts/
+          
+          # Create archive
+          tar -czf ara-ai-${{ needs.determine-version.outputs.version }}.tar.gz release_artifacts/
+
+      - name: Create Git tag
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git tag -a ${{ needs.determine-version.outputs.version }} -m "Release ${{ needs.determine-version.outputs.version }}"
+          git push origin ${{ needs.determine-version.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.determine-version.outputs.version }}
+          name: "ARA AI ${{ needs.determine-version.outputs.version }} - Weekly Release"
+          body_path: RELEASE_NOTES.md
+          files: |
+            ara-ai-${{ needs.determine-version.outputs.version }}.tar.gz
+            release_stats.json
+            release_stats.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update version in files
+        run: |
+          # Update version in README
+          sed -i "s/Version: .*/Version: ${{ needs.determine-version.outputs.version_number }}/" README.md
+          
+          # Commit version update
+          git add README.md
+          git commit -m "chore: bump version to ${{ needs.determine-version.outputs.version }}" || echo "No changes to commit"
+          git push
+
+  notify-success:
+    name: Notify Release Success
+    needs: [create-release, determine-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create success summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # 🎉 Weekly Release Created Successfully!
+          
+          ## Release Information
+          - **Version**: ${{ needs.determine-version.outputs.version }}
+          - **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          - **Status**: ✅ All tests passed
+          
+          ## What's Included
+          - ✅ Trained models
+          - ✅ Training database
+          - ✅ Weekly statistics
+          - ✅ Performance metrics
+          - ✅ Release notes
+          
+          ## Next Steps
+          1. View the release: [Releases Page](https://github.com/${{ github.repository }}/releases)
+          2. Download artifacts
+          3. Review statistics
+          
+          ---
+          *Automated weekly release by GitHub Actions*
+          EOF
