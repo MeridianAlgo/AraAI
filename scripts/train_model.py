@@ -18,25 +18,35 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from meridianalgo.unified_ml import UnifiedStockML
 
-def load_data_from_db(db_file, symbol, use_all_data=True):
-    """Load training data from database"""
+def load_data_from_db(db_file, symbol, use_all_data=True, timeframe='1d', training_mode='full'):
+    """Load training data from database with timeframe awareness"""
     conn = sqlite3.connect(db_file)
     
     if use_all_data:
-        # Load all historical data
+        # Load all historical data for this timeframe
         query = '''
-            SELECT date, open, high, low, close, volume
+            SELECT date, open, high, low, close, volume, timeframe, interval
             FROM market_data
             WHERE symbol = ? AND asset_type = 'stock'
+            ORDER BY date ASC
+        '''
+    elif training_mode == 'hourly':
+        # Load hourly data (last 30 days of hourly data + today's hours)
+        query = '''
+            SELECT date, open, high, low, close, volume, timeframe, interval
+            FROM market_data
+            WHERE symbol = ? AND asset_type = 'stock'
+            AND interval = '1h'
+            AND date >= datetime('now', '-30 days')
             ORDER BY date ASC
         '''
     else:
         # Load only recent data (last 90 days)
         query = '''
-            SELECT date, open, high, low, close, volume
+            SELECT date, open, high, low, close, volume, timeframe, interval
             FROM market_data
             WHERE symbol = ? AND asset_type = 'stock'
-            AND date >= date('now', '-90 days')
+            AND date >= datetime('now', '-90 days')
             ORDER BY date ASC
         '''
     
@@ -46,24 +56,40 @@ def load_data_from_db(db_file, symbol, use_all_data=True):
     if df.empty:
         raise ValueError(f"No data found for {symbol}")
     
+    # Store timeframe info
+    detected_timeframe = df['timeframe'].iloc[0] if 'timeframe' in df.columns else timeframe
+    detected_interval = df['interval'].iloc[0] if 'interval' in df.columns else '1d'
+    
     # Rename columns to match expected format
-    df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+    df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Timeframe', 'Interval']
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.set_index('Date')
     
-    return df
+    print(f"  Detected timeframe: {detected_timeframe}, interval: {detected_interval}")
+    
+    return df, detected_timeframe, detected_interval
 
-def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, incremental=False):
-    """Train model for a symbol"""
+def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, incremental=False, 
+                timeframe='1d', training_mode='full', hour=None):
+    """Train model for a symbol with timeframe awareness"""
     print(f"\n{'='*60}")
     print(f"Training model for {symbol}")
+    print(f"Mode: {training_mode}, Timeframe: {timeframe}")
+    if hour is not None:
+        print(f"Hour: {hour}:00 UTC")
     print(f"{'='*60}")
     
     # Load data
     print("Loading data from database...")
-    data = load_data_from_db(db_file, symbol, use_all_data)
+    data, detected_timeframe, detected_interval = load_data_from_db(
+        db_file, symbol, use_all_data, timeframe, training_mode
+    )
     print(f"  ✓ Loaded {len(data)} rows")
     print(f"  Date range: {data.index.min()} to {data.index.max()}")
+    
+    # Drop metadata columns before training
+    if 'Timeframe' in data.columns:
+        data = data.drop(columns=['Timeframe', 'Interval'])
     
     # Initialize ML system
     ml = UnifiedStockML(model_path=output_path)
@@ -95,25 +121,49 @@ def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, inc
     if result.get('success'):
         print(f"\n✓ Training completed successfully")
         print(f"  Final loss: {result.get('final_loss', 'N/A')}")
+        print(f"  Timeframe: {timeframe} ({training_mode} mode)")
         print(f"  Model saved to: {output_path}")
         
         # Store metadata in database
-        store_model_metadata(db_file, symbol, output_path, result)
+        store_model_metadata(db_file, symbol, output_path, result, timeframe, training_mode, hour)
         
         return True
     else:
         print(f"\n✗ Training failed: {result.get('error', 'Unknown error')}")
         return False
 
-def store_model_metadata(db_file, symbol, model_path, training_result):
-    """Store model metadata in database"""
+def store_model_metadata(db_file, symbol, model_path, training_result, timeframe='1d', training_mode='full', hour=None):
+    """Store model metadata in database with timeframe info"""
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     
+    # First, ensure the table has the new columns
+    try:
+        cursor.execute('''
+            ALTER TABLE model_metadata ADD COLUMN timeframe TEXT
+        ''')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        cursor.execute('''
+            ALTER TABLE model_metadata ADD COLUMN training_mode TEXT
+        ''')
+    except sqlite3.OperationalError:
+        pass
+    
+    try:
+        cursor.execute('''
+            ALTER TABLE model_metadata ADD COLUMN hour INTEGER
+        ''')
+    except sqlite3.OperationalError:
+        pass
+    
     cursor.execute('''
         INSERT INTO model_metadata 
-        (symbol, model_type, training_date, accuracy, loss, epochs, model_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (symbol, model_type, training_date, accuracy, loss, epochs, model_path, 
+         timeframe, training_mode, hour)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         symbol,
         'unified_ml',
@@ -121,7 +171,10 @@ def store_model_metadata(db_file, symbol, model_path, training_result):
         training_result.get('accuracy', 0.0),
         training_result.get('final_loss', 0.0),
         training_result.get('epochs', 0),
-        str(model_path)
+        str(model_path),
+        timeframe,
+        training_mode,
+        hour
     ))
     
     conn.commit()
@@ -135,6 +188,9 @@ def main():
     parser.add_argument('--epochs', type=int, default=100, help='Training epochs')
     parser.add_argument('--use-all-data', action='store_true', help='Use all historical data')
     parser.add_argument('--incremental', action='store_true', help='Incremental training')
+    parser.add_argument('--timeframe', default='1d', help='Timeframe identifier')
+    parser.add_argument('--training-mode', default='full', help='Training mode (full, hourly)')
+    parser.add_argument('--hour', type=int, help='Current hour (for hourly mode)')
     
     args = parser.parse_args()
     
@@ -148,7 +204,10 @@ def main():
         output_path=args.output,
         epochs=args.epochs,
         use_all_data=args.use_all_data,
-        incremental=args.incremental
+        incremental=args.incremental,
+        timeframe=args.timeframe,
+        training_mode=args.training_mode,
+        hour=args.hour
     )
     
     sys.exit(0 if success else 1)
