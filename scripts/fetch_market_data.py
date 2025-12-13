@@ -18,7 +18,7 @@ def fetch_data(symbols, asset_type='stock', mode='full', period='2y', interval='
     Args:
         symbols: List of symbols to fetch
         asset_type: 'stock' or 'forex'
-        mode: 'full' (all historical), 'hourly' (1 hour), or 'refresh' (recent only)
+        mode: 'full' (all historical), 'daily' (1 day of hourly data), or 'refresh' (recent only)
         period: Data period for full mode
         interval: Data interval ('1d', '1h', '5m', etc.)
         timeframe: Timeframe identifier for database
@@ -35,9 +35,9 @@ def fetch_data(symbols, asset_type='stock', mode='full', period='2y', interval='
             print(f"Fetching {symbol} ({interval} interval)...")
             
             # Determine period and interval based on mode
-            if mode == 'hourly':
-                # Fetch last 2 hours of data (to ensure we get the latest hour)
-                fetch_period = '2h'
+            if mode == 'daily':
+                # Fetch last 1 day of data for daily training
+                fetch_period = '1d'
                 fetch_interval = '1h'
             elif mode == 'refresh':
                 # Only fetch last 7 days for refresh
@@ -89,7 +89,7 @@ def main():
     parser = argparse.ArgumentParser(description='Fetch market data for training')
     parser.add_argument('--symbols', nargs='+', required=True, help='Symbols to fetch')
     parser.add_argument('--asset-type', choices=['stock', 'forex'], default='stock')
-    parser.add_argument('--mode', choices=['full', 'hourly', 'refresh'], default='full')
+    parser.add_argument('--mode', choices=['full', 'daily', 'refresh'], default='full')
     parser.add_argument('--period', default='2y', help='Period for full mode (e.g., 1y, 2y, 5y)')
     parser.add_argument('--interval', default='1d', help='Data interval (1d, 1h, 5m, etc.)')
     parser.add_argument('--timeframe', default='1d', help='Timeframe identifier')

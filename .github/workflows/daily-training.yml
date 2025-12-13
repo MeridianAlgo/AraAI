@@ -1,30 +1,18 @@
-name: Hourly Model Training
+name: Daily Model Training
 
 on:
   schedule:
-    # Hourly training: 9 AM - 7 PM UTC (hourly data)
-    - cron: '0 9 * * *'   # 9 AM
-    - cron: '0 10 * * *'  # 10 AM
-    - cron: '0 11 * * *'  # 11 AM
-    - cron: '0 12 * * *'  # 12 PM
-    - cron: '0 13 * * *'  # 1 PM
-    - cron: '0 14 * * *'  # 2 PM
-    - cron: '0 15 * * *'  # 3 PM
-    - cron: '0 16 * * *'  # 4 PM
-    - cron: '0 17 * * *'  # 5 PM
-    - cron: '0 18 * * *'  # 6 PM
-    - cron: '0 19 * * *'  # 7 PM
-    # Full historical training: 8 PM UTC (2 years of data)
-    - cron: '0 20 * * *'  # 8 PM
+    # Daily training at 8 AM UTC
+    - cron: '0 8 * * *'   # 8 AM daily
   workflow_dispatch:
     inputs:
       mode:
         description: 'Training mode'
         required: true
-        default: 'hourly'
+        default: 'daily'
         type: choice
         options:
-          - hourly
+          - daily
           - full
 
 env:
@@ -49,20 +37,16 @@ jobs:
             if [ "${{ github.event.inputs.mode }}" = "full" ]; then
               echo "timeframe=2y" >> $GITHUB_OUTPUT
             else
-              echo "timeframe=1h" >> $GITHUB_OUTPUT
+              echo "timeframe=1d" >> $GITHUB_OUTPUT
             fi
           else
             HOUR=$(date -u +%H)
             echo "current_hour=$HOUR" >> $GITHUB_OUTPUT
             
-            # 8 PM (20:00 UTC) = Full historical training
-            if [ "$HOUR" -eq 20 ]; then
-              echo "mode=full" >> $GITHUB_OUTPUT
-              echo "timeframe=2y" >> $GITHUB_OUTPUT
-            # 9 AM - 7 PM = Hourly training
-            elif [ "$HOUR" -ge 9 ] && [ "$HOUR" -lt 20 ]; then
-              echo "mode=hourly" >> $GITHUB_OUTPUT
-              echo "timeframe=1h" >> $GITHUB_OUTPUT
+            # 8 AM (08:00 UTC) = Daily training with 1d data
+            if [ "$HOUR" -eq 8 ]; then
+              echo "mode=daily" >> $GITHUB_OUTPUT
+              echo "timeframe=1d" >> $GITHUB_OUTPUT
             else
               echo "mode=skip" >> $GITHUB_OUTPUT
               echo "timeframe=none" >> $GITHUB_OUTPUT
@@ -109,7 +93,7 @@ jobs:
             --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
             --output ${{ env.DATA_DIR }}/stocks_$(date +%Y%m%d_%H%M).csv \
             --symbols AAPL MSFT GOOGL AMZN TSLA NVDA META NFLX AMD INTC \
-            --interval ${{ needs.determine-mode.outputs.training_mode == 'hourly' && '1h' || '1d' }}
+            --interval ${{ needs.determine-mode.outputs.training_mode == 'daily' && '1h' || '1d' }}
 
       - name: Fetch forex data
         run: |
@@ -119,7 +103,7 @@ jobs:
             --output ${{ env.DATA_DIR }}/forex_$(date +%Y%m%d_%H%M).csv \
             --symbols EURUSD GBPUSD USDJPY AUDUSD USDCAD \
             --asset-type forex \
-            --interval ${{ needs.determine-mode.outputs.training_mode == 'hourly' && '1h' || '1d' }}
+            --interval ${{ needs.determine-mode.outputs.training_mode == 'daily' && '1h' || '1d' }}
 
       - name: Store data in database
         run: |
@@ -187,10 +171,10 @@ jobs:
               --symbol ${{ matrix.symbol }} \
               --db-file ${{ env.DB_FILE }} \
               --output ${{ env.MODEL_DIR }}/${{ matrix.symbol }}_model.pt \
-              --epochs 5 \
+              --epochs 100 \
               --incremental \
               --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
-              --training-mode hourly \
+              --training-mode daily \
               --hour ${{ needs.determine-mode.outputs.current_hour }}
           fi
 
@@ -243,10 +227,10 @@ jobs:
               --pair ${{ matrix.pair }} \
               --db-file ${{ env.DB_FILE }} \
               --output ${{ env.MODEL_DIR }}/forex_${{ matrix.pair }}_model.pt \
-              --epochs 5 \
+              --epochs 100 \
               --incremental \
               --timeframe ${{ needs.determine-mode.outputs.timeframe }} \
-              --training-mode hourly \
+              --training-mode daily \
               --hour ${{ needs.determine-mode.outputs.current_hour }}
           fi
 
