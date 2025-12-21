@@ -676,7 +676,7 @@ python scripts/train_model.py \
   --symbol AAPL \
   --db-file training.db \
   --output models/aapl.pt \
-  --wandb-project ara-ai-training \
+  --wandb-project ara-ai \
   --wandb-run-name "aapl-experiment-1"
 
 # Train forex with wandb
@@ -684,11 +684,11 @@ python scripts/train_forex_model.py \
   --pair EURUSD \
   --db-file training.db \
   --output models/eurusd.pt \
-  --wandb-project ara-ai-training \
+  --wandb-project ara-ai \
   --wandb-run-name "eurusd-experiment-1"
 ```
 
-View your experiments at: https://wandb.ai/your-username/ara-ai-training
+View your experiments at: https://wandb.ai/your-username/ara-ai
 
 For detailed testing documentation, see [TESTING.md](TESTING.md).
 

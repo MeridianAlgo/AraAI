@@ -140,7 +140,7 @@ def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, inc
     
     wandb_enabled = wandb_project is not None and os.environ.get('WANDB_API_KEY')
     run = init_wandb(
-        project=wandb_project or 'ara-ai-training',
+        project=wandb_project or 'ara-ai',
         run_name=wandb_run_name or f"stock-{symbol}",
         config=wandb_config,
         enabled=wandb_enabled
