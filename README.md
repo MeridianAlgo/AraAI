@@ -5,6 +5,8 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](TESTING.md)
+[![Daily Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml)
+[![W&B](https://img.shields.io/badge/Weights%20%26%20Biases-FFCC33?logo=weightsandbiases&logoColor=black)](https://wandb.ai)
 
 > **DISCLAIMER**: This software is for educational and research purposes only. NOT financial advice. You are solely responsible for your investment decisions.
 
@@ -101,6 +103,7 @@ See [SECURITY.md](SECURITY.md) for detailed security documentation.
 - **Health Checks**: Liveness and readiness probes
 - **Grafana Dashboards**: Pre-built visualization dashboards
 - **Automated Alerts**: Anomaly detection and alerting
+- **Weights & Biases**: ML experiment tracking and model versioning
 
 ---
 
@@ -489,6 +492,9 @@ export ALPHA_VANTAGE_API_KEY=your_key
 export NEWS_API_KEY=your_key
 export TWITTER_BEARER_TOKEN=your_token
 
+# Weights & Biases (for experiment tracking)
+export WANDB_API_KEY=your_wandb_api_key
+
 # Database (Optional)
 export DATABASE_URL=postgresql://user:pass@host:port/db
 
@@ -640,8 +646,49 @@ The project includes GitHub Actions workflows for:
 - Automated testing on push/PR
 - Security scanning
 - Code quality checks
-- Model training workflows
+- **Daily automated model training** (stocks and forex)
 - Automated releases
+
+#### Daily Automated Training
+
+Models are automatically retrained daily via GitHub Actions:
+
+- **Schedule**: Runs at 6:00 AM UTC daily (after market close)
+- **Stock Models**: AAPL, MSFT, GOOGL, AMZN, TSLA, META, NVDA, JPM, V, JNJ
+- **Forex Models**: EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD, USDCHF, NZDUSD, EURGBP
+- **Manual Trigger**: Can be triggered manually with custom epochs and training mode
+
+To set up automated training:
+
+1. Add `WANDB_API_KEY` to your repository secrets (optional, for experiment tracking)
+2. The workflow will automatically fetch data, train models, and upload artifacts
+
+#### Weights & Biases Integration
+
+Training experiments are tracked with [Weights & Biases](https://wandb.ai):
+
+```bash
+# Set your API key
+export WANDB_API_KEY=your_api_key
+
+# Train with wandb tracking
+python scripts/train_model.py \
+  --symbol AAPL \
+  --db-file training.db \
+  --output models/aapl.pt \
+  --wandb-project ara-ai-training \
+  --wandb-run-name "aapl-experiment-1"
+
+# Train forex with wandb
+python scripts/train_forex_model.py \
+  --pair EURUSD \
+  --db-file training.db \
+  --output models/eurusd.pt \
+  --wandb-project ara-ai-training \
+  --wandb-run-name "eurusd-experiment-1"
+```
+
+View your experiments at: https://wandb.ai/your-username/ara-ai-training
 
 For detailed testing documentation, see [TESTING.md](TESTING.md).
 
@@ -782,5 +829,5 @@ Built with:
 ---
 
 **Maintained by**: [MeridianAlgo](https://github.com/MeridianAlgo)  
-**Last Updated**: 2025-12-11  
-**Version**: 5.0.0
+**Last Updated**: 2025-12-21  
+**Version**: 5.1.0

@@ -2,6 +2,7 @@
 """
 Train stock prediction models from database
 Supports both full and incremental training
+Includes Weights & Biases (wandb) integration for experiment tracking
 """
 
 import argparse
@@ -11,12 +12,21 @@ import numpy as np
 from pathlib import Path
 import sys
 import warnings
+import os
 warnings.filterwarnings('ignore')
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from meridianalgo.unified_ml import UnifiedStockML
+
+# Optional wandb import
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    print("Warning: wandb not installed. Install with: pip install wandb")
 
 def load_data_from_db(db_file, symbol, use_all_data=True, timeframe='1d', training_mode='full'):
     """Load training data from database with timeframe awareness"""
@@ -69,9 +79,38 @@ def load_data_from_db(db_file, symbol, use_all_data=True, timeframe='1d', traini
     
     return df, detected_timeframe, detected_interval
 
+def init_wandb(project, run_name, config, enabled=True):
+    """Initialize Weights & Biases tracking"""
+    if not enabled or not WANDB_AVAILABLE:
+        return None
+    
+    try:
+        run = wandb.init(
+            project=project,
+            name=run_name,
+            config=config,
+            reinit=True
+        )
+        print(f"  ✓ W&B initialized: {run.url}")
+        return run
+    except Exception as e:
+        print(f"  Warning: Failed to initialize wandb: {e}")
+        return None
+
+
+def log_to_wandb(run, metrics):
+    """Log metrics to wandb if available"""
+    if run is not None and WANDB_AVAILABLE:
+        try:
+            wandb.log(metrics)
+        except Exception as e:
+            print(f"  Warning: Failed to log to wandb: {e}")
+
+
 def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, incremental=False, 
-                timeframe='1d', training_mode='full', hour=None):
-    """Train model for a symbol with timeframe awareness"""
+                timeframe='1d', training_mode='full', hour=None, 
+                wandb_project=None, wandb_run_name=None):
+    """Train model for a symbol with timeframe awareness and wandb tracking"""
     print(f"\n{'='*60}")
     print(f"Training model for {symbol}")
     print(f"Mode: {training_mode}, Timeframe: {timeframe}")
@@ -87,6 +126,26 @@ def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, inc
     print(f"  ✓ Loaded {len(data)} rows")
     print(f"  Date range: {data.index.min()} to {data.index.max()}")
     
+    # Initialize wandb
+    wandb_config = {
+        'symbol': symbol,
+        'epochs': epochs,
+        'timeframe': timeframe,
+        'training_mode': training_mode,
+        'incremental': incremental,
+        'data_rows': len(data),
+        'model_type': 'unified_ml',
+        'asset_type': 'stock'
+    }
+    
+    wandb_enabled = wandb_project is not None and os.environ.get('WANDB_API_KEY')
+    run = init_wandb(
+        project=wandb_project or 'ara-ai-training',
+        run_name=wandb_run_name or f"stock-{symbol}",
+        config=wandb_config,
+        enabled=wandb_enabled
+    )
+    
     # Drop metadata columns before training
     if 'Timeframe' in data.columns:
         data = data.drop(columns=['Timeframe', 'Interval'])
@@ -99,7 +158,6 @@ def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, inc
     
     if incremental and Path(output_path).exists():
         print("  Using incremental training mode")
-        # Load existing model and continue training
         result = ml.train_ultimate_models(
             target_symbol=symbol,
             period='custom',
@@ -109,7 +167,6 @@ def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, inc
         )
     else:
         print("  Using full training mode")
-        # Train from scratch
         result = ml.train_ultimate_models(
             target_symbol=symbol,
             period='custom',
@@ -124,12 +181,33 @@ def train_model(symbol, db_file, output_path, epochs=100, use_all_data=True, inc
         print(f"  Timeframe: {timeframe} ({training_mode} mode)")
         print(f"  Model saved to: {output_path}")
         
+        # Log final metrics to wandb
+        log_to_wandb(run, {
+            'final_loss': result.get('final_loss', 0),
+            'accuracy': result.get('accuracy', 0),
+            'training_success': 1
+        })
+        
         # Store metadata in database
         store_model_metadata(db_file, symbol, output_path, result, timeframe, training_mode, hour)
+        
+        # Finish wandb run
+        if run is not None:
+            wandb.finish()
         
         return True
     else:
         print(f"\n✗ Training failed: {result.get('error', 'Unknown error')}")
+        
+        # Log failure to wandb
+        log_to_wandb(run, {
+            'training_success': 0,
+            'error': result.get('error', 'Unknown')
+        })
+        
+        if run is not None:
+            wandb.finish(exit_code=1)
+        
         return False
 
 def store_model_metadata(db_file, symbol, model_path, training_result, timeframe='1d', training_mode='full', hour=None):
@@ -191,6 +269,8 @@ def main():
     parser.add_argument('--timeframe', default='1d', help='Timeframe identifier')
     parser.add_argument('--training-mode', default='full', help='Training mode (full, hourly)')
     parser.add_argument('--hour', type=int, help='Current hour (for hourly mode)')
+    parser.add_argument('--wandb-project', help='Weights & Biases project name')
+    parser.add_argument('--wandb-run-name', help='Weights & Biases run name')
     
     args = parser.parse_args()
     
@@ -207,7 +287,9 @@ def main():
         incremental=args.incremental,
         timeframe=args.timeframe,
         training_mode=args.training_mode,
-        hour=args.hour
+        hour=args.hour,
+        wandb_project=args.wandb_project,
+        wandb_run_name=args.wandb_run_name
     )
     
     sys.exit(0 if success else 1)

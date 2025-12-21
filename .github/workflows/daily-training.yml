@@ -1,0 +1,251 @@
+name: Daily Model Training
+
+on:
+  schedule:
+    # Run daily at 6:00 AM UTC (after market close)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      training_mode:
+        description: 'Training mode'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - incremental
+      epochs:
+        description: 'Number of training epochs'
+        required: false
+        default: '100'
+        type: string
+
+env:
+  PYTHON_VERSION: '3.11'
+  WANDB_PROJECT: 'ara-ai-training'
+
+jobs:
+  fetch-data:
+    name: Fetch Market Data
+    runs-on: ubuntu-latest
+    outputs:
+      data-fetched: ${{ steps.fetch.outputs.success }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install yfinance pandas numpy
+
+      - name: Fetch stock data
+        id: fetch-stocks
+        run: |
+          python scripts/fetch_training_data.py \
+            --symbols AAPL,MSFT,GOOGL,AMZN,TSLA,META,NVDA,JPM,V,JNJ \
+            --output-dir data/stocks \
+            --period 2y \
+            --asset-type stock
+
+      - name: Fetch forex data
+        id: fetch-forex
+        run: |
+          python scripts/fetch_training_data.py \
+            --symbols EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD,USDCHF,NZDUSD,EURGBP \
+            --output-dir data/forex \
+            --period 2y \
+            --asset-type forex
+
+      - name: Upload data artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-data
+          path: data/
+          retention-days: 7
+
+      - name: Set output
+        id: fetch
+        run: echo "success=true" >> $GITHUB_OUTPUT
+
+  train-stock-models:
+    name: Train Stock Models
+    needs: fetch-data
+    runs-on: ubuntu-latest
+    if: needs.fetch-data.outputs.data-fetched == 'true'
+    
+    strategy:
+      matrix:
+        symbol: [AAPL, MSFT, GOOGL, AMZN, TSLA, META, NVDA, JPM, V, JNJ]
+      fail-fast: false
+      max-parallel: 3
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install wandb
+
+      - name: Download data artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: market-data
+          path: data/
+
+      - name: Store data in database
+        run: |
+          python scripts/store_training_data.py \
+            --data-dir data/stocks \
+            --db-file training.db \
+            --mode ${{ github.event.inputs.training_mode || 'full' }}
+
+      - name: Train model for ${{ matrix.symbol }}
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          python scripts/train_model.py \
+            --symbol ${{ matrix.symbol }} \
+            --db-file training.db \
+            --output models/stock_${{ matrix.symbol }}.pt \
+            --epochs ${{ github.event.inputs.epochs || '100' }} \
+            --use-all-data \
+            --wandb-project ${{ env.WANDB_PROJECT }} \
+            --wandb-run-name "stock-${{ matrix.symbol }}-$(date +%Y%m%d)"
+
+      - name: Upload trained model
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-stock-${{ matrix.symbol }}
+          path: models/stock_${{ matrix.symbol }}.pt
+          retention-days: 30
+
+  train-forex-models:
+    name: Train Forex Models
+    needs: fetch-data
+    runs-on: ubuntu-latest
+    if: needs.fetch-data.outputs.data-fetched == 'true'
+    
+    strategy:
+      matrix:
+        pair: [EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD, USDCHF, NZDUSD, EURGBP]
+      fail-fast: false
+      max-parallel: 3
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install wandb
+
+      - name: Download data artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: market-data
+          path: data/
+
+      - name: Store data in database
+        run: |
+          python scripts/store_training_data.py \
+            --data-dir data/forex \
+            --db-file training.db \
+            --mode ${{ github.event.inputs.training_mode || 'full' }}
+
+      - name: Train model for ${{ matrix.pair }}
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          python scripts/train_forex_model.py \
+            --pair ${{ matrix.pair }} \
+            --db-file training.db \
+            --output models/forex_${{ matrix.pair }}.pt \
+            --epochs ${{ github.event.inputs.epochs || '100' }} \
+            --use-all-data \
+            --wandb-project ${{ env.WANDB_PROJECT }} \
+            --wandb-run-name "forex-${{ matrix.pair }}-$(date +%Y%m%d)"
+
+      - name: Upload trained model
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-forex-${{ matrix.pair }}
+          path: models/forex_${{ matrix.pair }}.pt
+          retention-days: 30
+
+  aggregate-models:
+    name: Aggregate and Release Models
+    needs: [train-stock-models, train-forex-models]
+    runs-on: ubuntu-latest
+    if: always() && (needs.train-stock-models.result == 'success' || needs.train-forex-models.result == 'success')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all model artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-models/
+          pattern: model-*
+
+      - name: Organize models
+        run: |
+          mkdir -p models/
+          find downloaded-models/ -name "*.pt" -exec cp {} models/ \;
+          ls -la models/
+
+      - name: Upload combined models
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-trained-models-${{ github.run_number }}
+          path: models/
+          retention-days: 90
+
+      - name: Create training summary
+        run: |
+          echo "# Daily Training Summary - $(date +%Y-%m-%d)" > training-summary.md
+          echo "" >> training-summary.md
+          echo "## Models Trained" >> training-summary.md
+          echo "" >> training-summary.md
+          echo "### Stock Models" >> training-summary.md
+          ls models/stock_*.pt 2>/dev/null | while read f; do echo "- $(basename $f)"; done >> training-summary.md || echo "- None" >> training-summary.md
+          echo "" >> training-summary.md
+          echo "### Forex Models" >> training-summary.md
+          ls models/forex_*.pt 2>/dev/null | while read f; do echo "- $(basename $f)"; done >> training-summary.md || echo "- None" >> training-summary.md
+          echo "" >> training-summary.md
+          echo "## Training Configuration" >> training-summary.md
+          echo "- Mode: ${{ github.event.inputs.training_mode || 'full' }}" >> training-summary.md
+          echo "- Epochs: ${{ github.event.inputs.epochs || '100' }}" >> training-summary.md
+          echo "- Run ID: ${{ github.run_id }}" >> training-summary.md
+          cat training-summary.md
+
+      - name: Upload training summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-summary
+          path: training-summary.md
