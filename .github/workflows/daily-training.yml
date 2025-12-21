@@ -22,7 +22,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-  WANDB_PROJECT: 'ara-ai-training'
+  WANDB_PROJECT: 'ara-ai'
 
 jobs:
   fetch-data:
