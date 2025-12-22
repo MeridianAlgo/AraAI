@@ -22,12 +22,31 @@ def fetch_stock_data(symbol, period='2y', interval='1d'):
             print(f"  Warning: No data for {symbol}")
             return None
         
+        # Reset index to get Date as a column
         df = df.reset_index()
+        
+        # Standardize column names
+        df = df.rename(columns={'index': 'Date'})
+        
+        # Ensure Date column exists and is properly named
+        if 'Date' not in df.columns and 'Datetime' in df.columns:
+            df = df.rename(columns={'Datetime': 'Date'})
+        
+        # Convert Date to string format for CSV storage
+        df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Add metadata columns
         df['Symbol'] = symbol
         df['AssetType'] = 'stock'
-        df['FetchDate'] = datetime.now()
+        df['FetchDate'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         df['Timeframe'] = period
         df['Interval'] = interval
+        
+        # Ensure all required columns exist
+        required_cols = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Symbol', 'AssetType', 'FetchDate', 'Timeframe', 'Interval']
+        for col in required_cols:
+            if col not in df.columns:
+                print(f"  Warning: Missing column {col}")
         
         return df
     except Exception as e:
@@ -48,12 +67,29 @@ def fetch_forex_data(pair, period='2y', interval='1d'):
             print(f"  Warning: No data for {pair}")
             return None
         
+        # Reset index to get Date as a column
         df = df.reset_index()
+        
+        # Standardize column names
+        df = df.rename(columns={'index': 'Date'})
+        
+        # Ensure Date column exists and is properly named
+        if 'Date' not in df.columns and 'Datetime' in df.columns:
+            df = df.rename(columns={'Datetime': 'Date'})
+        
+        # Convert Date to string format for CSV storage
+        df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Add metadata columns
         df['Symbol'] = symbol
         df['AssetType'] = 'forex'
-        df['FetchDate'] = datetime.now()
+        df['FetchDate'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         df['Timeframe'] = period
         df['Interval'] = interval
+        
+        # Forex often has 0 volume, set to 0 if missing
+        if 'Volume' not in df.columns:
+            df['Volume'] = 0
         
         return df
     except Exception as e:

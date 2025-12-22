@@ -11,6 +11,7 @@ from pathlib import Path
 from datetime import datetime
 import sys
 
+
 def create_database(db_file):
     """Create database schema"""
     conn = sqlite3.connect(db_file)
@@ -76,12 +77,16 @@ def create_database(db_file):
     conn.close()
     print("✓ Database schema created")
 
+
 def store_data(data_dir, db_file, mode='full', timeframe='1d', hour=None):
     """Store CSV data in database"""
     conn = sqlite3.connect(db_file)
     
     data_dir = Path(data_dir)
     csv_files = list(data_dir.glob('*.csv'))
+    
+    # Filter out combined files to avoid duplicates
+    csv_files = [f for f in csv_files if not f.name.startswith('all_')]
     
     if not csv_files:
         print("Error: No CSV files found")
@@ -96,8 +101,24 @@ def store_data(data_dir, db_file, mode='full', timeframe='1d', hour=None):
         try:
             df = pd.read_csv(csv_file)
             
-            # Prepare data for insertion
-            df['date'] = pd.to_datetime(df['Date'])
+            # Debug: print columns
+            print(f"  Columns: {list(df.columns)}")
+            
+            # Handle Date column - convert to datetime
+            if 'Date' in df.columns:
+                df['date'] = pd.to_datetime(df['Date'], utc=True, errors='coerce')
+            elif 'Datetime' in df.columns:
+                df['date'] = pd.to_datetime(df['Datetime'], utc=True, errors='coerce')
+            else:
+                print(f"  Error: No Date or Datetime column found")
+                continue
+            
+            # Drop rows with invalid dates
+            df = df.dropna(subset=['date'])
+            
+            if df.empty:
+                print(f"  Warning: No valid data after date parsing")
+                continue
             
             # Extract hour from datetime
             df['hour'] = df['date'].dt.hour
@@ -106,46 +127,53 @@ def store_data(data_dir, db_file, mode='full', timeframe='1d', hour=None):
             csv_timeframe = df['Timeframe'].iloc[0] if 'Timeframe' in df.columns else timeframe
             csv_interval = df['Interval'].iloc[0] if 'Interval' in df.columns else '1d'
             
-            # Select relevant columns
-            columns_to_select = [
-                'Symbol', 'AssetType', 'date', 
-                'Open', 'High', 'Low', 'Close', 'Volume', 'FetchDate', 'hour'
-            ]
-            
-            insert_df = df[columns_to_select].copy()
-            
-            insert_df.columns = [
-                'symbol', 'asset_type', 'date',
-                'open', 'high', 'low', 'close', 'volume', 'fetch_date', 'hour'
-            ]
-            
-            # Add timeframe and interval
+            # Prepare insert dataframe with correct column mapping
+            insert_df = pd.DataFrame()
+            insert_df['symbol'] = df['Symbol']
+            insert_df['asset_type'] = df['AssetType']
+            insert_df['date'] = df['date'].dt.strftime('%Y-%m-%d %H:%M:%S')  # Convert to string
+            insert_df['open'] = df['Open']
+            insert_df['high'] = df['High']
+            insert_df['low'] = df['Low']
+            insert_df['close'] = df['Close']
+            insert_df['volume'] = df['Volume'].fillna(0).astype(int)
+            insert_df['fetch_date'] = df['FetchDate'] if 'FetchDate' in df.columns else datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            insert_df['hour'] = df['hour']
             insert_df['timeframe'] = csv_timeframe
             insert_df['interval'] = csv_interval
             
-            # Insert or replace data
-            if mode == 'full':
-                # Full mode: append all data
-                insert_df.to_sql('market_data', conn, if_exists='append', index=False)
-            else:
-                # Hourly/Refresh mode: only insert new data
-                for _, row in insert_df.iterrows():
-                    try:
-                        conn.execute('''
-                            INSERT OR IGNORE INTO market_data 
-                            (symbol, asset_type, date, open, high, low, close, volume, 
-                             fetch_date, timeframe, interval, hour)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', tuple(row))
-                    except sqlite3.IntegrityError:
-                        pass  # Skip duplicates
+            # Insert data with INSERT OR REPLACE to handle duplicates
+            for _, row in insert_df.iterrows():
+                try:
+                    conn.execute('''
+                        INSERT OR REPLACE INTO market_data 
+                        (symbol, asset_type, date, open, high, low, close, volume, 
+                         fetch_date, timeframe, interval, hour)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        row['symbol'], row['asset_type'], row['date'], 
+                        row['open'], row['high'], row['low'], row['close'], 
+                        row['volume'], row['fetch_date'], row['timeframe'], 
+                        row['interval'], row['hour']
+                    ))
+                except Exception as e:
+                    print(f"  Warning: Failed to insert row: {e}")
             
+            conn.commit()
             symbols_processed.update(df['Symbol'].unique())
             total_rows += len(insert_df)
             print(f"  ✓ Stored {len(insert_df)} rows")
             
         except Exception as e:
             print(f"Error processing {csv_file}: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
+            
+        except Exception as e:
+            print(f"Error processing {csv_file}: {e}")
+            import traceback
+            traceback.print_exc()
             continue
     
     # Record training run
@@ -162,6 +190,7 @@ def store_data(data_dir, db_file, mode='full', timeframe='1d', hour=None):
     print(f"  Symbols: {len(symbols_processed)}")
     print(f"  Mode: {mode}")
 
+
 def main():
     parser = argparse.ArgumentParser(description='Store training data in database')
     parser.add_argument('--data-dir', required=True, help='Directory containing CSV files')
@@ -177,6 +206,7 @@ def main():
     
     # Store data
     store_data(args.data_dir, args.db_file, args.mode, args.timeframe, args.hour)
+
 
 if __name__ == '__main__':
     main()
