@@ -654,14 +654,18 @@ The project includes GitHub Actions workflows for:
 Models are automatically retrained daily via GitHub Actions:
 
 - **Schedule**: Runs at 6:00 AM UTC daily (after market close)
-- **Stock Models**: AAPL, MSFT, GOOGL, AMZN, TSLA, META, NVDA, JPM, V, JNJ
-- **Forex Models**: EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD, USDCHF, NZDUSD, EURGBP
-- **Manual Trigger**: Can be triggered manually with custom epochs and training mode
+- **Stock Models**: 10 randomly selected stocks from `all_tickers.txt` each day
+- **Forex Models**: 3 robust pairs (EURUSD, GBPUSD, USDJPY)
+- **Manual Trigger**: Can be triggered manually with custom epochs, training mode, and stock count
 
 To set up automated training:
 
 1. Add `WANDB_API_KEY` to your repository secrets (optional, for experiment tracking)
-2. The workflow will automatically fetch data, train models, and upload artifacts
+2. The workflow will automatically:
+   - Select 10 random stocks daily
+   - Fetch fresh market data
+   - Train models independently
+   - Upload trained models as artifacts
 
 #### Weights & Biases Integration
 

@@ -19,74 +19,21 @@ on:
         required: false
         default: '100'
         type: string
+      stock_count:
+        description: 'Number of random stocks to train'
+        required: false
+        default: '10'
+        type: string
 
 env:
   PYTHON_VERSION: '3.11'
   WANDB_PROJECT: 'ara-ai'
 
 jobs:
-  fetch-data:
-    name: Fetch Market Data
-    runs-on: ubuntu-latest
-    outputs:
-      data-fetched: ${{ steps.fetch.outputs.success }}
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install yfinance pandas numpy
-
-      - name: Fetch stock data
-        id: fetch-stocks
-        run: |
-          python scripts/fetch_training_data.py \
-            --symbols AAPL,MSFT,GOOGL,AMZN,TSLA,META,NVDA,JPM,V,JNJ \
-            --output-dir data/stocks \
-            --period 2y \
-            --asset-type stock
-
-      - name: Fetch forex data
-        id: fetch-forex
-        run: |
-          python scripts/fetch_training_data.py \
-            --symbols EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD,USDCHF,NZDUSD,EURGBP \
-            --output-dir data/forex \
-            --period 2y \
-            --asset-type forex
-
-      - name: Upload data artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: market-data
-          path: data/
-          retention-days: 7
-
-      - name: Set output
-        id: fetch
-        run: echo "success=true" >> $GITHUB_OUTPUT
-
   train-stock-models:
-    name: Train Stock Models
-    needs: fetch-data
+    name: Train Random Stock Models
     runs-on: ubuntu-latest
-    if: needs.fetch-data.outputs.data-fetched == 'true'
     
-    strategy:
-      matrix:
-        symbol: [AAPL, MSFT, GOOGL, AMZN, TSLA, META, NVDA, JPM, V, JNJ]
-      fail-fast: false
-      max-parallel: 3
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -103,50 +50,71 @@ jobs:
           pip install -r requirements.txt
           pip install wandb
 
-      - name: Download data artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: market-data
-          path: data/
-
-      - name: Store data in database
+      - name: Select random stock tickers
+        id: select
         run: |
-          python scripts/store_training_data.py \
-            --data-dir data/stocks \
-            --db-file training.db \
-            --mode ${{ github.event.inputs.training_mode || 'full' }}
+          STOCKS=$(python scripts/select_random_tickers.py --file all_tickers.txt --count ${{ github.event.inputs.stock_count || '10' }} --output-format comma | tail -n 1)
+          echo "stocks=$STOCKS" >> $GITHUB_OUTPUT
+          echo "Selected stocks: $STOCKS"
 
-      - name: Train model for ${{ matrix.symbol }}
+      - name: Train stock models
         env:
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
-          python scripts/train_model.py \
-            --symbol ${{ matrix.symbol }} \
-            --db-file training.db \
-            --output models/stock_${{ matrix.symbol }}.pt \
-            --epochs ${{ github.event.inputs.epochs || '100' }} \
-            --use-all-data \
-            --wandb-project ${{ env.WANDB_PROJECT }} \
-            --wandb-run-name "stock-${{ matrix.symbol }}-$(date +%Y%m%d)"
+          STOCKS="${{ steps.select.outputs.stocks }}"
+          IFS=',' read -ra STOCK_ARRAY <<< "$STOCKS"
+          
+          for SYMBOL in "${STOCK_ARRAY[@]}"; do
+            echo "=========================================="
+            echo "Processing $SYMBOL"
+            echo "=========================================="
+            
+            # Fetch data
+            echo "Fetching data for $SYMBOL..."
+            python scripts/fetch_training_data.py \
+              --symbols "$SYMBOL" \
+              --output-dir "data/stocks/$SYMBOL" \
+              --period 2y \
+              --asset-type stock || { echo "Failed to fetch $SYMBOL, skipping..."; continue; }
+            
+            # Store in database
+            echo "Storing data for $SYMBOL..."
+            python scripts/store_training_data.py \
+              --data-dir "data/stocks/$SYMBOL" \
+              --db-file "training_${SYMBOL}.db" \
+              --mode ${{ github.event.inputs.training_mode || 'full' }} || { echo "Failed to store $SYMBOL, skipping..."; continue; }
+            
+            # Train model
+            echo "Training model for $SYMBOL..."
+            python scripts/train_model.py \
+              --symbol "$SYMBOL" \
+              --db-file "training_${SYMBOL}.db" \
+              --output "models/stock_${SYMBOL}.pt" \
+              --epochs ${{ github.event.inputs.epochs || '100' }} \
+              --use-all-data \
+              --wandb-project ${{ env.WANDB_PROJECT }} \
+              --wandb-run-name "stock-${SYMBOL}-$(date +%Y%m%d)" || { echo "Failed to train $SYMBOL, skipping..."; continue; }
+            
+            echo "✓ Successfully trained $SYMBOL"
+          done
 
-      - name: Upload trained model
+      - name: Upload trained models
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: model-stock-${{ matrix.symbol }}
-          path: models/stock_${{ matrix.symbol }}.pt
+          name: stock-models-${{ github.run_number }}
+          path: models/stock_*.pt
           retention-days: 30
+          if-no-files-found: warn
 
   train-forex-models:
     name: Train Forex Models
-    needs: fetch-data
     runs-on: ubuntu-latest
-    if: needs.fetch-data.outputs.data-fetched == 'true'
     
     strategy:
       matrix:
-        pair: [EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD, USDCHF, NZDUSD, EURGBP]
+        pair: [EURUSD, GBPUSD, USDJPY]
       fail-fast: false
-      max-parallel: 3
 
     steps:
       - name: Checkout repository
@@ -164,33 +132,45 @@ jobs:
           pip install -r requirements.txt
           pip install wandb
 
-      - name: Download data artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: market-data
-          path: data/
-
-      - name: Store data in database
-        run: |
-          python scripts/store_training_data.py \
-            --data-dir data/forex \
-            --db-file training.db \
-            --mode ${{ github.event.inputs.training_mode || 'full' }}
-
-      - name: Train model for ${{ matrix.pair }}
+      - name: Fetch and train forex model
         env:
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
+          PAIR="${{ matrix.pair }}"
+          echo "=========================================="
+          echo "Processing $PAIR"
+          echo "=========================================="
+          
+          # Fetch data
+          echo "Fetching data for $PAIR..."
+          python scripts/fetch_training_data.py \
+            --symbols "$PAIR" \
+            --output-dir "data/forex/$PAIR" \
+            --period 2y \
+            --asset-type forex
+          
+          # Store in database
+          echo "Storing data for $PAIR..."
+          python scripts/store_training_data.py \
+            --data-dir "data/forex/$PAIR" \
+            --db-file "training_${PAIR}.db" \
+            --mode ${{ github.event.inputs.training_mode || 'full' }}
+          
+          # Train model
+          echo "Training model for $PAIR..."
           python scripts/train_forex_model.py \
-            --pair ${{ matrix.pair }} \
-            --db-file training.db \
-            --output models/forex_${{ matrix.pair }}.pt \
+            --pair "$PAIR" \
+            --db-file "training_${PAIR}.db" \
+            --output "models/forex_${PAIR}.pt" \
             --epochs ${{ github.event.inputs.epochs || '100' }} \
             --use-all-data \
             --wandb-project ${{ env.WANDB_PROJECT }} \
-            --wandb-run-name "forex-${{ matrix.pair }}-$(date +%Y%m%d)"
+            --wandb-run-name "forex-${PAIR}-$(date +%Y%m%d)"
+          
+          echo "✓ Successfully trained $PAIR"
 
       - name: Upload trained model
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: model-forex-${{ matrix.pair }}
@@ -198,10 +178,10 @@ jobs:
           retention-days: 30
 
   aggregate-models:
-    name: Aggregate and Release Models
+    name: Aggregate Models
     needs: [train-stock-models, train-forex-models]
     runs-on: ubuntu-latest
-    if: always() && (needs.train-stock-models.result == 'success' || needs.train-forex-models.result == 'success')
+    if: always()
     
     steps:
       - name: Checkout repository
@@ -211,15 +191,25 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: downloaded-models/
-          pattern: model-*
+          pattern: "*-models-*"
+        continue-on-error: true
+
+      - name: Download forex models
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-models/
+          pattern: "model-forex-*"
+        continue-on-error: true
 
       - name: Organize models
         run: |
           mkdir -p models/
-          find downloaded-models/ -name "*.pt" -exec cp {} models/ \;
-          ls -la models/
+          find downloaded-models/ -name "*.pt" -exec cp {} models/ \; 2>/dev/null || true
+          echo "Models found:"
+          ls -la models/ || echo "No models found"
 
       - name: Upload combined models
+        if: hashFiles('models/*.pt') != ''
         uses: actions/upload-artifact@v4
         with:
           name: all-trained-models-${{ github.run_number }}
@@ -232,20 +222,33 @@ jobs:
           echo "" >> training-summary.md
           echo "## Models Trained" >> training-summary.md
           echo "" >> training-summary.md
+          
           echo "### Stock Models" >> training-summary.md
-          ls models/stock_*.pt 2>/dev/null | while read f; do echo "- $(basename $f)"; done >> training-summary.md || echo "- None" >> training-summary.md
+          if ls models/stock_*.pt 1> /dev/null 2>&1; then
+            ls models/stock_*.pt | while read f; do echo "- $(basename $f)"; done >> training-summary.md
+          else
+            echo "- None" >> training-summary.md
+          fi
+          
           echo "" >> training-summary.md
           echo "### Forex Models" >> training-summary.md
-          ls models/forex_*.pt 2>/dev/null | while read f; do echo "- $(basename $f)"; done >> training-summary.md || echo "- None" >> training-summary.md
+          if ls models/forex_*.pt 1> /dev/null 2>&1; then
+            ls models/forex_*.pt | while read f; do echo "- $(basename $f)"; done >> training-summary.md
+          else
+            echo "- None" >> training-summary.md
+          fi
+          
           echo "" >> training-summary.md
           echo "## Training Configuration" >> training-summary.md
           echo "- Mode: ${{ github.event.inputs.training_mode || 'full' }}" >> training-summary.md
           echo "- Epochs: ${{ github.event.inputs.epochs || '100' }}" >> training-summary.md
+          echo "- Stock Count: ${{ github.event.inputs.stock_count || '10' }}" >> training-summary.md
           echo "- Run ID: ${{ github.run_id }}" >> training-summary.md
+          
           cat training-summary.md
 
       - name: Upload training summary
         uses: actions/upload-artifact@v4
         with:
-          name: training-summary
+          name: training-summary-${{ github.run_number }}
           path: training-summary.md
