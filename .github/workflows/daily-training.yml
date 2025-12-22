@@ -186,6 +186,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download all model artifacts
         uses: actions/download-artifact@v4
@@ -244,6 +246,7 @@ jobs:
           echo "- Epochs: ${{ github.event.inputs.epochs || '100' }}" >> training-summary.md
           echo "- Stock Count: ${{ github.event.inputs.stock_count || '10' }}" >> training-summary.md
           echo "- Run ID: ${{ github.run_id }}" >> training-summary.md
+          echo "- Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> training-summary.md
           
           cat training-summary.md
 
@@ -252,3 +255,23 @@ jobs:
         with:
           name: training-summary-${{ github.run_number }}
           path: training-summary.md
+
+      - name: Commit and push trained models
+        if: hashFiles('models/*.pt') != ''
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Add models
+          git add models/*.pt
+          
+          # Create commit
+          git commit -m "chore: Update trained models - $(date +%Y-%m-%d)
+          
+          Stock models: $(ls models/stock_*.pt 2>/dev/null | wc -l)
+          Forex models: $(ls models/forex_*.pt 2>/dev/null | wc -l)
+          Run: ${{ github.run_id }}" || echo "No changes to commit"
+          
+          # Push
+          git push origin main || echo "Failed to push models"
+        continue-on-error: true
