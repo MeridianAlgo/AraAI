@@ -9,7 +9,7 @@ on:
       training_mode:
         description: 'Training mode'
         required: false
-        default: 'incremental'
+        default: 'full'
         type: choice
         options:
           - full
@@ -100,6 +100,9 @@ jobs:
           STOCKS="${{ steps.select.outputs.stocks }}"
           IFS=',' read -ra STOCK_ARRAY <<< "$STOCKS"
           
+          # Create models directory
+          mkdir -p models
+          
           for SYMBOL in "${STOCK_ARRAY[@]}"; do
             echo "=========================================="
             echo "Processing $SYMBOL"
@@ -113,12 +116,12 @@ jobs:
               --period 2y \
               --asset-type stock || { echo "Failed to fetch $SYMBOL, skipping..."; continue; }
             
-            # Store in database
+            # Store in database (use 'full' mode, not 'incremental')
             echo "Storing data for $SYMBOL..."
             python scripts/store_training_data.py \
               --data-dir "data/stocks/$SYMBOL" \
               --db-file "training_${SYMBOL}.db" \
-              --mode ${{ github.event.inputs.training_mode || 'incremental' }} || { echo "Failed to store $SYMBOL, skipping..."; continue; }
+              --mode full || { echo "Failed to store $SYMBOL, skipping..."; continue; }
             
             # Train model (incremental if model exists)
             echo "Training model for $SYMBOL..."
@@ -208,6 +211,9 @@ jobs:
           echo "Processing $PAIR"
           echo "=========================================="
           
+          # Create models directory
+          mkdir -p models
+          
           # Fetch data
           echo "Fetching data for $PAIR..."
           python scripts/fetch_training_data.py \
@@ -216,12 +222,12 @@ jobs:
             --period 2y \
             --asset-type forex
           
-          # Store in database
+          # Store in database (use 'full' mode, not 'incremental')
           echo "Storing data for $PAIR..."
           python scripts/store_training_data.py \
             --data-dir "data/forex/$PAIR" \
             --db-file "training_${PAIR}.db" \
-            --mode ${{ github.event.inputs.training_mode || 'incremental' }}
+            --mode full
           
           # Train model (incremental if model exists)
           INCREMENTAL_FLAG=""
