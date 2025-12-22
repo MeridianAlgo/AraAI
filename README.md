@@ -1,11 +1,11 @@
 # ARA AI - Financial Prediction System
 
-**World-class AI-powered financial prediction platform with ensemble machine learning models**
+**AI-powered financial prediction platform with continuous ensemble machine learning model training**
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](TESTING.md)
-[![Daily Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml)
+[![Continuous Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml)
+[![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face-yellow)](https://huggingface.co/MeridianAlgo/ARA.AI)
 [![W&B](https://img.shields.io/badge/Weights%20%26%20Biases-FFCC33?logo=weightsandbiases&logoColor=black)](https://wandb.ai)
 
 > **DISCLAIMER**: This software is for educational and research purposes only. NOT financial advice. You are solely responsible for your investment decisions.
@@ -17,93 +17,58 @@
 - [Overview](#overview)
 - [Features](#features)
 - [Quick Start](#quick-start)
-- [Documentation](#documentation)
-  - [Complete Documentation Index](DOCS_INDEX.md)
 - [Installation](#installation)
-- [Usage Examples](#usage-examples)
+- [Usage](#usage)
+- [Continuous Training](#continuous-training)
 - [Architecture](#architecture)
-- [Configuration](#configuration)
-- [API Documentation](#api-documentation)
-- [Testing](#testing)
 - [Contributing](#contributing)
-- [Security](#security)
 - [License](#license)
-- [Support](#support)
 
 ---
 
 ## Overview
 
-ARA AI is a comprehensive financial prediction platform that combines multiple machine learning models to provide accurate price predictions for stocks, forex, and cryptocurrencies. The system uses ensemble learning, technical analysis, sentiment analysis, and risk management to deliver robust predictions.
+ARA AI is a financial prediction platform that combines ensemble machine learning models to provide price predictions for stocks and forex. The system uses:
 
-### Key Highlights
+- **Ensemble Learning**: XGBoost, LightGBM, Random Forest, Transformers, CNN-LSTM
+- **Continuous Training**: Models retrain every 2 hours with latest market data
+- **Experiment Tracking**: Weights & Biases integration for monitoring
+- **Model Storage**: Hugging Face Hub for versioning and distribution
 
-- **Multiple ML Models**: Transformer, CNN-LSTM, and 9-model ensemble systems
-- **Multi-Asset Support**: Stocks, Forex, Crypto, and DeFi tokens
-- **Production Ready**: REST API with authentication, rate limiting, and security features
-- **Real-time Analysis**: Technical indicators, sentiment analysis, and market regime detection
-- **Enterprise Features**: Backtesting, portfolio optimization, and risk management
+### Key Features
+
+- **Automated Training**: 12 training cycles daily (every 2 hours)
+- **Random Stock Selection**: 5 different stocks per cycle from 6,800+ tickers
+- **Robust Forex Pairs**: EURUSD, GBPUSD, USDJPY
+- **Incremental Learning**: Models improve continuously with new data
+- **Model Versioning**: All models stored on Hugging Face Hub
 
 ---
 
 ## Features
 
-### Machine Learning Models
+### Machine Learning
 
-- **Transformer Models** - Advanced time series prediction with attention mechanisms
-- **CNN-LSTM Hybrid** - Convolutional-recurrent neural networks
-- **Ensemble Systems** - 9-model ensemble (XGBoost, LightGBM, Random Forest, etc.)
-- **Regime Detection** - Automatic market regime identification
-- **Adaptive Learning** - Self-adjusting models based on market conditions
+- **Ensemble Models**: Combines 9+ different algorithms
+- **Transformer Architecture**: Attention-based time series prediction
+- **CNN-LSTM Hybrid**: Convolutional-recurrent neural networks
+- **Incremental Training**: Continuous model improvement
+- **Adaptive Learning**: Models adjust to market conditions
 
 ### Technical Analysis
 
-- **44+ Technical Indicators**: RSI, MACD, Bollinger Bands, ATR, and more
+- **44+ Indicators**: RSI, MACD, Bollinger Bands, ATR, and more
 - **Pattern Recognition**: Head & Shoulders, Triangles, Wedges
-- **Volume Analysis**: OBV, MFI, VWAP, Accumulation/Distribution
+- **Volume Analysis**: OBV, MFI, VWAP
 - **Trend Indicators**: SMA, EMA, ADX, Parabolic SAR
 - **Volatility Measures**: Bollinger Bands, Keltner Channels, ATR
 
-### Sentiment Analysis
+### Data & Training
 
-- **Twitter Sentiment**: Real-time tweet analysis
-- **Reddit Analysis**: r/wallstreetbets and r/stocks sentiment
-- **News Sentiment**: Financial news scoring with FinBERT
-- **Social Media Aggregation**: Multi-source sentiment compilation
-
-### Risk Management
-
-- **Portfolio Optimization**: Modern Portfolio Theory, Black-Litterman
-- **Risk Metrics**: VaR, CVaR, Sharpe Ratio, Sortino Ratio, Maximum Drawdown
-- **Constraint Management**: Position limits, sector exposure controls
-- **Automated Rebalancing**: Dynamic portfolio rebalancing
-
-### Backtesting
-
-- **Strategy Validation**: Historical data testing
-- **Performance Metrics**: Returns, drawdown, win rate, Sharpe ratio
-- **Walk-Forward Analysis**: Out-of-sample testing
-- **Monte Carlo Simulation**: Risk assessment and scenario analysis
-
-### Security Features
-
-- **Authentication**: JWT tokens and API key authentication
-- **Input Sanitization**: SQL injection and XSS protection
-- **Encryption**: AES-256 for sensitive data
-- **Rate Limiting**: Prevent abuse and DDoS attacks
-- **Audit Logging**: Comprehensive security event tracking
-- **Adversarial Defense**: Malicious input detection
-
-See [SECURITY.md](SECURITY.md) for detailed security documentation.
-
-### Monitoring & Observability
-
-- **Prometheus Metrics**: Request rates, latencies, error tracking
-- **Distributed Tracing**: OpenTelemetry integration
-- **Health Checks**: Liveness and readiness probes
-- **Grafana Dashboards**: Pre-built visualization dashboards
-- **Automated Alerts**: Anomaly detection and alerting
-- **Weights & Biases**: ML experiment tracking and model versioning
+- **2 Years Historical Data**: Comprehensive training dataset
+- **Real-time Updates**: Latest market data fetched before each training cycle
+- **Multi-asset Support**: Stocks and forex pairs
+- **Automatic Scheduling**: GitHub Actions handles all training
 
 ---
 
@@ -112,8 +77,8 @@ See [SECURITY.md](SECURITY.md) for detailed security documentation.
 ### Prerequisites
 
 - Python 3.9 or higher
-- pip or conda package manager
-- Git (for cloning the repository)
+- pip package manager
+- Git
 
 ### Installation
 
@@ -122,7 +87,7 @@ See [SECURITY.md](SECURITY.md) for detailed security documentation.
 git clone https://github.com/MeridianAlgo/AraAI.git
 cd AraAI
 
-# Create virtual environment (recommended)
+# Create virtual environment
 python -m venv venv
 
 # Activate virtual environment
@@ -135,77 +100,23 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Basic Usage
+### Download Models
 
-```bash
-# Stock predictions
-python scripts/ara.py AAPL --days 5
-python scripts/ara.py TSLA --days 7
+```python
+from huggingface_hub import hf_hub_download
 
-# Forex predictions
-python scripts/ara_forex.py EURUSD --days 3
-python scripts/ara_forex.py GBPUSD --days 5
+# Download a stock model
+model_path = hf_hub_download(
+    repo_id="MeridianAlgo/ARA.AI",
+    filename="models/stock_AAPL.pt"
+)
 
-# CSV data predictions
-python scripts/ara_csv.py your_data.csv
+# Download a forex model
+forex_path = hf_hub_download(
+    repo_id="MeridianAlgo/ARA.AI",
+    filename="models/forex_EURUSD.pt"
+)
 ```
-
-### Start API Server
-
-```bash
-# Start the FastAPI server
-python scripts/run_api.py
-
-# Access points:
-# - API: http://localhost:8000
-# - Interactive Docs: http://localhost:8000/docs
-# - Alternative Docs: http://localhost:8000/redoc
-```
-
----
-
-## Documentation
-
-> **For a complete index of all documentation files, see [DOCS_INDEX.md](DOCS_INDEX.md)**
-
-### Core Documentation
-
-- **[README.md](README.md)** - This file, main project overview
-- **[DOCUMENTATION.md](DOCUMENTATION.md)** - Comprehensive usage guide, model architecture, and technical details
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guidelines for contributing to the project
-- **[SECURITY.md](SECURITY.md)** - Security policy, vulnerability reporting, and security features
-- **[TESTING.md](TESTING.md)** - Testing guide, CI/CD workflows, and quality assurance
-- **[LICENSE](LICENSE)** - MIT License with additional terms and disclaimers
-
-### Module Documentation
-
-#### ARA Package Components
-
-- **[ara/api/README.md](ara/api/README.md)** - REST API documentation and endpoints
-- **[ara/api/auth/README.md](ara/api/auth/README.md)** - Authentication and authorization
-- **[ara/api/webhooks/README.md](ara/api/webhooks/README.md)** - Webhook integration
-- **[ara/api/websocket/README.md](ara/api/websocket/README.md)** - WebSocket real-time updates
-- **[ara/alerts/README.md](ara/alerts/README.md)** - Alert system documentation
-- **[ara/backtesting/README.md](ara/backtesting/README.md)** - Backtesting engine guide
-- **[ara/cli/README.md](ara/cli/README.md)** - Command-line interface
-- **[ara/compat/README.md](ara/compat/README.md)** - Compatibility layer
-- **[ara/compat/QUICK_REFERENCE.md](ara/compat/QUICK_REFERENCE.md)** - Quick reference guide
-- **[ara/config/README.md](ara/config/README.md)** - Configuration management
-- **[ara/correlation/README.md](ara/correlation/README.md)** - Asset correlation analysis
-- **[ara/currency/README.md](ara/currency/README.md)** - Currency and forex support
-- **[ara/explainability/README.md](ara/explainability/README.md)** - Model explainability and interpretability
-- **[ara/features/README.md](ara/features/README.md)** - Feature engineering and technical indicators
-- **[ara/monitoring/README.md](ara/monitoring/README.md)** - Monitoring and metrics
-- **[ara/risk/README.md](ara/risk/README.md)** - Risk management and portfolio optimization
-- **[ara/security/README.md](ara/security/README.md)** - Security features and modules
-- **[ara/sentiment/README.md](ara/sentiment/README.md)** - Sentiment analysis
-- **[ara/visualization/README.md](ara/visualization/README.md)** - Data visualization and charting
-
-#### Additional Documentation
-
-- **[meridianalgo/README.md](meridianalgo/README.md)** - Core ML algorithms documentation
-- **[scripts/README.md](scripts/README.md)** - Utility scripts and tools
-- **[datasets/README.md](datasets/README.md)** - Sample datasets and data information
 
 ---
 
@@ -214,188 +125,141 @@ python scripts/run_api.py
 ### Standard Installation
 
 ```bash
-# Install from requirements.txt
 pip install -r requirements.txt
 ```
 
 ### Development Installation
 
 ```bash
-# Install development dependencies
 pip install -r requirements.txt
-pip install pytest black flake8 mypy bandit safety
-
-# Install pre-commit hooks (optional)
-pip install pre-commit
-pre-commit install
+pip install pytest black flake8 mypy
 ```
 
-### Docker Installation
+### Docker
 
 ```bash
-# Build Docker image
 docker build -t ara-ai .
-
-# Run container
 docker run -p 8000:8000 ara-ai
-
-# Docker Compose
-docker-compose up -d
 ```
 
 ### Requirements
 
-Main dependencies include:
-- fastapi, uvicorn - Web framework and ASGI server
-- torch, transformers - Deep learning models
-- scikit-learn, xgboost, lightgbm - Machine learning
-- pandas, numpy - Data manipulation
-- yfinance - Market data
-- rich - Console output formatting
+Main dependencies:
+- **torch, transformers** - Deep learning
+- **scikit-learn, xgboost, lightgbm** - Machine learning
+- **pandas, numpy** - Data manipulation
+- **yfinance** - Market data
+- **wandb** - Experiment tracking
+- **huggingface_hub** - Model storage
 
 See [requirements.txt](requirements.txt) for complete list.
 
 ---
 
-## Usage Examples
+## Usage
 
-### Python API Usage
-
-#### Basic Stock Prediction
+### Load and Use Stock Models
 
 ```python
 from meridianalgo.unified_ml import UnifiedStockML
+from huggingface_hub import hf_hub_download
 
-# Initialize the ML system
-ml = UnifiedStockML()
-
-# Make prediction
-result = ml.predict('AAPL', days=5)
-
-# Display results
-print(f"Current Price: ${result['current_price']}")
-for pred in result['predictions']:
-    print(f"Day {pred['day']}: ${pred['price']} ({pred['change']}%)")
-```
-
-#### Using ARA Package
-
-```python
-from ara.data.base_provider import BaseDataProvider
-from ara.features.calculator import IndicatorCalculator
-from ara.models.ensemble import EnhancedEnsemble
-
-# Fetch historical data
-provider = BaseDataProvider()
-data = provider.fetch_historical('AAPL', period='1y')
-
-# Calculate technical indicators
-calc = IndicatorCalculator()
-features = calc.calculate(data, indicators=['rsi', 'macd', 'bb', 'atr'])
-
-# Generate predictions
-model = EnhancedEnsemble()
-predictions = model.predict(features)
-
-print(f"Predictions: {predictions}")
-```
-
-#### Portfolio Optimization
-
-```python
-from ara.risk.optimizer import PortfolioOptimizer
-
-# Initialize optimizer
-optimizer = PortfolioOptimizer()
-
-# Optimize portfolio
-assets = ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
-optimal_weights = optimizer.optimize(
-    assets=assets,
-    method='mpt',  # Modern Portfolio Theory
-    risk_tolerance='moderate'
+# Download model from Hugging Face
+model_path = hf_hub_download(
+    repo_id="MeridianAlgo/ARA.AI",
+    filename="models/stock_AAPL.pt"
 )
 
-print(f"Optimal Weights: {optimal_weights}")
-print(f"Expected Return: {optimal_weights['expected_return']}")
-print(f"Risk (Volatility): {optimal_weights['volatility']}")
-print(f"Sharpe Ratio: {optimal_weights['sharpe_ratio']}")
-```
+# Load and predict
+ml = UnifiedStockML(model_path=model_path)
+prediction = ml.predict('AAPL', days=5)
 
-### REST API Usage
-
-#### Basic Prediction Request
-
-```bash
-# Health check
-curl http://localhost:8000/health
-
-# Make prediction
-curl -X POST http://localhost:8000/api/v1/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "symbol": "AAPL",
-    "days": 5,
-    "include_explanations": true
-  }'
-```
-
-#### Batch Predictions
-
-```bash
-curl -X POST http://localhost:8000/api/v1/predict/batch \
-  -H "Content-Type: application/json" \
-  -d '{
-    "symbols": ["AAPL", "MSFT", "GOOGL"],
-    "days": 5,
-    "analysis_level": "standard"
-  }'
-```
-
-#### Python Client
-
-```python
-import requests
-
-BASE_URL = "http://localhost:8000"
-
-# Generate prediction
-response = requests.post(
-    f"{BASE_URL}/api/v1/predict",
-    json={
-        "symbol": "AAPL",
-        "days": 5,
-        "include_explanations": True
-    }
-)
-
-prediction = response.json()
 print(f"Current Price: ${prediction['current_price']}")
-print(f"5-Day Prediction: ${prediction['predictions'][4]['predicted_price']}")
-print(f"Confidence: {prediction['confidence']['overall']}")
+print(f"5-Day Prediction: ${prediction['predictions'][4]['price']}")
 ```
 
-#### JavaScript Client
+### Load and Use Forex Models
 
-```javascript
-// Generate prediction
-const response = await fetch('http://localhost:8000/api/v1/predict', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    symbol: 'AAPL',
-    days: 5,
-    include_explanations: true
-  })
-});
+```python
+from meridianalgo.forex_ml import ForexML
+from huggingface_hub import hf_hub_download
 
-const prediction = await response.json();
-console.log(`Current Price: $${prediction.current_price}`);
-console.log(`5-Day Prediction: $${prediction.predictions[4].predicted_price}`);
-console.log(`Confidence: ${prediction.confidence.overall}`);
+# Download model
+model_path = hf_hub_download(
+    repo_id="MeridianAlgo/ARA.AI",
+    filename="models/forex_EURUSD.pt"
+)
+
+# Load and predict
+forex_ml = ForexML(model_path=model_path)
+prediction = forex_ml.predict('EURUSD', days=5)
+
+print(f"Prediction: {prediction}")
 ```
+
+### Train Locally
+
+```bash
+# Train a stock model
+python scripts/train_model.py \
+  --symbol AAPL \
+  --db-file training.db \
+  --output models/stock_AAPL.pt \
+  --epochs 100 \
+  --use-all-data
+
+# Train a forex model
+python scripts/train_forex_model.py \
+  --pair EURUSD \
+  --db-file training.db \
+  --output models/forex_EURUSD.pt \
+  --epochs 100 \
+  --use-all-data
+```
+
+---
+
+## Continuous Training
+
+### How It Works
+
+Models are automatically trained every 2 hours via GitHub Actions:
+
+1. **Pull**: Download existing models from Hugging Face
+2. **Select**: Choose 5 random stocks + 3 forex pairs
+3. **Fetch**: Get latest 2 years of market data
+4. **Train**: Incrementally train models (50 epochs)
+5. **Push**: Upload updated models to Hugging Face
+6. **Track**: Log metrics to Weights & Biases
+
+### Training Schedule
+
+- **Frequency**: Every 2 hours (12 cycles daily)
+- **Stock Models**: 5 random stocks per cycle (60 different stocks daily)
+- **Forex Models**: EURUSD, GBPUSD, USDJPY (36 training sessions daily)
+- **Total**: 96 model updates per day
+
+### Estimated Training Time
+
+- Per stock: 5-10 minutes
+- Per forex pair: 5-10 minutes
+- Total per cycle: 30-60 minutes
+- Buffer: 60+ minutes before next cycle
+
+### Setup
+
+1. Add `HF_TOKEN` to GitHub repository secrets (required)
+   - Go to Settings → Secrets and variables → Actions
+   - Add new secret with your Hugging Face API token
+
+2. Add `WANDB_API_KEY` to GitHub repository secrets (optional)
+   - For experiment tracking on Weights & Biases
+
+### View Training
+
+- **Models**: https://huggingface.co/MeridianAlgo/ARA.AI
+- **Experiments**: https://wandb.ai/your-username/ara-ai
+- **Workflow Runs**: GitHub Actions tab in repository
 
 ---
 
@@ -405,64 +269,40 @@ console.log(`Confidence: ${prediction.confidence.overall}`);
 
 ```
 AraAI/
-├── ara/                    # Main ARA AI package
-│   ├── api/               # FastAPI REST API
-│   ├── models/            # ML models (Transformer, CNN-LSTM, Ensemble)
-│   ├── data/              # Data providers (stocks, crypto, forex)
-│   ├── features/          # Technical indicator calculations
-│   ├── risk/              # Portfolio optimization & risk management
-│   ├── backtesting/       # Strategy validation engine
-│   ├── sentiment/         # Sentiment analysis modules
-│   ├── security/          # Authentication & security features
-│   ├── monitoring/        # Metrics & observability
-│   ├── alerts/            # Alert system
-│   ├── visualization/     # Charts and reports
-│   ├── correlation/       # Asset correlation analysis
-│   ├── currency/          # Currency and forex utilities
-│   ├── explainability/    # Model interpretability
-│   ├── cli/               # Command-line interface
-│   ├── config/            # Configuration management
-│   └── compat/            # Compatibility layer
-├── meridianalgo/          # Core ML algorithms
-│   ├── unified_ml.py      # Unified stock ML system
-│   ├── forex_ml.py        # Forex prediction system
-│   ├── intelligent_model.py  # Advanced model architecture
-│   ├── torch_ensemble.py  # PyTorch ensemble models
-│   └── ai_analysis.py     # AI-powered analysis
-├── scripts/               # Utility scripts
-│   ├── ara.py            # Stock prediction script
-│   ├── ara_forex.py      # Forex prediction script
-│   ├── ara_csv.py        # CSV data prediction
-│   ├── train_all.py      # Batch model training
-│   └── run_api.py        # API server launcher
-├── tests/                 # Test suite
-├── datasets/              # Sample datasets
-├── models/                # Trained model files
-├── requirements.txt       # Python dependencies
-├── LICENSE               # MIT License
-├── README.md             # This file
-├── DOCUMENTATION.md      # Comprehensive guide
-├── CONTRIBUTING.md       # Contribution guidelines
-├── SECURITY.md           # Security policy
-└── TESTING.md            # Testing guide
+├── .github/workflows/
+│   └── daily-training.yml      # Continuous training workflow
+├── meridianalgo/               # Core ML algorithms
+│   ├── unified_ml.py           # Stock prediction system
+│   ├── forex_ml.py             # Forex prediction system
+│   ├── torch_ensemble.py       # PyTorch ensemble models
+│   └── ...
+├── scripts/                    # Training scripts
+│   ├── train_model.py          # Stock model training
+│   ├── train_forex_model.py    # Forex model training
+│   ├── fetch_training_data.py  # Data fetching
+│   ├── store_training_data.py  # Data storage
+│   └── select_random_tickers.py # Random ticker selection
+├── models/                     # Trained model files
+│   └── README.md               # Model documentation
+├── ara/                        # ARA package (optional)
+├── requirements.txt            # Python dependencies
+├── LICENSE                     # MIT License
+└── README.md                   # This file
 ```
 
-### Component Overview
+### Core Scripts
 
-#### Core Components
+- **train_model.py**: Train stock prediction models
+- **train_forex_model.py**: Train forex prediction models
+- **fetch_training_data.py**: Fetch market data from Yahoo Finance
+- **store_training_data.py**: Store data in SQLite database
+- **select_random_tickers.py**: Select random stocks from all_tickers.txt
 
-1. **Data Layer** (`ara/data/`): Data fetching from multiple sources (yFinance, Alpha Vantage, etc.)
-2. **Feature Engineering** (`ara/features/`): Technical indicator calculation and feature extraction
-3. **ML Models** (`ara/models/`, `meridianalgo/`): Ensemble learning, transformers, CNN-LSTM
-4. **API Layer** (`ara/api/`): REST API with authentication and rate limiting
-5. **Risk Management** (`ara/risk/`): Portfolio optimization and risk analysis
-6. **Monitoring** (`ara/monitoring/`): Metrics, logging, and observability
+### Model Architecture
 
-#### ML Model Architecture
+The system uses a multi-layer ensemble:
 
-The system uses a multi-layer ensemble approach:
-
-1. **Layer 1: Base Models**
+1. **Base Models**
    - XGBoost
    - LightGBM
    - Random Forest
@@ -470,398 +310,76 @@ The system uses a multi-layer ensemble approach:
    - Extra Trees
    - AdaBoost
 
-2. **Layer 2: Deep Learning Models**
+2. **Deep Learning**
    - Transformer (attention-based)
    - CNN-LSTM (hybrid)
-   - Intelligent Model (1.6M parameters)
 
-3. **Layer 3: Ensemble**
+3. **Ensemble**
    - Weighted averaging
    - Confidence-based selection
-   - Regime-aware switching
-
----
-
-## Configuration
-
-### Environment Variables
-
-```bash
-# API Keys (Optional)
-export ALPHA_VANTAGE_API_KEY=your_key
-export NEWS_API_KEY=your_key
-export TWITTER_BEARER_TOKEN=your_token
-
-# Weights & Biases (for experiment tracking)
-export WANDB_API_KEY=your_wandb_api_key
-
-# Database (Optional)
-export DATABASE_URL=postgresql://user:pass@host:port/db
-
-# Redis (Optional)
-export REDIS_URL=redis://localhost:6379
-
-# Security
-export ARA_SECRET_KEY=your-secret-key
-export ARA_JWT_SECRET=your-jwt-secret
-
-# API Configuration
-export ARA_API_HOST=0.0.0.0
-export ARA_API_PORT=8000
-export ARA_RATE_LIMIT=100
-```
-
-### Configuration File
-
-Edit `ara/config/config.example.yaml` and save as `config.yaml`:
-
-```yaml
-# Data providers
-data:
-  default_provider: yfinance
-  cache_enabled: true
-  cache_ttl: 3600
-  backup_providers:
-    - alpha_vantage
-    - polygon
-
-# ML models
-models:
-  use_gpu: false
-  ensemble_weights: auto
-  retraining_interval: 90  # days
-  model_path: ./models/
-  
-# API settings
-api:
-  host: 0.0.0.0
-  port: 8000
-  rate_limit: 100  # requests per minute
-  enable_cors: true
-  allowed_origins:
-    - https://yourdomain.com
-  
-# Security
-security:
-  enable_authentication: true
-  jwt_expiration: 3600  # seconds
-  api_key_length: 32
-  
-# Monitoring
-monitoring:
-  enable_prometheus: true
-  enable_tracing: false
-  log_level: INFO
-```
-
----
-
-## API Documentation
-
-### Core Endpoints
-
-#### Predictions
-
-- `POST /api/v1/predict` - Generate single prediction
-- `POST /api/v1/predict/batch` - Batch predictions (max 100 symbols)
-- `GET /api/v1/predictions/{id}` - Get prediction status
-
-#### Market Data
-
-- `GET /api/v1/market/{symbol}` - Get current market data
-- `GET /api/v1/market/{symbol}/indicators` - Calculate technical indicators
-- `GET /api/v1/market/{symbol}/sentiment` - Get sentiment analysis
-- `GET /api/v1/market/regime?symbol={symbol}` - Get market regime
-
-#### Portfolio Management
-
-- `POST /api/v1/portfolio/optimize` - Optimize portfolio allocation
-- `GET /api/v1/portfolio/analyze` - Analyze portfolio metrics
-- `POST /api/v1/portfolio/backtest` - Run backtest
-- `POST /api/v1/portfolio/rebalance` - Calculate rebalancing trades
-
-#### Model Management
-
-- `GET /api/v1/models/status` - Get model status
-- `POST /api/v1/models/train` - Train model (async)
-- `GET /api/v1/models/compare` - Compare model performance
-- `POST /api/v1/models/deploy` - Deploy model to production
-- `DELETE /api/v1/models/{model_id}` - Delete model
-
-#### Backtesting
-
-- `POST /api/v1/backtest` - Run backtest (async)
-- `GET /api/v1/backtest/{job_id}` - Get backtest results
-
-#### Health & Info
-
-- `GET /health` - Health check
-- `GET /` - API information
-
-### Interactive Documentation
-
-Once the API server is running:
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI Spec**: http://localhost:8000/openapi.json
-
-For detailed API documentation, see [ara/api/README.md](ara/api/README.md).
-
----
-
-## Testing
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run with coverage
-pytest tests/ --cov=ara --cov=meridianalgo --cov-report=html
-
-# Run specific test categories
-pytest tests/test_unit/ -v              # Unit tests
-pytest tests/test_integration/ -v      # Integration tests
-pytest tests/test_security.py -v       # Security tests
-
-# Run performance benchmarks
-pytest tests/test_performance/ -v
-
-# Run module tests
-python test_all_modules.py
-```
-
-### Test Coverage
-
-- **Target Coverage**: 80%+
-- **Current Status**: 180/180 modules passing
-- **Test Categories**: Unit, Integration, Security, Performance
-
-### CI/CD
-
-The project includes GitHub Actions workflows for:
-
-- Automated testing on push/PR
-- Security scanning
-- Code quality checks
-- **Daily automated model training** (stocks and forex)
-- Automated releases
-
-#### Continuous Automated Training
-
-Models are automatically retrained every 2 hours via GitHub Actions:
-
-- **Schedule**: Runs every 2 hours (12 times daily)
-- **Stock Models**: 5 randomly selected stocks from `all_tickers.txt` each cycle
-- **Forex Models**: 3 robust pairs (EURUSD, GBPUSD, USDJPY)
-- **Training Mode**: Incremental (continues training existing models)
-- **Epochs per Cycle**: 50 (faster iterations)
-- **Model Storage**: Hugging Face Hub at [MeridianAlgo/ARA.AI](https://huggingface.co/MeridianAlgo/ARA.AI)
-
-**Training Cycle:**
-1. Pull existing models from Hugging Face
-2. Select 5 random stocks + 3 forex pairs
-3. Fetch latest market data
-4. Train models incrementally (50 epochs)
-5. Push updated models back to Hugging Face
-6. Track experiments on Weights & Biases
-
-**Setup Requirements:**
-1. Add `WANDB_API_KEY` to repository secrets (optional, for experiment tracking)
-2. Add `HF_TOKEN` to repository secrets (required, for Hugging Face model storage)
-
-**Estimated Training Time:**
-- Per stock: ~5-10 minutes
-- Per forex pair: ~5-10 minutes
-- Total per cycle: ~30-60 minutes
-- Daily coverage: 60 stocks + 36 forex training sessions
-
-#### Weights & Biases Integration
-
-Training experiments are tracked with [Weights & Biases](https://wandb.ai):
-
-```bash
-# Set your API key
-export WANDB_API_KEY=your_api_key
-
-# Train with wandb tracking
-python scripts/train_model.py \
-  --symbol AAPL \
-  --db-file training.db \
-  --output models/aapl.pt \
-  --wandb-project ara-ai \
-  --wandb-run-name "aapl-experiment-1"
-
-# Train forex with wandb
-python scripts/train_forex_model.py \
-  --pair EURUSD \
-  --db-file training.db \
-  --output models/eurusd.pt \
-  --wandb-project ara-ai \
-  --wandb-run-name "eurusd-experiment-1"
-```
-
-View your experiments at: https://wandb.ai/your-username/ara-ai
-
-**Download Models from Hugging Face:**
-
-```python
-from huggingface_hub import hf_hub_download
-
-# Download a specific model
-model_path = hf_hub_download(
-    repo_id="MeridianAlgo/ARA.AI",
-    filename="models/stock_AAPL.pt"
-)
-
-# Use the model
-from meridianalgo.unified_ml import UnifiedStockML
-ml = UnifiedStockML(model_path=model_path)
-prediction = ml.predict('AAPL', days=5)
-```
-
-Browse all models: https://huggingface.co/MeridianAlgo/ARA.AI
-
-For detailed testing documentation, see [TESTING.md](TESTING.md).
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please follow these steps:
+We welcome contributions! Please:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests and code quality checks
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to your branch (`git push origin feature/amazing-feature`)
+4. Run tests: `pytest tests/ -v`
+5. Commit: `git commit -m 'Add amazing feature'`
+6. Push: `git push origin feature/amazing-feature`
 7. Open a Pull Request
 
 ### Code Quality
 
 ```bash
 # Format code
-black ara/ meridianalgo/
+black scripts/ meridianalgo/
 
 # Lint code
-flake8 ara/ meridianalgo/ --max-line-length=100
+flake8 scripts/ meridianalgo/ --max-line-length=100
 
 # Type checking
-mypy ara/ meridianalgo/
-
-# Security scan
-bandit -r ara/ meridianalgo/
+mypy scripts/ meridianalgo/
 ```
-
-### Development Guidelines
-
-- Follow PEP 8 style guidelines
-- Write comprehensive tests for new features
-- Update documentation for API changes
-- Use type hints for function signatures
-- Add docstrings to public functions and classes
-
-For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
-## Security
-
-### Reporting Vulnerabilities
-
-**Please DO NOT create public GitHub issues for security vulnerabilities.**
-
-To report a security issue:
-- Email: security@meridianalgo.com
-- Create a private security advisory on GitHub
-
-### Security Features
-
-- Input validation and sanitization
-- SQL injection prevention
-- XSS protection
-- API key encryption
-- JWT authentication
-- Rate limiting
-- Audit logging
-- Adversarial ML defense
-
-For detailed security information, see [SECURITY.md](SECURITY .md).
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
-### Additional Terms
+### Disclaimer
 
-- **Financial Disclaimer**: Not financial advice
-- **No Investment Recommendations**: Consult qualified professionals
-- **Risk Acknowledgment**: Use at your own risk
-- **No Warranties**: Provided "as is" without guarantees
+**IMPORTANT**: This software is for educational and research purposes only.
+
+- NOT financial advice
+- Past performance ≠ future results
+- All predictions are probabilistic
+- You are solely responsible for investment decisions
+- Consult qualified financial professionals
+- Authors are not liable for financial losses
 
 ### Third-Party Licenses
 
-This software incorporates:
 - Scikit-learn (BSD License)
 - XGBoost (Apache License 2.0)
 - LightGBM (MIT License)
 - PyTorch (BSD License)
 - Transformers by Hugging Face (Apache License 2.0)
-- And other open-source libraries
 
 ---
 
 ## Support
 
-### Getting Help
-
-- **Documentation**: Comprehensive guides in this repository
-- **GitHub Issues**: [Report bugs or request features](https://github.com/MeridianAlgo/AraAI/issues)
-- **GitHub Discussions**: [Ask questions and discuss](https://github.com/MeridianAlgo/AraAI/discussions)
-
-### Community
-
-- Follow development progress on GitHub
-- Star the repository if you find it useful
-- Share your feedback and suggestions
-
-### Production Support
-
-For production deployment assistance or enterprise support, please contact:
-- Email: support@meridianalgo.com
-
----
-
-## Disclaimer
-
-**IMPORTANT**: This software is provided for educational and research purposes only. It is NOT financial advice and should NOT be used for actual trading or investment decisions without proper due diligence. 
-
-- Past performance does not guarantee future results
-- All predictions are probabilistic and may be wrong
-- You are solely responsible for your investment decisions
-- Consult with qualified financial professionals before investing
-- The authors and contributors are not liable for any financial losses
-
----
-
-## Acknowledgments
-
-Built with:
-- FastAPI, Uvicorn - Web framework
-- PyTorch - Deep learning
-- Scikit-learn, XGBoost, LightGBM - Machine learning
-- Pandas, NumPy - Data processing
-- yFinance - Market data
-- Transformers - NLP models
-- And many other excellent open-source projects
+- **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/AraAI/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/AraAI/discussions)
+- **Models**: [Hugging Face Hub](https://huggingface.co/MeridianAlgo/ARA.AI)
 
 ---
 
 **Maintained by**: [MeridianAlgo](https://github.com/MeridianAlgo)  
-**Last Updated**: 2025-12-21  
-**Version**: 5.1.0
+**Last Updated**: 2025-12-22  
+**Version**: 5.2.0
