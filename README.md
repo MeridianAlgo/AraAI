@@ -649,23 +649,34 @@ The project includes GitHub Actions workflows for:
 - **Daily automated model training** (stocks and forex)
 - Automated releases
 
-#### Daily Automated Training
+#### Continuous Automated Training
 
-Models are automatically retrained daily via GitHub Actions:
+Models are automatically retrained every 2 hours via GitHub Actions:
 
-- **Schedule**: Runs at 6:00 AM UTC daily (after market close)
-- **Stock Models**: 10 randomly selected stocks from `all_tickers.txt` each day
+- **Schedule**: Runs every 2 hours (12 times daily)
+- **Stock Models**: 5 randomly selected stocks from `all_tickers.txt` each cycle
 - **Forex Models**: 3 robust pairs (EURUSD, GBPUSD, USDJPY)
-- **Manual Trigger**: Can be triggered manually with custom epochs, training mode, and stock count
+- **Training Mode**: Incremental (continues training existing models)
+- **Epochs per Cycle**: 50 (faster iterations)
+- **Model Storage**: Hugging Face Hub at [MeridianAlgo/ARA.AI](https://huggingface.co/MeridianAlgo/ARA.AI)
 
-To set up automated training:
+**Training Cycle:**
+1. Pull existing models from Hugging Face
+2. Select 5 random stocks + 3 forex pairs
+3. Fetch latest market data
+4. Train models incrementally (50 epochs)
+5. Push updated models back to Hugging Face
+6. Track experiments on Weights & Biases
 
-1. Add `WANDB_API_KEY` to your repository secrets (optional, for experiment tracking)
-2. The workflow will automatically:
-   - Select 10 random stocks daily
-   - Fetch fresh market data
-   - Train models independently
-   - Upload trained models as artifacts
+**Setup Requirements:**
+1. Add `WANDB_API_KEY` to repository secrets (optional, for experiment tracking)
+2. Add `HF_TOKEN` to repository secrets (required, for Hugging Face model storage)
+
+**Estimated Training Time:**
+- Per stock: ~5-10 minutes
+- Per forex pair: ~5-10 minutes
+- Total per cycle: ~30-60 minutes
+- Daily coverage: 60 stocks + 36 forex training sessions
 
 #### Weights & Biases Integration
 
@@ -693,6 +704,25 @@ python scripts/train_forex_model.py \
 ```
 
 View your experiments at: https://wandb.ai/your-username/ara-ai
+
+**Download Models from Hugging Face:**
+
+```python
+from huggingface_hub import hf_hub_download
+
+# Download a specific model
+model_path = hf_hub_download(
+    repo_id="MeridianAlgo/ARA.AI",
+    filename="models/stock_AAPL.pt"
+)
+
+# Use the model
+from meridianalgo.unified_ml import UnifiedStockML
+ml = UnifiedStockML(model_path=model_path)
+prediction = ml.predict('AAPL', days=5)
+```
+
+Browse all models: https://huggingface.co/MeridianAlgo/ARA.AI
 
 For detailed testing documentation, see [TESTING.md](TESTING.md).
 

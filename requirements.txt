@@ -89,6 +89,7 @@ openpyxl>=3.1.0                 # Excel export (optional)
 prometheus-client>=0.17.0       # Prometheus metrics exporter
 psutil>=5.9.0                   # System and process utilities
 wandb>=0.15.0                   # Weights & Biases experiment tracking
+huggingface_hub>=0.19.0         # Hugging Face Hub for model storage
 # opentelemetry-api>=1.20.0     # OpenTelemetry tracing API (optional)
 # opentelemetry-sdk>=1.20.0     # OpenTelemetry SDK (optional)
 # opentelemetry-exporter-otlp>=1.20.0  # OTLP exporter (optional)
