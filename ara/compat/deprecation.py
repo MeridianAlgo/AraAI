@@ -14,6 +14,7 @@ from datetime import datetime
 
 class DeprecationLevel(Enum):
     """Deprecation severity levels"""
+
     INFO = "info"  # Feature will be deprecated in future
     WARNING = "warning"  # Feature is deprecated, still works
     ERROR = "error"  # Feature is deprecated, may not work correctly
@@ -22,29 +23,29 @@ class DeprecationLevel(Enum):
 
 class DeprecationTimeline:
     """Deprecation timeline for features"""
-    
+
     # Version 4.0.0 (Current) - Compatibility layer introduced
     V4_0_0 = "4.0.0"
     V4_0_0_DATE = datetime(2024, 1, 1)
-    
+
     # Version 4.5.0 - Deprecation warnings become more prominent
     V4_5_0 = "4.5.0"
     V4_5_0_DATE = datetime(2024, 6, 1)
-    
+
     # Version 5.0.0 - Compatibility layer removed
     V5_0_0 = "5.0.0"
     V5_0_0_DATE = datetime(2025, 1, 1)
-    
+
     @classmethod
     def get_current_version(cls) -> str:
         """Get current version"""
         return cls.V4_0_0
-    
+
     @classmethod
     def get_removal_version(cls) -> str:
         """Get version when compatibility layer will be removed"""
         return cls.V5_0_0
-    
+
     @classmethod
     def get_removal_date(cls) -> datetime:
         """Get estimated date when compatibility layer will be removed"""
@@ -56,18 +57,18 @@ def deprecated(
     version: str,
     removal_version: Optional[str] = None,
     alternative: Optional[str] = None,
-    level: DeprecationLevel = DeprecationLevel.WARNING
+    level: DeprecationLevel = DeprecationLevel.WARNING,
 ) -> Callable:
     """
     Decorator to mark functions/classes as deprecated
-    
+
     Args:
         reason: Why the feature is deprecated
         version: Version when deprecation started
         removal_version: Version when feature will be removed
         alternative: Suggested alternative to use
         level: Deprecation severity level
-        
+
     Example:
         @deprecated(
             reason="Old API structure",
@@ -81,26 +82,26 @@ def deprecated(
     """
     if removal_version is None:
         removal_version = DeprecationTimeline.get_removal_version()
-    
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             # Build deprecation message
             msg_parts = [
                 f"{func.__name__} is deprecated since version {version}.",
-                reason
+                reason,
             ]
-            
+
             if alternative:
                 msg_parts.append(f"Use {alternative} instead.")
-            
+
             if removal_version:
                 msg_parts.append(
                     f"This feature will be removed in version {removal_version}."
                 )
-            
+
             message = " ".join(msg_parts)
-            
+
             # Issue warning based on level
             if level == DeprecationLevel.INFO:
                 warnings.warn(message, FutureWarning, stacklevel=2)
@@ -113,10 +114,10 @@ def deprecated(
                     f"{func.__name__} has been removed in version {removal_version}. "
                     f"{alternative if alternative else 'No alternative available.'}"
                 )
-            
+
             # Call original function
             return func(*args, **kwargs)
-        
+
         # Add deprecation metadata
         wrapper.__deprecated__ = True
         wrapper.__deprecation_info__ = {
@@ -124,27 +125,27 @@ def deprecated(
             "version": version,
             "removal_version": removal_version,
             "alternative": alternative,
-            "level": level.value
+            "level": level.value,
         }
-        
+
         return wrapper
-    
+
     return decorator
 
 
 class DeprecationWarningManager:
     """Manages deprecation warnings and provides migration guidance"""
-    
+
     def __init__(self):
         self._warnings_issued = set()
         self._migration_guide_shown = False
-    
+
     def warn_once(self, feature: str, message: str):
         """Issue a deprecation warning only once per feature"""
         if feature not in self._warnings_issued:
             warnings.warn(message, DeprecationWarning, stacklevel=3)
             self._warnings_issued.add(feature)
-    
+
     def show_migration_guide(self):
         """Show migration guide to user"""
         if not self._migration_guide_shown:
@@ -164,9 +165,9 @@ class DeprecationWarningManager:
             print("  https://docs.ara-ai.com/migration-guide")
             print("\nCompatibility layer will be removed in version 5.0.0")
             print("=" * 70 + "\n")
-            
+
             self._migration_guide_shown = True
-    
+
     def get_deprecation_summary(self) -> dict:
         """Get summary of deprecation warnings issued"""
         return {
@@ -175,7 +176,7 @@ class DeprecationWarningManager:
             "migration_guide_shown": self._migration_guide_shown,
             "current_version": DeprecationTimeline.get_current_version(),
             "removal_version": DeprecationTimeline.get_removal_version(),
-            "removal_date": DeprecationTimeline.get_removal_date().isoformat()
+            "removal_date": DeprecationTimeline.get_removal_date().isoformat(),
         }
 
 

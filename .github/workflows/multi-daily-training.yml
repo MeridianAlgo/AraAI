@@ -1,0 +1,75 @@
+name: Multi-Daily Model Training (5-6x per day)
+
+on:
+  schedule:
+    # Run 6 times per day at strategic market hours (UTC)
+    - cron: '0 2 * * *'   # 02:00 UTC - Pre-market Asia
+    - cron: '0 7 * * *'   # 07:00 UTC - European market open
+    - cron: '0 13 * * *'  # 13:00 UTC - US pre-market
+    - cron: '0 17 * * *'  # 17:00 UTC - US market mid-day
+    - cron: '0 21 * * *'  # 21:00 UTC - US market close
+    - cron: '0 23 * * *'  # 23:00 UTC - After-hours trading
+  workflow_dispatch:      # Allow manual trigger
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache database
+        uses: actions/cache@v3
+        with:
+          path: training.db
+          key: ${{ runner.os }}-training-db-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-training-db-
+
+      - name: Cache models directory
+        uses: actions/cache@v3
+        with:
+          path: models/
+          key: ${{ runner.os }}-models-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-models-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install huggingface_hub python-dotenv psutil accelerate
+
+      - name: Run Continuous Training
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          echo "=== Training Session Started at $(date) ==="
+          echo "Training run: ${{ github.run_number }}"
+          python scripts/continuous_training.py
+          echo "=== Training Session Completed at $(date) ==="
+
+      - name: Upload training logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: training-logs-${{ github.run_number }}
+          path: |
+            *.log
+            training.db
+          retention-days: 7
+
+      - name: Report training status
+        if: always()
+        run: |
+          echo "Training session completed"
+          echo "Next scheduled run in ~4 hours"

@@ -10,6 +10,7 @@ from enum import Enum
 
 class WebhookEventType(str, Enum):
     """Webhook event types"""
+
     PREDICTION_COMPLETE = "prediction_complete"
     MODEL_TRAINED = "model_trained"
     MODEL_DEPLOYED = "model_deployed"
@@ -21,29 +22,23 @@ class WebhookEventType(str, Enum):
 
 class WebhookCreate(BaseModel):
     """Request model for creating a webhook"""
+
     url: HttpUrl = Field(..., description="Webhook callback URL")
     events: List[WebhookEventType] = Field(
-        ...,
-        description="List of event types to subscribe to",
-        min_items=1
+        ..., description="List of event types to subscribe to", min_items=1
     )
     secret: Optional[str] = Field(
         None,
         description="Secret key for signature verification",
         min_length=16,
-        max_length=128
+        max_length=128,
     )
     description: Optional[str] = Field(
-        None,
-        description="Optional description of the webhook",
-        max_length=500
+        None, description="Optional description of the webhook", max_length=500
     )
-    active: bool = Field(
-        True,
-        description="Whether the webhook is active"
-    )
-    
-    @validator('events')
+    active: bool = Field(True, description="Whether the webhook is active")
+
+    @validator("events")
     def validate_events(cls, v):
         """Ensure events list is not empty and contains valid types"""
         if not v:
@@ -53,30 +48,26 @@ class WebhookCreate(BaseModel):
 
 class WebhookUpdate(BaseModel):
     """Request model for updating a webhook"""
+
     url: Optional[HttpUrl] = Field(None, description="Webhook callback URL")
     events: Optional[List[WebhookEventType]] = Field(
-        None,
-        description="List of event types to subscribe to"
+        None, description="List of event types to subscribe to"
     )
     secret: Optional[str] = Field(
         None,
         description="Secret key for signature verification",
         min_length=16,
-        max_length=128
+        max_length=128,
     )
     description: Optional[str] = Field(
-        None,
-        description="Optional description of the webhook",
-        max_length=500
+        None, description="Optional description of the webhook", max_length=500
     )
-    active: Optional[bool] = Field(
-        None,
-        description="Whether the webhook is active"
-    )
+    active: Optional[bool] = Field(None, description="Whether the webhook is active")
 
 
 class WebhookResponse(BaseModel):
     """Response model for webhook information"""
+
     id: str = Field(..., description="Webhook ID")
     url: str = Field(..., description="Webhook callback URL")
     events: List[WebhookEventType] = Field(..., description="Subscribed event types")
@@ -88,9 +79,13 @@ class WebhookResponse(BaseModel):
     delivery_count: int = Field(0, description="Total delivery attempts")
     success_count: int = Field(0, description="Successful deliveries")
     failure_count: int = Field(0, description="Failed deliveries")
-    last_delivery_at: Optional[datetime] = Field(None, description="Last delivery timestamp")
-    last_delivery_status: Optional[str] = Field(None, description="Last delivery status")
-    
+    last_delivery_at: Optional[datetime] = Field(
+        None, description="Last delivery timestamp"
+    )
+    last_delivery_status: Optional[str] = Field(
+        None, description="Last delivery status"
+    )
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -106,18 +101,19 @@ class WebhookResponse(BaseModel):
                 "success_count": 98,
                 "failure_count": 2,
                 "last_delivery_at": "2024-01-01T12:00:00Z",
-                "last_delivery_status": "success"
+                "last_delivery_status": "success",
             }
         }
 
 
 class WebhookEvent(BaseModel):
     """Webhook event payload"""
+
     event_id: str = Field(..., description="Unique event ID")
     event_type: WebhookEventType = Field(..., description="Event type")
     timestamp: datetime = Field(..., description="Event timestamp")
     data: Dict[str, Any] = Field(..., description="Event data")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -128,14 +124,15 @@ class WebhookEvent(BaseModel):
                     "symbol": "AAPL",
                     "prediction_id": "pred_123",
                     "confidence": 0.85,
-                    "predicted_price": 150.25
-                }
+                    "predicted_price": 150.25,
+                },
             }
         }
 
 
 class WebhookDelivery(BaseModel):
     """Webhook delivery record"""
+
     delivery_id: str = Field(..., description="Delivery ID")
     webhook_id: str = Field(..., description="Webhook ID")
     event_id: str = Field(..., description="Event ID")
@@ -149,7 +146,7 @@ class WebhookDelivery(BaseModel):
     created_at: datetime = Field(..., description="Creation timestamp")
     delivered_at: Optional[datetime] = Field(None, description="Delivery timestamp")
     next_retry_at: Optional[datetime] = Field(None, description="Next retry timestamp")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -165,13 +162,14 @@ class WebhookDelivery(BaseModel):
                 "error_message": None,
                 "created_at": "2024-01-01T12:00:00Z",
                 "delivered_at": "2024-01-01T12:00:01Z",
-                "next_retry_at": None
+                "next_retry_at": None,
             }
         }
 
 
 class WebhookListResponse(BaseModel):
     """Response model for listing webhooks"""
+
     webhooks: List[WebhookResponse] = Field(..., description="List of webhooks")
     total: int = Field(..., description="Total number of webhooks")
     page: int = Field(1, description="Current page")
@@ -180,6 +178,7 @@ class WebhookListResponse(BaseModel):
 
 class WebhookDeliveryListResponse(BaseModel):
     """Response model for listing webhook deliveries"""
+
     deliveries: List[WebhookDelivery] = Field(..., description="List of deliveries")
     total: int = Field(..., description="Total number of deliveries")
     page: int = Field(1, description="Current page")

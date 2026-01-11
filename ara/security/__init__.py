@@ -15,7 +15,10 @@ from ara.security.sql_protection import SQLProtection
 from ara.security.xss_protection import XSSProtection
 from ara.security.key_encryption import KeyEncryption
 from ara.security.audit_logger import SecurityAuditLogger
-from ara.security.adversarial_protection import AdversarialProtection, ModelVersionManager
+from ara.security.adversarial_protection import (
+    AdversarialProtection,
+    ModelVersionManager,
+)
 
 __all__ = [
     "InputSanitizer",

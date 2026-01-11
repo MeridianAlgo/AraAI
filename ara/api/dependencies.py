@@ -3,8 +3,7 @@ FastAPI dependencies for dependency injection
 """
 
 from typing import Optional
-from fastapi import Header, HTTPException, status
-from functools import lru_cache
+from fastapi import Header
 import uuid
 
 

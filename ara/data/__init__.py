@@ -9,7 +9,7 @@ from ara.data.crypto_provider import (
     BinanceProvider,
     CoinbaseProvider,
     KrakenProvider,
-    CryptoDataAggregator
+    CryptoDataAggregator,
 )
 from ara.data.onchain_provider import OnChainMetricsProvider
 from ara.data.defi_provider import DeFiDataProvider
@@ -21,31 +21,31 @@ from ara.data.validation import (
     DataQualityReport,
     ValidationConfig,
     ImputationStrategy,
-    OutlierMethod
+    OutlierMethod,
 )
 from ara.data.aggregator import DataAggregator, RateLimiter, ProviderStats
 
 __all__ = [
-    'BaseDataProvider',
-    'CryptoExchangeProvider',
-    'BinanceProvider',
-    'CoinbaseProvider',
-    'KrakenProvider',
-    'CryptoDataAggregator',
-    'OnChainMetricsProvider',
-    'DeFiDataProvider',
-    'CacheManager',
-    'LRUCache',
-    'RedisCache',
-    'cached',
-    'DataValidator',
-    'DataCleaner',
-    'DataQualityScorer',
-    'DataQualityReport',
-    'ValidationConfig',
-    'ImputationStrategy',
-    'OutlierMethod',
-    'DataAggregator',
-    'RateLimiter',
-    'ProviderStats'
+    "BaseDataProvider",
+    "CryptoExchangeProvider",
+    "BinanceProvider",
+    "CoinbaseProvider",
+    "KrakenProvider",
+    "CryptoDataAggregator",
+    "OnChainMetricsProvider",
+    "DeFiDataProvider",
+    "CacheManager",
+    "LRUCache",
+    "RedisCache",
+    "cached",
+    "DataValidator",
+    "DataCleaner",
+    "DataQualityScorer",
+    "DataQualityReport",
+    "ValidationConfig",
+    "ImputationStrategy",
+    "OutlierMethod",
+    "DataAggregator",
+    "RateLimiter",
+    "ProviderStats",
 ]

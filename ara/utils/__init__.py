@@ -10,7 +10,7 @@ from ara.utils.monitoring import (
     record_histogram,
     timed,
     counted,
-    Timer
+    Timer,
 )
 
 __all__ = [
@@ -22,5 +22,5 @@ __all__ = [
     "record_histogram",
     "timed",
     "counted",
-    "Timer"
+    "Timer",
 ]

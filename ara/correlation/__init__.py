@@ -11,7 +11,7 @@ from ara.correlation.cross_asset import CrossAssetPredictor
 from ara.correlation.pairs_trading import PairsTradingAnalyzer
 
 __all__ = [
-    'CorrelationAnalyzer',
-    'CrossAssetPredictor',
-    'PairsTradingAnalyzer',
+    "CorrelationAnalyzer",
+    "CrossAssetPredictor",
+    "PairsTradingAnalyzer",
 ]

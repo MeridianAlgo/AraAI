@@ -9,7 +9,7 @@ from ara.api.webhooks.models import (
     WebhookResponse,
     WebhookEvent,
     WebhookEventType,
-    WebhookDelivery
+    WebhookDelivery,
 )
 from ara.api.webhooks.delivery import WebhookDeliveryService
 
@@ -22,5 +22,5 @@ __all__ = [
     "WebhookEvent",
     "WebhookEventType",
     "WebhookDelivery",
-    "WebhookDeliveryService"
+    "WebhookDeliveryService",
 ]

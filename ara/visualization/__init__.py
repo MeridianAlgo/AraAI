@@ -21,11 +21,11 @@ from ara.visualization.correlation import CorrelationChart
 from ara.visualization.exporter import ChartExporter, ReportGenerator
 
 __all__ = [
-    'ChartFactory',
-    'CandlestickChart',
-    'PredictionChart',
-    'PortfolioChart',
-    'CorrelationChart',
-    'ChartExporter',
-    'ReportGenerator'
+    "ChartFactory",
+    "CandlestickChart",
+    "PredictionChart",
+    "PortfolioChart",
+    "CorrelationChart",
+    "ChartExporter",
+    "ReportGenerator",
 ]

@@ -41,24 +41,30 @@ def handle_error(error: Exception, context: str = "Operation failed"):
         ModelError,
         ValidationError,
         CacheError,
-        APIError
+        APIError,
     )
-    
+
     error_type = type(error).__name__
-    
+
     # Custom error messages for known exceptions
     if isinstance(error, DataProviderError):
         console.print(f"[red]Data Provider Error:[/red] {str(error)}")
-        console.print("[yellow]Tip: Check your internet connection and API keys[/yellow]")
+        console.print(
+            "[yellow]Tip: Check your internet connection and API keys[/yellow]"
+        )
     elif isinstance(error, ModelError):
         console.print(f"[red]Model Error:[/red] {str(error)}")
-        console.print("[yellow]Tip: Try retraining the model or using a different model type[/yellow]")
+        console.print(
+            "[yellow]Tip: Try retraining the model or using a different model type[/yellow]"
+        )
     elif isinstance(error, ValidationError):
         console.print(f"[red]Validation Error:[/red] {str(error)}")
         console.print("[yellow]Tip: Check your input parameters[/yellow]")
     elif isinstance(error, CacheError):
         console.print(f"[red]Cache Error:[/red] {str(error)}")
-        console.print("[yellow]Tip: Try clearing the cache with --no-cache flag[/yellow]")
+        console.print(
+            "[yellow]Tip: Try clearing the cache with --no-cache flag[/yellow]"
+        )
     elif isinstance(error, APIError):
         console.print(f"[red]API Error:[/red] {str(error)}")
         console.print("[yellow]Tip: Check API rate limits and authentication[/yellow]")
@@ -68,42 +74,46 @@ def handle_error(error: Exception, context: str = "Operation failed"):
         # Generic error
         console.print(f"[red]{context}:[/red] {str(error)}")
         console.print(f"[dim]Error type: {error_type}[/dim]")
-    
+
     # Show traceback in verbose mode
     import os
-    if os.getenv('ARA_DEBUG', '').lower() == 'true':
+
+    if os.getenv("ARA_DEBUG", "").lower() == "true":
         console.print_exception()
 
 
 def confirm_action(message: str, default: bool = False) -> bool:
     """Prompt user for confirmation"""
     from rich.prompt import Confirm
+
     return Confirm.ask(message, default=default)
 
 
 def prompt_choice(message: str, choices: list, default: Any = None) -> str:
     """Prompt user to choose from options"""
     from rich.prompt import Prompt
+
     return Prompt.ask(message, choices=choices, default=default)
 
 
 def display_progress(message: str, total: int = None):
     """Create a progress bar"""
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-    
+
     progress = Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         BarColumn() if total else TextColumn(""),
-        console=console
+        console=console,
     )
-    
+
     return progress
 
 
 def create_table(title: str = None, **kwargs):
     """Create a formatted table"""
     from rich.table import Table
+
     return Table(title=title, **kwargs)
 
 

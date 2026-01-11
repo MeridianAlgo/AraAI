@@ -13,9 +13,4 @@ from ara.backtesting.engine import BacktestEngine
 from ara.backtesting.reporter import BacktestReporter
 from ara.backtesting.validator import ModelValidator
 
-__all__ = [
-    'PerformanceMetrics',
-    'BacktestEngine',
-    'BacktestReporter',
-    'ModelValidator'
-]
+__all__ = ["PerformanceMetrics", "BacktestEngine", "BacktestReporter", "ModelValidator"]
