@@ -1,4 +1,4 @@
-name: Daily Model Training
+name: Daily Model Training (Legacy - Use Multi-Daily Instead)
 
 on:
   schedule:
@@ -8,17 +8,20 @@ on:
 jobs:
   train:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Cache database
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: training.db
           key: ${{ runner.os }}-training-db-${{ github.run_id }}
@@ -36,5 +39,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
+          echo "=== Training Session Started at $(date) ==="
           python scripts/continuous_training.py
+          echo "=== Training Session Completed at $(date) ==="
 
