@@ -105,6 +105,7 @@ def train_and_upload_stock(symbol):
         "--epochs",
         str(EPOCHS),
         "--use-all-data",
+        "--incremental",
     ]
     success, output = run_command(train_cmd)
     if not success:
@@ -180,6 +181,7 @@ def train_and_upload_forex(pair):
         "--epochs",
         str(EPOCHS),
         "--use-all-data",
+        "--incremental",
     ]
     success, _ = run_command(train_cmd)
     if not success:

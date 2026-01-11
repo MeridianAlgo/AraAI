@@ -338,12 +338,16 @@ class AdvancedMLSystem:
 
             print(f"Training set: {len(X_train)}, Validation set: {len(X_val)}")
 
-            # Create model
-            self.model = LargeEnsembleModel(
-                input_size=X.shape[1],
-                hidden_sizes=[1024, 768, 512, 384, 256, 128],
-                dropout=0.2,
-            )
+            # Create model if not already loaded/trained
+            if self.model is None:
+                print("  Creating new LargeEnsembleModel architecture...")
+                self.model = LargeEnsembleModel(
+                    input_size=X.shape[1],
+                    hidden_sizes=[1024, 768, 512, 384, 256, 128],
+                    dropout=0.2,
+                )
+            else:
+                print("  Resuming training from existing model weights...")
 
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
