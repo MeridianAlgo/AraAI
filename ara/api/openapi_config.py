@@ -59,34 +59,22 @@ The API uses URL versioning (e.g., `/api/v1/`). Current version: **v1**
     "contact": {
         "name": "ARA AI Support",
         "url": "https://github.com/yourusername/ara-ai",
-        "email": "support@ara-ai.com"
+        "email": "support@ara-ai.com",
     },
-    "license": {
-        "name": "MIT",
-        "url": "https://opensource.org/licenses/MIT"
-    },
+    "license": {"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
     "servers": [
-        {
-            "url": "http://localhost:8000",
-            "description": "Development server"
-        },
-        {
-            "url": "https://api.ara-ai.com",
-            "description": "Production server"
-        }
-    ]
+        {"url": "http://localhost:8000", "description": "Development server"},
+        {"url": "https://api.ara-ai.com", "description": "Production server"},
+    ],
 }
 
 
 # Tag metadata for grouping endpoints
 TAGS_METADATA = [
-    {
-        "name": "health",
-        "description": "Health check and service status endpoints"
-    },
+    {"name": "health", "description": "Health check and service status endpoints"},
     {
         "name": "auth",
-        "description": "Authentication and authorization endpoints. Register, login, and manage API keys."
+        "description": "Authentication and authorization endpoints. Register, login, and manage API keys.",
     },
     {
         "name": "predictions",
@@ -97,32 +85,32 @@ Supports stocks, cryptocurrencies, and forex with multiple analysis levels:
 - **quick**: Fast predictions with basic analysis
 - **standard**: Balanced speed and detail (default)
 - **comprehensive**: Full analysis with all features
-        """
+        """,
     },
     {
         "name": "backtesting",
-        "description": "Backtest predictions against historical data to validate model performance."
+        "description": "Backtest predictions against historical data to validate model performance.",
     },
     {
         "name": "portfolio",
-        "description": "Portfolio optimization and analysis endpoints. Calculate optimal allocations, risk metrics, and rebalancing strategies."
+        "description": "Portfolio optimization and analysis endpoints. Calculate optimal allocations, risk metrics, and rebalancing strategies.",
     },
     {
         "name": "models",
-        "description": "Model management endpoints. Check status, train models, compare performance, and deploy new versions."
+        "description": "Model management endpoints. Check status, train models, compare performance, and deploy new versions.",
     },
     {
         "name": "market",
-        "description": "Market analysis endpoints. Get regime detection, sentiment analysis, correlations, and technical indicators."
+        "description": "Market analysis endpoints. Get regime detection, sentiment analysis, correlations, and technical indicators.",
     },
     {
         "name": "websocket",
-        "description": "WebSocket endpoints for real-time streaming data and predictions."
+        "description": "WebSocket endpoints for real-time streaming data and predictions.",
     },
     {
         "name": "webhooks",
-        "description": "Webhook management for receiving callbacks on prediction completion and other events."
-    }
+        "description": "Webhook management for receiving callbacks on prediction completion and other events.",
+    },
 ]
 
 
@@ -132,14 +120,14 @@ SECURITY_SCHEMES = {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "JWT token obtained from `/api/v1/auth/login`"
+        "description": "JWT token obtained from `/api/v1/auth/login`",
     },
     "apiKeyAuth": {
         "type": "apiKey",
         "in": "header",
         "name": "X-API-Key",
-        "description": "API key obtained from `/api/v1/auth/api-keys`"
-    }
+        "description": "API key obtained from `/api/v1/auth/api-keys`",
+    },
 }
 
 
@@ -208,7 +196,7 @@ response = requests.post(
 result = response.json()
 print(f"Accuracy: {result['accuracy']:.2%}")
 print(f"Sharpe Ratio: {result['sharpe_ratio']:.2f}")
-        """
+        """,
     },
     "javascript": {
         "predict": """
@@ -242,7 +230,7 @@ ws.onmessage = (event) => {
 ws.onerror = (error) => {
   console.error('WebSocket error:', error);
 };
-        """
+        """,
     },
     "curl": {
         "predict": """
@@ -274,22 +262,20 @@ curl -X POST "http://localhost:8000/api/v1/backtest" \\
     "end_date": "2023-12-31",
     "strategy": "buy_and_hold"
   }'
-        """
-    }
+        """,
+    },
 }
 
 
 def get_openapi_config() -> Dict[str, Any]:
     """
     Get complete OpenAPI configuration
-    
+
     Returns:
         OpenAPI configuration dictionary
     """
     return {
         **API_METADATA,
         "tags": TAGS_METADATA,
-        "components": {
-            "securitySchemes": SECURITY_SCHEMES
-        }
+        "components": {"securitySchemes": SECURITY_SCHEMES},
     }

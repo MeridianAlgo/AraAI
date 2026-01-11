@@ -15,13 +15,13 @@ from ara.features.patterns import PatternRecognition
 from ara.features.support_resistance import SupportResistance
 
 __all__ = [
-    'IndicatorRegistry',
-    'get_registry',
-    'IndicatorCalculator',
-    'TrendIndicators',
-    'MomentumIndicators',
-    'VolatilityIndicators',
-    'VolumeIndicators',
-    'PatternRecognition',
-    'SupportResistance',
+    "IndicatorRegistry",
+    "get_registry",
+    "IndicatorCalculator",
+    "TrendIndicators",
+    "MomentumIndicators",
+    "VolatilityIndicators",
+    "VolumeIndicators",
+    "PatternRecognition",
+    "SupportResistance",
 ]

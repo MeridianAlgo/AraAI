@@ -10,6 +10,7 @@ from enum import Enum
 
 class AssetTypeEnum(str, Enum):
     """Asset type enumeration"""
+
     STOCK = "stock"
     CRYPTO = "crypto"
     FOREX = "forex"
@@ -17,6 +18,7 @@ class AssetTypeEnum(str, Enum):
 
 class AnalysisLevel(str, Enum):
     """Analysis detail level"""
+
     BASIC = "basic"
     STANDARD = "standard"
     FULL = "full"
@@ -24,13 +26,20 @@ class AnalysisLevel(str, Enum):
 
 class PredictionRequest(BaseModel):
     """Request model for single prediction"""
+
     symbol: str = Field(..., description="Asset symbol (e.g., AAPL, BTC-USD, EURUSD)")
     days: int = Field(5, ge=1, le=30, description="Number of days to predict (1-30)")
-    asset_type: Optional[AssetTypeEnum] = Field(None, description="Asset type (auto-detected if not provided)")
-    analysis_level: AnalysisLevel = Field(AnalysisLevel.STANDARD, description="Level of analysis detail")
-    include_explanations: bool = Field(True, description="Include prediction explanations")
-    
-    @validator('symbol')
+    asset_type: Optional[AssetTypeEnum] = Field(
+        None, description="Asset type (auto-detected if not provided)"
+    )
+    analysis_level: AnalysisLevel = Field(
+        AnalysisLevel.STANDARD, description="Level of analysis detail"
+    )
+    include_explanations: bool = Field(
+        True, description="Include prediction explanations"
+    )
+
+    @validator("symbol")
     def validate_symbol(cls, v):
         if not v or len(v) < 1:
             raise ValueError("Symbol cannot be empty")
@@ -39,18 +48,26 @@ class PredictionRequest(BaseModel):
 
 class BatchPredictionRequest(BaseModel):
     """Request model for batch predictions"""
-    symbols: List[str] = Field(..., min_items=1, max_items=100, description="List of symbols (max 100)")
+
+    symbols: List[str] = Field(
+        ..., min_items=1, max_items=100, description="List of symbols (max 100)"
+    )
     days: int = Field(5, ge=1, le=30, description="Number of days to predict")
-    asset_type: Optional[AssetTypeEnum] = Field(None, description="Asset type for all symbols")
-    analysis_level: AnalysisLevel = Field(AnalysisLevel.BASIC, description="Level of analysis detail")
-    
-    @validator('symbols')
+    asset_type: Optional[AssetTypeEnum] = Field(
+        None, description="Asset type for all symbols"
+    )
+    analysis_level: AnalysisLevel = Field(
+        AnalysisLevel.BASIC, description="Level of analysis detail"
+    )
+
+    @validator("symbols")
     def validate_symbols(cls, v):
         return [s.upper().strip() for s in v if s]
 
 
 class DailyPrediction(BaseModel):
     """Single day prediction"""
+
     day: int
     date: datetime
     predicted_price: float
@@ -62,6 +79,7 @@ class DailyPrediction(BaseModel):
 
 class ConfidenceScore(BaseModel):
     """Confidence score breakdown"""
+
     overall: float = Field(..., ge=0, le=1)
     model_agreement: float = Field(..., ge=0, le=1)
     data_quality: float = Field(..., ge=0, le=1)
@@ -71,6 +89,7 @@ class ConfidenceScore(BaseModel):
 
 class Factor(BaseModel):
     """Contributing factor"""
+
     name: str
     value: float
     contribution: float = Field(..., ge=-1, le=1)
@@ -79,6 +98,7 @@ class Factor(BaseModel):
 
 class Explanations(BaseModel):
     """Prediction explanations"""
+
     top_factors: List[Factor]
     feature_importance: Dict[str, float]
     natural_language: str
@@ -86,6 +106,7 @@ class Explanations(BaseModel):
 
 class MarketRegime(BaseModel):
     """Market regime information"""
+
     current_regime: str
     confidence: float
     transition_probabilities: Dict[str, float]
@@ -95,6 +116,7 @@ class MarketRegime(BaseModel):
 
 class PredictionResponse(BaseModel):
     """Response model for predictions"""
+
     symbol: str
     asset_type: str
     current_price: float
@@ -109,6 +131,7 @@ class PredictionResponse(BaseModel):
 
 class BatchPredictionResponse(BaseModel):
     """Response model for batch predictions"""
+
     predictions: List[PredictionResponse]
     total_count: int
     successful_count: int
@@ -120,6 +143,7 @@ class BatchPredictionResponse(BaseModel):
 
 class PredictionStatus(BaseModel):
     """Status of a prediction request"""
+
     request_id: str
     status: str  # pending, processing, completed, failed
     progress: Optional[float] = Field(None, ge=0, le=1)
@@ -131,6 +155,7 @@ class PredictionStatus(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response model"""
+
     error: str
     message: str
     details: Optional[Dict[str, Any]] = None
@@ -140,6 +165,7 @@ class ErrorResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response"""
+
     status: str
     version: str
     timestamp: datetime

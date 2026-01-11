@@ -15,11 +15,11 @@ console = Console()
 def cli(ctx):
     """
     ARA AI - World-Class Financial Prediction System
-    
+
     Supports stocks, cryptocurrencies, and forex with advanced ML models.
     """
     ctx.ensure_object(dict)
-    ctx.obj['console'] = console
+    ctx.obj["console"] = console
 
 
 # Register command groups
@@ -38,5 +38,5 @@ def main():
     cli(obj={})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

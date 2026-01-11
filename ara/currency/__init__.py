@@ -9,18 +9,18 @@ from ara.currency.models import (
     CurrencyPreference,
     ConversionResult,
     CurrencyRiskMetrics,
-    ExchangeRate
+    ExchangeRate,
 )
 from ara.currency.risk_analyzer import CurrencyRiskAnalyzer
 from ara.currency.preference_manager import CurrencyPreferenceManager
 
 __all__ = [
-    'CurrencyConverter',
-    'Currency',
-    'CurrencyPreference',
-    'ConversionResult',
-    'CurrencyRiskMetrics',
-    'ExchangeRate',
-    'CurrencyRiskAnalyzer',
-    'CurrencyPreferenceManager'
+    "CurrencyConverter",
+    "Currency",
+    "CurrencyPreference",
+    "ConversionResult",
+    "CurrencyRiskMetrics",
+    "ExchangeRate",
+    "CurrencyRiskAnalyzer",
+    "CurrencyPreferenceManager",
 ]

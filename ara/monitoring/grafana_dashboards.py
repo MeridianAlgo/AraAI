@@ -10,7 +10,7 @@ import json
 def get_system_metrics_dashboard() -> Dict[str, Any]:
     """
     Get system metrics dashboard configuration
-    
+
     Returns:
         Grafana dashboard JSON
     """
@@ -32,13 +32,13 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "rate(ara_api_requests_total[5m])",
                             "legendFormat": "{{method}} {{endpoint}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "reqps", "label": "Requests/sec"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 2,
@@ -49,13 +49,13 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "histogram_quantile(0.95, rate(ara_api_request_duration_seconds_bucket[5m]))",
                             "legendFormat": "{{method}} {{endpoint}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "s", "label": "Duration"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 3,
@@ -66,13 +66,13 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "ara_active_requests",
                             "legendFormat": "Active Requests",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "short", "label": "Count"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 4,
@@ -83,13 +83,13 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "rate(ara_errors_total[5m])",
                             "legendFormat": "{{error_type}} - {{component}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "ops", "label": "Errors/sec"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 5,
@@ -100,13 +100,13 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "process_cpu_seconds_total",
                             "legendFormat": "CPU",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "percent", "label": "CPU %"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 6,
@@ -117,13 +117,13 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "process_resident_memory_bytes",
                             "legendFormat": "Memory",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "bytes", "label": "Memory"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 7,
@@ -134,15 +134,15 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "rate(ara_cache_hits_total[5m]) / (rate(ara_cache_hits_total[5m]) + rate(ara_cache_misses_total[5m])) * 100",
                             "legendFormat": "{{cache_level}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "percent", "label": "Hit Rate %"},
-                        {"format": "short"}
-                    ]
-                }
-            ]
+                        {"format": "short"},
+                    ],
+                },
+            ],
         }
     }
 
@@ -150,7 +150,7 @@ def get_system_metrics_dashboard() -> Dict[str, Any]:
 def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
     """
     Get prediction accuracy monitoring dashboard
-    
+
     Returns:
         Grafana dashboard JSON
     """
@@ -172,12 +172,17 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "ara_prediction_accuracy",
                             "legendFormat": "{{asset_type}} - {{timeframe}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
-                        {"format": "percentunit", "label": "Accuracy", "min": 0, "max": 1},
-                        {"format": "short"}
+                        {
+                            "format": "percentunit",
+                            "label": "Accuracy",
+                            "min": 0,
+                            "max": 1,
+                        },
+                        {"format": "short"},
                     ],
                     "alert": {
                         "conditions": [
@@ -186,11 +191,11 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                                 "operator": {"type": "and"},
                                 "query": {"params": ["A", "5m", "now"]},
                                 "reducer": {"params": [], "type": "avg"},
-                                "type": "query"
+                                "type": "query",
                             }
                         ],
-                        "name": "Low Prediction Accuracy"
-                    }
+                        "name": "Low Prediction Accuracy",
+                    },
                 },
                 {
                     "id": 2,
@@ -201,13 +206,13 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "rate(ara_predictions_total[5m])",
                             "legendFormat": "{{asset_type}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "ops", "label": "Predictions/sec"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 3,
@@ -218,12 +223,12 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "histogram_quantile(0.95, rate(ara_prediction_duration_seconds_bucket[5m]))",
                             "legendFormat": "{{asset_type}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "s", "label": "Duration"},
-                        {"format": "short"}
+                        {"format": "short"},
                     ],
                     "alert": {
                         "conditions": [
@@ -232,11 +237,11 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                                 "operator": {"type": "and"},
                                 "query": {"params": ["A", "5m", "now"]},
                                 "reducer": {"params": [], "type": "avg"},
-                                "type": "query"
+                                "type": "query",
                             }
                         ],
-                        "name": "Slow Predictions"
-                    }
+                        "name": "Slow Predictions",
+                    },
                 },
                 {
                     "id": 4,
@@ -247,9 +252,9 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "rate(ara_prediction_confidence_bucket[5m])",
                             "legendFormat": "{{asset_type}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
-                    ]
+                    ],
                 },
                 {
                     "id": 5,
@@ -260,9 +265,9 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "topk(10, sum by (symbol) (rate(ara_predictions_total[1h])))",
                             "format": "table",
-                            "refId": "A"
+                            "refId": "A",
                         }
-                    ]
+                    ],
                 },
                 {
                     "id": 6,
@@ -271,17 +276,17 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
                     "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
                     "targets": [
                         {
-                            "expr": "rate(ara_errors_total{component=\"prediction\"}[5m])",
+                            "expr": 'rate(ara_errors_total{component="prediction"}[5m])',
                             "legendFormat": "{{error_type}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "ops", "label": "Errors/sec"},
-                        {"format": "short"}
-                    ]
-                }
-            ]
+                        {"format": "short"},
+                    ],
+                },
+            ],
         }
     }
 
@@ -289,7 +294,7 @@ def get_prediction_accuracy_dashboard() -> Dict[str, Any]:
 def get_model_performance_dashboard() -> Dict[str, Any]:
     """
     Get model performance tracking dashboard
-    
+
     Returns:
         Grafana dashboard JSON
     """
@@ -311,18 +316,18 @@ def get_model_performance_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "histogram_quantile(0.95, rate(ara_model_inference_duration_seconds_bucket[5m]))",
                             "legendFormat": "{{model_name}} (p95)",
-                            "refId": "A"
+                            "refId": "A",
                         },
                         {
                             "expr": "histogram_quantile(0.50, rate(ara_model_inference_duration_seconds_bucket[5m]))",
                             "legendFormat": "{{model_name}} (p50)",
-                            "refId": "B"
-                        }
+                            "refId": "B",
+                        },
                     ],
                     "yaxes": [
                         {"format": "s", "label": "Duration"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 2,
@@ -333,9 +338,9 @@ def get_model_performance_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "ara_active_models",
                             "legendFormat": "{{model_type}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
-                    ]
+                    ],
                 },
                 {
                     "id": 3,
@@ -346,13 +351,13 @@ def get_model_performance_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "ara_model_training_duration_seconds",
                             "legendFormat": "{{model_name}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "s", "label": "Duration"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 4,
@@ -363,15 +368,15 @@ def get_model_performance_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "histogram_quantile(0.95, rate(ara_feature_calculation_duration_seconds_bucket[5m]))",
                             "legendFormat": "{{feature_type}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "s", "label": "Duration"},
-                        {"format": "short"}
-                    ]
-                }
-            ]
+                        {"format": "short"},
+                    ],
+                },
+            ],
         }
     }
 
@@ -379,7 +384,7 @@ def get_model_performance_dashboard() -> Dict[str, Any]:
 def get_api_performance_dashboard() -> Dict[str, Any]:
     """
     Get API performance dashboard
-    
+
     Returns:
         Grafana dashboard JSON
     """
@@ -401,13 +406,13 @@ def get_api_performance_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "rate(ara_api_requests_total[5m])",
                             "legendFormat": "{{endpoint}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "reqps", "label": "Requests/sec"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 2,
@@ -418,23 +423,23 @@ def get_api_performance_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "histogram_quantile(0.99, rate(ara_api_request_duration_seconds_bucket[5m]))",
                             "legendFormat": "p99",
-                            "refId": "A"
+                            "refId": "A",
                         },
                         {
                             "expr": "histogram_quantile(0.95, rate(ara_api_request_duration_seconds_bucket[5m]))",
                             "legendFormat": "p95",
-                            "refId": "B"
+                            "refId": "B",
                         },
                         {
                             "expr": "histogram_quantile(0.50, rate(ara_api_request_duration_seconds_bucket[5m]))",
                             "legendFormat": "p50",
-                            "refId": "C"
-                        }
+                            "refId": "C",
+                        },
                     ],
                     "yaxes": [
                         {"format": "s", "label": "Duration"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 3,
@@ -443,15 +448,15 @@ def get_api_performance_dashboard() -> Dict[str, Any]:
                     "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
                     "targets": [
                         {
-                            "expr": "rate(ara_api_requests_total{status=~\"4..|5..\"}[5m])",
+                            "expr": 'rate(ara_api_requests_total{status=~"4..|5.."}[5m])',
                             "legendFormat": "{{status}} - {{endpoint}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "ops", "label": "Errors/sec"},
-                        {"format": "short"}
-                    ]
+                        {"format": "short"},
+                    ],
                 },
                 {
                     "id": 4,
@@ -462,15 +467,15 @@ def get_api_performance_dashboard() -> Dict[str, Any]:
                         {
                             "expr": "histogram_quantile(0.95, rate(ara_data_fetch_duration_seconds_bucket[5m]))",
                             "legendFormat": "{{provider}}",
-                            "refId": "A"
+                            "refId": "A",
                         }
                     ],
                     "yaxes": [
                         {"format": "s", "label": "Duration"},
-                        {"format": "short"}
-                    ]
-                }
-            ]
+                        {"format": "short"},
+                    ],
+                },
+            ],
         }
     }
 
@@ -478,19 +483,19 @@ def get_api_performance_dashboard() -> Dict[str, Any]:
 def export_dashboard_to_file(dashboard: Dict[str, Any], filename: str):
     """
     Export dashboard configuration to JSON file
-    
+
     Args:
         dashboard: Dashboard configuration
         filename: Output filename
     """
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         json.dump(dashboard, f, indent=2)
 
 
 def get_all_dashboards() -> List[Dict[str, Any]]:
     """
     Get all dashboard configurations
-    
+
     Returns:
         List of dashboard configurations
     """
@@ -498,5 +503,5 @@ def get_all_dashboards() -> List[Dict[str, Any]]:
         get_system_metrics_dashboard(),
         get_prediction_accuracy_dashboard(),
         get_model_performance_dashboard(),
-        get_api_performance_dashboard()
+        get_api_performance_dashboard(),
     ]

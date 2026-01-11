@@ -19,7 +19,7 @@ from ara.core.exceptions import (
     ConfigurationError,
     FeatureEngineeringError,
     BacktestError,
-    PortfolioError
+    PortfolioError,
 )
 
 # Risk management
@@ -30,7 +30,7 @@ from ara.currency import (
     CurrencyConverter,
     CurrencyRiskAnalyzer,
     CurrencyPreferenceManager,
-    Currency
+    Currency,
 )
 
 # CLI entry point

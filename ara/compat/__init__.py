@@ -8,24 +8,19 @@ Deprecated: This compatibility layer will be removed in version 5.0.0
 Please migrate to the new ara.api module.
 """
 
-from .wrappers import (
-    AraAI,
-    StockPredictor,
-    predict_stock,
-    analyze_stock
-)
+from .wrappers import AraAI, StockPredictor, predict_stock, analyze_stock
 from .migration import ModelMigrator, DataMigrator
 from .deprecation import deprecated, DeprecationLevel
 
 __all__ = [
-    'AraAI',
-    'StockPredictor',
-    'predict_stock',
-    'analyze_stock',
-    'ModelMigrator',
-    'DataMigrator',
-    'deprecated',
-    'DeprecationLevel'
+    "AraAI",
+    "StockPredictor",
+    "predict_stock",
+    "analyze_stock",
+    "ModelMigrator",
+    "DataMigrator",
+    "deprecated",
+    "DeprecationLevel",
 ]
 
 # Version info

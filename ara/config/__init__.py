@@ -16,7 +16,7 @@ from ara.config.config import (
     ModelConfig,
     APIConfig,
     CacheConfig,
-    LoggingConfig
+    LoggingConfig,
 )
 
 __all__ = [
@@ -27,5 +27,5 @@ __all__ = [
     "ModelConfig",
     "APIConfig",
     "CacheConfig",
-    "LoggingConfig"
+    "LoggingConfig",
 ]
