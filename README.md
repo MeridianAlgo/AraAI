@@ -5,7 +5,7 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Continuous Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/daily-training.yml)
-[![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face-yellow)](https://huggingface.co/MeridianAlgo/ARA.AI)
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-yellow)](https://huggingface.co/MeridianAlgo/ARA.AI)
 [![W&B](https://img.shields.io/badge/Weights%20%26%20Biases-FFCC33?logo=weightsandbiases&logoColor=black)](https://wandb.ai)
 
 > **DISCLAIMER**: This software is for educational and research purposes only. NOT financial advice. You are solely responsible for your investment decisions.
@@ -249,7 +249,7 @@ Models are automatically trained every 2 hours via GitHub Actions:
 ### Setup
 
 1. Add `HF_TOKEN` to GitHub repository secrets (required)
-   - Go to Settings → Secrets and variables → Actions
+   - Go to Settings  Secrets and variables  Actions
    - Add new secret with your Hugging Face API token
 
 2. Add `WANDB_API_KEY` to GitHub repository secrets (optional)
@@ -269,25 +269,25 @@ Models are automatically trained every 2 hours via GitHub Actions:
 
 ```
 AraAI/
-├── .github/workflows/
-│   └── daily-training.yml      # Continuous training workflow
-├── meridianalgo/               # Core ML algorithms
-│   ├── unified_ml.py           # Stock prediction system
-│   ├── forex_ml.py             # Forex prediction system
-│   ├── torch_ensemble.py       # PyTorch ensemble models
-│   └── ...
-├── scripts/                    # Training scripts
-│   ├── train_model.py          # Stock model training
-│   ├── train_forex_model.py    # Forex model training
-│   ├── fetch_training_data.py  # Data fetching
-│   ├── store_training_data.py  # Data storage
-│   └── select_random_tickers.py # Random ticker selection
-├── models/                     # Trained model files
-│   └── README.md               # Model documentation
-├── ara/                        # ARA package (optional)
-├── requirements.txt            # Python dependencies
-├── LICENSE                     # MIT License
-└── README.md                   # This file
+ .github/workflows/
+    daily-training.yml      # Continuous training workflow
+ meridianalgo/               # Core ML algorithms
+    unified_ml.py           # Stock prediction system
+    forex_ml.py             # Forex prediction system
+    torch_ensemble.py       # PyTorch ensemble models
+    ...
+ scripts/                    # Training scripts
+    train_model.py          # Stock model training
+    train_forex_model.py    # Forex model training
+    fetch_training_data.py  # Data fetching
+    store_training_data.py  # Data storage
+    select_random_tickers.py # Random ticker selection
+ models/                     # Trained model files
+    README.md               # Model documentation
+ ara/                        # ARA package (optional)
+ requirements.txt            # Python dependencies
+ LICENSE                     # MIT License
+ README.md                   # This file
 ```
 
 ### Core Scripts
@@ -356,7 +356,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 **IMPORTANT**: This software is for educational and research purposes only.
 
 - NOT financial advice
-- Past performance ≠ future results
+- Past performance  future results
 - All predictions are probabilistic
 - You are solely responsible for investment decisions
 - Consult qualified financial professionals
