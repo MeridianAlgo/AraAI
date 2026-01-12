@@ -530,11 +530,9 @@ class CryptoDataAggregator:
 
                 for variant in col_variants:
                     if variant == col:
-                        source_col = "source"
                         quality_col = "quality_score"
                     else:
                         source = variant.split("_")[-1]
-                        source_col = f"source_{source}"
                         quality_col = f"quality_score_{source}"
 
                     if quality_col in merged.columns:

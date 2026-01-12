@@ -253,7 +253,7 @@ class AttentionVisualizer:
             diagonal_strength = np.trace(head_attention) / seq_len
 
             # Check for uniform attention (global focus)
-            uniform_baseline = 1.0 / seq_len
+            1.0 / seq_len
             uniformity = 1.0 - np.std(head_attention)
 
             # Check for position bias (attending to specific positions)

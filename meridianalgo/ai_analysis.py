@@ -1085,7 +1085,7 @@ Analysis:"""
         """Assess competitive position based on margins"""
         try:
             profit_margin = info.get("profitMargins", 0)
-            gross_margin = info.get("grossMargins", 0)
+            info.get("grossMargins", 0)
 
             if profit_margin > 0.2:
                 return "Strong competitive advantage"

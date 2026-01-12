@@ -987,7 +987,7 @@ class ConsoleManager:
 
                     # Calculate change from current price
                     change = price - current_price
-                    change_pct = (change / current_price) * 100
+                    (change / current_price) * 100
 
                     # Format change with colors
                     change_color = "green" if change >= 0 else "red"
@@ -1198,7 +1198,7 @@ class ConsoleManager:
 
                     # Calculate change from current price
                     change = price - current_price
-                    change_pct = (change / current_price) * 100
+                    (change / current_price) * 100
 
                     # Format change with colors
                     change_color = "green" if change >= 0 else "red"

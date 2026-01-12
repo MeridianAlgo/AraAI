@@ -395,7 +395,7 @@ async def deploy_model(
         registry = ModelRegistry()
 
         # Deploy model
-        result = registry.deploy_model(
+        registry.deploy_model(
             model_id=request.model_id, environment=request.environment
         )
 

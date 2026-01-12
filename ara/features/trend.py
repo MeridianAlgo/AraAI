@@ -232,7 +232,7 @@ class TrendIndicators:
 
         high = result["high"].values
         low = result["low"].values
-        close = result["close"].values
+        result["close"].values
 
         sar = np.zeros(len(result))
         ep = np.zeros(len(result))

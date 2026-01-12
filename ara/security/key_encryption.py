@@ -203,7 +203,6 @@ class KeyEncryption:
             new_master_key: New master key
         """
         # Create new Fernet with new key
-        old_fernet = self.fernet
 
         self.master_key = new_master_key.encode()
         self.fernet = self._create_fernet()

@@ -303,7 +303,7 @@ class TwitterSentimentAnalyzer(SentimentAnalyzer):
             logger.warning("Twitter streaming not available without API credentials")
             return
 
-        normalized_symbol = self._normalize_symbol(symbol)
+        self._normalize_symbol(symbol)
 
         try:
             # Note: Twitter API v2 streaming requires elevated access

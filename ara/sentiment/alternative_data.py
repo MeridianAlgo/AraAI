@@ -176,7 +176,7 @@ class AlternativeDataProvider:
                 async with session.get(url, headers=headers) as response:
                     if response.status != 200:
                         return None
-                    data = await response.json()
+                    await response.json()
 
             # Parse insider transactions (Form 4 filings)
             # This is a placeholder - actual implementation would parse Form 4 data

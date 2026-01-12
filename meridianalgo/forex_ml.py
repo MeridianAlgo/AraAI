@@ -228,7 +228,6 @@ class ForexML:
 
             # Enhanced multi-day predictions with feature evolution
             forecast_predictions = []
-            base_price = current_price
 
             # Get historical volatility for realistic bounds
             hist_volatility = data["Close"].pct_change().std()
@@ -252,7 +251,7 @@ class ForexML:
                     # Subsequent predictions use evolved features
                     # Simulate next day's OHLCV based on predicted price
                     pred_close = recent_closes[-1]
-                    pred_volatility = hist_volatility * pred_close
+                    hist_volatility * pred_close
 
                     # Generate realistic OHLC for next day
                     pred_open = pred_close * (

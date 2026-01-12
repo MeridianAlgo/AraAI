@@ -559,7 +559,7 @@ class DataValidator:
             try:
                 # Try to load model
                 with open(model_file, "rb") as f:
-                    model = pickle.load(f)
+                    pickle.load(f)
 
                 # Check for metadata file
                 metadata_file = model_file.with_suffix(".json")
