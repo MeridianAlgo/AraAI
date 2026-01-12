@@ -28,11 +28,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-training-db-
 
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install huggingface_hub python-dotenv psutil accelerate
+          # Install only essential packages for training
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install pandas numpy scikit-learn yfinance rich click scipy
+          pip install huggingface_hub python-dotenv psutil
+          # Skip heavy optional dependencies
+          pip install --no-deps transformers tokenizers datasets accelerate
 
       - name: Run Continuous Training
         env:
