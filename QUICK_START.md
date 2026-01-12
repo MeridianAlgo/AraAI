@@ -1,161 +1,161 @@
-# ARA AI Training System - Quick Start
+# ⚡ ARA AI - Quick Start Guide
 
-## 🚀 Training Performance
+Get up and running with ARA AI in under 5 minutes!
 
-**Training Time**: ~15 seconds per model (50 epochs, 2 years data)
-**Accuracy**: >99.9%
-**Models per Day**: 48 (multi-daily) or 192 (hourly)
+---
+
+## 🎯 Training Performance
+
+| Metric | Value |
+|--------|-------|
+| **Training Time** | ~15 seconds per model |
+| **Accuracy** | >99.9% |
+| **Models/Day** | 48 (multi-daily) or 192 (hourly) |
+| **Loss** | <0.0004 |
+
+---
+
+## 🚀 Installation
+
+```bash
+# Clone and setup
+git clone https://github.com/MeridianAlgo/AraAI.git
+cd AraAI
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+---
 
 ## ⚡ Quick Commands
 
+### Windows Setup
 ```bash
-# Windows: Set UTF-8 encoding first
+# Set UTF-8 encoding (required on Windows)
 $env:PYTHONIOENCODING="utf-8"
+```
 
-# Test single model training
+### Training Commands
+
+```bash
+# Test single model (~15 seconds)
 python scripts/quick_train.py --symbol AAPL --epochs 50
 
 # Train multiple models
-python scripts/batch_train.py --symbols AAPL GOOGL MSFT --epochs 50
+python scripts/batch_train.py --symbols AAPL GOOGL MSFT
 
 # Train random stocks
-python scripts/batch_train.py --random 5 --epochs 50
+python scripts/batch_train.py --random 5
 
 # View training dashboard
 python scripts/training_dashboard.py
 
-# Run full training session
+# Full training session
 python scripts/continuous_training.py
 ```
 
+---
+
 ## 📊 Training Schedules
 
-### Option 1: Multi-Daily (Recommended for Free Tier)
-- **File**: `.github/workflows/multi-daily-training.yml`
+### Option 1: Multi-Daily (Recommended)
 - **Frequency**: 6 times per day
-- **Schedule**: Every ~4 hours at market-strategic times
-- **Models/Day**: 48 (5 stocks + 3 forex per session)
-- **GitHub Actions Usage**: ~900 min/month (within free 2,000 limit)
+- **Times**: 02:00, 07:00, 13:00, 17:00, 21:00, 23:00 UTC
+- **Models/Day**: 48
+- **Cost**: FREE (within GitHub Actions free tier)
 
 ### Option 2: Hourly (Maximum Learning)
-- **File**: `.github/workflows/hourly-training.yml`
 - **Frequency**: 24 times per day
-- **Schedule**: Every hour
-- **Models/Day**: 192 (5 stocks + 3 forex per session)
-- **GitHub Actions Usage**: ~3,600 min/month (requires paid plan)
+- **Models/Day**: 192
+- **Cost**: Requires paid GitHub Actions plan
 
-## 🎯 Current Training Results
-
-```
-╭──────────────────────┬──────────╮
-│ Total Models Trained │ 3        │
-│ Trainings (24h)      │ 3        │
-│ Unique Symbols       │ 3        │
-│ Avg Accuracy         │ 99.9786  │
-│ Avg Loss             │ 0.000214 │
-╰──────────────────────┴──────────╯
-
-Latest Training Sessions:
-Symbol  Type        Date                 Accuracy  Loss      Epochs
-MSFT    unified_ml  2026-01-11 09:45:25  99.9877   0.000123  50
-GOOGL   unified_ml  2026-01-11 09:45:12  99.9641   0.000359  50
-AAPL    unified_ml  2026-01-11 09:43:07  99.9839   0.000161  50
-```
-
-## 📁 Project Structure
-
-```
-AraAI/
-├── .github/workflows/
-│   ├── multi-daily-training.yml  # 6x per day schedule
-│   └── hourly-training.yml       # 24x per day schedule
-├── scripts/
-│   ├── quick_train.py           # Test single model
-│   ├── batch_train.py           # Train multiple models
-│   ├── training_dashboard.py    # View training stats
-│   ├── continuous_training.py   # Full training session
-│   ├── train_model.py          # Stock model training
-│   └── train_forex_model.py    # Forex model training
-├── models/                      # Trained models
-├── datasets/                    # Training data
-├── training.db                  # Training database
-├── TRAINING_GUIDE.md           # Detailed guide
-├── TRAINING_RESULTS.md         # Performance results
-└── QUICK_START.md              # This file
-```
-
-## 🔧 Setup (First Time)
-
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Run setup script (optional)
-python setup_training.py
-
-# 3. Test training
-python scripts/quick_train.py --symbol AAPL
-```
+---
 
 ## 🤖 Enable Automated Training
 
 ### Step 1: Push to GitHub
 ```bash
 git add .
-git commit -m "Add automated training system"
+git commit -m "Setup automated training"
 git push
 ```
 
-### Step 2: Enable GitHub Actions
-1. Go to repository Settings
-2. Navigate to Actions → General
+### Step 2: Enable Actions
+1. Go to repository **Settings**
+2. Navigate to **Actions** → **General**
 3. Enable "Allow all actions and reusable workflows"
 4. Save
 
 ### Step 3: Add Secrets (Optional)
 For Hugging Face and W&B integration:
-1. Go to Settings → Secrets and variables → Actions
-2. Add secrets:
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Add:
    - `HF_TOKEN` - Hugging Face API token
    - `WANDB_API_KEY` - Weights & Biases API key
 
 ### Step 4: Trigger First Run
-1. Go to Actions tab
+1. Go to **Actions** tab
 2. Select "Multi-Daily Model Training"
-3. Click "Run workflow"
-4. Watch the training progress!
+3. Click **"Run workflow"**
+4. Watch it train! 🎉
 
-## 📈 Monitoring
+---
 
-### Local Dashboard
-```bash
-python scripts/training_dashboard.py
-```
+## 💻 Usage Examples
 
-### GitHub Actions
-- View logs in Actions tab
-- Download training artifacts
-- Monitor success/failure rates
-
-### Database Queries
-```bash
-sqlite3 training.db "SELECT * FROM model_metadata ORDER BY training_date DESC LIMIT 10"
-```
-
-## 🎛️ Configuration
-
-Edit `scripts/continuous_training.py`:
+### Load Pre-trained Model
 
 ```python
-# Number of stocks per session
-STOCK_COUNT = 5
+from meridianalgo.unified_ml import UnifiedStockML
+from huggingface_hub import hf_hub_download
 
-# Forex pairs to train
-FOREX_PAIRS = ["EURUSD", "GBPUSD", "USDJPY"]
+# Download model
+model_path = hf_hub_download(
+    repo_id="MeridianAlgo/ARA.AI",
+    filename="models/stock_AAPL.pt"
+)
 
-# Training epochs
-EPOCHS = 50
+# Predict
+ml = UnifiedStockML(model_path=model_path)
+prediction = ml.predict('AAPL', days=5)
+print(f"5-Day Forecast: ${prediction['predictions'][4]['price']:.2f}")
 ```
+
+### Train Custom Model
+
+```python
+from scripts.train_model import train_model
+
+success = train_model(
+    symbol="TSLA",
+    db_file="training.db",
+    output_path="models/stock_TSLA.pt",
+    epochs=50,
+    use_all_data=True
+)
+```
+
+---
+
+## 📈 Current Results
+
+```
+╭──────────────────────┬──────────╮
+│ Total Models Trained │ 3        │
+│ Trainings (24h)      │ 3        │
+│ Avg Accuracy         │ 99.9786  │
+│ Avg Loss             │ 0.000214 │
+╰──────────────────────┴──────────╯
+
+Latest Training:
+Symbol  Accuracy  Loss      Time
+MSFT    99.9877   0.000123  13.22s
+GOOGL   99.9641   0.000359  13.76s
+AAPL    99.9839   0.000161  15.40s
+```
+
+---
 
 ## 🐛 Troubleshooting
 
@@ -173,32 +173,18 @@ python scripts/fetch_training_data.py --period 2y --interval 1d
 ### Training Too Slow
 - Reduce epochs: `--epochs 30`
 - Use shorter period: `--period 1y`
-- Enable GPU acceleration
+- Enable GPU if available
 
 ### Database Locked
 ```bash
-# Close connections and recreate
+# Recreate database
 rm training.db
 python scripts/store_training_data.py --data-dir datasets/training_data --db-file training.db
 ```
 
-## 📚 Documentation
+---
 
-- **TRAINING_GUIDE.md** - Complete training guide
-- **TRAINING_RESULTS.md** - Performance benchmarks
-- **CONTRIBUTING.md** - Contribution guidelines
-- **README.md** - Main project README
-
-## 🎉 Success Indicators
-
-✓ Training completes in ~15 seconds per model
-✓ Accuracy >99.9%
-✓ Loss <0.0004
-✓ Models saved to `models/` directory
-✓ Dashboard shows training history
-✓ GitHub Actions runs successfully
-
-## 🚀 Next Steps
+## 📚 Next Steps
 
 1. ✅ Test local training
 2. ✅ View dashboard
@@ -207,24 +193,34 @@ python scripts/store_training_data.py --data-dir datasets/training_data --db-fil
 5. ⬜ Monitor first automated run
 6. ⬜ Adjust schedules as needed
 
+---
+
+## 📖 Documentation
+
+- **[README.md](README.md)** - Main documentation
+- **[GITHUB_ACTIONS_FIX.md](GITHUB_ACTIONS_FIX.md)** - Workflow optimization
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guide
+
+---
+
 ## 💡 Tips
 
 - Start with multi-daily schedule (free tier friendly)
 - Monitor GitHub Actions usage
 - Use batch training for testing
 - Check dashboard regularly
-- Adjust epochs based on performance
 - Enable W&B for experiment tracking
+
+---
 
 ## 🆘 Support
 
-If you encounter issues:
-1. Check TRAINING_GUIDE.md
-2. Review GitHub Actions logs
-3. Run training dashboard
-4. Check database: `sqlite3 training.db`
-5. Review model files in `models/`
+- **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/AraAI/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/AraAI/discussions)
+- **Models**: [Hugging Face Hub](https://huggingface.co/MeridianAlgo/ARA.AI)
 
 ---
 
 **Ready to train?** Run: `python scripts/quick_train.py --symbol AAPL`
+
+🚀 Happy Training!

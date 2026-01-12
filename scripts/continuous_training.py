@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Continuous Training Orchestrator for Ara AI
-Selects stocks, fetches data, trains models, and pushes to Hugging Face.
+Trains ONE unified model for all stocks and ONE for all forex pairs.
+Much more efficient than training separate models per ticker.
 """
 
 import os
@@ -20,9 +21,11 @@ DB_FILE = "training.db"
 MODEL_DIR = Path("models")
 SCRIPTS_DIR = Path("scripts")
 TICKERS_FILE = "all_tickers.txt"
-STOCK_COUNT = 5
-FOREX_PAIRS = ["EURUSD", "GBPUSD", "USDJPY"]
+STOCK_COUNT = 10  # Fetch more stocks for unified training
+FOREX_PAIRS = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD"]
 EPOCHS = 50
+UNIFIED_STOCK_MODEL = MODEL_DIR / "unified_stock_model.pt"
+UNIFIED_FOREX_MODEL = MODEL_DIR / "unified_forex_model.pt"
 
 
 def run_command(cmd):
@@ -47,29 +50,22 @@ def select_tickers():
     return random.sample(tickers, min(len(tickers), STOCK_COUNT))
 
 
-def train_and_upload_stock(symbol):
-    """Train a model for a specific stock and upload to HF"""
-    print(f"\n--- Training Stock: {symbol} ---")
+def fetch_and_store_stocks(symbols):
+    """Fetch data for multiple stocks and store in DB"""
+    print(f"\n--- Fetching Stock Data for {len(symbols)} symbols ---")
 
-    # Randomly choose timeframe/horizon for "smart" learning
-    horizons = [("2y", "1d"), ("1y", "1d"), ("60d", "1h")]
-    period, interval = random.choice(horizons)
-    print(f"Selected horizon: {period} with interval {interval}")
-
-    output_model = MODEL_DIR / f"stock_{symbol}.pt"
-
-    # 1. Fetch data
+    # Fetch data for all stocks
     fetch_cmd = [
         sys.executable,
         str(SCRIPTS_DIR / "fetch_training_data.py"),
         "--symbols",
-        symbol,
+        *symbols,
         "--output-dir",
         "datasets/training_data",
         "--period",
-        period,
+        "2y",
         "--interval",
-        interval,
+        "1d",
         "--asset-type",
         "stock",
     ]
@@ -77,7 +73,7 @@ def train_and_upload_stock(symbol):
     if not success:
         return False
 
-    # 2. Store in DB (Assuming store_training_data.py exists and works)
+    # Store in DB
     store_cmd = [
         sys.executable,
         str(SCRIPTS_DIR / "store_training_data.py"),
@@ -87,74 +83,19 @@ def train_and_upload_stock(symbol):
         DB_FILE,
     ]
     success, _ = run_command(store_cmd)
-    if not success:
-        print(
-            "Warning: Failed to store data in DB, but continuing training with local data if possible..."
-        )
-
-    # 3. Train
-    train_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "train_model.py"),
-        "--symbol",
-        symbol,
-        "--db-file",
-        DB_FILE,
-        "--output",
-        str(output_model),
-        "--epochs",
-        str(EPOCHS),
-        "--use-all-data",
-        "--incremental",
-    ]
-    success, output = run_command(train_cmd)
-    if not success:
-        return False
-
-    # Extract metrics if possible (simple heuristic)
-    accuracy = "98.5"  # Default if not found
-    loss = "0.001"
-    for line in output.split("\n"):
-        if "accuracy" in line.lower() and ":" in line:
-            accuracy = line.split(":")[-1].strip()
-        if "loss" in line.lower() and ":" in line:
-            loss = line.split(":")[-1].strip()
-
-    # 4. Upload to Hugging Face
-    upload_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "hf_manager.py"),
-        "--upload",
-        str(output_model),
-        "--update-card",
-        "--symbol",
-        symbol,
-        "--accuracy",
-        accuracy,
-        "--loss",
-        loss,
-        "--cleanup",
-        "--prefix",
-        "models/stock_",
-    ]
-    success, _ = run_command(upload_cmd)
-
     return success
 
 
-def train_and_upload_forex(pair):
-    """Train a model for a forex pair and upload to HF"""
-    print(f"\n--- Training Forex: {pair} ---")
+def fetch_and_store_forex(pairs):
+    """Fetch data for multiple forex pairs and store in DB"""
+    print(f"\n--- Fetching Forex Data for {len(pairs)} pairs ---")
 
-    output_model = MODEL_DIR / f"forex_{pair}.pt"
-
-    # Similar steps for forex... (using train_forex_model.py)
-    # 1. Fetch
+    # Fetch data for all forex pairs
     fetch_cmd = [
         sys.executable,
         str(SCRIPTS_DIR / "fetch_training_data.py"),
         "--symbols",
-        pair,
+        *pairs,
         "--output-dir",
         "datasets/training_data",
         "--period",
@@ -168,80 +109,121 @@ def train_and_upload_forex(pair):
     if not success:
         return False
 
-    # 2. Train
-    train_cmd = [
+    # Store in DB
+    store_cmd = [
         sys.executable,
-        str(SCRIPTS_DIR / "train_forex_model.py"),
-        "--pair",
-        pair,
+        str(SCRIPTS_DIR / "store_training_data.py"),
+        "--data-dir",
+        "datasets/training_data",
         "--db-file",
         DB_FILE,
-        "--output",
-        str(output_model),
-        "--epochs",
-        str(EPOCHS),
-        "--use-all-data",
-        "--incremental",
     ]
-    success, _ = run_command(train_cmd)
-    if not success:
-        return False
-
-    # 3. Upload
-    upload_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "hf_manager.py"),
-        "--upload",
-        str(output_model),
-        "--cleanup",
-        "--prefix",
-        f"models/forex_{pair}",
-    ]
-    success, _ = run_command(upload_cmd)
-
+    success, _ = run_command(store_cmd)
     return success
 
 
+def train_unified_models():
+    """Train unified models - ONE for all stocks, ONE for all forex"""
+    print("\n--- Training Unified Models ---")
+
+    train_cmd = [
+        sys.executable,
+        str(SCRIPTS_DIR / "train_unified_model.py"),
+        "--db-file",
+        DB_FILE,
+        "--stock-output",
+        str(UNIFIED_STOCK_MODEL),
+        "--forex-output",
+        str(UNIFIED_FOREX_MODEL),
+        "--epochs",
+        str(EPOCHS),
+    ]
+    success, _ = run_command(train_cmd)
+    return success
+
+
+def upload_unified_models():
+    """Upload unified models to Hugging Face"""
+    print("\n--- Uploading Unified Models to Hugging Face ---")
+
+    # Upload stock model
+    stock_upload_cmd = [
+        sys.executable,
+        str(SCRIPTS_DIR / "hf_manager.py"),
+        "--upload",
+        str(UNIFIED_STOCK_MODEL),
+        "--cleanup",
+        "--prefix",
+        "models/unified_stock_model",
+    ]
+    stock_success, _ = run_command(stock_upload_cmd)
+
+    # Upload forex model
+    forex_upload_cmd = [
+        sys.executable,
+        str(SCRIPTS_DIR / "hf_manager.py"),
+        "--upload",
+        str(UNIFIED_FOREX_MODEL),
+        "--cleanup",
+        "--prefix",
+        "models/unified_forex_model",
+    ]
+    forex_success, _ = run_command(forex_upload_cmd)
+
+    return stock_success and forex_success
+
+
 def main():
-    print(f"=== Starting Continuous Training Session: {datetime.now()} ===")
+    print(f"=== Starting Unified Training Session: {datetime.now()} ===")
+    print("Training ONE model for all stocks and ONE for all forex pairs")
 
     # Ensure directories exist
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     Path("datasets/training_data").mkdir(parents=True, exist_ok=True)
 
-    # 0. Sync existing models from Hugging Face
-    print("\n--- Syncing existing models from Hugging Face ---")
-    sync_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "hf_manager.py"),
-        "--sync",
-        "--prefix",
-        "models/",
-    ]
-    success, _ = run_command(sync_cmd)
-    if not success:
-        print(
-            "Warning: Failed to sync models from Hugging Face. Continuing with local models..."
-        )
-
-    # 1. Stocks
+    # 1. Select stocks for this session
     selected_stocks = select_tickers()
-    print(f"Selected stocks for this session: {', '.join(selected_stocks)}")
+    print(f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}")
 
-    for symbol in selected_stocks:
+    # 2. Fetch and store stock data
+    try:
+        if not fetch_and_store_stocks(selected_stocks):
+            print("Error: Failed to fetch stock data")
+            return
+    except Exception as e:
+        print(f"Error fetching stocks: {e}")
+        return
+
+    # 3. Fetch and store forex data
+    try:
+        if not fetch_and_store_forex(FOREX_PAIRS):
+            print("Error: Failed to fetch forex data")
+            return
+    except Exception as e:
+        print(f"Error fetching forex: {e}")
+        return
+
+    # 4. Train unified models
+    try:
+        if not train_unified_models():
+            print("Error: Failed to train unified models")
+            return
+    except Exception as e:
+        print(f"Error training models: {e}")
+        return
+
+    # 5. Upload to Hugging Face (optional)
+    if os.environ.get("HF_TOKEN"):
         try:
-            train_and_upload_stock(symbol)
+            upload_unified_models()
         except Exception as e:
-            print(f"Error training {symbol}: {e}")
+            print(f"Warning: Failed to upload models: {e}")
+    else:
+        print("\nSkipping Hugging Face upload (no HF_TOKEN found)")
 
-    # 2. Forex
-    for pair in FOREX_PAIRS:
-        try:
-            train_and_upload_forex(pair)
-        except Exception as e:
-            print(f"Error training {pair}: {e}")
-
-    print(f"\n=== Continuous Training Session Completed: {datetime.now()} ===")
+    print(f"\n=== Unified Training Session Completed: {datetime.now()} ===")
+    print(f"✓ Stock Model: {UNIFIED_STOCK_MODEL}")
+    print(f"✓ Forex Model: {UNIFIED_FOREX_MODEL}")
 
 
 if __name__ == "__main__":
