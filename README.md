@@ -22,9 +22,9 @@ ARA AI is a production-ready financial prediction platform that leverages ensemb
 
 ### ⚡ Key Highlights
 
-- **🚀 Fast Training**: ~15 seconds per model with >99.9% accuracy
-- **🔄 Automated Learning**: 48-192 models trained daily
-- **📊 Multi-Asset**: Stocks, forex, and more
+- **🚀 Fast Training**: ~2-3 minutes for both unified models
+- **🔄 Hourly Learning**: Trains every hour (24x per day)
+- **📊 Unified Models**: ONE model for all stocks, ONE for all forex
 - **🎯 High Accuracy**: Consistently >99.9% on validation data
 - **☁️ Cloud-Ready**: GitHub Actions + Hugging Face integration
 - **📈 Real-Time**: Latest market data before each training cycle
@@ -52,11 +52,11 @@ ARA AI is a production-ready financial prediction platform that leverages ensemb
 ### 🔄 Automated Training
 
 - **Unified Models**: ONE model for all stocks, ONE for all forex (efficient & scalable)
-- **Multi-Daily Schedule**: 6 training sessions per day (every ~4 hours)
-- **Hourly Schedule**: 24 training sessions per day (maximum learning)
-- **Smart Selection**: Random stock selection from 6,800+ tickers
+- **Hourly Schedule**: Trains every hour (24x per day) for maximum learning
+- **Smart Selection**: Random stock selection from 6,800+ tickers each hour
 - **Forex Coverage**: EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD
 - **Model Versioning**: All models stored on Hugging Face Hub
+- **Fast Training**: ~2-3 minutes per session
 
 ---
 
@@ -136,19 +136,13 @@ AAPL    unified_ml  2026-01-11 09:43:07  99.9839   0.000161
 
 ### Training Schedules
 
-#### Multi-Daily (Recommended for Free Tier)
-- **Frequency**: 6 times per day
-- **Schedule**: 02:00, 07:00, 13:00, 17:00, 21:00, 23:00 UTC
+#### Hourly Training (Automated)
+- **Frequency**: Every hour (24 times per day)
+- **Schedule**: Runs at minute 0 of every hour
 - **Models**: 2 unified models (1 stock + 1 forex)
-- **Training Data**: 10 stocks + 5 forex pairs per session
-- **GitHub Actions**: ~900 min/month (within free 2,000 limit)
-
-#### Hourly (Maximum Learning)
-- **Frequency**: 24 times per day
-- **Schedule**: Every hour
-- **Models**: 2 unified models (1 stock + 1 forex)
-- **Training Data**: 10 stocks + 5 forex pairs per session
-- **GitHub Actions**: ~3,600 min/month (requires paid plan)
+- **Training Data**: 10 random stocks + 5 forex pairs per session
+- **Training Time**: ~2-3 minutes per session
+- **GitHub Actions**: ~3,600 min/month (requires paid plan or use public repo)
 
 ### How It Works
 
