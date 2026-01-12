@@ -38,6 +38,7 @@ env/
 # Models and Cache
 # models/  # Commented out to allow trained models to be committed
 .ara_cache/
+.ruff_cache/
 *.pkl
 *.joblib
 *.h5

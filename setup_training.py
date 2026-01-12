@@ -48,12 +48,12 @@ def main():
     # Check requirements
     print("\nChecking dependencies...")
     try:
-        import pandas
-        import numpy
-        import sklearn
-        import torch
-        import yfinance
-        import rich
+        import pandas  # noqa: F401
+        import numpy  # noqa: F401
+        import sklearn  # noqa: F401
+        import torch  # noqa: F401
+        import yfinance  # noqa: F401
+        import rich  # noqa: F401
 
         print("  ✓ All core dependencies installed")
     except ImportError as e:
