@@ -172,7 +172,7 @@ class FeatureContributionAnalyzer:
         for feature in top_features:
             name = feature["feature_name"]
             value = feature["feature_value"]
-            contribution = feature["contribution"]
+            feature["contribution"]
             percentage = feature["contribution_percentage"]
             direction = feature["direction"]
 

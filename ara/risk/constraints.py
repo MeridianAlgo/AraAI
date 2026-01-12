@@ -674,7 +674,6 @@ class PortfolioRebalancer:
 
         # Otherwise, find partial rebalance that meets cost threshold
         # Use linear interpolation between current and target
-        best_alpha = 0.0
         best_weights = current_weights.copy()
 
         for alpha in np.linspace(0, 1, 21):  # Test 21 points
@@ -692,7 +691,6 @@ class PortfolioRebalancer:
 
             # Check if within threshold
             if test_cost / portfolio_value <= cost_threshold:
-                best_alpha = alpha
                 best_weights = test_weights
 
         return best_weights

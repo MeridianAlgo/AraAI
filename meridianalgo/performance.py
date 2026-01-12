@@ -438,7 +438,7 @@ class BenchmarkRunner:
                 start_time = time.time()
 
                 try:
-                    result = ara_instance.predict(symbol, days=5, use_cache=False)
+                    ara_instance.predict(symbol, days=5, use_cache=False)
                     prediction_time = time.time() - start_time
 
                     results["individual_times"][symbol] = prediction_time
@@ -499,7 +499,7 @@ class BenchmarkRunner:
             # CPU benchmark
             start_time = time.time()
             # Simple CPU-intensive task
-            result = sum(i * i for i in range(100000))
+            sum(i * i for i in range(100000))
             cpu_time = time.time() - start_time
 
             # Memory benchmark

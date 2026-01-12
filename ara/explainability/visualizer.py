@@ -20,7 +20,6 @@ except ImportError:
     warnings.warn("Matplotlib not available. Visualization features will be limited.")
 
 
-
 class ExplainabilityVisualizer:
     """
     Creates visualizations for model explanations

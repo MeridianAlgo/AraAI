@@ -138,10 +138,10 @@ def main():
     print("Setting up ARA AI monitoring stack...\n")
 
     # Export dashboards
-    dashboards_dir = export_dashboards()
+    export_dashboards()
 
     # Create Grafana provisioning
-    provisioning_dir = create_grafana_provisioning()
+    create_grafana_provisioning()
 
     # Print instructions
     print_setup_instructions()

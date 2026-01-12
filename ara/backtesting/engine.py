@@ -288,7 +288,7 @@ class BacktestEngine:
             # Training window
             train_start = max(0, start_idx - train_window)
             train_end = start_idx
-            train_subset = data.iloc[train_start:train_end]
+            data.iloc[train_start:train_end]
 
             # Test window
             test_start = start_idx
@@ -381,7 +381,7 @@ class BacktestEngine:
         for i in range(n_folds):
             # Training data: all data up to this fold
             train_end = fold_size * (i + 1)
-            train_data = data.iloc[:train_end]
+            data.iloc[:train_end]
 
             # Test data: next fold
             test_start = train_end

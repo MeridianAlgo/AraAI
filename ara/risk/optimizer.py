@@ -672,7 +672,7 @@ class PortfolioOptimizer:
 
         # Get return matrix (T x N)
         returns_matrix = df.values
-        T = len(returns_matrix)
+        len(returns_matrix)
 
         # Calculate expected returns
         expected_returns = df.mean().values
@@ -820,7 +820,7 @@ class PortfolioOptimizer:
 
         # Convert to DataFrame
         df = pd.DataFrame(returns_dict)
-        assets = df.columns.tolist()
+        df.columns.tolist()
 
         # Calculate expected returns
         expected_returns = df.mean().values
