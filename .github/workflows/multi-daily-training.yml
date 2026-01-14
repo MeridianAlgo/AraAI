@@ -1,9 +1,9 @@
-name: Hourly Model Training (24x per day)
+name: Multi-Daily Model Training (6x per day)
 
 on:
   schedule:
-    # Run every hour for maximum learning frequency
-    - cron: '0 * * * *'   # Every hour at minute 0
+    # Run 6 times per day for balanced learning
+    - cron: '0 0,4,8,12,16,20 * * *'   # Every 4 hours
   workflow_dispatch:      # Allow manual trigger
     inputs:
       workflow:
@@ -22,7 +22,7 @@ permissions:
 jobs:
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 120  # Increased for fetching all tickers
+    timeout-minutes: 180  # Increased for fetching all tickers
     
     steps:
       - name: Checkout repository
@@ -66,26 +66,26 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
 
-      - name: Run Quick Training Session
+      - name: Run Multi-Daily Training Session
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-          TRAINING_MODE: hourly
+          TRAINING_MODE: multi-daily
         run: |
-          echo "=== Hourly Training Session Started at $(date) ===" | tee -a hourly-training.log
-          echo "Training run: ${{ github.run_number }}" | tee -a hourly-training.log
+          echo "=== Multi-Daily Training Session Started at $(date) ===" | tee -a multi-daily-training.log
+          echo "Training run: ${{ github.run_number }}" | tee -a multi-daily-training.log
           WORKFLOW="${{ inputs.workflow }}"
           if [ -z "$WORKFLOW" ]; then WORKFLOW="both"; fi
           # Use all tickers from all_tickers.txt
           if [ -f "all_tickers.txt" ]; then
             TICKER_COUNT=$(wc -l < all_tickers.txt | tr -d ' ')
-            echo "Found all_tickers.txt with $TICKER_COUNT tickers - using ALL tickers" | tee -a hourly-training.log
-            python scripts/continuous_training.py --workflow "$WORKFLOW" --use-all-tickers 2>&1 | tee -a hourly-training.log
+            echo "Found all_tickers.txt with $TICKER_COUNT tickers - using ALL tickers" | tee -a multi-daily-training.log
+            python scripts/continuous_training.py --workflow "$WORKFLOW" --use-all-tickers 2>&1 | tee -a multi-daily-training.log
           else
-            echo "Warning: all_tickers.txt not found, using fallback" | tee -a hourly-training.log
-            python scripts/continuous_training.py --workflow "$WORKFLOW" 2>&1 | tee -a hourly-training.log
+            echo "Warning: all_tickers.txt not found, using fallback" | tee -a multi-daily-training.log
+            python scripts/continuous_training.py --workflow "$WORKFLOW" 2>&1 | tee -a multi-daily-training.log
           fi
-          echo "=== Hourly Training Session Completed at $(date) ===" | tee -a hourly-training.log
+          echo "=== Multi-Daily Training Session Completed at $(date) ===" | tee -a multi-daily-training.log
 
       - name: Upload training artifacts
         if: always()
@@ -101,7 +101,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hourly-training-logs-${{ github.run_number }}
+          name: multi-daily-training-logs-${{ github.run_number }}
           path: |
             *.log
-          retention-days: 3
+          retention-days: 7

@@ -22,8 +22,13 @@ DB_FILE = "training.db"
 MODEL_DIR = Path("models")
 SCRIPTS_DIR = Path("scripts")
 TICKERS_FILE = "all_tickers.txt"
-STOCK_COUNT = 10  # Fetch more stocks for unified training
-FOREX_PAIRS = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD"]
+STOCK_COUNT = 500  # Fetch more stocks for unified training (increased for better coverage)
+FOREX_PAIRS = [
+    "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD",
+    "EURGBP", "EURJPY", "GBPJPY", "AUDJPY", "NZDUSD",
+    "USDCHF", "EURCHF", "GBPCHF", "AUDNZD", "EURAUD",
+    "EURCAD", "GBPAUD", "GBPCAD", "AUDCAD", "CADJPY"
+]  # Extended forex pairs list
 EPOCHS = 50
 UNIFIED_STOCK_MODEL = MODEL_DIR / "unified_stock_model.pt"
 UNIFIED_FOREX_MODEL = MODEL_DIR / "unified_forex_model.pt"
@@ -39,8 +44,8 @@ def run_command(cmd):
     return True, result.stdout
 
 
-def select_tickers():
-    """Select random tickers from the file"""
+def select_tickers(use_all=False):
+    """Select tickers from the file"""
     if not os.path.exists(TICKERS_FILE):
         print(f"Warning: {TICKERS_FILE} not found. Using fallback tickers.")
         return ["AAPL", "GOOGL", "MSFT", "TSLA", "AMZN"]  # Fallback
@@ -48,7 +53,13 @@ def select_tickers():
     with open(TICKERS_FILE, "r") as f:
         tickers = [line.strip() for line in f if line.strip()]
 
-    return random.sample(tickers, min(len(tickers), STOCK_COUNT))
+    if use_all or len(tickers) <= STOCK_COUNT:
+        print(f"Using all {len(tickers)} tickers from {TICKERS_FILE}")
+        return tickers
+    else:
+        selected = random.sample(tickers, STOCK_COUNT)
+        print(f"Selected {len(selected)} random tickers from {len(tickers)} available")
+        return selected
 
 
 def fetch_and_store_stocks(symbols):
@@ -216,6 +227,11 @@ def main():
         default="both",
         help="Which workflow to run: stock-only, forex-only, or both",
     )
+    parser.add_argument(
+        "--use-all-tickers",
+        action="store_true",
+        help="Use all tickers from all_tickers.txt instead of random sample",
+    )
     args = parser.parse_args()
 
     print(f"=== Starting Unified Training Session: {datetime.now()} ===")
@@ -232,8 +248,11 @@ def main():
 
     # 1. Stock workflow
     if args.workflow in {"stock", "both"}:
-        selected_stocks = select_tickers()
-        print(f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}")
+        selected_stocks = select_tickers(use_all=args.use_all_tickers)
+        if len(selected_stocks) <= 20:
+            print(f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}")
+        else:
+            print(f"\nSelected {len(selected_stocks)} stocks (showing first 20): {', '.join(selected_stocks[:20])}...")
 
         try:
             if not fetch_and_store_stocks(selected_stocks):
