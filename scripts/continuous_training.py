@@ -9,6 +9,7 @@ import os
 import sys
 import subprocess
 import random
+import argparse
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
@@ -41,7 +42,7 @@ def run_command(cmd):
 def select_tickers():
     """Select random tickers from the file"""
     if not os.path.exists(TICKERS_FILE):
-        print(f"Error: {TICKERS_FILE} not found.")
+        print(f"Warning: {TICKERS_FILE} not found. Using fallback tickers.")
         return ["AAPL", "GOOGL", "MSFT", "TSLA", "AMZN"]  # Fallback
 
     with open(TICKERS_FILE, "r") as f:
@@ -173,57 +174,131 @@ def upload_unified_models():
     return stock_success and forex_success
 
 
+def upload_stock_model():
+    """Upload unified stock model to Hugging Face"""
+    print("\n--- Uploading Unified Stock Model to Hugging Face ---")
+    stock_upload_cmd = [
+        sys.executable,
+        str(SCRIPTS_DIR / "hf_manager.py"),
+        "--upload",
+        str(UNIFIED_STOCK_MODEL),
+        "--cleanup",
+        "--prefix",
+        "models/unified_stock_model",
+    ]
+    stock_success, _ = run_command(stock_upload_cmd)
+    return stock_success
+
+
+def upload_forex_model():
+    """Upload unified forex model to Hugging Face"""
+    print("\n--- Uploading Unified Forex Model to Hugging Face ---")
+    forex_upload_cmd = [
+        sys.executable,
+        str(SCRIPTS_DIR / "hf_manager.py"),
+        "--upload",
+        str(UNIFIED_FOREX_MODEL),
+        "--cleanup",
+        "--prefix",
+        "models/unified_forex_model",
+    ]
+    forex_success, _ = run_command(forex_upload_cmd)
+    return forex_success
+
+
 def main():
+    parser = argparse.ArgumentParser(
+        description="Continuous Training Orchestrator for Ara AI"
+    )
+    parser.add_argument(
+        "--workflow",
+        choices=["stock", "forex", "both"],
+        default="both",
+        help="Which workflow to run: stock-only, forex-only, or both",
+    )
+    args = parser.parse_args()
+
     print(f"=== Starting Unified Training Session: {datetime.now()} ===")
-    print("Training ONE model for all stocks and ONE for all forex pairs")
+    if args.workflow == "stock":
+        print("Running STOCK workflow only")
+    elif args.workflow == "forex":
+        print("Running FOREX workflow only")
+    else:
+        print("Training ONE model for all stocks and ONE for all forex pairs")
 
     # Ensure directories exist
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     Path("datasets/training_data").mkdir(parents=True, exist_ok=True)
 
-    # 1. Select stocks for this session
-    selected_stocks = select_tickers()
-    print(f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}")
+    # 1. Stock workflow
+    if args.workflow in {"stock", "both"}:
+        selected_stocks = select_tickers()
+        print(f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}")
 
-    # 2. Fetch and store stock data
-    try:
-        if not fetch_and_store_stocks(selected_stocks):
-            print("Error: Failed to fetch stock data")
+        try:
+            if not fetch_and_store_stocks(selected_stocks):
+                print("Error: Failed to fetch stock data")
+                return
+        except Exception as e:
+            print(f"Error fetching stocks: {e}")
             return
-    except Exception as e:
-        print(f"Error fetching stocks: {e}")
-        return
 
-    # 3. Fetch and store forex data
-    try:
-        if not fetch_and_store_forex(FOREX_PAIRS):
-            print("Error: Failed to fetch forex data")
+    # 2. Forex workflow
+    if args.workflow in {"forex", "both"}:
+        try:
+            if not fetch_and_store_forex(FOREX_PAIRS):
+                print("Error: Failed to fetch forex data")
+                return
+        except Exception as e:
+            print(f"Error fetching forex: {e}")
             return
-    except Exception as e:
-        print(f"Error fetching forex: {e}")
-        return
 
-    # 4. Train unified models
+    # 3. Train unified models (scoped)
     try:
-        if not train_unified_models():
+        train_cmd = [
+            sys.executable,
+            str(SCRIPTS_DIR / "train_unified_model.py"),
+            "--db-file",
+            DB_FILE,
+            "--stock-output",
+            str(UNIFIED_STOCK_MODEL),
+            "--forex-output",
+            str(UNIFIED_FOREX_MODEL),
+            "--epochs",
+            str(EPOCHS),
+        ]
+        if args.workflow == "stock":
+            train_cmd.append("--stocks-only")
+        elif args.workflow == "forex":
+            train_cmd.append("--forex-only")
+
+        success, _ = run_command(train_cmd)
+        if not success:
             print("Error: Failed to train unified models")
             return
     except Exception as e:
         print(f"Error training models: {e}")
         return
 
-    # 5. Upload to Hugging Face (optional)
+    # 4. Upload to Hugging Face (optional)
     if os.environ.get("HF_TOKEN"):
         try:
-            upload_unified_models()
+            if args.workflow == "stock":
+                upload_stock_model()
+            elif args.workflow == "forex":
+                upload_forex_model()
+            else:
+                upload_unified_models()
         except Exception as e:
             print(f"Warning: Failed to upload models: {e}")
     else:
         print("\nSkipping Hugging Face upload (no HF_TOKEN found)")
 
     print(f"\n=== Unified Training Session Completed: {datetime.now()} ===")
-    print(f"✓ Stock Model: {UNIFIED_STOCK_MODEL}")
-    print(f"✓ Forex Model: {UNIFIED_FOREX_MODEL}")
+    if args.workflow in {"stock", "both"}:
+        print(f"✓ Stock Model: {UNIFIED_STOCK_MODEL}")
+    if args.workflow in {"forex", "both"}:
+        print(f"✓ Forex Model: {UNIFIED_FOREX_MODEL}")
 
 
 if __name__ == "__main__":

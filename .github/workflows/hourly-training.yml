@@ -5,6 +5,19 @@ on:
     # Run every hour for maximum learning frequency
     - cron: '0 * * * *'   # Every hour at minute 0
   workflow_dispatch:      # Allow manual trigger
+    inputs:
+      workflow:
+        description: 'Which workflow to run'
+        required: false
+        default: 'both'
+        type: choice
+        options:
+          - stock
+          - forex
+          - both
+
+permissions:
+  contents: write
 
 jobs:
   train:
@@ -14,6 +27,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -25,7 +40,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: training.db
-          key: ${{ runner.os }}-training-db-${{ github.run_id }}
+          key: ${{ runner.os }}-training-db-${{ github.ref_name }}
           restore-keys: |
             ${{ runner.os }}-training-db-
 
@@ -33,7 +48,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: models/
-          key: ${{ runner.os }}-models-${{ github.run_id }}
+          key: ${{ runner.os }}-models-${{ github.ref_name }}
           restore-keys: |
             ${{ runner.os }}-models-
 
@@ -48,12 +63,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Install only essential packages for training
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install pandas numpy scikit-learn yfinance rich click scipy
           pip install huggingface_hub python-dotenv psutil
-          # Skip heavy optional dependencies
-          pip install --no-deps transformers tokenizers datasets accelerate
 
       - name: Run Quick Training Session
         env:
@@ -63,8 +75,27 @@ jobs:
         run: |
           echo "=== Hourly Training Session Started at $(date) ==="
           echo "Training run: ${{ github.run_number }}"
-          python scripts/continuous_training.py
+          WORKFLOW="${{ inputs.workflow }}"
+          if [ -z "$WORKFLOW" ]; then WORKFLOW="both"; fi
+          python scripts/continuous_training.py --workflow "$WORKFLOW"
           echo "=== Hourly Training Session Completed at $(date) ==="
+
+      - name: Commit and push updated models/db
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add models/ training.db || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Hourly training update (run ${{ github.run_number }})"
+          git push
 
       - name: Upload training logs
         if: always()
