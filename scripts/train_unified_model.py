@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 import warnings
 import time
+import random
 
 warnings.filterwarnings("ignore")
 
@@ -21,25 +22,46 @@ from meridianalgo.unified_ml import UnifiedStockML  # noqa: E402
 from meridianalgo.forex_ml import ForexML  # noqa: E402
 
 
-def load_all_stock_data(db_file, limit=None):
-    """Load data for all stocks from database"""
+def load_stock_symbols(db_file):
+    """Load available stock symbols from database."""
     conn = sqlite3.connect(db_file)
-
     query = """
+        SELECT DISTINCT symbol
+        FROM market_data
+        WHERE asset_type = 'stock'
+        ORDER BY symbol ASC
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    symbols = df["symbol"].tolist() if not df.empty else []
+    if not symbols:
+        raise ValueError("No stock symbols found in database")
+    return symbols
+
+
+def load_stock_data_for_symbols(db_file, symbols, limit=None):
+    """Load OHLCV rows for a subset of stock symbols from database."""
+    if not symbols:
+        raise ValueError("No symbols provided")
+
+    conn = sqlite3.connect(db_file)
+    placeholders = ",".join(["?"] * len(symbols))
+    query = f"""
         SELECT symbol, date, open, high, low, close, volume
         FROM market_data
         WHERE asset_type = 'stock'
+          AND symbol IN ({placeholders})
         ORDER BY symbol, date ASC
     """
 
     if limit:
         query += f" LIMIT {limit}"
 
-    df = pd.read_sql_query(query, conn)
+    df = pd.read_sql_query(query, conn, params=list(symbols))
     conn.close()
 
     if df.empty:
-        raise ValueError("No stock data found in database")
+        raise ValueError("No stock data found in database for selected symbols")
 
     print(f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} stocks")
     return df
@@ -69,7 +91,9 @@ def load_all_forex_data(db_file, limit=None):
     return df
 
 
-def train_unified_stock_model(db_file, output_path, epochs=50):
+def train_unified_stock_model(
+    db_file, output_path, epochs=50, sample_size=24, seed=None
+):
     """Train ONE model for ALL stocks"""
     print(f"\n{'='*60}")
     print("Training Unified Stock Model")
@@ -77,13 +101,26 @@ def train_unified_stock_model(db_file, output_path, epochs=50):
 
     start_time = time.time()
 
-    # Load all stock data
-    print("Loading all stock data from database...")
-    data = load_all_stock_data(db_file)
+    all_symbols = load_stock_symbols(db_file)
+    rng = random.Random(seed)
+    effective_size = min(sample_size, len(all_symbols))
+    selected_symbols = (
+        all_symbols
+        if effective_size == len(all_symbols)
+        else rng.sample(all_symbols, effective_size)
+    )
+    selected_symbols = sorted(selected_symbols)
 
-    # Group by symbol and prepare for training
-    symbols = data["symbol"].unique()
-    print(f"Training on {len(symbols)} stocks: {', '.join(symbols[:5])}...")
+    print(
+        "Loading stock data from database "
+        f"(sample_size={effective_size}, total_symbols={len(all_symbols)})..."
+    )
+    data = load_stock_data_for_symbols(db_file, selected_symbols)
+
+    print(
+        f"Training on {len(selected_symbols)} stocks: "
+        f"{', '.join(selected_symbols[:5])}{'...' if len(selected_symbols) > 5 else ''}"
+    )
 
     # Initialize ML system
     ml = UnifiedStockML(model_path=output_path)
@@ -110,7 +147,7 @@ def train_unified_stock_model(db_file, output_path, epochs=50):
         print("\n✓ Training completed successfully")
         print(f"  Final loss: {result.get('final_loss', 'N/A')}")
         print(f"  Training time: {training_time:.2f}s")
-        print(f"  Stocks trained: {len(symbols)}")
+        print(f"  Stocks trained: {len(selected_symbols)}")
         print(f"  Model saved to: {output_path}")
         return True
     else:
@@ -184,6 +221,18 @@ def main():
     )
     parser.add_argument("--epochs", type=int, default=50, help="Training epochs")
     parser.add_argument(
+        "--stock-sample-size",
+        type=int,
+        default=24,
+        help="Number of stock symbols to sample per run",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for stock sampling (optional)",
+    )
+    parser.add_argument(
         "--stocks-only", action="store_true", help="Train only stock model"
     )
     parser.add_argument(
@@ -201,7 +250,11 @@ def main():
     # Train stock model
     if not args.forex_only:
         stock_success = train_unified_stock_model(
-            args.db_file, args.stock_output, args.epochs
+            args.db_file,
+            args.stock_output,
+            args.epochs,
+            sample_size=args.stock_sample_size,
+            seed=args.seed,
         )
         success = success and stock_success
 

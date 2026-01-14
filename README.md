@@ -1,13 +1,13 @@
 <div align="center">
 
-# 🤖 ARA AI - Automated Trading Intelligence
+# ARA AI - Automated Trading Intelligence
 
 **High-Performance Financial Prediction Platform with Continuous Ensemble Learning**
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Training Status](https://img.shields.io/badge/training-automated-success)](https://github.com/MeridianAlgo/AraAI/actions)
-[![Hugging Face](https://img.shields.io/badge/🤗%20Hugging%20Face-Models-yellow)](https://huggingface.co/MeridianAlgo/ARA.AI)
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Models-yellow)](https://huggingface.co/MeridianAlgo/ARA.AI)
 [![W&B](https://img.shields.io/badge/W%26B-Tracking-orange)](https://wandb.ai)
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Training](#-automated-training) • [Documentation](#-documentation) • [Performance](#-performance)
@@ -16,24 +16,24 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
 ARA AI is a production-ready financial prediction platform that leverages ensemble machine learning to forecast stock and forex prices. With **automated training running 6-24 times daily**, models continuously improve and adapt to market conditions.
 
-### ⚡ Key Highlights
+### Key Highlights
 
-- **🚀 Fast Training**: ~2-3 minutes for both unified models
-- **🔄 Hourly Learning**: Trains every hour (24x per day)
-- **📊 Unified Models**: ONE model for all stocks, ONE for all forex
-- **🎯 High Accuracy**: Consistently >99.9% on validation data
-- **☁️ Cloud-Ready**: GitHub Actions + Hugging Face integration
-- **📈 Real-Time**: Latest market data before each training cycle
+- **Fast Training**: ~2-3 minutes for both unified models
+- **Hourly Learning**: Trains every hour (24x per day)
+- **Unified Models**: ONE model for all stocks, ONE for all forex
+- **High Accuracy**: Consistently >99.9% on validation data
+- **Cloud-Ready**: GitHub Actions + Hugging Face integration
+- **Real-Time**: Latest market data before each training cycle
 
 ---
 
-## ✨ Features
+## Features
 
-### 🤖 Machine Learning
+### Machine Learning
 
 - **Ensemble Architecture**: XGBoost, LightGBM, Random Forest, Gradient Boosting
 - **Deep Learning**: Transformer attention mechanisms + CNN-LSTM hybrid
@@ -41,7 +41,7 @@ ARA AI is a production-ready financial prediction platform that leverages ensemb
 - **Adaptive Learning**: Automatically adjusts to market volatility
 - **4.2M+ Parameters**: Large-scale neural network architecture
 
-### 📊 Technical Analysis
+### Technical Analysis
 
 - **44+ Indicators**: RSI, MACD, Bollinger Bands, ATR, Stochastic, and more
 - **Pattern Recognition**: Head & Shoulders, Triangles, Wedges, Flags
@@ -49,7 +49,7 @@ ARA AI is a production-ready financial prediction platform that leverages ensemb
 - **Trend Detection**: SMA, EMA, ADX, Parabolic SAR, Ichimoku
 - **Volatility Measures**: Bollinger Bands, Keltner Channels, ATR
 
-### 🔄 Automated Training
+### Automated Training
 
 - **Unified Models**: ONE model for all stocks, ONE for all forex (efficient & scalable)
 - **Hourly Schedule**: Trains every hour (24x per day) for maximum learning
@@ -60,7 +60,7 @@ ARA AI is a production-ready financial prediction platform that leverages ensemb
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -100,7 +100,7 @@ python scripts/training_dashboard.py
 
 ---
 
-## 📈 Performance
+## Performance
 
 ### Training Metrics
 
@@ -166,7 +166,7 @@ graph LR
 
 ---
 
-## 💻 Usage
+## Usage
 
 ### Load Pre-trained Models
 
@@ -220,7 +220,7 @@ sqlite3 training.db "SELECT * FROM model_metadata ORDER BY training_date DESC LI
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Project Structure
 
@@ -281,7 +281,7 @@ Input Layer (OHLCV + 44 Indicators)
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 - **[QUICK_START.md](QUICK_START.md)** - Quick reference guide
 - **[GITHUB_ACTIONS_FIX.md](GITHUB_ACTIONS_FIX.md)** - Workflow optimization details
@@ -290,7 +290,7 @@ Input Layer (OHLCV + 44 Indicators)
 
 ---
 
-## 🛠️ Setup Automated Training
+## Setup Automated Training
 
 ### 1. Enable GitHub Actions
 
@@ -313,11 +313,11 @@ For Hugging Face and W&B integration:
 1. Go to Actions tab
 2. Select "Multi-Daily Model Training"
 3. Click "Run workflow"
-4. Watch the magic happen! ✨
+4. Watch the workflow run.
 
 ---
 
-## 🎯 Use Cases
+## Use Cases
 
 - **Algorithmic Trading**: Integrate predictions into trading bots
 - **Portfolio Management**: Optimize asset allocation
@@ -327,7 +327,7 @@ For Hugging Face and W&B integration:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Here's how:
 
@@ -355,20 +355,20 @@ mypy scripts/ meridianalgo/
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 **IMPORTANT**: This software is for educational and research purposes only.
 
-- ❌ NOT financial advice
-- ❌ Past performance ≠ future results
-- ❌ All predictions are probabilistic
-- ✅ You are solely responsible for investment decisions
-- ✅ Consult qualified financial professionals
-- ✅ Authors are not liable for financial losses
+- NOT financial advice
+- Past performance does not guarantee future results
+- All predictions are probabilistic
+- You are solely responsible for investment decisions
+- Consult qualified financial professionals
+- Authors are not liable for financial losses
 
 ---
 
-## 📊 Statistics
+## Statistics
 
 - **6,800+** Available tickers
 - **2** Unified models (1 stock + 1 forex)
@@ -380,13 +380,13 @@ mypy scripts/ meridianalgo/
 
 ---
 
-## 🌟 Star History
+## Star History
 
-If you find this project useful, please consider giving it a star! ⭐
+If you find this project useful, please consider giving it a star.
 
 ---
 
-## 📞 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/AraAI/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/AraAI/discussions)
@@ -395,7 +395,7 @@ If you find this project useful, please consider giving it a star! ⭐
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
@@ -415,8 +415,8 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 **Last Updated**: January 2026  
 **Version**: 6.0.0
 
-Made with ❤️ and 🤖
+Made with care.
 
-[⬆ Back to Top](#-ara-ai---automated-trading-intelligence)
+[Back to Top](#-ara-ai---automated-trading-intelligence)
 
 </div>
