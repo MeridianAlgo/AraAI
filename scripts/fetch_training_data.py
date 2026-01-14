@@ -76,7 +76,7 @@ def fetch_forex_data(pair, period="2y", interval="1d"):
         df = ticker.history(period=period, interval=interval)
 
         if df.empty:
-            print(f"  Warning: No data for {pair}")
+            print(f"  Warning: No data for {pair} (symbol: {symbol})")
             return None
 
         # Reset index to get Date as a column
@@ -93,7 +93,7 @@ def fetch_forex_data(pair, period="2y", interval="1d"):
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d %H:%M:%S")
 
         # Add metadata columns
-        df["Symbol"] = symbol
+        df["Symbol"] = pair  # Store original pair name, not symbol with =X
         df["AssetType"] = "forex"
         df["FetchDate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         df["Timeframe"] = period
@@ -105,7 +105,10 @@ def fetch_forex_data(pair, period="2y", interval="1d"):
 
         return df
     except Exception as e:
-        print(f"  Error fetching {pair}: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"  Error fetching {pair} (symbol: {symbol if 'symbol' in locals() else 'unknown'}): {e}")
+        print(f"  Details: {error_details}")
         return None
 
 
@@ -140,8 +143,11 @@ def main():
 
     all_data = []
 
+    successful = 0
+    failed = 0
+    
     for symbol in symbols:
-        print(f"  Fetching {symbol}...")
+        print(f"  Fetching {symbol}...", flush=True)
 
         if args.asset_type == "stock":
             df = fetch_stock_data(symbol, args.period, args.interval)
@@ -153,7 +159,13 @@ def main():
             # Save individual CSV
             csv_path = output_dir / f"{symbol.replace('=X', '')}.csv"
             df.to_csv(csv_path, index=False)
-            print(f"    ✓ Saved {len(df)} rows to {csv_path}")
+            print(f"    ✓ Saved {len(df)} rows to {csv_path}", flush=True)
+            successful += 1
+        else:
+            failed += 1
+            print(f"    ✗ Failed to fetch {symbol}", flush=True)
+    
+    print(f"\nSummary: {successful} successful, {failed} failed out of {len(symbols)} symbols")
 
     if all_data:
         # Save combined CSV

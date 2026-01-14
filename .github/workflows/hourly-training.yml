@@ -71,6 +71,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
           TRAINING_MODE: hourly
+          TRAINING_LOG_FILE: hourly-training.log
         run: |
           echo "=== Hourly Training Session Started at $(date) ===" | tee -a hourly-training.log
           echo "Training run: ${{ github.run_number }}" | tee -a hourly-training.log
@@ -80,10 +81,10 @@ jobs:
           if [ -f "all_tickers.txt" ]; then
             TICKER_COUNT=$(wc -l < all_tickers.txt | tr -d ' ')
             echo "Found all_tickers.txt with $TICKER_COUNT tickers - using ALL tickers" | tee -a hourly-training.log
-            python scripts/continuous_training.py --workflow "$WORKFLOW" --use-all-tickers 2>&1 | tee -a hourly-training.log
+            python scripts/continuous_training.py --workflow "$WORKFLOW" --use-all-tickers --log-file hourly-training.log 2>&1 | tee -a hourly-training.log
           else
             echo "Warning: all_tickers.txt not found, using fallback" | tee -a hourly-training.log
-            python scripts/continuous_training.py --workflow "$WORKFLOW" 2>&1 | tee -a hourly-training.log
+            python scripts/continuous_training.py --workflow "$WORKFLOW" --log-file hourly-training.log 2>&1 | tee -a hourly-training.log
           fi
           echo "=== Hourly Training Session Completed at $(date) ===" | tee -a hourly-training.log
 
