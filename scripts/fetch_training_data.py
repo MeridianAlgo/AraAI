@@ -112,7 +112,10 @@ def fetch_forex_data(pair, period="2y", interval="1d"):
 def main():
     parser = argparse.ArgumentParser(description="Fetch market data for training")
     parser.add_argument(
-        "--symbols", required=True, help="Comma-separated list of symbols"
+        "--symbols",
+        required=True,
+        nargs="+",
+        help="List of symbols (space-separated) or a single comma-separated string",
     )
     parser.add_argument(
         "--output-dir", required=True, help="Output directory for CSV files"
@@ -127,7 +130,10 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    symbols = [s.strip() for s in args.symbols.split(",")]
+    if len(args.symbols) == 1 and "," in args.symbols[0]:
+        symbols = [s.strip() for s in args.symbols[0].split(",") if s.strip()]
+    else:
+        symbols = [s.strip() for s in args.symbols if s.strip()]
 
     print(f"Fetching {args.asset_type} data for {len(symbols)} symbols...")
     print(f"Period: {args.period}, Interval: {args.interval}")
