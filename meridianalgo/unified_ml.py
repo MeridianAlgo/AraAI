@@ -182,7 +182,8 @@ class UnifiedStockML:
                 df["Volume"] = 1000000
 
             # Convert Date and set index
-            df["Date"] = pd.to_datetime(df["Date"])
+            df["Date"] = pd.to_datetime(df["Date"], format="mixed", errors="coerce")
+            df = df.dropna(subset=["Date"])
             df.set_index("Date", inplace=True)
             df.sort_index(inplace=True)
 

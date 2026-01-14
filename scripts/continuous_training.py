@@ -22,12 +22,28 @@ DB_FILE = "training.db"
 MODEL_DIR = Path("models")
 SCRIPTS_DIR = Path("scripts")
 TICKERS_FILE = "all_tickers.txt"
-STOCK_COUNT = 500  # Fetch more stocks for unified training (increased for better coverage)
+STOCK_COUNT = 24
 FOREX_PAIRS = [
-    "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD",
-    "EURGBP", "EURJPY", "GBPJPY", "AUDJPY", "NZDUSD",
-    "USDCHF", "EURCHF", "GBPCHF", "AUDNZD", "EURAUD",
-    "EURCAD", "GBPAUD", "GBPCAD", "AUDCAD", "CADJPY"
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "USDCAD",
+    "EURGBP",
+    "EURJPY",
+    "GBPJPY",
+    "AUDJPY",
+    "NZDUSD",
+    "USDCHF",
+    "EURCHF",
+    "GBPCHF",
+    "AUDNZD",
+    "EURAUD",
+    "EURCAD",
+    "GBPAUD",
+    "GBPCAD",
+    "AUDCAD",
+    "CADJPY",
 ]  # Extended forex pairs list
 EPOCHS = 50
 UNIFIED_STOCK_MODEL = MODEL_DIR / "unified_stock_model.pt"
@@ -36,45 +52,45 @@ UNIFIED_FOREX_MODEL = MODEL_DIR / "unified_forex_model.pt"
 
 def run_command(cmd, log_file=None):
     """Run a shell command and return output with detailed error handling"""
-    import logging
-    from datetime import datetime
-    
-    cmd_str = ' '.join(cmd)
+
+    cmd_str = " ".join(cmd)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
     log_msg = f"[{timestamp}] Running: {cmd_str}"
     print(log_msg)
     if log_file:
-        with open(log_file, 'a') as f:
-            f.write(log_msg + '\n')
-    
-    result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    
+        with open(log_file, "a") as f:
+            f.write(log_msg + "\n")
+
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
+
     # Always log stdout
     if result.stdout:
         print("STDOUT:", result.stdout)
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write("STDOUT: " + result.stdout + '\n')
-    
+            with open(log_file, "a") as f:
+                f.write("STDOUT: " + result.stdout + "\n")
+
     if result.returncode != 0:
         error_msg = f"[{timestamp}] Command failed with exit code {result.returncode}"
         if result.stderr:
             error_msg += f"\nSTDERR: {result.stderr}"
         if result.stdout:
             error_msg += f"\nSTDOUT: {result.stdout}"
-        
+
         print(f"ERROR: {error_msg}")
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write("ERROR: " + error_msg + '\n')
-        
+            with open(log_file, "a") as f:
+                f.write("ERROR: " + error_msg + "\n")
+
         return False, result.stderr or result.stdout or error_msg
-    
+
     return True, result.stdout
 
 
-def select_tickers(use_all=False):
+def select_tickers(use_all=False, stock_count=STOCK_COUNT, seed=None):
     """Select tickers from the file"""
     if not os.path.exists(TICKERS_FILE):
         print(f"Warning: {TICKERS_FILE} not found. Using fallback tickers.")
@@ -83,25 +99,28 @@ def select_tickers(use_all=False):
     with open(TICKERS_FILE, "r") as f:
         tickers = [line.strip() for line in f if line.strip()]
 
-    if use_all or len(tickers) <= STOCK_COUNT:
+    if use_all or len(tickers) <= stock_count:
         print(f"Using all {len(tickers)} tickers from {TICKERS_FILE}")
         return tickers
     else:
-        selected = random.sample(tickers, STOCK_COUNT)
-        print(f"Selected {len(selected)} random tickers from {len(tickers)} available")
+        rng = random.Random(seed)
+        selected = rng.sample(tickers, stock_count)
+        print(
+            f"Selected {len(selected)} random tickers from {len(tickers)} available "
+            f"(seed={seed})"
+        )
         return selected
 
 
 def fetch_and_store_stocks(symbols, log_file=None):
     """Fetch data for multiple stocks and store in DB"""
-    from datetime import datetime
-    
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_msg = f"\n[{timestamp}] --- Fetching Stock Data for {len(symbols)} symbols ---"
     print(log_msg)
     if log_file:
-        with open(log_file, 'a') as f:
-            f.write(log_msg + '\n')
+        with open(log_file, "a") as f:
+            f.write(log_msg + "\n")
 
     # Fetch data for all stocks
     fetch_cmd = [
@@ -123,8 +142,8 @@ def fetch_and_store_stocks(symbols, log_file=None):
         error_msg = f"[{timestamp}] Failed to fetch stock data. Output: {output}"
         print(error_msg)
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write(error_msg + '\n')
+            with open(log_file, "a") as f:
+                f.write(error_msg + "\n")
         return False
 
     # Store in DB
@@ -132,9 +151,9 @@ def fetch_and_store_stocks(symbols, log_file=None):
     log_msg = f"[{timestamp}] Storing stock data in database..."
     print(log_msg)
     if log_file:
-        with open(log_file, 'a') as f:
-            f.write(log_msg + '\n')
-    
+        with open(log_file, "a") as f:
+            f.write(log_msg + "\n")
+
     store_cmd = [
         sys.executable,
         str(SCRIPTS_DIR / "store_training_data.py"),
@@ -148,27 +167,26 @@ def fetch_and_store_stocks(symbols, log_file=None):
         error_msg = f"[{timestamp}] Failed to store stock data. Output: {output}"
         print(error_msg)
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write(error_msg + '\n')
+            with open(log_file, "a") as f:
+                f.write(error_msg + "\n")
         return False
-    
+
     return True
 
 
 def fetch_and_store_forex(pairs, log_file=None):
     """Fetch data for multiple forex pairs and store in DB"""
-    from datetime import datetime
-    
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_msg = f"\n[{timestamp}] --- Fetching Forex Data for {len(pairs)} pairs ---"
     print(log_msg)
     if log_file:
-        with open(log_file, 'a') as f:
-            f.write(log_msg + '\n')
-    
+        with open(log_file, "a") as f:
+            f.write(log_msg + "\n")
+
     print(f"[{timestamp}] Forex pairs: {', '.join(pairs)}")
     if log_file:
-        with open(log_file, 'a') as f:
+        with open(log_file, "a") as f:
             f.write(f"[{timestamp}] Forex pairs: {', '.join(pairs)}\n")
 
     # Fetch data for all forex pairs
@@ -191,14 +209,18 @@ def fetch_and_store_forex(pairs, log_file=None):
         error_msg = f"[{timestamp}] Failed to fetch forex data. Output: {output}"
         print(error_msg)
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write(error_msg + '\n')
+            with open(log_file, "a") as f:
+                f.write(error_msg + "\n")
         # Try fetching pairs individually to identify which ones fail
-        print(f"[{timestamp}] Attempting to fetch forex pairs individually to identify failures...")
+        print(
+            f"[{timestamp}] Attempting to fetch forex pairs individually to identify failures..."
+        )
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write(f"[{timestamp}] Attempting to fetch forex pairs individually to identify failures...\n")
-        
+            with open(log_file, "a") as f:
+                f.write(
+                    f"[{timestamp}] Attempting to fetch forex pairs individually to identify failures...\n"
+                )
+
         successful_pairs = []
         for pair in pairs:
             single_cmd = [
@@ -221,23 +243,27 @@ def fetch_and_store_forex(pairs, log_file=None):
                 print(f"[{timestamp}] ✓ Successfully fetched {pair}")
             else:
                 print(f"[{timestamp}] ✗ Failed to fetch {pair}: {pair_output}")
-        
+
         if not successful_pairs:
             return False
-        
-        print(f"[{timestamp}] Successfully fetched {len(successful_pairs)}/{len(pairs)} forex pairs")
+
+        print(
+            f"[{timestamp}] Successfully fetched {len(successful_pairs)}/{len(pairs)} forex pairs"
+        )
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write(f"[{timestamp}] Successfully fetched {len(successful_pairs)}/{len(pairs)} forex pairs\n")
+            with open(log_file, "a") as f:
+                f.write(
+                    f"[{timestamp}] Successfully fetched {len(successful_pairs)}/{len(pairs)} forex pairs\n"
+                )
 
     # Store in DB
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_msg = f"[{timestamp}] Storing forex data in database..."
     print(log_msg)
     if log_file:
-        with open(log_file, 'a') as f:
-            f.write(log_msg + '\n')
-    
+        with open(log_file, "a") as f:
+            f.write(log_msg + "\n")
+
     store_cmd = [
         sys.executable,
         str(SCRIPTS_DIR / "store_training_data.py"),
@@ -251,23 +277,22 @@ def fetch_and_store_forex(pairs, log_file=None):
         error_msg = f"[{timestamp}] Failed to store forex data. Output: {output}"
         print(error_msg)
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write(error_msg + '\n')
+            with open(log_file, "a") as f:
+                f.write(error_msg + "\n")
         return False
-    
+
     return True
 
 
 def train_unified_models(log_file=None):
     """Train unified models - ONE for all stocks, ONE for all forex"""
-    from datetime import datetime
-    
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_msg = f"\n[{timestamp}] --- Training Unified Models ---"
     print(log_msg)
     if log_file:
-        with open(log_file, 'a') as f:
-            f.write(log_msg + '\n')
+        with open(log_file, "a") as f:
+            f.write(log_msg + "\n")
 
     train_cmd = [
         sys.executable,
@@ -286,8 +311,8 @@ def train_unified_models(log_file=None):
         error_msg = f"[{timestamp}] Failed to train unified models. Output: {output}"
         print(error_msg)
         if log_file:
-            with open(log_file, 'a') as f:
-                f.write(error_msg + '\n')
+            with open(log_file, "a") as f:
+                f.write(error_msg + "\n")
     return success
 
 
@@ -355,9 +380,8 @@ def upload_forex_model():
 
 
 def main():
-    from datetime import datetime
     import traceback
-    
+
     parser = argparse.ArgumentParser(
         description="Continuous Training Orchestrator for Ara AI"
     )
@@ -371,6 +395,24 @@ def main():
         "--use-all-tickers",
         action="store_true",
         help="Use all tickers from all_tickers.txt instead of random sample",
+    )
+    parser.add_argument(
+        "--stock-count",
+        type=int,
+        default=STOCK_COUNT,
+        help="Number of stocks to fetch/store per run",
+    )
+    parser.add_argument(
+        "--stock-sample-size",
+        type=int,
+        default=STOCK_COUNT,
+        help="Number of stocks to train on per run",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for stock sampling (optional)",
     )
     parser.add_argument(
         "--log-file",
@@ -392,10 +434,13 @@ def main():
     start_time = datetime.now()
     start_msg = f"=== Starting Unified Training Session: {start_time} ==="
     print(start_msg)
-    with open(log_file, 'w') as f:
-        f.write(start_msg + '\n')
+    with open(log_file, "w") as f:
+        f.write(start_msg + "\n")
         f.write(f"Workflow: {args.workflow}\n")
         f.write(f"Use all tickers: {args.use_all_tickers}\n")
+        f.write(f"Stock count (fetch/store): {args.stock_count}\n")
+        f.write(f"Stock sample size (train): {args.stock_sample_size}\n")
+        f.write(f"Seed: {args.seed}\n")
         f.write(f"Log file: {log_file}\n\n")
 
     try:
@@ -412,26 +457,37 @@ def main():
 
         # 1. Stock workflow
         if args.workflow in {"stock", "both"}:
-            selected_stocks = select_tickers(use_all=args.use_all_tickers)
+            stock_count = args.stock_count
+            if args.use_all_tickers:
+                stock_count = 10**9
+            selected_stocks = select_tickers(
+                use_all=args.use_all_tickers,
+                stock_count=stock_count,
+                seed=args.seed,
+            )
             if len(selected_stocks) <= 20:
-                print(f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}")
+                print(
+                    f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}"
+                )
             else:
-                print(f"\nSelected {len(selected_stocks)} stocks (showing first 20): {', '.join(selected_stocks[:20])}...")
-            with open(log_file, 'a') as f:
+                print(
+                    f"\nSelected {len(selected_stocks)} stocks (showing first 20): {', '.join(selected_stocks[:20])}..."
+                )
+            with open(log_file, "a") as f:
                 f.write(f"Selected {len(selected_stocks)} stocks for training\n")
 
             try:
                 if not fetch_and_store_stocks(selected_stocks, log_file=log_file):
                     error_msg = "Error: Failed to fetch stock data"
                     print(error_msg)
-                    with open(log_file, 'a') as f:
-                        f.write(error_msg + '\n')
+                    with open(log_file, "a") as f:
+                        f.write(error_msg + "\n")
                     return
             except Exception as e:
                 error_msg = f"Error fetching stocks: {e}\n{traceback.format_exc()}"
                 print(error_msg)
-                with open(log_file, 'a') as f:
-                    f.write(error_msg + '\n')
+                with open(log_file, "a") as f:
+                    f.write(error_msg + "\n")
                 return
 
         # 2. Forex workflow
@@ -440,15 +496,15 @@ def main():
                 if not fetch_and_store_forex(FOREX_PAIRS, log_file=log_file):
                     error_msg = "Error: Failed to fetch forex data"
                     print(error_msg)
-                    with open(log_file, 'a') as f:
-                        f.write(error_msg + '\n')
+                    with open(log_file, "a") as f:
+                        f.write(error_msg + "\n")
                     # Continue anyway - some pairs might have succeeded
                     print("Warning: Continuing with available forex data...")
             except Exception as e:
                 error_msg = f"Error fetching forex: {e}\n{traceback.format_exc()}"
                 print(error_msg)
-                with open(log_file, 'a') as f:
-                    f.write(error_msg + '\n')
+                with open(log_file, "a") as f:
+                    f.write(error_msg + "\n")
                 print("Warning: Continuing with available forex data...")
 
         # 3. Train unified models (scoped)
@@ -464,7 +520,11 @@ def main():
                 str(UNIFIED_FOREX_MODEL),
                 "--epochs",
                 str(EPOCHS),
+                "--stock-sample-size",
+                str(args.stock_sample_size),
             ]
+            if args.seed is not None:
+                train_cmd.extend(["--seed", str(args.seed)])
             if args.workflow == "stock":
                 train_cmd.append("--stocks-only")
             elif args.workflow == "forex":
@@ -474,14 +534,14 @@ def main():
             if not success:
                 error_msg = f"Error: Failed to train unified models. Output: {output}"
                 print(error_msg)
-                with open(log_file, 'a') as f:
-                    f.write(error_msg + '\n')
+                with open(log_file, "a") as f:
+                    f.write(error_msg + "\n")
                 return
         except Exception as e:
             error_msg = f"Error training models: {e}\n{traceback.format_exc()}"
             print(error_msg)
-            with open(log_file, 'a') as f:
-                f.write(error_msg + '\n')
+            with open(log_file, "a") as f:
+                f.write(error_msg + "\n")
             return
 
         # 4. Upload to Hugging Face (optional)
@@ -496,35 +556,35 @@ def main():
             except Exception as e:
                 warning_msg = f"Warning: Failed to upload models: {e}"
                 print(warning_msg)
-                with open(log_file, 'a') as f:
-                    f.write(warning_msg + '\n')
+                with open(log_file, "a") as f:
+                    f.write(warning_msg + "\n")
         else:
             msg = "\nSkipping Hugging Face upload (no HF_TOKEN found)"
             print(msg)
-            with open(log_file, 'a') as f:
-                f.write(msg + '\n')
+            with open(log_file, "a") as f:
+                f.write(msg + "\n")
 
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
         completion_msg = f"\n=== Unified Training Session Completed: {end_time} ==="
         print(completion_msg)
         print(f"Duration: {duration:.2f} seconds")
-        with open(log_file, 'a') as f:
-            f.write(completion_msg + '\n')
+        with open(log_file, "a") as f:
+            f.write(completion_msg + "\n")
             f.write(f"Duration: {duration:.2f} seconds\n")
-        
+
         if args.workflow in {"stock", "both"}:
             print(f"✓ Stock Model: {UNIFIED_STOCK_MODEL}")
         if args.workflow in {"forex", "both"}:
             print(f"✓ Forex Model: {UNIFIED_FOREX_MODEL}")
-        
+
         print(f"\n✓ Detailed log saved to: {log_file}")
-        
+
     except Exception as e:
         error_msg = f"Fatal error in main: {e}\n{traceback.format_exc()}"
         print(error_msg)
-        with open(log_file, 'a') as f:
-            f.write(error_msg + '\n')
+        with open(log_file, "a") as f:
+            f.write(error_msg + "\n")
         raise
 
 

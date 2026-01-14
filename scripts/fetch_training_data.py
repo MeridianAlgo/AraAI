@@ -106,8 +106,11 @@ def fetch_forex_data(pair, period="2y", interval="1d"):
         return df
     except Exception as e:
         import traceback
+
         error_details = traceback.format_exc()
-        print(f"  Error fetching {pair} (symbol: {symbol if 'symbol' in locals() else 'unknown'}): {e}")
+        print(
+            f"  Error fetching {pair} (symbol: {symbol if 'symbol' in locals() else 'unknown'}): {e}"
+        )
         print(f"  Details: {error_details}")
         return None
 
@@ -145,7 +148,7 @@ def main():
 
     successful = 0
     failed = 0
-    
+
     for symbol in symbols:
         print(f"  Fetching {symbol}...", flush=True)
 
@@ -164,8 +167,10 @@ def main():
         else:
             failed += 1
             print(f"    ✗ Failed to fetch {symbol}", flush=True)
-    
-    print(f"\nSummary: {successful} successful, {failed} failed out of {len(symbols)} symbols")
+
+    print(
+        f"\nSummary: {successful} successful, {failed} failed out of {len(symbols)} symbols"
+    )
 
     if all_data:
         # Save combined CSV
