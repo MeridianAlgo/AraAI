@@ -11,8 +11,8 @@ import numpy as np
 
 from ara.core.interfaces import AssetType
 from ara.core.exceptions import DataProviderError, ValidationError
-from ara.data.base_provider import BaseDataProvider
-from ara.data.crypto_provider import CryptoExchangeProvider
+from ara.data.stock_provider import YahooFinanceProvider
+from ara.data.crypto_provider import BinanceProvider
 from ara.features.calculator import IndicatorCalculator
 from ara.models.ensemble import EnhancedEnsemble
 from ara.models.regime_detector import RegimeDetector
@@ -26,8 +26,9 @@ class PredictionEngine:
 
     def __init__(self):
         """Initialize prediction engine with providers and models"""
-        self.stock_provider = BaseDataProvider()
-        self.crypto_provider = CryptoExchangeProvider()
+        self.stock_provider = YahooFinanceProvider(AssetType.STOCK)
+        self.forex_provider = YahooFinanceProvider(AssetType.FOREX)
+        self.crypto_provider = BinanceProvider()
         self.feature_calculator = IndicatorCalculator()
         self.regime_detector = RegimeDetector()
         self.explanation_generator = ExplanationGenerator()
@@ -55,6 +56,8 @@ class PredictionEngine:
         """Get appropriate data provider for asset type"""
         if asset_type == AssetType.CRYPTO:
             return self.crypto_provider
+        elif asset_type == AssetType.FOREX:
+            return self.forex_provider
         else:
             return self.stock_provider
 
@@ -88,10 +91,11 @@ class PredictionEngine:
                 f"Feature calculation failed: {str(e)}", {"data_shape": data.shape}
             )
 
-    def _get_or_create_model(self, symbol: str) -> EnhancedEnsemble:
+    def _get_or_create_model(self, symbol: str, asset_type: AssetType) -> EnhancedEnsemble:
         """Get cached model or create new one"""
+        model_type = asset_type.value if asset_type else "stock"
         if symbol not in self._models:
-            self._models[symbol] = EnhancedEnsemble(symbol=symbol)
+            self._models[symbol] = EnhancedEnsemble(symbol=symbol, model_type=model_type)
         return self._models[symbol]
 
     def _prepare_features(self, features: pd.DataFrame) -> np.ndarray:
@@ -100,7 +104,7 @@ class PredictionEngine:
         feature_cols = [
             col
             for col in features.columns
-            if col not in ["Date", "Open", "High", "Low", "Close", "Volume"]
+            if col not in ["date", "open", "high", "low", "close", "volume"]
         ]
 
         if not feature_cols:
@@ -141,7 +145,7 @@ class PredictionEngine:
         data = await self._fetch_data(symbol, asset_type)
 
         # Get current price
-        current_price = float(data["Close"].iloc[-1])
+        current_price = float(data["close"].iloc[-1])
 
         # Calculate features
         features = self._calculate_features(data)
@@ -150,7 +154,7 @@ class PredictionEngine:
         regime_info = self.regime_detector.detect_regime(data)
 
         # Get or create model
-        model = self._get_or_create_model(symbol)
+        model = self._get_or_create_model(symbol, asset_type)
 
         # Prepare features for prediction
         X = self._prepare_features(features)
@@ -158,12 +162,12 @@ class PredictionEngine:
         # Train model if not trained
         if not model.is_trained():
             # Prepare training data
-            y = data["Close"].pct_change().fillna(0).values[-len(X) :]
+            y = data["close"].pct_change().fillna(0).values[-len(X) :]
             model.train(X, y)
 
         # Generate predictions
         predictions = []
-        last_price = current_price
+        last_price = float(current_price)
 
         for day in range(1, days + 1):
             # Predict next day return
@@ -175,18 +179,18 @@ class PredictionEngine:
             pred_price = last_price * (1 + pred_return)
 
             # Calculate confidence interval (95%)
-            volatility = data["Close"].pct_change().std()
+            volatility = data["close"].pct_change().std()
             margin = 1.96 * volatility * last_price
 
             predictions.append(
                 {
-                    "day": day,
+                    "day": int(day),
                     "date": datetime.now() + timedelta(days=day),
-                    "predicted_price": round(pred_price, 2),
-                    "predicted_return": round(pred_return * 100, 2),
-                    "confidence": round(confidence, 3),
-                    "lower_bound": round(pred_price - margin, 2),
-                    "upper_bound": round(pred_price + margin, 2),
+                    "predicted_price": round(float(pred_price), 2),
+                    "predicted_return": round(float(pred_return) * 100, 2),
+                    "confidence": round(float(confidence), 3),
+                    "lower_bound": round(float(pred_price - margin), 2),
+                    "upper_bound": round(float(pred_price + margin), 2),
                 }
             )
 
@@ -194,7 +198,7 @@ class PredictionEngine:
 
         # Calculate confidence scores
         confidence_score = {
-            "overall": round(np.mean([p["confidence"] for p in predictions]), 3),
+            "overall": round(float(np.mean([p["confidence"] for p in predictions])), 3),
             "model_agreement": 0.85,  # Placeholder
             "data_quality": 0.90,  # Placeholder
             "regime_stability": 0.80,  # Placeholder
@@ -227,13 +231,11 @@ class PredictionEngine:
             "confidence": confidence_score,
             "explanations": explanations,
             "regime": {
-                "current_regime": regime_info.get("regime", "unknown"),
-                "confidence": regime_info.get("confidence", 0.5),
-                "transition_probabilities": regime_info.get(
-                    "transition_probabilities", {}
-                ),
-                "duration_in_regime": regime_info.get("duration", 0),
-                "expected_duration": regime_info.get("expected_duration", 0),
+                "current_regime": str(regime_info.get("regime", "unknown")),
+                "confidence": float(regime_info.get("confidence", 0.5)),
+                "transition_probabilities": {k: float(v) for k, v in regime_info.get("transition_probabilities", {}).items()},
+                "duration_in_regime": int(regime_info.get("duration", 0)),
+                "expected_duration": int(regime_info.get("expected_duration", 0)),
             },
             "timestamp": datetime.now(),
             "model_version": self._model_version,

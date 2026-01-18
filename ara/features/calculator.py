@@ -36,6 +36,12 @@ class IndicatorCalculator:
         self.registry.enable_cache(enable_cache)
         self.max_workers = max_workers
 
+    def calculate_features(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Bridge method for PredictionEngine"""
+        # Calculate standard set of indicators using registered names
+        # Parameters are passed to the individual registration defaults if not specified
+        return self.calculate(data, ["sma", "rsi", "macd"])
+
     def calculate(
         self,
         data: pd.DataFrame,
@@ -212,6 +218,10 @@ class IndicatorCalculator:
         resampled = resampled.dropna()
 
         return resampled
+
+    def get_feature_names(self) -> List[str]:
+        """Return list of default feature names"""
+        return ["sma", "rsi", "macd", "macd_signal", "macd_histogram"]
 
     def get_available_indicators(self, category: Optional[str] = None) -> List[str]:
         """

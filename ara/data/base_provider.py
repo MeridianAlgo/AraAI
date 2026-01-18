@@ -92,7 +92,7 @@ class BaseDataProvider(IDataProvider):
         Raises:
             DataProviderError: If validation fails
         """
-        required_columns = ["Open", "High", "Low", "Close", "Volume"]
+        required_columns = ["open", "high", "low", "close", "volume"]
 
         # Check columns
         missing_columns = [col for col in required_columns if col not in df.columns]
@@ -107,18 +107,18 @@ class BaseDataProvider(IDataProvider):
             raise DataProviderError("Empty dataframe returned")
 
         # Check for NaN values in critical columns
-        for col in ["Close", "Volume"]:
+        for col in ["close", "volume"]:
             if df[col].isna().all():
                 raise DataProviderError(f"All values are NaN in column: {col}")
 
         # Check for negative prices
-        price_columns = ["Open", "High", "Low", "Close"]
+        price_columns = ["open", "high", "low", "close"]
         for col in price_columns:
             if (df[col] < 0).any():
                 raise DataProviderError(f"Negative values found in column: {col}")
 
         # Check High >= Low
-        if (df["High"] < df["Low"]).any():
+        if (df["high"] < df["low"]).any():
             raise DataProviderError("High price is less than Low price")
 
         return True

@@ -306,13 +306,13 @@ def main():
     parser = argparse.ArgumentParser(description="Train stock prediction model")
     parser.add_argument("--symbol", required=True, help="Stock symbol")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
-    parser.add_argument("--output", required=True, help="Output model file")
+    parser.add_argument("--output", default="models/stock_model.pt", help="Output model file (default: models/stock_model.pt)")
     parser.add_argument("--epochs", type=int, default=100, help="Training epochs")
     parser.add_argument(
-        "--use-all-data", action="store_true", help="Use all historical data"
+        "--use-all-data", action="store_true", default=True, help="Use all historical data"
     )
     parser.add_argument(
-        "--incremental", action="store_true", help="Incremental training"
+        "--incremental", action="store_true", default=True, help="Incremental training (default: True)"
     )
     parser.add_argument("--timeframe", default="1d", help="Timeframe identifier")
     parser.add_argument(

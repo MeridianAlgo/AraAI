@@ -77,6 +77,8 @@ def create_app() -> FastAPI:
     @app.exception_handler(Exception)
     async def general_exception_handler(request: Request, exc: Exception):
         """Handle general exceptions"""
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={

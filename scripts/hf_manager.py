@@ -44,10 +44,10 @@ class HFManager:
                 local_dir=str(local_path.parent),
                 token=self.token,
             )
-            print(f"✓ Download successful: {path}")
+            print(f"[OK] Download successful: {path}")
             return True
         except Exception as e:
-            print(f"✗ Download failed: {e}")
+            print(f"[FAIL] Download failed: {e}")
             return False
 
     def sync_models(self, prefix="models/"):
@@ -62,10 +62,10 @@ class HFManager:
                 if self.download_model(file_path):
                     success_count += 1
 
-            print(f"✓ Synced {success_count}/{len(target_files)} models.")
+            print(f"[OK] Synced {success_count}/{len(target_files)} models.")
             return True
         except Exception as e:
-            print(f"✗ Sync failed: {e}")
+            print(f"[FAIL] Sync failed: {e}")
             return False
 
     def upload_model(self, local_path, remote_path=None):
@@ -86,10 +86,10 @@ class HFManager:
                 repo_id=self.repo_id,
                 repo_type="model",
             )
-            print(f"✓ Upload successful: {remote_path}")
+            print(f"[OK] Upload successful: {remote_path}")
             return True
         except Exception as e:
-            print(f"✗ Upload failed: {e}")
+            print(f"[FAIL] Upload failed: {e}")
             return False
 
     def delete_old_models(self, keep_count=5, prefix="models/stock_"):
@@ -108,12 +108,12 @@ class HFManager:
                     self.api.delete_file(
                         path_in_repo=file_path, repo_id=self.repo_id, repo_type="model"
                     )
-                print(f"✓ Deleted {len(to_delete)} old files.")
+                print(f"[OK] Deleted {len(to_delete)} old files.")
             else:
                 print("No old files to delete.")
             return True
         except Exception as e:
-            print(f"✗ Cleanup failed: {e}")
+            print(f"[FAIL] Cleanup failed: {e}")
             return False
 
     def update_model_card(self, content):
@@ -131,10 +131,10 @@ class HFManager:
                 repo_type="model",
             )
             temp_readme.unlink()
-            print("✓ Model card updated.")
+            print("[OK] Model card updated.")
             return True
         except Exception as e:
-            print(f"✗ Model card update failed: {e}")
+            print(f"[FAIL] Model card update failed: {e}")
             return False
 
 

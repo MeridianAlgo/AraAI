@@ -14,6 +14,17 @@ from ara.features.volume import VolumeIndicators
 from ara.features.patterns import PatternRecognition
 from ara.features.support_resistance import SupportResistance
 
+# Register all indicators
+from ara.features.trend import register_trend_indicators
+from ara.features.momentum import register_momentum_indicators
+from ara.features.volatility import register_volatility_indicators
+from ara.features.volume import register_volume_indicators
+
+register_trend_indicators()
+register_momentum_indicators()
+register_volatility_indicators()
+register_volume_indicators()
+
 __all__ = [
     "IndicatorRegistry",
     "get_registry",

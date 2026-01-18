@@ -85,7 +85,7 @@ def create_database(db_file):
 
     conn.commit()
     conn.close()
-    print("✓ Database schema created")
+    print("[OK] Database schema created")
 
 
 def store_data(data_dir, db_file, mode="full", timeframe="1d", hour=None):
@@ -191,7 +191,7 @@ def store_data(data_dir, db_file, mode="full", timeframe="1d", hour=None):
             conn.commit()
             symbols_processed.update(df["Symbol"].unique())
             total_rows += len(insert_df)
-            print(f"  ✓ Stored {len(insert_df)} rows")
+            print(f"  [OK] Stored {len(insert_df)} rows")
 
         except Exception as e:
             print(f"Error processing {csv_file}: {e}")
@@ -221,7 +221,7 @@ def store_data(data_dir, db_file, mode="full", timeframe="1d", hour=None):
     conn.commit()
     conn.close()
 
-    print(f"\n✓ Stored {total_rows} total rows")
+    print(f"\n[OK] Stored {total_rows} total rows")
     print(f"  Symbols: {len(symbols_processed)}")
     print(f"  Mode: {mode}")
 

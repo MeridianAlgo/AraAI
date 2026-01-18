@@ -96,7 +96,7 @@ class CryptoExchangeProvider(BaseDataProvider):
             # Convert to DataFrame
             df = pd.DataFrame(
                 ohlcv_data,
-                columns=["timestamp", "Open", "High", "Low", "Close", "Volume"],
+                columns=["timestamp", "open", "high", "low", "close", "volume"],
             )
 
             # Convert timestamp to datetime
