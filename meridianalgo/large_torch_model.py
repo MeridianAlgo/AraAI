@@ -316,15 +316,23 @@ class AdvancedMLSystem:
             print(f"\nTraining {self.model_type} model on {symbol}...")
             print(f"Training samples: {len(X)}")
 
-            # Convert to tensors
+            # Convert to tensors and normalize targets to reduce loss scale
             X_tensor = torch.FloatTensor(X)
             y_tensor = torch.FloatTensor(y)
 
-            # Calculate scaler parameters
+            # Normalize targets to reasonable range (0-1) to prevent explosion
+            y_min = y_tensor.min()
+            y_max = y_tensor.max()
+            if y_max > y_min:
+                y_tensor = (y_tensor - y_min) / (y_max - y_min)
+            else:
+                y_tensor = torch.zeros_like(y_tensor)
+
+            # Calculate scaler parameters for features
             self.scaler_mean = X_tensor.mean(dim=0)
             self.scaler_std = X_tensor.std(dim=0) + 1e-8
 
-            # Normalize
+            # Normalize features
             X_normalized = (X_tensor - self.scaler_mean) / self.scaler_std
 
             # Train/validation split
@@ -352,9 +360,9 @@ class AdvancedMLSystem:
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
 
-            # Training setup
+            # Training setup with better learning rate for convergence
             optimizer = torch.optim.AdamW(
-                self.model.parameters(), lr=lr, weight_decay=0.01
+                self.model.parameters(), lr=lr * 0.1, weight_decay=0.01
             )
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                 optimizer, mode="min", factor=0.5, patience=10
@@ -407,13 +415,9 @@ class AdvancedMLSystem:
                 scheduler.step(val_loss)
 
                 # Print progress
-                if (
-                    (epoch + 1) % 100 == 0
-                    or (epoch + 1) % 20 == 0
-                    and (epoch + 1) <= 100
-                ):
+                if (epoch + 1) % 100 == 0 or ((epoch + 1) % 20 == 0 and (epoch + 1) <= 100):
                     print(
-                        f"Epoch {epoch+1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}"
+                        f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}"
                     )
 
                 # Early stopping
@@ -423,7 +427,7 @@ class AdvancedMLSystem:
                 else:
                     patience_counter += 1
                     if patience_counter >= patience:
-                        print(f"Early stopping at epoch {epoch+1}")
+                        print(f"Early stopping at epoch {epoch + 1}")
                         break
 
             # Update metadata
@@ -434,6 +438,9 @@ class AdvancedMLSystem:
             self.metadata["last_symbol"] = symbol
             self.metadata["data_points"] = len(X)
             self.metadata["best_val_loss"] = best_val_loss
+            # Store target normalization parameters
+            self.metadata["target_min"] = float(y_min)
+            self.metadata["target_max"] = float(y_max)
             self.metadata["training_history"].append(
                 {
                     "symbol": symbol,
@@ -478,6 +485,13 @@ class AdvancedMLSystem:
             X_normalized = X_normalized.to(self.device)
 
             pred, individual_preds = self.model(X_normalized)
+
+            # Denormalize predictions if we have target normalization parameters
+            if "target_min" in self.metadata and "target_max" in self.metadata:
+                target_min = self.metadata["target_min"]
+                target_max = self.metadata["target_max"]
+                pred = pred * (target_max - target_min) + target_min
+                individual_preds = individual_preds * (target_max - target_min) + target_min
 
             # Return as numpy arrays
             pred_np = pred.cpu().numpy()

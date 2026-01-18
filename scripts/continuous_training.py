@@ -22,30 +22,11 @@ DB_FILE = "training.db"
 MODEL_DIR = Path("models")
 SCRIPTS_DIR = Path("scripts")
 TICKERS_FILE = "all_tickers.txt"
-STOCK_COUNT = 24
+STOCK_COUNT = 1
 FOREX_PAIRS = [
     "EURUSD",
-    "GBPUSD",
-    "USDJPY",
-    "AUDUSD",
-    "USDCAD",
-    "EURGBP",
-    "EURJPY",
-    "GBPJPY",
-    "AUDJPY",
-    "NZDUSD",
-    "USDCHF",
-    "EURCHF",
-    "GBPCHF",
-    "AUDNZD",
-    "EURAUD",
-    "EURCAD",
-    "GBPAUD",
-    "GBPCAD",
-    "AUDCAD",
-    "CADJPY",
-]  # Extended forex pairs list
-EPOCHS = 50
+]  # Single forex pair for training
+EPOCHS = 500
 UNIFIED_STOCK_MODEL = MODEL_DIR / "unified_stock_model.pt"
 UNIFIED_FOREX_MODEL = MODEL_DIR / "unified_forex_model.pt"
 

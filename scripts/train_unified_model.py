@@ -92,24 +92,25 @@ def load_all_forex_data(db_file, limit=None):
 
 
 def train_unified_stock_model(
-    db_file, output_path, epochs=50, sample_size=24, seed=None
+    db_file, output_path, epochs=500, sample_size=1, seed=None
 ):
     """Train ONE model for ALL stocks"""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Training Unified Stock Model")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     start_time = time.time()
 
     all_symbols = load_stock_symbols(db_file)
-    rng = random.Random(seed)
+    rng = random.Random(seed if seed is not None else time.time())
     effective_size = min(sample_size, len(all_symbols))
     selected_symbols = (
         all_symbols
         if effective_size == len(all_symbols)
         else rng.sample(all_symbols, effective_size)
     )
-    selected_symbols = sorted(selected_symbols)
+    # Don't sort - keep random order for training
+    print(f"Randomly selected {len(selected_symbols)} symbol(s) from {len(all_symbols)} available")
 
     print(
         "Loading stock data from database "
@@ -155,11 +156,11 @@ def train_unified_stock_model(
         return False
 
 
-def train_unified_forex_model(db_file, output_path, epochs=50):
+def train_unified_forex_model(db_file, output_path, epochs=500):
     """Train ONE model for ALL forex pairs"""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Training Unified Forex Model")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     start_time = time.time()
 
@@ -219,11 +220,11 @@ def main():
         default="models/unified_forex_model.pt",
         help="Output path for unified forex model",
     )
-    parser.add_argument("--epochs", type=int, default=50, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=500, help="Training epochs")
     parser.add_argument(
         "--stock-sample-size",
         type=int,
-        default=24,
+        default=1,
         help="Number of stock symbols to sample per run",
     )
     parser.add_argument(
@@ -265,13 +266,13 @@ def main():
         )
         success = success and forex_success
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Training Summary")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Stock Model: {args.stock_output}")
     print(f"Forex Model: {args.forex_output}")
     print(f"Status: {'✓ Success' if success else '✗ Failed'}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     sys.exit(0 if success else 1)
 
