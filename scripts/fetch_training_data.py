@@ -162,11 +162,11 @@ def main():
             # Save individual CSV
             csv_path = output_dir / f"{symbol.replace('=X', '')}.csv"
             df.to_csv(csv_path, index=False)
-            print(f"    ✓ Saved {len(df)} rows to {csv_path}", flush=True)
+            print(f"    [OK] Saved {len(df)} rows to {csv_path}", flush=True)
             successful += 1
         else:
             failed += 1
-            print(f"    ✗ Failed to fetch {symbol}", flush=True)
+            print(f"    [FAIL] Failed to fetch {symbol}", flush=True)
 
     print(
         f"\nSummary: {successful} successful, {failed} failed out of {len(symbols)} symbols"
@@ -177,9 +177,9 @@ def main():
         combined = pd.concat(all_data, ignore_index=True)
         combined_path = output_dir / f"all_{args.asset_type}_data.csv"
         combined.to_csv(combined_path, index=False)
-        print(f"\n✓ Saved combined data ({len(combined)} rows) to {combined_path}")
+        print(f"\n[OK] Saved combined data ({len(combined)} rows) to {combined_path}")
     else:
-        print("\n✗ No data fetched")
+        print("\n[FAIL] No data fetched")
         sys.exit(1)
 
 

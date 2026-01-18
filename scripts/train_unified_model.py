@@ -63,7 +63,7 @@ def load_stock_data_for_symbols(db_file, symbols, limit=None):
     if df.empty:
         raise ValueError("No stock data found in database for selected symbols")
 
-    print(f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} stocks")
+    print(f"  [OK] Loaded {len(df)} rows for {df['symbol'].nunique()} stocks")
     return df
 
 
@@ -87,7 +87,7 @@ def load_all_forex_data(db_file, limit=None):
     if df.empty:
         raise ValueError("No forex data found in database")
 
-    print(f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} forex pairs")
+    print(f"  [OK] Loaded {len(df)} rows for {df['symbol'].nunique()} forex pairs")
     return df
 
 
@@ -145,14 +145,14 @@ def train_unified_stock_model(
     training_time = time.time() - start_time
 
     if result.get("success"):
-        print("\n✓ Training completed successfully")
+        print("\n[OK] Training completed successfully")
         print(f"  Final loss: {result.get('final_loss', 'N/A')}")
         print(f"  Training time: {training_time:.2f}s")
         print(f"  Stocks trained: {len(selected_symbols)}")
         print(f"  Model saved to: {output_path}")
         return True
     else:
-        print(f"\n✗ Training failed: {result.get('error', 'Unknown error')}")
+        print(f"\n[FAIL] Training failed: {result.get('error', 'Unknown error')}")
         return False
 
 
@@ -194,14 +194,14 @@ def train_unified_forex_model(db_file, output_path, epochs=500):
     training_time = time.time() - start_time
 
     if result.get("success"):
-        print("\n✓ Training completed successfully")
+        print("\n[OK] Training completed successfully")
         print(f"  Final loss: {result.get('final_loss', 'N/A')}")
         print(f"  Training time: {training_time:.2f}s")
         print(f"  Forex pairs trained: {len(pairs)}")
         print(f"  Model saved to: {output_path}")
         return True
     else:
-        print(f"\n✗ Training failed: {result.get('error', 'Unknown error')}")
+        print(f"\n[FAIL] Training failed: {result.get('error', 'Unknown error')}")
         return False
 
 
@@ -271,7 +271,7 @@ def main():
     print(f"{'=' * 60}")
     print(f"Stock Model: {args.stock_output}")
     print(f"Forex Model: {args.forex_output}")
-    print(f"Status: {'✓ Success' if success else '✗ Failed'}")
+    print(f"Status: {'[OK] Success' if success else '[FAIL] Failed'}")
     print(f"{'=' * 60}\n")
 
     sys.exit(0 if success else 1)
