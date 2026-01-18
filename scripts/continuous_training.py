@@ -396,6 +396,12 @@ def main():
         help="Random seed for stock sampling (optional)",
     )
     parser.add_argument(
+        "--epochs",
+        type=int,
+        default=EPOCHS,
+        help="Number of training epochs per run",
+    )
+    parser.add_argument(
         "--log-file",
         default=None,
         help="Path to log file for detailed logging",
@@ -500,7 +506,7 @@ def main():
                 "--forex-output",
                 str(UNIFIED_FOREX_MODEL),
                 "--epochs",
-                str(EPOCHS),
+                str(args.epochs),
                 "--stock-sample-size",
                 str(args.stock_sample_size),
             ]
