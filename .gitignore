@@ -42,8 +42,8 @@ env/
 *.pkl
 *.joblib
 *.h5
-# *.pt  # Commented out to allow trained models to be committed
-# *.pth  # Commented out to allow trained models to be committed
+*.pt  # Allow PyTorch models to be tracked
+*.pth  # Allow PyTorch models to be tracked
 
 # Data
 datasets/*.csv
