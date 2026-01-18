@@ -140,8 +140,7 @@ def display_dashboard():
     schedule_info.add_column("Schedule", style="yellow")
     schedule_info.add_column("Details", style="white")
 
-    schedule_info.add_row("Multi-Daily", "6 times per day (every ~4 hours)")
-    schedule_info.add_row("Hourly", "24 times per day (every hour)")
+    schedule_info.add_row("Elite Hourly", "24 times per day (every hour) with enhanced performance")
     schedule_info.add_row("Manual", "Run: python scripts/quick_train.py")
 
     console.print(

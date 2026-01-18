@@ -107,7 +107,7 @@ class PredictionHead(nn.Module):
 
 class LargeEnsembleModel(nn.Module):
     def __init__(
-        self, input_size=44, hidden_sizes=[1024, 768, 512, 384, 256, 128], dropout=0.2
+        self, input_size=44, hidden_sizes=[2048, 1536, 1024, 768, 512, 256, 128], dropout=0.1
     ):
         super(LargeEnsembleModel, self).__init__()
 
@@ -122,9 +122,9 @@ class LargeEnsembleModel(nn.Module):
                 ResidualBlock(hidden_sizes[i], hidden_sizes[i + 1], dropout)
             )
 
-        # Multi-head attention for feature importance
+        # Multi-head attention for feature importance (enhanced)
         final_hidden = hidden_sizes[-1]
-        self.attention = MultiHeadAttention(final_hidden, num_heads=4, dropout=dropout)
+        self.attention = MultiHeadAttention(final_hidden, num_heads=8, dropout=dropout)
 
         # Multiple specialized prediction heads (ensemble)
         # 1. XGBoost-style head (Gradient Boosting focus)
@@ -247,9 +247,9 @@ class AdvancedMLSystem:
                 self.model = LargeEnsembleModel(
                     input_size=checkpoint.get("input_size", 44),
                     hidden_sizes=checkpoint.get(
-                        "hidden_sizes", [1024, 768, 512, 384, 256, 128]
+                        "hidden_sizes", [2048, 1536, 1024, 768, 512, 256, 128]
                     ),
-                    dropout=checkpoint.get("dropout", 0.2),
+                    dropout=checkpoint.get("dropout", 0.1),
                 )
                 self.model.load_state_dict(checkpoint["model_state_dict"])
                 self.model.to(self.device)
@@ -283,8 +283,8 @@ class AdvancedMLSystem:
                 "model_state_dict": unwrapped_model.state_dict(),
                 "model_type": self.model_type,
                 "input_size": 44,
-                "hidden_sizes": [1024, 768, 512, 384, 256, 128],
-                "dropout": 0.2,
+                "hidden_sizes": [2048, 1536, 1024, 768, 512, 256, 128],
+                "dropout": 0.1,
                 "scaler_mean": self.scaler_mean,
                 "scaler_std": self.scaler_std,
                 "metadata": self.metadata,
@@ -351,8 +351,8 @@ class AdvancedMLSystem:
                 print("  Creating new LargeEnsembleModel architecture...")
                 self.model = LargeEnsembleModel(
                     input_size=X.shape[1],
-                    hidden_sizes=[1024, 768, 512, 384, 256, 128],
-                    dropout=0.2,
+                    hidden_sizes=[2048, 1536, 1024, 768, 512, 256, 128],
+                    dropout=0.1,
                 )
             else:
                 print("  Resuming training from existing model weights...")
@@ -360,12 +360,12 @@ class AdvancedMLSystem:
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
 
-            # Training setup with better learning rate for convergence
+            # Training setup with elite learning rate for convergence
             optimizer = torch.optim.AdamW(
-                self.model.parameters(), lr=lr * 0.1, weight_decay=0.01
+                self.model.parameters(), lr=lr * 0.05, weight_decay=0.005
             )
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer, mode="min", factor=0.5, patience=10
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                optimizer, T_0=100, T_mult=2, eta_min=lr * 0.001
             )
             criterion = nn.MSELoss()
 
@@ -412,7 +412,7 @@ class AdvancedMLSystem:
                     val_pred, _ = self.model(X_val_device)
                     val_loss = criterion(val_pred, y_val_device).item()
 
-                scheduler.step(val_loss)
+                scheduler.step()
 
                 # Print progress
                 if (epoch + 1) % 100 == 0 or ((epoch + 1) % 20 == 0 and (epoch + 1) <= 100):

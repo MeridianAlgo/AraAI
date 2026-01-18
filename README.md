@@ -227,8 +227,7 @@ sqlite3 training.db "SELECT * FROM model_metadata ORDER BY training_date DESC LI
 ```
 AraAI/
 ├── .github/workflows/
-│   ├── multi-daily-training.yml  # 6x daily schedule
-│   └── hourly-training.yml       # 24x daily schedule
+│   └── hourly-training.yml       # Elite 24x daily schedule
 ├── scripts/
 │   ├── quick_train.py           # Test single model
 │   ├── batch_train.py           # Train multiple models
@@ -311,7 +310,7 @@ For Hugging Face and W&B integration:
 ### 3. Trigger First Run
 
 1. Go to Actions tab
-2. Select "Multi-Daily Model Training"
+2. Select "Elite Hourly Model Training"
 3. Click "Run workflow"
 4. Watch the workflow run.
 
