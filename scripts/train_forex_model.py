@@ -315,25 +315,9 @@ def main():
 
     args = parser.parse_args()
 
-    # Create output directory
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    raise SystemExit("Forex training is disabled in this project. Train the unified stock model instead.")
 
-    # Train model
-    success = train_forex_model(
-        pair=args.pair,
-        db_file=args.db_file,
-        output_path=args.output,
-        epochs=args.epochs,
-        use_all_data=args.use_all_data,
-        incremental=args.incremental,
-        timeframe=args.timeframe,
-        training_mode=args.training_mode,
-        hour=args.hour,
-        wandb_project=args.wandb_project,
-        wandb_run_name=args.wandb_run_name,
-    )
-
-    sys.exit(0 if success else 1)
+    sys.exit(1)
 
 
 if __name__ == "__main__":

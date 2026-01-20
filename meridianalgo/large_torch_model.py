@@ -286,17 +286,61 @@ class AdvancedMLSystem:
                     )
                     return
 
+                model_state_dict = checkpoint.get("model_state_dict")
+                if not isinstance(model_state_dict, dict) or not model_state_dict:
+                    print(f"Could not load model: missing or invalid model_state_dict in {self.model_path}")
+                    self.model = None
+                    return
+
+                architecture = checkpoint.get("architecture")
+                if architecture is not None and architecture != "EliteEnsembleModel-2025-Compact":
+                    print(
+                        "Could not load model: incompatible architecture "
+                        f"({architecture}) in {self.model_path}"
+                    )
+                    self.model = None
+                    return
+
+                if any(k.startswith("residual_blocks.") for k in model_state_dict.keys()):
+                    print(
+                        "Could not load model: legacy checkpoint format detected "
+                        f"in {self.model_path} (residual_blocks.*). Please retrain."
+                    )
+                    self.model = None
+                    return
+
+                inferred_hidden0 = None
+                if "input_proj.weight" in model_state_dict:
+                    inferred_hidden0 = int(model_state_dict["input_proj.weight"].shape[0])
+
+                inferred_seq_len = None
+                if "pos_encoding" in model_state_dict:
+                    inferred_seq_len = int(model_state_dict["pos_encoding"].shape[0])
+
+                hidden_dims = checkpoint.get("hidden_dims")
+                if not isinstance(hidden_dims, (list, tuple)) or len(hidden_dims) < 2:
+                    hidden_dims = [256, 192, 128, 64]
+                if inferred_hidden0 is not None:
+                    hidden_dims = [inferred_hidden0] + list(hidden_dims[1:])
+
                 self.model = EliteEnsembleModel(
-                    input_size=checkpoint.get("input_size", 44),
-                    seq_len=checkpoint.get("seq_len", 1),
-                    hidden_dims=checkpoint.get(
-                        "hidden_dims", [256, 192, 128, 64]
-                    ),
-                    num_heads=checkpoint.get("num_heads", 4),
-                    num_layers=checkpoint.get("num_layers", 3),
-                    dropout=checkpoint.get("dropout", 0.1),
+                    input_size=int(checkpoint.get("input_size", 44)),
+                    seq_len=int(inferred_seq_len if inferred_seq_len is not None else checkpoint.get("seq_len", 1)),
+                    hidden_dims=list(hidden_dims),
+                    num_heads=int(checkpoint.get("num_heads", 4)),
+                    num_layers=int(checkpoint.get("num_layers", 3)),
+                    dropout=float(checkpoint.get("dropout", 0.1)),
                 )
-                self.model.load_state_dict(checkpoint["model_state_dict"])
+
+                try:
+                    self.model.load_state_dict(model_state_dict, strict=True)
+                except RuntimeError:
+                    print(
+                        "Could not load model: checkpoint weights are incompatible with current "
+                        f"EliteEnsembleModel config in {self.model_path}. Please retrain."
+                    )
+                    self.model = None
+                    return
                 self.model.to(self.device)
                 self.model.eval()
 
@@ -327,17 +371,17 @@ class AdvancedMLSystem:
             checkpoint = {
                 "model_state_dict": unwrapped_model.state_dict(),
                 "model_type": self.model_type,
-                "input_size": 44,
-                "seq_len": 1,
-                "hidden_dims": [256, 192, 128, 64],
-                "num_heads": 4,
-                "num_layers": 3,
-                "dropout": 0.1,
+                "input_size": int(getattr(unwrapped_model, "input_size", 44)),
+                "seq_len": int(getattr(unwrapped_model, "seq_len", 1)),
+                "hidden_dims": list(getattr(unwrapped_model, "hidden_dims", [256, 192, 128, 64])),
+                "num_heads": int(getattr(unwrapped_model, "num_heads", 4)),
+                "num_layers": int(getattr(unwrapped_model, "num_layers", 3)),
+                "dropout": float(getattr(getattr(unwrapped_model, "input_dropout", None), "p", 0.1)),
                 "scaler_mean": self.scaler_mean,
                 "scaler_std": self.scaler_std,
                 "metadata": self.metadata,
                 "architecture": "EliteEnsembleModel-2025-Compact",
-                "version": "3.1"
+                "version": "3.2",
             }
 
             torch.save(checkpoint, self.model_path)
@@ -370,6 +414,13 @@ class AdvancedMLSystem:
             X_tensor = torch.FloatTensor(X)
             y_tensor = torch.FloatTensor(y)
 
+            if X_tensor.dim() == 3:
+                seq_len = int(X_tensor.shape[1])
+                input_size = int(X_tensor.shape[2])
+            else:
+                seq_len = 1
+                input_size = int(X_tensor.shape[1])
+
             # Normalize targets to reasonable range (0-1) to prevent explosion
             y_min = y_tensor.min()
             y_max = y_tensor.max()
@@ -379,6 +430,9 @@ class AdvancedMLSystem:
                 y_tensor = torch.zeros_like(y_tensor)
 
             # Calculate scaler parameters for features
+            # Shape:
+            # - 2D X: [features]
+            # - 3D X: [seq_len, features]
             self.scaler_mean = X_tensor.mean(dim=0)
             self.scaler_std = X_tensor.std(dim=0) + 1e-8
 
@@ -400,8 +454,8 @@ class AdvancedMLSystem:
             if self.model is None:
                 print("  Creating new EliteEnsembleModel architecture...")
                 self.model = EliteEnsembleModel(
-                    input_size=X.shape[1],
-                    seq_len=1,
+                    input_size=input_size,
+                    seq_len=seq_len,
                     hidden_dims=[256, 192, 128, 64],
                     num_heads=4,
                     num_layers=3,
@@ -434,7 +488,7 @@ class AdvancedMLSystem:
 
             # Training loop with early stopping
             best_val_loss = float("inf")
-            patience = 500
+            patience = 80
             patience_counter = 0
 
             for epoch in range(epochs):
@@ -534,6 +588,14 @@ class AdvancedMLSystem:
         self.model.eval()
         with torch.no_grad():
             X_tensor = torch.FloatTensor(X)
+
+            if X_tensor.dim() == 1:
+                X_tensor = X_tensor.unsqueeze(0)
+
+            if X_tensor.dim() == 2 and getattr(self.scaler_mean, "dim", lambda: 0)() == 2:
+                seq_len = int(self.scaler_mean.shape[0])
+                X_tensor = X_tensor.unsqueeze(1).repeat(1, seq_len, 1)
+
             X_normalized = (X_tensor - self.scaler_mean) / self.scaler_std
             X_normalized = X_normalized.to(self.device)
 

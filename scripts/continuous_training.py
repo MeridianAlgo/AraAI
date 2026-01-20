@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""
+"""\
 Continuous Training Orchestrator for Ara AI
-Trains ONE unified model for all stocks and ONE for all forex pairs.
+Trains ONE unified model for all stocks.
 Much more efficient than training separate models per ticker.
 """
 
@@ -23,12 +23,8 @@ MODEL_DIR = Path("models")
 SCRIPTS_DIR = Path("scripts")
 TICKERS_FILE = "all_tickers.txt"
 STOCK_COUNT = 1
-FOREX_PAIRS = [
-    "EURUSD",
-]  # Single forex pair for training
 EPOCHS = 500
 UNIFIED_STOCK_MODEL = MODEL_DIR / "unified_stock_model.pt"
-UNIFIED_FOREX_MODEL = MODEL_DIR / "unified_forex_model.pt"
 
 
 def run_command(cmd, log_file=None):
@@ -155,118 +151,8 @@ def fetch_and_store_stocks(symbols, log_file=None):
     return True
 
 
-def fetch_and_store_forex(pairs, log_file=None):
-    """Fetch data for multiple forex pairs and store in DB"""
-
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_msg = f"\n[{timestamp}] --- Fetching Forex Data for {len(pairs)} pairs ---"
-    print(log_msg)
-    if log_file:
-        with open(log_file, "a") as f:
-            f.write(log_msg + "\n")
-
-    print(f"[{timestamp}] Forex pairs: {', '.join(pairs)}")
-    if log_file:
-        with open(log_file, "a") as f:
-            f.write(f"[{timestamp}] Forex pairs: {', '.join(pairs)}\n")
-
-    # Fetch data for all forex pairs
-    fetch_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "fetch_training_data.py"),
-        "--symbols",
-        *pairs,
-        "--output-dir",
-        "datasets/training_data",
-        "--period",
-        "2y",
-        "--interval",
-        "1d",
-        "--asset-type",
-        "forex",
-    ]
-    success, output = run_command(fetch_cmd, log_file=log_file)
-    if not success:
-        error_msg = f"[{timestamp}] Failed to fetch forex data. Output: {output}"
-        print(error_msg)
-        if log_file:
-            with open(log_file, "a") as f:
-                f.write(error_msg + "\n")
-        # Try fetching pairs individually to identify which ones fail
-        print(
-            f"[{timestamp}] Attempting to fetch forex pairs individually to identify failures..."
-        )
-        if log_file:
-            with open(log_file, "a") as f:
-                f.write(
-                    f"[{timestamp}] Attempting to fetch forex pairs individually to identify failures...\n"
-                )
-
-        successful_pairs = []
-        for pair in pairs:
-            single_cmd = [
-                sys.executable,
-                str(SCRIPTS_DIR / "fetch_training_data.py"),
-                "--symbols",
-                pair,
-                "--output-dir",
-                "datasets/training_data",
-                "--period",
-                "2y",
-                "--interval",
-                "1d",
-                "--asset-type",
-                "forex",
-            ]
-            pair_success, pair_output = run_command(single_cmd, log_file=log_file)
-            if pair_success:
-                successful_pairs.append(pair)
-                print(f"[{timestamp}] ✓ Successfully fetched {pair}")
-            else:
-                print(f"[{timestamp}] ✗ Failed to fetch {pair}: {pair_output}")
-
-        if not successful_pairs:
-            return False
-
-        print(
-            f"[{timestamp}] Successfully fetched {len(successful_pairs)}/{len(pairs)} forex pairs"
-        )
-        if log_file:
-            with open(log_file, "a") as f:
-                f.write(
-                    f"[{timestamp}] Successfully fetched {len(successful_pairs)}/{len(pairs)} forex pairs\n"
-                )
-
-    # Store in DB
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_msg = f"[{timestamp}] Storing forex data in database..."
-    print(log_msg)
-    if log_file:
-        with open(log_file, "a") as f:
-            f.write(log_msg + "\n")
-
-    store_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "store_training_data.py"),
-        "--data-dir",
-        "datasets/training_data",
-        "--db-file",
-        DB_FILE,
-    ]
-    success, output = run_command(store_cmd, log_file=log_file)
-    if not success:
-        error_msg = f"[{timestamp}] Failed to store forex data. Output: {output}"
-        print(error_msg)
-        if log_file:
-            with open(log_file, "a") as f:
-                f.write(error_msg + "\n")
-        return False
-
-    return True
-
-
 def train_unified_models(log_file=None):
-    """Train unified models - ONE for all stocks, ONE for all forex"""
+    """Train unified model - ONE for all stocks"""
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_msg = f"\n[{timestamp}] --- Training Unified Models ---"
@@ -282,8 +168,6 @@ def train_unified_models(log_file=None):
         DB_FILE,
         "--stock-output",
         str(UNIFIED_STOCK_MODEL),
-        "--forex-output",
-        str(UNIFIED_FOREX_MODEL),
         "--epochs",
         str(EPOCHS),
     ]
@@ -295,37 +179,6 @@ def train_unified_models(log_file=None):
             with open(log_file, "a") as f:
                 f.write(error_msg + "\n")
     return success
-
-
-def upload_unified_models():
-    """Upload unified models to Hugging Face"""
-    print("\n--- Uploading Unified Models to Hugging Face ---")
-
-    # Upload stock model
-    stock_upload_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "hf_manager.py"),
-        "--upload",
-        str(UNIFIED_STOCK_MODEL),
-        "--cleanup",
-        "--prefix",
-        "models/unified_stock_model",
-    ]
-    stock_success, _ = run_command(stock_upload_cmd)
-
-    # Upload forex model
-    forex_upload_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "hf_manager.py"),
-        "--upload",
-        str(UNIFIED_FOREX_MODEL),
-        "--cleanup",
-        "--prefix",
-        "models/unified_forex_model",
-    ]
-    forex_success, _ = run_command(forex_upload_cmd)
-
-    return stock_success and forex_success
 
 
 def upload_stock_model():
@@ -344,22 +197,6 @@ def upload_stock_model():
     return stock_success
 
 
-def upload_forex_model():
-    """Upload unified forex model to Hugging Face"""
-    print("\n--- Uploading Unified Forex Model to Hugging Face ---")
-    forex_upload_cmd = [
-        sys.executable,
-        str(SCRIPTS_DIR / "hf_manager.py"),
-        "--upload",
-        str(UNIFIED_FOREX_MODEL),
-        "--cleanup",
-        "--prefix",
-        "models/unified_forex_model",
-    ]
-    forex_success, _ = run_command(forex_upload_cmd)
-    return forex_success
-
-
 def main():
     import traceback
 
@@ -368,9 +205,9 @@ def main():
     )
     parser.add_argument(
         "--workflow",
-        choices=["stock", "forex", "both"],
-        default="both",
-        help="Which workflow to run: stock-only, forex-only, or both",
+        choices=["stock"],
+        default="stock",
+        help="Which workflow to run",
     )
     parser.add_argument(
         "--use-all-tickers",
@@ -431,12 +268,7 @@ def main():
         f.write(f"Log file: {log_file}\n\n")
 
     try:
-        if args.workflow == "stock":
-            print("Running STOCK workflow only")
-        elif args.workflow == "forex":
-            print("Running FOREX workflow only")
-        else:
-            print("Training ONE model for all stocks and ONE for all forex pairs")
+        print("Running STOCK workflow only")
 
         # Ensure directories exist
         MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -477,24 +309,7 @@ def main():
                     f.write(error_msg + "\n")
                 return
 
-        # 2. Forex workflow
-        if args.workflow in {"forex", "both"}:
-            try:
-                if not fetch_and_store_forex(FOREX_PAIRS, log_file=log_file):
-                    error_msg = "Error: Failed to fetch forex data"
-                    print(error_msg)
-                    with open(log_file, "a") as f:
-                        f.write(error_msg + "\n")
-                    # Continue anyway - some pairs might have succeeded
-                    print("Warning: Continuing with available forex data...")
-            except Exception as e:
-                error_msg = f"Error fetching forex: {e}\n{traceback.format_exc()}"
-                print(error_msg)
-                with open(log_file, "a") as f:
-                    f.write(error_msg + "\n")
-                print("Warning: Continuing with available forex data...")
-
-        # 3. Train unified models (scoped)
+        # 2. Train unified model
         try:
             train_cmd = [
                 sys.executable,
@@ -503,8 +318,6 @@ def main():
                 DB_FILE,
                 "--stock-output",
                 str(UNIFIED_STOCK_MODEL),
-                "--forex-output",
-                str(UNIFIED_FOREX_MODEL),
                 "--epochs",
                 str(args.epochs),
                 "--stock-sample-size",
@@ -512,10 +325,6 @@ def main():
             ]
             if args.seed is not None:
                 train_cmd.extend(["--seed", str(args.seed)])
-            if args.workflow == "stock":
-                train_cmd.append("--stocks-only")
-            elif args.workflow == "forex":
-                train_cmd.append("--forex-only")
 
             success, output = run_command(train_cmd, log_file=log_file)
             if not success:
@@ -531,15 +340,10 @@ def main():
                 f.write(error_msg + "\n")
             return
 
-        # 4. Upload to Hugging Face (optional)
+        # 3. Upload to Hugging Face (optional)
         if os.environ.get("HF_TOKEN"):
             try:
-                if args.workflow == "stock":
-                    upload_stock_model()
-                elif args.workflow == "forex":
-                    upload_forex_model()
-                else:
-                    upload_unified_models()
+                upload_stock_model()
             except Exception as e:
                 warning_msg = f"Warning: Failed to upload models: {e}"
                 print(warning_msg)
@@ -560,10 +364,7 @@ def main():
             f.write(completion_msg + "\n")
             f.write(f"Duration: {duration:.2f} seconds\n")
 
-        if args.workflow in {"stock", "both"}:
-            print(f"✓ Stock Model: {UNIFIED_STOCK_MODEL}")
-        if args.workflow in {"forex", "both"}:
-            print(f"✓ Forex Model: {UNIFIED_FOREX_MODEL}")
+        print(f"✓ Stock Model: {UNIFIED_STOCK_MODEL}")
 
         print(f"\n✓ Detailed log saved to: {log_file}")
 

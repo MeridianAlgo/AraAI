@@ -193,23 +193,29 @@ class UnifiedStockML:
             # Add indicators
             df = self._add_indicators(df)
 
+            lookback = int(kwargs.get("lookback", 30))
+
             # Prepare training data
             X = []
             y = []
 
-            for i in range(len(df) - 1):
-                features = self._extract_features(df.iloc[: i + 1])
+            for i in range(lookback, len(df) - 1):
+                window_features = []
+                for j in range(i - lookback + 1, i + 1):
+                    window_features.append(self._extract_features(df.iloc[: j + 1]))
+
                 target = (df["Close"].iloc[i + 1] - df["Close"].iloc[i]) / df[
                     "Close"
                 ].iloc[i]
-                X.append(features)
+
+                X.append(np.array(window_features))
                 y.append(target)
 
             X = np.array(X)
             y = np.array(y)
 
             # Remove NaN
-            mask = ~(np.isnan(X).any(axis=1) | np.isnan(y))
+            mask = ~(np.isnan(X).any(axis=(1, 2)) | np.isnan(y))
             X = X[mask]
             y = y[mask]
 
@@ -223,6 +229,8 @@ class UnifiedStockML:
             if metadata:
                 for key, value in metadata.items():
                     self.ml_system.metadata[key] = value
+
+            self.ml_system.metadata["lookback"] = lookback
 
             # Train large PyTorch model with validation
             result = self.ml_system.train(
@@ -302,14 +310,22 @@ class UnifiedStockML:
             # Get historical volatility
             hist_volatility = data["Close"].pct_change().std()
 
+            lookback = int(self.ml_system.get_metadata().get("lookback", 30))
+            if len(data) < lookback:
+                return {"error": "Insufficient data"}
+
             # Make predictions
             predictions = []
-            current_features = self._extract_features(data)
+            window_features = []
+            start = len(data) - lookback
+            for i in range(start, len(data)):
+                window_features.append(self._extract_features(data.iloc[: i + 1]))
+            current_features = np.array(window_features)
             pred_price = current_price
 
             for day in range(1, days + 1):
                 # Predict
-                pred_return, _ = self.ml_system.predict(current_features.reshape(1, -1))
+                pred_return, _ = self.ml_system.predict(current_features.reshape(1, lookback, -1))
                 pred_return = (
                     float(pred_return)
                     if np.isscalar(pred_return)

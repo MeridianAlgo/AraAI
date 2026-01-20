@@ -38,20 +38,13 @@ def push_elite_models_to_hf():
         
         # Model paths
         stock_model_path = "models/unified_stock_model.pt"
-        forex_model_path = "models/unified_forex_model.pt"
         
         models_to_push = [
             {
                 "path": stock_model_path,
                 "repo_id": "MeridianAlgo/ARA.AI",
-                "filename": "models/elite_stock_model_v3.1.pt",
-                "description": "Elite Stock Model - 2025 Compact Architecture with Flash Attention, SwiGLU, RMSNorm"
-            },
-            {
-                "path": forex_model_path,
-                "repo_id": "MeridianAlgo/ARA.AI", 
-                "filename": "models/elite_forex_model_v3.1.pt",
-                "description": "Elite Forex Model - 2025 Compact Architecture with Flash Attention, SwiGLU, RMSNorm"
+                "filename": "models/elite_stock_model_v3.2.pt",
+                "description": "Elite Stock Model - 2025 Compact Architecture with Flash Attention, SwiGLU, RMSNorm",
             }
         ]
         
@@ -62,7 +55,7 @@ def push_elite_models_to_hf():
             
             if not model_path.exists():
                 print(f"🔨 Creating new elite model: {model_info['filename']}")
-                create_and_save_elite_model(model_path, "stock" in model_info["filename"])
+                create_and_save_elite_model(model_path, True)
             
             try:
                 print(f"📤 Pushing {model_info['filename']} to Hugging Face...")
