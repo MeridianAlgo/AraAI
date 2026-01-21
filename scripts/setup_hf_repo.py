@@ -31,6 +31,8 @@ def setup_huggingface():
     print("=== Ara AI Hugging Face Setup & Cleanup ===")
 
     token = os.getenv("HF_TOKEN")
+    if token:
+        token = token.strip()
     repo_id = "MeridianAlgo/ARA.AI"
 
     if not token:

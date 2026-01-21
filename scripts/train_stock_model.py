@@ -8,6 +8,7 @@ Revolutionary Stock Model Training System
 """
 
 import argparse
+import os
 import random
 import sqlite3
 import sys
@@ -116,9 +117,9 @@ def train_stock_model(
     seed=None,
 ):
     """Train unified stock model with Comet ML tracking"""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Revolutionary Stock Model Training")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     start_time = time.time()
 
@@ -229,6 +230,11 @@ def main():
 
     args = parser.parse_args()
 
+    # Get Comet API key from args or environment
+    comet_api_key = args.comet_api_key or os.environ.get("COMET_API_KEY")
+    if comet_api_key:
+        comet_api_key = comet_api_key.strip()
+
     # Create output directory
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
@@ -241,7 +247,7 @@ def main():
         lr=args.lr,
         sample_size=args.sample_size,
         use_all_data=args.use_all_data,
-        comet_api_key=args.comet_api_key,
+        comet_api_key=comet_api_key,
         seed=args.seed,
     )
 

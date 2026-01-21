@@ -23,6 +23,7 @@ from meridianalgo.unified_ml import UnifiedStockML  # noqa: E402
 # Comet ML import
 try:
     import comet_ml
+
     COMET_AVAILABLE = True
 except ImportError:
     COMET_AVAILABLE = False
@@ -101,9 +102,7 @@ def init_comet(project, run_name, config, api_key=None):
 
     try:
         experiment = comet_ml.Experiment(
-            api_key=api_key,
-            project_name=project,
-            workspace="ara-ai"
+            api_key=api_key, project_name=project, workspace="ara-ai"
         )
         experiment.set_name(run_name)
         experiment.log_parameters(config)
@@ -137,12 +136,12 @@ def train_model(
     wandb_run_name=None,
 ):
     """Train model for a symbol with timeframe awareness and wandb tracking"""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Training model for {symbol}")
     print(f"Mode: {training_mode}, Timeframe: {timeframe}")
     if hour is not None:
         print(f"Hour: {hour}:00 UTC")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Load data
     print("Loading data from database...")
@@ -165,11 +164,13 @@ def train_model(
     }
 
     comet_api_key = os.environ.get("COMET_API_KEY")
+    if comet_api_key:
+        comet_api_key = comet_api_key.strip()
     experiment = init_comet(
         project=wandb_project or "ara-ai-stock",
         run_name=wandb_run_name or f"stock-{symbol}",
         config=wandb_config,
-        api_key=comet_api_key
+        api_key=comet_api_key,
     )
 
     # Drop metadata columns before training
@@ -311,13 +312,23 @@ def main():
     parser = argparse.ArgumentParser(description="Train stock prediction model")
     parser.add_argument("--symbol", required=True, help="Stock symbol")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
-    parser.add_argument("--output", default="models/stock_model.pt", help="Output model file (default: models/stock_model.pt)")
+    parser.add_argument(
+        "--output",
+        default="models/stock_model.pt",
+        help="Output model file (default: models/stock_model.pt)",
+    )
     parser.add_argument("--epochs", type=int, default=100, help="Training epochs")
     parser.add_argument(
-        "--use-all-data", action="store_true", default=True, help="Use all historical data"
+        "--use-all-data",
+        action="store_true",
+        default=True,
+        help="Use all historical data",
     )
     parser.add_argument(
-        "--incremental", action="store_true", default=True, help="Incremental training (default: True)"
+        "--incremental",
+        action="store_true",
+        default=True,
+        help="Incremental training (default: True)",
     )
     parser.add_argument("--timeframe", default="1d", help="Timeframe identifier")
     parser.add_argument(

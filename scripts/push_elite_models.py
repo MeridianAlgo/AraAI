@@ -22,6 +22,8 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
 
     # Get HF token from environment
     hf_token = os.getenv("HF_TOKEN")
+    if hf_token:
+        hf_token = hf_token.strip()
     if not hf_token:
         print("ERROR: HF_TOKEN not found in environment variables")
         return False
@@ -97,7 +99,7 @@ Professional financial AI models for stock and forex prediction.
 
 See full documentation at: https://github.com/MeridianAlgo/AraAI
 
-**Last Updated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Last Updated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
 
         # Upload model card

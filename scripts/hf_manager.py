@@ -20,6 +20,8 @@ class HFManager:
     def __init__(self, repo_id="MeridianAlgo/ARA.AI", token=None):
         self.repo_id = repo_id
         self.token = token or os.getenv("HF_TOKEN")
+        if self.token:
+            self.token = self.token.strip()
         if not self.token:
             print("Error: HF_TOKEN not found in environment or .env file.")
             sys.exit(1)
