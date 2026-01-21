@@ -678,12 +678,11 @@ class AdvancedMLSystem:
 
                 scheduler.step()
 
-                # Print progress every 50 epochs or at key milestones
-                if (epoch + 1) % 50 == 0 or (epoch + 1) in [1, 10, 25]:
-                    current_lr = optimizer.param_groups[0]["lr"]
-                    print(
-                        f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}, LR: {current_lr:.2e}"
-                    )
+                # Print progress for all epochs
+                current_lr = optimizer.param_groups[0]["lr"]
+                print(
+                    f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}, LR: {current_lr:.2e}"
+                )
 
                 # Early stopping
                 if val_loss < best_val_loss:
