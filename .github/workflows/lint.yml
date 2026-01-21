@@ -1,0 +1,49 @@
+name: Lint Code
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install isort black ruff
+      
+      - name: Run isort
+        run: |
+          isort --check-only --diff .
+        continue-on-error: true
+      
+      - name: Run Black
+        run: |
+          black --check --diff .
+        continue-on-error: true
+      
+      - name: Run Ruff
+        run: |
+          ruff check .
+        continue-on-error: true
+      
+      - name: Lint Summary
+        if: always()
+        run: |
+          echo "Linting completed. Check individual steps for details."

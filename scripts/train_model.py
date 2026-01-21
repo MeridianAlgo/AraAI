@@ -20,14 +20,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from meridianalgo.unified_ml import UnifiedStockML  # noqa: E402
 
-# Optional wandb import
+# Comet ML import
 try:
-    import wandb
-
-    WANDB_AVAILABLE = True
+    import comet_ml
+    COMET_AVAILABLE = True
 except ImportError:
-    WANDB_AVAILABLE = False
-    print("Warning: wandb not installed. Install with: pip install wandb")
+    COMET_AVAILABLE = False
+    print("Warning: comet_ml not installed. Install with: pip install comet-ml")
 
 
 def load_data_from_db(
@@ -95,27 +94,33 @@ def load_data_from_db(
     return df, detected_timeframe, detected_interval
 
 
-def init_wandb(project, run_name, config, enabled=True):
-    """Initialize Weights & Biases tracking"""
-    if not enabled or not WANDB_AVAILABLE:
+def init_comet(project, run_name, config, api_key=None):
+    """Initialize Comet ML tracking"""
+    if not COMET_AVAILABLE or not api_key:
         return None
 
     try:
-        run = wandb.init(project=project, name=run_name, config=config, reinit=True)
-        print(f"  ✓ W&B initialized: {run.url}")
-        return run
+        experiment = comet_ml.Experiment(
+            api_key=api_key,
+            project_name=project,
+            workspace="ara-ai"
+        )
+        experiment.set_name(run_name)
+        experiment.log_parameters(config)
+        print(f"  ✓ Comet ML initialized: {experiment.url}")
+        return experiment
     except Exception as e:
-        print(f"  Warning: Failed to initialize wandb: {e}")
+        print(f"  Warning: Failed to initialize Comet ML: {e}")
         return None
 
 
-def log_to_wandb(run, metrics):
-    """Log metrics to wandb if available"""
-    if run is not None and WANDB_AVAILABLE:
+def log_to_comet(experiment, metrics):
+    """Log metrics to Comet ML if available"""
+    if experiment is not None and COMET_AVAILABLE:
         try:
-            wandb.log(metrics)
+            experiment.log_metrics(metrics)
         except Exception as e:
-            print(f"  Warning: Failed to log to wandb: {e}")
+            print(f"  Warning: Failed to log to Comet ML: {e}")
 
 
 def train_model(
@@ -159,12 +164,12 @@ def train_model(
         "asset_type": "stock",
     }
 
-    wandb_enabled = wandb_project is not None and os.environ.get("WANDB_API_KEY")
-    run = init_wandb(
-        project=wandb_project or "ara-ai",
+    comet_api_key = os.environ.get("COMET_API_KEY")
+    experiment = init_comet(
+        project=wandb_project or "ara-ai-stock",
         run_name=wandb_run_name or f"stock-{symbol}",
         config=wandb_config,
-        enabled=wandb_enabled,
+        api_key=comet_api_key
     )
 
     # Drop metadata columns before training
@@ -202,9 +207,9 @@ def train_model(
         print(f"  Timeframe: {timeframe} ({training_mode} mode)")
         print(f"  Model saved to: {output_path}")
 
-        # Log final metrics to wandb
-        log_to_wandb(
-            run,
+        # Log final metrics to Comet ML
+        log_to_comet(
+            experiment,
             {
                 "final_loss": result.get("final_loss", 0),
                 "accuracy": result.get("accuracy", 0),
@@ -217,21 +222,21 @@ def train_model(
             db_file, symbol, output_path, result, timeframe, training_mode, hour
         )
 
-        # Finish wandb run
-        if run is not None:
-            wandb.finish()
+        # Finish Comet ML experiment
+        if experiment is not None:
+            experiment.end()
 
         return True
     else:
         print(f"\n✗ Training failed: {result.get('error', 'Unknown error')}")
 
-        # Log failure to wandb
-        log_to_wandb(
-            run, {"training_success": 0, "error": result.get("error", "Unknown")}
+        # Log failure to Comet ML
+        log_to_comet(
+            experiment, {"training_success": 0, "error": result.get("error", "Unknown")}
         )
 
-        if run is not None:
-            wandb.finish(exit_code=1)
+        if experiment is not None:
+            experiment.end()
 
         return False
 

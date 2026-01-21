@@ -88,9 +88,14 @@ openpyxl>=3.1.0                 # Excel export (optional)
 # Monitoring and Observability (optional)
 prometheus-client>=0.17.0       # Prometheus metrics exporter
 psutil>=5.9.0                   # System and process utilities
-wandb>=0.15.0                   # Weights & Biases experiment tracking
+comet-ml>=3.35.0                # Comet ML experiment tracking (replaces wandb)
 huggingface_hub>=0.19.0         # Hugging Face Hub for model storage
 # opentelemetry-api>=1.20.0     # OpenTelemetry tracing API (optional)
 # opentelemetry-sdk>=1.20.0     # OpenTelemetry SDK (optional)
 # opentelemetry-exporter-otlp>=1.20.0  # OTLP exporter (optional)
 # sentry-sdk>=1.32.0            # Sentry error tracking (optional)
+
+# Code Quality
+isort>=5.12.0                   # Import sorting
+black>=23.0.0                   # Code formatting
+ruff>=0.1.0                     # Fast Python linter

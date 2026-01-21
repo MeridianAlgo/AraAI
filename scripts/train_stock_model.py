@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Revolutionary Forex Model Training System
-- Optimized for unified forex model
+Revolutionary Stock Model Training System
+- Optimized for single unified stock model
 - Comet ML experiment tracking
-- Multi-currency pair support
-- Advanced technical indicators
+- Advanced feature engineering
+- Efficient batch processing
 """
 
 import argparse
@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from meridianalgo.forex_ml import ForexML
+from meridianalgo.unified_ml import UnifiedStockML
 
 # Comet ML integration
 try:
@@ -52,13 +52,13 @@ def init_comet(project_name, experiment_name, config, api_key=None):
         return None
 
 
-def load_forex_pairs(db_file, limit=None):
-    """Load available forex pairs from database"""
+def load_stock_symbols(db_file, limit=None):
+    """Load available stock symbols from database"""
     conn = sqlite3.connect(db_file)
     query = """
         SELECT DISTINCT symbol
         FROM market_data
-        WHERE asset_type = 'forex'
+        WHERE asset_type = 'stock'
         ORDER BY symbol ASC
     """
     if limit:
@@ -67,44 +67,44 @@ def load_forex_pairs(db_file, limit=None):
     df = pd.read_sql_query(query, conn)
     conn.close()
 
-    pairs = df["symbol"].tolist() if not df.empty else []
-    if not pairs:
-        raise ValueError("No forex pairs found in database")
-    return pairs
+    symbols = df["symbol"].tolist() if not df.empty else []
+    if not symbols:
+        raise ValueError("No stock symbols found in database")
+    return symbols
 
 
-def load_forex_data(db_file, pairs, use_all_data=True):
-    """Load forex data for training"""
+def load_stock_data(db_file, symbols, use_all_data=True):
+    """Load stock data for training"""
     conn = sqlite3.connect(db_file)
-    placeholders = ",".join(["?"] * len(pairs))
+    placeholders = ",".join(["?"] * len(symbols))
 
     if use_all_data:
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
-            WHERE asset_type = 'forex' AND symbol IN ({placeholders})
+            WHERE asset_type = 'stock' AND symbol IN ({placeholders})
             ORDER BY symbol, date ASC
         """
     else:
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
-            WHERE asset_type = 'forex' AND symbol IN ({placeholders})
+            WHERE asset_type = 'stock' AND symbol IN ({placeholders})
             AND date >= datetime('now', '-90 days')
             ORDER BY symbol, date ASC
         """
 
-    df = pd.read_sql_query(query, conn, params=list(pairs))
+    df = pd.read_sql_query(query, conn, params=list(symbols))
     conn.close()
 
     if df.empty:
-        raise ValueError("No forex data found in database")
+        raise ValueError("No stock data found in database")
 
-    print(f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} pairs")
+    print(f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} stocks")
     return df
 
 
-def train_forex_model(
+def train_stock_model(
     db_file,
     output_path,
     epochs=500,
@@ -115,46 +115,46 @@ def train_forex_model(
     comet_api_key=None,
     seed=None,
 ):
-    """Train unified forex model with Comet ML tracking"""
+    """Train unified stock model with Comet ML tracking"""
     print(f"\n{'='*60}")
-    print("Revolutionary Forex Model Training")
+    print("Revolutionary Stock Model Training")
     print(f"{'='*60}\n")
 
     start_time = time.time()
 
-    # Load pairs
-    all_pairs = load_forex_pairs(db_file)
+    # Load symbols
+    all_symbols = load_stock_symbols(db_file)
 
-    # Sample pairs if requested
-    if sample_size and sample_size < len(all_pairs):
+    # Sample symbols if requested
+    if sample_size and sample_size < len(all_symbols):
         rng = random.Random(seed if seed is not None else time.time())
-        selected_pairs = rng.sample(all_pairs, sample_size)
+        selected_symbols = rng.sample(all_symbols, sample_size)
         print(
-            f"Randomly selected {len(selected_pairs)} pairs from {len(all_pairs)} available"
+            f"Randomly selected {len(selected_symbols)} symbols from {len(all_symbols)} available"
         )
     else:
-        selected_pairs = all_pairs
-        print(f"Training on all {len(selected_pairs)} pairs")
+        selected_symbols = all_symbols
+        print(f"Training on all {len(selected_symbols)} symbols")
 
     # Load data
-    print("Loading forex data from database...")
-    data = load_forex_data(db_file, selected_pairs, use_all_data)
+    print("Loading stock data from database...")
+    data = load_stock_data(db_file, selected_symbols, use_all_data)
 
     # Initialize Comet ML
     config = {
-        "model_type": "unified_forex",
+        "model_type": "unified_stock",
         "epochs": epochs,
         "batch_size": batch_size,
         "learning_rate": lr,
-        "pairs_count": len(selected_pairs),
+        "symbols_count": len(selected_symbols),
         "data_rows": len(data),
         "use_all_data": use_all_data,
         "seed": seed,
     }
 
     experiment = init_comet(
-        project_name="ara-ai-forex",
-        experiment_name=f"forex-unified-{int(time.time())}",
+        project_name="ara-ai-stock",
+        experiment_name=f"stock-unified-{int(time.time())}",
         config=config,
         api_key=comet_api_key,
     )
@@ -164,12 +164,12 @@ def train_forex_model(
     data["Date"] = pd.to_datetime(data["Date"])
 
     # Initialize ML system
-    ml = ForexML(model_path=output_path)
+    ml = UnifiedStockML(model_path=output_path)
 
     # Train model
-    print(f"\nTraining unified forex model ({epochs} epochs)...")
+    print(f"\nTraining unified stock model ({epochs} epochs)...")
     result = ml.train_ultimate_models(
-        target_symbol="UNIFIED_FOREX",
+        target_symbol="UNIFIED_STOCKS",
         period="custom",
         custom_data=data,
         epochs=epochs,
@@ -196,7 +196,7 @@ def train_forex_model(
         print("\n✓ Training completed successfully")
         print(f"  Final loss: {result.get('final_loss', 'N/A')}")
         print(f"  Training time: {training_time:.2f}s")
-        print(f"  Pairs trained: {len(selected_pairs)}")
+        print(f"  Stocks trained: {len(selected_symbols)}")
         print(f"  Model saved to: {output_path}")
         return True
     else:
@@ -205,16 +205,16 @@ def train_forex_model(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train unified forex prediction model")
+    parser = argparse.ArgumentParser(description="Train unified stock prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument(
-        "--output", default="models/unified_forex_model.pt", help="Output model path"
+        "--output", default="models/unified_stock_model.pt", help="Output model path"
     )
     parser.add_argument("--epochs", type=int, default=500, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument(
-        "--sample-size", type=int, help="Number of pairs to sample (default: all)"
+        "--sample-size", type=int, help="Number of symbols to sample (default: all)"
     )
     parser.add_argument(
         "--use-all-data",
@@ -231,7 +231,7 @@ def main():
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 
     # Train model
-    success = train_forex_model(
+    success = train_stock_model(
         db_file=args.db_file,
         output_path=args.output,
         epochs=args.epochs,

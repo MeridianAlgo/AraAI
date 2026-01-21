@@ -1,0 +1,104 @@
+name: Hourly Train Stock Model
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch:
+    inputs:
+      epochs:
+        description: 'Training epochs'
+        required: false
+        default: '500'
+      sample_size:
+        description: 'Number of stocks to sample'
+        required: false
+        default: '5'
+
+permissions:
+  contents: write
+
+jobs:
+  train-stock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Cache Database
+        uses: actions/cache@v4
+        with:
+          path: training.db
+          key: ${{ runner.os }}-training-db-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-training-db-
+      
+      - name: Cache Models
+        uses: actions/cache@v4
+        with:
+          path: models/
+          key: ${{ runner.os }}-models-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-models-
+      
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          df -h
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+          pip install comet-ml
+      
+      - name: Fetch Training Data
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python scripts/fetch_training_data.py --db-file training.db --asset-type stock --limit 100
+      
+      - name: Train Stock Model
+        env:
+          COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
+        run: |
+          EPOCHS="${{ inputs.epochs }}"
+          SAMPLE_SIZE="${{ inputs.sample_size }}"
+          if [ -z "$EPOCHS" ]; then EPOCHS="500"; fi
+          if [ -z "$SAMPLE_SIZE" ]; then SAMPLE_SIZE="5"; fi
+          
+          python scripts/train_stock_model.py \
+            --db-file training.db \
+            --output models/unified_stock_model.pt \
+            --epochs "$EPOCHS" \
+            --sample-size "$SAMPLE_SIZE" \
+            --comet-api-key "$COMET_API_KEY"
+      
+      - name: Upload to Hugging Face
+        if: success()
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python scripts/push_elite_models.py --model-path models/unified_stock_model.pt --model-type stock
+      
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-training-${{ github.run_number }}
+          path: |
+            models/unified_stock_model.pt
+            training.db
+          retention-days: 7
