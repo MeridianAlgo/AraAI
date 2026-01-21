@@ -22,17 +22,17 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
     # Get HF token from environment
     hf_token = os.getenv("HF_TOKEN")
     if not hf_token:
-        print("❌ HF_TOKEN not found in environment variables")
+        print("ERROR: HF_TOKEN not found in environment variables")
         return False
 
     model_path = Path(model_path)
     if not model_path.exists():
-        print(f"❌ Model not found: {model_path}")
+        print(f"ERROR: Model not found: {model_path}")
         return False
 
     try:
         # Login to Hugging Face
-        print("🔐 Logging into Hugging Face...")
+        print("Logging into Hugging Face...")
         login(token=hf_token)
 
         api = HfApi()
@@ -45,7 +45,7 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
         else:
             filename = f"models/{model_path.name}"
 
-        print(f"📤 Uploading {model_path.name} to Hugging Face...")
+        print(f"Uploading {model_path.name} to Hugging Face...")
         print(f"   Destination: {repo_id}/{filename}")
 
         # Upload to Hugging Face
@@ -57,7 +57,7 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
             commit_message=f"Update {model_type} model - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         )
 
-        print(f"✅ Successfully uploaded {filename}")
+        print(f"Successfully uploaded {filename}")
 
         # Update model card
         update_model_card(api, hf_token, repo_id, model_type)
@@ -65,7 +65,7 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
         return True
 
     except Exception as e:
-        print(f"❌ Failed to upload: {e}")
+        print(f"ERROR: Failed to upload: {e}")
         return False
 
 
@@ -108,10 +108,10 @@ See full documentation at: https://github.com/MeridianAlgo/AraAI
             commit_message=f"Update model card - {model_type}",
         )
 
-        print("✅ Updated model card on Hugging Face")
+        print("Successfully updated model card on Hugging Face")
 
     except Exception as e:
-        print(f"⚠️  Could not update model card: {e}")
+        print(f"WARNING: Could not update model card: {e}")
 
 
 def main():
@@ -126,16 +126,17 @@ def main():
 
     args = parser.parse_args()
 
-    print("🚀 Model Upload to Hugging Face")
+    print("=" * 50)
+    print("Model Upload to Hugging Face")
     print("=" * 50)
 
     success = push_model_to_hf(args.model_path, args.model_type, args.repo_id)
 
     if success:
-        print("\n🎉 Model uploaded successfully!")
-        print(f"🌐 Available at: https://huggingface.co/{args.repo_id}")
+        print("\nModel uploaded successfully!")
+        print(f"Available at: https://huggingface.co/{args.repo_id}")
     else:
-        print("\n❌ Upload failed. Check the logs above.")
+        print("\nUpload failed. Check the logs above.")
         sys.exit(1)
 
 
