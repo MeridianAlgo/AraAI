@@ -386,9 +386,9 @@ class RevolutionaryFinancialModel(nn.Module):
                 nn.Sequential(
                     nn.Linear(dim, dim // 2, bias=False),
                     RMSNorm(dim // 2),
-                    SwiGLU(dim // 2, dim // 4),
+                    nn.GELU(),
                     nn.Dropout(dropout),
-                    nn.Linear(dim // 4, 1, bias=False),
+                    nn.Linear(dim // 2, 1, bias=False),
                 )
                 for _ in range(num_prediction_heads)
             ]

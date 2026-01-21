@@ -72,109 +72,31 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
 def update_model_card(api, hf_token, repo_id, model_type):
     """Update model card on Hugging Face"""
     try:
-        model_card_content = f"""---
+        # Read the professional model card
+        model_card_path = Path(__file__).parent.parent / "docs" / "MODEL_CARD.md"
+        
+        if model_card_path.exists():
+            with open(model_card_path, 'r', encoding='utf-8') as f:
+                model_card_content = f.read()
+        else:
+            # Fallback to basic model card
+            model_card_content = f"""---
 library_name: pytorch
 license: mit
 tags:
 - finance
 - trading
 - time-series
-- transformer
-- unified-model
 - {model_type}
 ---
 
-# ARA.AI - Revolutionary Trading Intelligence Models
+# ARA.AI - Advanced Financial Prediction Models
 
-## 🚀 Overview
+Professional financial AI models for stock and forex prediction.
 
-Revolutionary unified models for financial prediction with separate training workflows.
+See full documentation at: https://github.com/MeridianAlgo/AraAI
 
-### Model Types
-
-1. **Unified Stock Model** (`unified_stock_model.pt`)
-   - ONE model for ALL stocks
-   - Trained hourly at :00
-   - 4.2M parameters
-   - >99.9% accuracy
-
-2. **Unified Forex Model** (`unified_forex_model.pt`)
-   - ONE model for ALL forex pairs
-   - Trained hourly at :30
-   - 4.2M parameters
-   - >99.5% accuracy
-
-## 🎯 Architecture
-
-- **Deep Learning**: Transformer + CNN-LSTM hybrid
-- **Features**: 44+ technical indicators
-- **Training**: Comet ML experiment tracking
-- **Deployment**: Automated GitHub Actions workflows
-
-## 📊 Technical Indicators
-
-- Price: Returns, Log Returns, Volatility, ATR
-- Moving Averages: SMA (5,10,20,50,200), EMA (5,10,20,50,200)
-- Momentum: RSI, MACD, ROC, Momentum
-- Volatility: Bollinger Bands, ATR
-- Volume: Volume Ratio, Volume SMA
-
-## 🔧 Usage
-
-```python
-from meridianalgo.unified_ml import UnifiedStockML
-from meridianalgo.forex_ml import ForexML
-from huggingface_hub import hf_hub_download
-
-# Download stock model
-stock_model = hf_hub_download(
-    repo_id="MeridianAlgo/ARA.AI",
-    filename="models/unified_stock_model.pt"
-)
-
-# Load and predict
-ml = UnifiedStockML(model_path=stock_model)
-prediction = ml.predict_ultimate('AAPL', days=5)
-
-# Download forex model
-forex_model = hf_hub_download(
-    repo_id="MeridianAlgo/ARA.AI",
-    filename="models/unified_forex_model.pt"
-)
-
-# Load and predict
-forex_ml = ForexML(model_path=forex_model)
-forex_pred = forex_ml.predict_forex('EURUSD', days=5)
-```
-
-## 📈 Training
-
-- **Stock Training**: Every hour at :00 (24x per day)
-- **Forex Training**: Every hour at :30 (24x per day)
-- **Tracking**: Comet ML for metrics and visualization
-- **Storage**: Automatic upload to Hugging Face Hub
-
-## 🔄 Continuous Learning
-
-Models are continuously trained with:
-- Random sampling for diverse learning
-- Latest market data
-- Comet ML experiment tracking
-- Automated quality checks
-
-## 📅 Last Updated
-
-{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-## 🌐 Links
-
-- **Repository**: https://github.com/MeridianAlgo/AraAI
-- **Comet ML**: https://www.comet.ml/ara-ai
-- **Documentation**: https://github.com/MeridianAlgo/AraAI/blob/main/README.md
-
-## ⚠️ Disclaimer
-
-For educational and research purposes only. Not financial advice.
+**Last Updated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 """
 
         # Upload model card
