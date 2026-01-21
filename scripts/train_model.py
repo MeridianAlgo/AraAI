@@ -317,7 +317,7 @@ def main():
         default="models/stock_model.pt",
         help="Output model file (default: models/stock_model.pt)",
     )
-    parser.add_argument("--epochs", type=int, default=100, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=60, help="Training epochs")
     parser.add_argument(
         "--use-all-data",
         action="store_true",

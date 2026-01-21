@@ -139,7 +139,7 @@ def main():
         default="models/unified_stock_model.pt",
         help="Output path for unified stock model",
     )
-    parser.add_argument("--epochs", type=int, default=500, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=60, help="Training epochs")
     parser.add_argument(
         "--stock-sample-size",
         type=int,

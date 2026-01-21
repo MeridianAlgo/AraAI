@@ -145,7 +145,7 @@ class UnifiedStockML:
         self,
         dataset_path,
         symbol_name,
-        epochs=200,
+        epochs=60,
         batch_size=64,
         lr=0.0005,
         validation_split=0.2,

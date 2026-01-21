@@ -213,7 +213,7 @@ def main():
     parser.add_argument(
         "--output", default="models/unified_forex_model.pt", help="Output model path"
     )
-    parser.add_argument("--epochs", type=int, default=500, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=60, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument(

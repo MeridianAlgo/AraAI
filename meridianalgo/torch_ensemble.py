@@ -133,7 +133,7 @@ class TorchMLSystem:
         except Exception as e:
             print(f"Error saving model: {e}")
 
-    def train(self, X, y, symbol, epochs=100, batch_size=32, lr=0.001):
+    def train(self, X, y, symbol, epochs=60, batch_size=32, lr=0.001):
         """Train the ensemble model"""
         try:
             print(f"Training PyTorch ensemble on {symbol}...")
