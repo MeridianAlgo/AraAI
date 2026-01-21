@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   train-forex:
@@ -102,3 +103,63 @@ jobs:
             models/unified_forex_model.pt
             training.db
           retention-days: 7
+      
+      - name: Create Issue on Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `Forex Training Failed - Run ${context.runNumber}`;
+            const body = `## Forex Model Training Failure
+            
+            **Workflow Run:** [${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            **Branch:** ${context.ref}
+            **Commit:** ${context.sha.substring(0, 7)}
+            **Triggered by:** ${context.eventName}
+            
+            ### Configuration
+            - Epochs: ${{ inputs.epochs || '500' }}
+            - Sample Size: ${{ inputs.sample_size || '3' }}
+            
+            ### Failure Details
+            The forex model training workflow failed. Please check the workflow logs for detailed error messages.
+            
+            ### Action Items
+            - [ ] Review workflow logs
+            - [ ] Check data fetching step
+            - [ ] Verify training script
+            - [ ] Check Comet ML integration
+            - [ ] Verify Hugging Face upload
+            
+            ### Links
+            - [Workflow Run](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            - [Training Script](${context.payload.repository.html_url}/blob/main/scripts/train_forex_model.py)
+            `;
+            
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'training-failure,forex'
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Forex Training Failed')
+            );
+            
+            if (existingIssue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `Another failure occurred in run [${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})`
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['training-failure', 'forex', 'automated']
+              });
+            }

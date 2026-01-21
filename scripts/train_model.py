@@ -102,11 +102,11 @@ def init_comet(project, run_name, config, api_key=None):
 
     try:
         experiment = comet_ml.Experiment(
-            api_key=api_key, project_name=project, workspace="ara-ai"
+            api_key=api_key, project_name=project, workspace="meridianalgo"
         )
         experiment.set_name(run_name)
         experiment.log_parameters(config)
-        print(f"  ✓ Comet ML initialized: {experiment.url}")
+        print(f"  Comet ML initialized: {experiment.url}")
         return experiment
     except Exception as e:
         print(f"  Warning: Failed to initialize Comet ML: {e}")

@@ -34,9 +34,9 @@ class FlashMultiHeadAttention(nn.Module):
         self.head_dim = embed_dim // num_heads
         self.use_flash = use_flash and hasattr(F, "scaled_dot_product_attention")
 
-        assert (
-            self.head_dim * num_heads == embed_dim
-        ), "embed_dim must be divisible by num_heads"
+        assert self.head_dim * num_heads == embed_dim, (
+            "embed_dim must be divisible by num_heads"
+        )
 
         self.qkv_proj = nn.Linear(embed_dim, 3 * embed_dim, bias=False)
         self.out_proj = nn.Linear(embed_dim, embed_dim)
@@ -285,7 +285,7 @@ class EliteEnsembleModel(nn.Module):
 
         # Weighted ensemble
         weighted_predictions = all_predictions * ensemble_weights
-        ensemble_output = weighted_predictions.sum(dim=-1, keepdim=True)
+        _ = weighted_predictions.sum(dim=-1, keepdim=True)  # ensemble_output not used
 
         # Final processing
         final_pred = self.final_output(all_predictions)
@@ -678,12 +678,11 @@ class AdvancedMLSystem:
 
                 scheduler.step()
 
-                # Print progress
-                if (epoch + 1) % 100 == 0 or (
-                    (epoch + 1) % 20 == 0 and (epoch + 1) <= 100
-                ):
+                # Print progress every 50 epochs or at key milestones
+                if (epoch + 1) % 50 == 0 or (epoch + 1) in [1, 10, 25]:
+                    current_lr = optimizer.param_groups[0]["lr"]
                     print(
-                        f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}"
+                        f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}, LR: {current_lr:.2e}"
                     )
 
                 # Early stopping
