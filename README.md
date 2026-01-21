@@ -6,17 +6,18 @@
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Training Status](https://img.shields.io/badge/training-automated-success)](https://github.com/MeridianAlgo/AraAI/actions)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Models-yellow)](https://huggingface.co/MeridianAlgo/ARA.AI)
 [![Comet ML](https://img.shields.io/badge/Comet%20ML-Tracking-blue)](https://www.comet.ml)
-
-[Features](#features) • [Quick Start](#quick-start) • [![Hourly Train Stock Model](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-stock.yml/badge.svg?branch=main)](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-stock.yml) • [![Hourly Train Forex Model](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-forex.yml) • [Documentation](#documentation) • [![Lint Code](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
+[![Hourly Train Stock Model](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-stock.yml/badge.svg?branch=main)](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-stock.yml)
+[![Hourly Train Forex Model](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/hourly-train-forex.yml)
+[![Lint Code](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
 
 </div>
+
 > **Important Notice**  
-> **This is a conceptual demonstration repository**  
-> **Not intended for actual financial trading or investment decisions**
-> **It is merely our take on a new concept in financial AI and machine learning.**
+> This is a conceptual demonstration repository 
+> Not intended for actual financial trading or investment decisions
+> It is merely our take on a new concept in financial AI and machine learning.
 ---
 
 ## Overview
