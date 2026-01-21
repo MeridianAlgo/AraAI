@@ -163,11 +163,13 @@ def train_forex_model(
     data.columns = ["Symbol", "Date", "Open", "High", "Low", "Close", "Volume"]
     data["Date"] = pd.to_datetime(data["Date"])
 
-    # Initialize ML system
+    # Initialize ML system with Revolutionary 2026 Architecture
     ml = ForexML(model_path=output_path)
 
-    # Train model
-    print(f"\nTraining unified forex model ({epochs} epochs)...")
+    # Train model with Revolutionary 2026 Architecture
+    print(
+        f"\nTraining unified forex model ({epochs} epochs) with Revolutionary 2026 Architecture..."
+    )
     result = ml.train_ultimate_models(
         target_symbol="UNIFIED_FOREX",
         period="custom",
