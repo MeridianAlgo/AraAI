@@ -4,13 +4,14 @@ Push Models to Hugging Face Hub
 Supports both stock and forex unified models
 """
 
+import argparse
 import os
 import sys
-import argparse
+from datetime import datetime
 from pathlib import Path
+
 from dotenv import load_dotenv
 from huggingface_hub import HfApi, login
-from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -74,9 +75,9 @@ def update_model_card(api, hf_token, repo_id, model_type):
     try:
         # Read the professional model card
         model_card_path = Path(__file__).parent.parent / "docs" / "MODEL_CARD.md"
-        
+
         if model_card_path.exists():
-            with open(model_card_path, 'r', encoding='utf-8') as f:
+            with open(model_card_path, "r", encoding="utf-8") as f:
                 model_card_content = f.read()
         else:
             # Fallback to basic model card

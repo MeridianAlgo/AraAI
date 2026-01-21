@@ -68,7 +68,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python scripts/fetch_training_data.py --db-file training.db --asset-type forex --limit 20
+          python scripts/fetch_and_store_data.py --db-file training.db --asset-type forex --limit 20
       
       - name: Train Forex Model
         env:

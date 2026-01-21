@@ -8,14 +8,14 @@ Revolutionary Stock Model Training System
 """
 
 import argparse
-import sqlite3
-import pandas as pd
-import numpy as np
-from pathlib import Path
-import sys
-import warnings
-import time
 import random
+import sqlite3
+import sys
+import time
+import warnings
+from pathlib import Path
+
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 
