@@ -541,6 +541,7 @@ class AdvancedMLSystem:
         lr=0.0005,
         validation_split=0.2,
         cpu_limit=80,
+        comet_experiment=None,
     ):
         """
         Train the model with validation, early stopping, and CPU limiting
@@ -683,6 +684,17 @@ class AdvancedMLSystem:
                 print(
                     f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}, LR: {current_lr:.2e}"
                 )
+                
+                # Log to Comet ML
+                if comet_experiment:
+                    comet_experiment.log_metrics(
+                        {
+                            "train_loss": train_loss,
+                            "val_loss": val_loss,
+                            "learning_rate": current_lr,
+                        },
+                        epoch=epoch + 1,
+                    )
 
                 # Early stopping
                 if val_loss < best_val_loss:

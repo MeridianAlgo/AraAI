@@ -179,6 +179,7 @@ def train_stock_model(
         batch_size=batch_size,
         lr=lr,
         quick_mode=False,
+        comet_experiment=experiment,  # Pass Comet experiment
     )
 
     training_time = time.time() - start_time

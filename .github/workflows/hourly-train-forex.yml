@@ -8,7 +8,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '500'
+        default: '60'
       sample_size:
         description: 'Number of forex pairs to sample'
         required: false
@@ -77,7 +77,7 @@ jobs:
         run: |
           EPOCHS="${{ inputs.epochs }}"
           SAMPLE_SIZE="${{ inputs.sample_size }}"
-          if [ -z "$EPOCHS" ]; then EPOCHS="500"; fi
+          if [ -z "$EPOCHS" ]; then EPOCHS="60"; fi
           if [ -z "$SAMPLE_SIZE" ]; then SAMPLE_SIZE="3"; fi
           
           python scripts/train_forex_model.py \
@@ -118,7 +118,7 @@ jobs:
             **Triggered by:** ${context.eventName}
             
             ### Configuration
-            - Epochs: ${{ inputs.epochs || '500' }}
+            - Epochs: ${{ inputs.epochs || '60' }}
             - Sample Size: ${{ inputs.sample_size || '3' }}
             
             ### Failure Details
