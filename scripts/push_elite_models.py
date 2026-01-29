@@ -16,6 +16,10 @@ from huggingface_hub import HfApi, login
 # Load environment variables
 load_dotenv()
 
+# Increase Hugging Face Hub timeout to 3 hours (10800 seconds)
+os.environ["HUGGINGFACE_HUB_READ_TIMEOUT"] = "10800"
+os.environ["HUGGINGFACE_HUB_WRITE_TIMEOUT"] = "10800"
+
 
 def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.AI"):
     """Push model to Hugging Face Hub"""

@@ -15,6 +15,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
+# Increase Hugging Face Hub timeout to 3 hours (10800 seconds)
+os.environ["HUGGINGFACE_HUB_READ_TIMEOUT"] = "10800"
+os.environ["HUGGINGFACE_HUB_WRITE_TIMEOUT"] = "10800"
+
 
 class HFManager:
     def __init__(self, repo_id="MeridianAlgo/ARA.AI", token=None):
