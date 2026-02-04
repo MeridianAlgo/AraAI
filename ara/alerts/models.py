@@ -89,9 +89,7 @@ class AlertCondition:
     def __str__(self) -> str:
         """String representation"""
         if self.operator == ConditionOperator.PERCENT_CHANGE:
-            return (
-                f"{self.field} {self.operator.value} {self.value}% in {self.timeframe}"
-            )
+            return f"{self.field} {self.operator.value} {self.value}% in {self.timeframe}"
         return f"{self.field} {self.operator.value} {self.value}"
 
 
@@ -136,9 +134,7 @@ class Alert:
             "message_template": self.message_template,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "last_triggered": (
-                self.last_triggered.isoformat() if self.last_triggered else None
-            ),
+            "last_triggered": (self.last_triggered.isoformat() if self.last_triggered else None),
             "trigger_count": self.trigger_count,
             "cooldown_minutes": self.cooldown_minutes,
             "email_recipients": self.email_recipients,
@@ -155,9 +151,7 @@ class Alert:
             name=data["name"],
             symbol=data["symbol"],
             condition=(
-                AlertCondition.from_dict(data["condition"])
-                if data.get("condition")
-                else None
+                AlertCondition.from_dict(data["condition"]) if data.get("condition") else None
             ),
             channels=[NotificationChannel(ch) for ch in data.get("channels", [])],
             priority=AlertPriority(data.get("priority", "medium")),
@@ -194,9 +188,7 @@ class Alert:
         if self.last_triggered is None:
             return True
 
-        minutes_since_last = (
-            datetime.utcnow() - self.last_triggered
-        ).total_seconds() / 60
+        minutes_since_last = (datetime.utcnow() - self.last_triggered).total_seconds() / 60
         return minutes_since_last >= self.cooldown_minutes
 
     def mark_triggered(self) -> None:
@@ -221,9 +213,7 @@ class AlertHistory:
     threshold_value: float = 0.0
     message: str = ""
     channels_notified: List[NotificationChannel] = field(default_factory=list)
-    notification_status: Dict[str, bool] = field(
-        default_factory=dict
-    )  # channel -> success
+    notification_status: Dict[str, bool] = field(default_factory=dict)  # channel -> success
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -258,9 +248,7 @@ class AlertHistory:
             actual_value=data.get("actual_value", 0.0),
             threshold_value=data.get("threshold_value", 0.0),
             message=data.get("message", ""),
-            channels_notified=[
-                NotificationChannel(ch) for ch in data.get("channels_notified", [])
-            ],
+            channels_notified=[NotificationChannel(ch) for ch in data.get("channels_notified", [])],
             notification_status=data.get("notification_status", {}),
             metadata=data.get("metadata", {}),
         )

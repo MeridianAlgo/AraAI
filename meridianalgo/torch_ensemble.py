@@ -40,9 +40,7 @@ class EnsembleModel(nn.Module):
         self.lasso_head = nn.Linear(hidden_size, 1)
 
         # Model weights
-        self.model_weights = torch.tensor(
-            [0.25, 0.20, 0.15, 0.10, 0.10, 0.08, 0.04, 0.04, 0.04]
-        )
+        self.model_weights = torch.tensor([0.25, 0.20, 0.15, 0.10, 0.10, 0.08, 0.04, 0.04, 0.04])
 
     def forward(self, x):
         # Extract features
@@ -160,9 +158,7 @@ class TorchMLSystem:
             # Training loop
             self.model.train()
             dataset = torch.utils.data.TensorDataset(X_normalized, y_tensor)
-            dataloader = torch.utils.data.DataLoader(
-                dataset, batch_size=batch_size, shuffle=True
-            )
+            dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
             for epoch in range(epochs):
                 total_loss = 0

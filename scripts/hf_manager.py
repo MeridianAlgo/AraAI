@@ -100,9 +100,7 @@ class HFManager:
 
     def delete_old_models(self, keep_count=5, prefix="models/stock_"):
         """Delete old models to save space on Hugging Face"""
-        print(
-            f"Cleaning up old models with prefix '{prefix}' (keeping last {keep_count})..."
-        )
+        print(f"Cleaning up old models with prefix '{prefix}' (keeping last {keep_count})...")
         try:
             files = self.api.list_repo_files(repo_id=self.repo_id)
             target_files = sorted([f for f in files if f.startswith(prefix)])
@@ -204,29 +202,19 @@ print(prediction)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Manage Ara AI Hugging Face Repository"
-    )
+    parser = argparse.ArgumentParser(description="Manage Ara AI Hugging Face Repository")
     parser.add_argument("--upload", help="Local path of the model to upload")
     parser.add_argument("--download", help="Remote path of the model to download")
-    parser.add_argument(
-        "--sync", action="store_true", help="Sync all models from HF repo"
-    )
+    parser.add_argument("--sync", action="store_true", help="Sync all models from HF repo")
     parser.add_argument("--remote-path", help="Remote path in the repository")
     parser.add_argument("--cleanup", action="store_true", help="Clean up old models")
-    parser.add_argument(
-        "--prefix", default="models/", help="Prefix for files to cleanup or sync"
-    )
+    parser.add_argument("--prefix", default="models/", help="Prefix for files to cleanup or sync")
     parser.add_argument("--keep", type=int, default=5, help="Number of models to keep")
-    parser.add_argument(
-        "--update-card", action="store_true", help="Update the model card"
-    )
+    parser.add_argument("--update-card", action="store_true", help="Update the model card")
     parser.add_argument("--symbol", help="Symbol for the model card")
     parser.add_argument("--accuracy", help="Accuracy for the model card")
     parser.add_argument("--loss", help="Loss for the model card")
-    parser.add_argument(
-        "--trained-count", help="Trained symbols count for the model card"
-    )
+    parser.add_argument("--trained-count", help="Trained symbols count for the model card")
 
     args = parser.parse_args()
     manager = HFManager()

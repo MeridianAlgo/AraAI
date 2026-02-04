@@ -209,9 +209,7 @@ class ExplainabilityVisualizer:
         ax.barh(0, base_value, color="gray", alpha=0.5, label="Base value")
 
         # Feature contributions
-        for i, (name, shap_val, feat_val) in enumerate(
-            zip(top_names, top_shap, top_values)
-        ):
+        for i, (name, shap_val, feat_val) in enumerate(zip(top_names, top_shap, top_values)):
             color = "green" if shap_val > 0 else "red"
             ax.barh(i + 1, shap_val, left=cumulative[i], color=color, alpha=0.7)
 
@@ -327,9 +325,9 @@ class ExplainabilityVisualizer:
             return None
 
         # Sort and get top N
-        sorted_features = sorted(
-            feature_importance.items(), key=lambda x: abs(x[1]), reverse=True
-        )[:top_n]
+        sorted_features = sorted(feature_importance.items(), key=lambda x: abs(x[1]), reverse=True)[
+            :top_n
+        ]
 
         feature_names = [f[0] for f in sorted_features]
         importance_scores = [f[1] for f in sorted_features]

@@ -150,9 +150,7 @@ class PortfolioConstraints:
             for asset, weight in weights.items():
                 if asset in asset_classes:
                     asset_class = asset_classes[asset]
-                    class_weights[asset_class] = (
-                        class_weights.get(asset_class, 0.0) + weight
-                    )
+                    class_weights[asset_class] = class_weights.get(asset_class, 0.0) + weight
 
             for asset_class, (min_limit, max_limit) in self.asset_class_limits.items():
                 class_weight = class_weights.get(asset_class, 0.0)
@@ -211,9 +209,7 @@ class PortfolioConstraints:
         # Normalize to sum to 1
         total_weight = sum(adjusted_weights.values())
         if total_weight > 0:
-            adjusted_weights = {
-                asset: w / total_weight for asset, w in adjusted_weights.items()
-            }
+            adjusted_weights = {asset: w / total_weight for asset, w in adjusted_weights.items()}
 
         # Check and adjust sector constraints (iterative approach)
         if asset_sectors and self.sector_limits:
@@ -222,9 +218,7 @@ class PortfolioConstraints:
                 for asset, weight in adjusted_weights.items():
                     if asset in asset_sectors:
                         sector = asset_sectors[asset]
-                        sector_weights[sector] = (
-                            sector_weights.get(sector, 0.0) + weight
-                        )
+                        sector_weights[sector] = sector_weights.get(sector, 0.0) + weight
 
                 # Adjust if sector limits violated
                 adjustments_made = False
@@ -462,13 +456,9 @@ class PortfolioRebalancer:
                 return True
             elif frequency == RebalanceFrequency.MONTHLY and days_since_rebalance >= 30:
                 return True
-            elif (
-                frequency == RebalanceFrequency.QUARTERLY and days_since_rebalance >= 90
-            ):
+            elif frequency == RebalanceFrequency.QUARTERLY and days_since_rebalance >= 90:
                 return True
-            elif (
-                frequency == RebalanceFrequency.ANNUALLY and days_since_rebalance >= 365
-            ):
+            elif frequency == RebalanceFrequency.ANNUALLY and days_since_rebalance >= 365:
                 return True
 
         # Check drift-based rebalancing
@@ -816,8 +806,6 @@ class PortfolioRebalancer:
         # Normalize to sum to 1
         total_weight = sum(adjusted_weights.values())
         if total_weight > 0:
-            adjusted_weights = {
-                asset: w / total_weight for asset, w in adjusted_weights.items()
-            }
+            adjusted_weights = {asset: w / total_weight for asset, w in adjusted_weights.items()}
 
         return adjusted_weights

@@ -137,9 +137,7 @@ class CacheManager:
             cache_time = datetime.fromisoformat(cached_entry["timestamp"])
 
             # Check if cache is still valid
-            if datetime.now() - cache_time < timedelta(
-                hours=self.prediction_cache_hours
-            ):
+            if datetime.now() - cache_time < timedelta(hours=self.prediction_cache_hours):
                 cached_predictions = cached_entry["predictions"]
 
                 # Check if we have enough predictions
@@ -187,9 +185,7 @@ class CacheManager:
             cache_time = datetime.fromisoformat(cache_entry["timestamp"])
 
             # Check if cache is still valid
-            if datetime.now() - cache_time < timedelta(
-                minutes=self.market_data_cache_minutes
-            ):
+            if datetime.now() - cache_time < timedelta(minutes=self.market_data_cache_minutes):
                 return cache_entry["data"]
 
             return None
@@ -367,9 +363,7 @@ class AccuracyTracker:
                     if validation_result:
                         # Update record
                         records[record_id]["validated"] = True
-                        records[record_id][
-                            "validation_date"
-                        ] = datetime.now().isoformat()
+                        records[record_id]["validation_date"] = datetime.now().isoformat()
                         records[record_id]["accuracy_metrics"] = validation_result
 
                         # Store validation result
@@ -460,13 +454,9 @@ class AccuracyTracker:
             if valid_predictions > 0:
                 validation_results["avg_error"] = total_error / valid_predictions
                 accurate_count = sum(
-                    1
-                    for acc in validation_results["daily_accuracies"]
-                    if acc["accurate"]
+                    1 for acc in validation_results["daily_accuracies"] if acc["accurate"]
                 )
-                validation_results["overall_accuracy"] = (
-                    accurate_count / valid_predictions
-                ) * 100
+                validation_results["overall_accuracy"] = (accurate_count / valid_predictions) * 100
 
                 return validation_results
 

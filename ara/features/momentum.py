@@ -13,9 +13,7 @@ class MomentumIndicators:
     """Collection of momentum oscillators."""
 
     @staticmethod
-    def rsi(
-        data: pd.DataFrame, period: int = 14, column: str = "close"
-    ) -> pd.DataFrame:
+    def rsi(data: pd.DataFrame, period: int = 14, column: str = "close") -> pd.DataFrame:
         """
         Relative Strength Index (RSI).
 
@@ -104,16 +102,12 @@ class MomentumIndicators:
         highest_high = result["high"].rolling(window=period).max()
         lowest_low = result["low"].rolling(window=period).min()
 
-        result["williams_r"] = (
-            -100 * (highest_high - result["close"]) / (highest_high - lowest_low)
-        )
+        result["williams_r"] = -100 * (highest_high - result["close"]) / (highest_high - lowest_low)
 
         return result
 
     @staticmethod
-    def cci(
-        data: pd.DataFrame, period: int = 20, constant: float = 0.015
-    ) -> pd.DataFrame:
+    def cci(data: pd.DataFrame, period: int = 20, constant: float = 0.015) -> pd.DataFrame:
         """
         Commodity Channel Index (CCI).
 
@@ -134,9 +128,7 @@ class MomentumIndicators:
         sma_tp = tp.rolling(window=period).mean()
 
         # Calculate Mean Deviation
-        mad = tp.rolling(window=period).apply(
-            lambda x: np.abs(x - x.mean()).mean(), raw=True
-        )
+        mad = tp.rolling(window=period).apply(lambda x: np.abs(x - x.mean()).mean(), raw=True)
 
         # Calculate CCI
         result["cci"] = (tp - sma_tp) / (constant * mad)
@@ -144,9 +136,7 @@ class MomentumIndicators:
         return result
 
     @staticmethod
-    def roc(
-        data: pd.DataFrame, period: int = 12, column: str = "close"
-    ) -> pd.DataFrame:
+    def roc(data: pd.DataFrame, period: int = 12, column: str = "close") -> pd.DataFrame:
         """
         Rate of Change (ROC).
 
@@ -161,16 +151,13 @@ class MomentumIndicators:
         result = data.copy()
 
         result[f"roc_{period}"] = (
-            (result[column] - result[column].shift(period))
-            / result[column].shift(period)
+            (result[column] - result[column].shift(period)) / result[column].shift(period)
         ) * 100
 
         return result
 
     @staticmethod
-    def momentum(
-        data: pd.DataFrame, period: int = 10, column: str = "close"
-    ) -> pd.DataFrame:
+    def momentum(data: pd.DataFrame, period: int = 10, column: str = "close") -> pd.DataFrame:
         """
         Momentum (MOM).
 
@@ -212,9 +199,9 @@ class MomentumIndicators:
         result = data.copy()
 
         # Calculate Buying Pressure
-        bp = result["close"] - pd.concat(
-            [result["low"], result["close"].shift()], axis=1
-        ).min(axis=1)
+        bp = result["close"] - pd.concat([result["low"], result["close"].shift()], axis=1).min(
+            axis=1
+        )
 
         # Calculate True Range
         high_low = result["high"] - result["low"]
@@ -268,15 +255,11 @@ class MomentumIndicators:
 
         # Double smooth absolute momentum
         abs_momentum_ema1 = momentum.abs().ewm(span=long_period, adjust=False).mean()
-        abs_momentum_ema2 = abs_momentum_ema1.ewm(
-            span=short_period, adjust=False
-        ).mean()
+        abs_momentum_ema2 = abs_momentum_ema1.ewm(span=short_period, adjust=False).mean()
 
         # Calculate TSI
         result["tsi"] = 100 * (momentum_ema2 / abs_momentum_ema2)
-        result["tsi_signal"] = (
-            result["tsi"].ewm(span=signal_period, adjust=False).mean()
-        )
+        result["tsi_signal"] = result["tsi"].ewm(span=signal_period, adjust=False).mean()
 
         return result
 
@@ -317,9 +300,7 @@ class MomentumIndicators:
         return result
 
     @staticmethod
-    def awesome_oscillator(
-        data: pd.DataFrame, fast: int = 5, slow: int = 34
-    ) -> pd.DataFrame:
+    def awesome_oscillator(data: pd.DataFrame, fast: int = 5, slow: int = 34) -> pd.DataFrame:
         """
         Awesome Oscillator (AO).
 
@@ -338,8 +319,7 @@ class MomentumIndicators:
 
         # Calculate AO
         result["awesome_osc"] = (
-            median_price.rolling(window=fast).mean()
-            - median_price.rolling(window=slow).mean()
+            median_price.rolling(window=fast).mean() - median_price.rolling(window=slow).mean()
         )
 
         return result
@@ -397,9 +377,7 @@ class MomentumIndicators:
         return result
 
     @staticmethod
-    def cmo(
-        data: pd.DataFrame, period: int = 14, column: str = "close"
-    ) -> pd.DataFrame:
+    def cmo(data: pd.DataFrame, period: int = 14, column: str = "close") -> pd.DataFrame:
         """
         Chande Momentum Oscillator (CMO).
 
@@ -430,9 +408,7 @@ class MomentumIndicators:
         return result
 
     @staticmethod
-    def dpo(
-        data: pd.DataFrame, period: int = 20, column: str = "close"
-    ) -> pd.DataFrame:
+    def dpo(data: pd.DataFrame, period: int = 20, column: str = "close") -> pd.DataFrame:
         """
         Detrended Price Oscillator (DPO).
 
@@ -525,15 +501,10 @@ class MomentumIndicators:
         ) / 6
 
         # Calculate RVI
-        rvi = (
-            numerator.rolling(window=period).sum()
-            / denominator.rolling(window=period).sum()
-        )
+        rvi = numerator.rolling(window=period).sum() / denominator.rolling(window=period).sum()
 
         result["rvi"] = rvi
-        result["rvi_signal"] = (
-            rvi + 2 * rvi.shift(1) + 2 * rvi.shift(2) + rvi.shift(3)
-        ) / 6
+        result["rvi_signal"] = (rvi + 2 * rvi.shift(1) + 2 * rvi.shift(2) + rvi.shift(3)) / 6
 
         return result
 
@@ -567,9 +538,7 @@ class MomentumIndicators:
             .rolling(window=rvi_period)
             .apply(
                 lambda x: (
-                    np.polyfit(np.arange(len(x)), x, 1)[0]
-                    if len(x) == rvi_period
-                    else np.nan
+                    np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == rvi_period else np.nan
                 ),
                 raw=True,
             )

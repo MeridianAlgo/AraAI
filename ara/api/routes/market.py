@@ -190,9 +190,7 @@ async def get_market_sentiment(
 
         # Analyze sentiment
         aggregator = SentimentAggregator()
-        sentiment_data = aggregator.aggregate_sentiment(
-            symbol=symbol, sources=source_list
-        )
+        sentiment_data = aggregator.aggregate_sentiment(symbol=symbol, sources=source_list)
 
         return SentimentResponse(
             symbol=symbol,
@@ -275,9 +273,7 @@ async def get_correlations(
 
         # Analyze correlations
         analyzer = CorrelationAnalyzer()
-        correlation_data = analyzer.calculate_correlations(
-            assets=asset_list, period=period
-        )
+        correlation_data = analyzer.calculate_correlations(assets=asset_list, period=period)
 
         # Build correlation pairs
         correlation_pairs = []
@@ -377,9 +373,7 @@ async def get_indicators(
         latest = features.iloc[-1]
 
         # Helper function to determine signal
-        def get_signal(
-            value: float, threshold_high: float = 70, threshold_low: float = 30
-        ) -> str:
+        def get_signal(value: float, threshold_high: float = 70, threshold_low: float = 30) -> str:
             if value > threshold_high:
                 return "overbought"
             elif value < threshold_low:
@@ -398,11 +392,7 @@ async def get_indicators(
             ind = Indicator(
                 name="SMA_20",
                 value=float(latest["SMA_20"]),
-                signal=(
-                    "bullish"
-                    if data["Close"].iloc[-1] > latest["SMA_20"]
-                    else "bearish"
-                ),
+                signal=("bullish" if data["Close"].iloc[-1] > latest["SMA_20"] else "bearish"),
                 description="20-day Simple Moving Average",
             )
             all_indicators.append(ind)

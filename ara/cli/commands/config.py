@@ -18,9 +18,7 @@ def config():
 
 
 @config.command("init")
-@click.option(
-    "--interactive", "-i", is_flag=True, help="Interactive configuration wizard"
-)
+@click.option("--interactive", "-i", is_flag=True, help="Interactive configuration wizard")
 def init(interactive):
     """
     Initialize ARA AI configuration
@@ -36,9 +34,7 @@ def init(interactive):
         config_path = Path.home() / ".ara" / "config.yaml"
 
         if config_path.exists():
-            if not Confirm.ask(
-                f"Configuration already exists at {config_path}. Overwrite?"
-            ):
+            if not Confirm.ask(f"Configuration already exists at {config_path}. Overwrite?"):
                 return
 
         if interactive:
@@ -46,12 +42,8 @@ def init(interactive):
         else:
             # Create default config
             Config.create_default_config(config_path)
-            console.print(
-                f"[green]Default configuration created at {config_path}[/green]"
-            )
-            console.print(
-                "[yellow]Run 'ara config init --interactive' to customize[/yellow]"
-            )
+            console.print(f"[green]Default configuration created at {config_path}[/green]")
+            console.print("[yellow]Run 'ara config init --interactive' to customize[/yellow]")
 
     except Exception as e:
         handle_error(e, "Configuration initialization failed")
@@ -157,9 +149,7 @@ def reset(force):
     """Reset configuration to defaults"""
     try:
         if not force:
-            if not Confirm.ask(
-                "Are you sure you want to reset configuration to defaults?"
-            ):
+            if not Confirm.ask("Are you sure you want to reset configuration to defaults?"):
                 return
 
         from ara.config.config import Config
@@ -229,9 +219,7 @@ def _interactive_config_wizard(config_path):
     Config.save_config(config_data, config_path)
 
     console.print(f"\n[green]Configuration saved to {config_path}[/green]")
-    console.print(
-        "[yellow]You can modify it later with 'ara config set' commands[/yellow]"
-    )
+    console.print("[yellow]You can modify it later with 'ara config set' commands[/yellow]")
 
 
 def _display_full_config(config):

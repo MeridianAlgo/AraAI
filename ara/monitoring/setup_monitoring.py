@@ -107,9 +107,7 @@ def print_setup_instructions():
 
     print("\n4. Enable distributed tracing (optional):")
     print("   export OTLP_ENDPOINT=http://localhost:4317")
-    print(
-        "   pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp"
-    )
+    print("   pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp")
 
     print("\n5. Enable error tracking (optional):")
     print("   export SENTRY_DSN=your-sentry-dsn")

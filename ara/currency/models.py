@@ -118,15 +118,10 @@ class CurrencyRiskMetrics:
         """Convert to dictionary"""
         return {
             "base_currency": self.base_currency.value,
-            "currency_exposures": {
-                k.value: v for k, v in self.currency_exposures.items()
-            },
-            "currency_volatilities": {
-                k.value: v for k, v in self.currency_volatilities.items()
-            },
+            "currency_exposures": {k.value: v for k, v in self.currency_exposures.items()},
+            "currency_volatilities": {k.value: v for k, v in self.currency_volatilities.items()},
             "currency_correlations": {
-                f"{k[0].value}_{k[1].value}": v
-                for k, v in self.currency_correlations.items()
+                f"{k[0].value}_{k[1].value}": v for k, v in self.currency_correlations.items()
             },
             "total_currency_risk": self.total_currency_risk,
             "hedged_return": self.hedged_return,

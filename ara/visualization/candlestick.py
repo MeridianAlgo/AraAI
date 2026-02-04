@@ -66,9 +66,7 @@ class CandlestickChart:
             shared_xaxes=True,
             vertical_spacing=0.05,
             row_heights=row_heights,
-            subplot_titles=(
-                [f"{symbol} Price", "Volume"] if volume else [f"{symbol} Price"]
-            ),
+            subplot_titles=([f"{symbol} Price", "Volume"] if volume else [f"{symbol} Price"]),
         )
 
         # Add candlestick
@@ -118,9 +116,7 @@ class CandlestickChart:
             xaxis_rangeslider_visible=False,
             height=height,
             hovermode="x unified",
-            legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-            ),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
 
         # Update axes

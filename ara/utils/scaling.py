@@ -259,18 +259,14 @@ class WorkerPool:
 
         self._initialize_celery()
 
-        logger.info(
-            "Initialized WorkerPool", broker=broker_url, max_workers=max_workers
-        )
+        logger.info("Initialized WorkerPool", broker=broker_url, max_workers=max_workers)
 
     def _initialize_celery(self):
         """Initialize Celery app"""
         try:
             from celery import Celery
 
-            self._app = Celery(
-                "ara_worker", broker=self.broker_url, backend=self.backend_url
-            )
+            self._app = Celery("ara_worker", broker=self.broker_url, backend=self.backend_url)
 
             # Configure Celery
             self._app.conf.update(
@@ -438,9 +434,7 @@ class ServiceDiscovery:
                     port = int(host_port[1]) if len(host_port) > 1 else 6379
                     db = int(url_parts[1]) if len(url_parts) > 1 else 0
 
-                    self._registry = redis.Redis(
-                        host=host, port=port, db=db, decode_responses=True
-                    )
+                    self._registry = redis.Redis(host=host, port=port, db=db, decode_responses=True)
 
                     # Test connection
                     self._registry.ping()
@@ -691,17 +685,13 @@ class LoadBalancer:
     def increment_connections(self, backend: str) -> None:
         """Increment connection count for backend"""
         with self._lock:
-            self._connection_counts[backend] = (
-                self._connection_counts.get(backend, 0) + 1
-            )
+            self._connection_counts[backend] = self._connection_counts.get(backend, 0) + 1
 
     def decrement_connections(self, backend: str) -> None:
         """Decrement connection count for backend"""
         with self._lock:
             if backend in self._connection_counts:
-                self._connection_counts[backend] = max(
-                    0, self._connection_counts[backend] - 1
-                )
+                self._connection_counts[backend] = max(0, self._connection_counts[backend] - 1)
 
     def get_stats(self) -> Dict[str, Any]:
         """Get load balancer statistics"""

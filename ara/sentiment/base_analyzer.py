@@ -35,13 +35,9 @@ class SentimentScore:
     def __post_init__(self):
         """Validate sentiment score values"""
         if not -1 <= self.score <= 1:
-            raise ValueError(
-                f"Sentiment score must be between -1 and 1, got {self.score}"
-            )
+            raise ValueError(f"Sentiment score must be between -1 and 1, got {self.score}")
         if not 0 <= self.confidence <= 1:
-            raise ValueError(
-                f"Confidence must be between 0 and 1, got {self.confidence}"
-            )
+            raise ValueError(f"Confidence must be between 0 and 1, got {self.confidence}")
         if self.volume < 0:
             raise ValueError(f"Volume must be non-negative, got {self.volume}")
 
@@ -73,9 +69,7 @@ class SentimentResult:
         if total_weight == 0:
             return 0.0
 
-        weighted_sum = sum(
-            s.score * s.volume * s.confidence for s in self.sentiment_scores
-        )
+        weighted_sum = sum(s.score * s.volume * s.confidence for s in self.sentiment_scores)
         return weighted_sum / total_weight
 
 
@@ -127,9 +121,7 @@ class SentimentAnalyzer(ABC):
         """
         pass
 
-    def calculate_momentum(
-        self, scores: List[SentimentScore], window_hours: int = 6
-    ) -> float:
+    def calculate_momentum(self, scores: List[SentimentScore], window_hours: int = 6) -> float:
         """
         Calculate sentiment momentum (rate of change).
 
@@ -146,14 +138,10 @@ class SentimentAnalyzer(ABC):
         # Split into recent and older scores
         cutoff_time = datetime.now()
         recent_scores = [
-            s
-            for s in scores
-            if (cutoff_time - s.timestamp).total_seconds() / 3600 <= window_hours
+            s for s in scores if (cutoff_time - s.timestamp).total_seconds() / 3600 <= window_hours
         ]
         older_scores = [
-            s
-            for s in scores
-            if (cutoff_time - s.timestamp).total_seconds() / 3600 > window_hours
+            s for s in scores if (cutoff_time - s.timestamp).total_seconds() / 3600 > window_hours
         ]
 
         if not recent_scores or not older_scores:

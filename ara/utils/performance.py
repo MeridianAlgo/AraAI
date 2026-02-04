@@ -144,9 +144,7 @@ class GPUAccelerator:
 
                 stats["allocated_mb"] = torch.cuda.memory_allocated() / (1024**2)
                 stats["reserved_mb"] = torch.cuda.memory_reserved() / (1024**2)
-                stats["max_allocated_mb"] = torch.cuda.max_memory_allocated() / (
-                    1024**2
-                )
+                stats["max_allocated_mb"] = torch.cuda.max_memory_allocated() / (1024**2)
             except Exception as e:
                 logger.debug(f"Could not get memory stats: {e}")
 
@@ -241,13 +239,11 @@ class ModelQuantizer:
             param_count = sum(p.numel() for p in model.parameters())
 
             # Estimate size in MB
-            param_size_mb = sum(
-                p.numel() * p.element_size() for p in model.parameters()
-            ) / (1024**2)
+            param_size_mb = sum(p.numel() * p.element_size() for p in model.parameters()) / (
+                1024**2
+            )
 
-            buffer_size_mb = sum(
-                b.numel() * b.element_size() for b in model.buffers()
-            ) / (1024**2)
+            buffer_size_mb = sum(b.numel() * b.element_size() for b in model.buffers()) / (1024**2)
 
             total_size_mb = param_size_mb + buffer_size_mb
 
@@ -350,9 +346,7 @@ class ONNXExporter:
             return session
 
         except ImportError:
-            logger.error(
-                "onnxruntime not installed. Install with: pip install onnxruntime"
-            )
+            logger.error("onnxruntime not installed. Install with: pip install onnxruntime")
             raise ModelError("onnxruntime not available")
         except Exception as e:
             logger.error(f"Failed to load ONNX model: {e}")
@@ -374,9 +368,7 @@ class ONNXExporter:
             input_name = session.get_inputs()[0].name
             output_name = session.get_outputs()[0].name
 
-            result = session.run(
-                [output_name], {input_name: input_data.astype(np.float32)}
-            )
+            result = session.run([output_name], {input_name: input_data.astype(np.float32)})
 
             return result[0]
 
@@ -438,8 +430,7 @@ class BatchProcessor:
         self._stats["total_time"] += elapsed
 
         logger.debug(
-            f"Processed {len(items)} items in {elapsed:.2f}s "
-            f"({len(items)/elapsed:.1f} items/s)"
+            f"Processed {len(items)} items in {elapsed:.2f}s " f"({len(items)/elapsed:.1f} items/s)"
         )
 
         return results
@@ -577,9 +568,7 @@ class PerformanceProfiler:
         stats = self.get_stats()
 
         print("\n=== Performance Profile ===")
-        for name, metrics in sorted(
-            stats.items(), key=lambda x: x[1]["total"], reverse=True
-        ):
+        for name, metrics in sorted(stats.items(), key=lambda x: x[1]["total"], reverse=True):
             print(f"\n{name}:")
             print(f"  Count: {metrics['count']}")
             print(f"  Total: {metrics['total']:.3f}s")

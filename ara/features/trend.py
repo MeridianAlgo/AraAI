@@ -13,9 +13,7 @@ class TrendIndicators:
     """Collection of trend-following indicators."""
 
     @staticmethod
-    def sma(
-        data: pd.DataFrame, period: int = 20, column: str = "close"
-    ) -> pd.DataFrame:
+    def sma(data: pd.DataFrame, period: int = 20, column: str = "close") -> pd.DataFrame:
         """
         Simple Moving Average (SMA).
 
@@ -32,9 +30,7 @@ class TrendIndicators:
         return result
 
     @staticmethod
-    def ema(
-        data: pd.DataFrame, period: int = 20, column: str = "close"
-    ) -> pd.DataFrame:
+    def ema(data: pd.DataFrame, period: int = 20, column: str = "close") -> pd.DataFrame:
         """
         Exponential Moving Average (EMA).
 
@@ -51,9 +47,7 @@ class TrendIndicators:
         return result
 
     @staticmethod
-    def wma(
-        data: pd.DataFrame, period: int = 20, column: str = "close"
-    ) -> pd.DataFrame:
+    def wma(data: pd.DataFrame, period: int = 20, column: str = "close") -> pd.DataFrame:
         """
         Weighted Moving Average (WMA).
 
@@ -79,9 +73,7 @@ class TrendIndicators:
         return result
 
     @staticmethod
-    def dema(
-        data: pd.DataFrame, period: int = 20, column: str = "close"
-    ) -> pd.DataFrame:
+    def dema(data: pd.DataFrame, period: int = 20, column: str = "close") -> pd.DataFrame:
         """
         Double Exponential Moving Average (DEMA).
 
@@ -102,9 +94,7 @@ class TrendIndicators:
         return result
 
     @staticmethod
-    def tema(
-        data: pd.DataFrame, period: int = 20, column: str = "close"
-    ) -> pd.DataFrame:
+    def tema(data: pd.DataFrame, period: int = 20, column: str = "close") -> pd.DataFrame:
         """
         Triple Exponential Moving Average (TEMA).
 
@@ -192,12 +182,8 @@ class TrendIndicators:
 
         # Smooth with Wilder's method
         atr = tr.ewm(alpha=1 / period, adjust=False).mean()
-        plus_di = (
-            100 * pd.Series(plus_dm).ewm(alpha=1 / period, adjust=False).mean() / atr
-        )
-        minus_di = (
-            100 * pd.Series(minus_dm).ewm(alpha=1 / period, adjust=False).mean() / atr
-        )
+        plus_di = 100 * pd.Series(plus_dm).ewm(alpha=1 / period, adjust=False).mean() / atr
+        minus_di = 100 * pd.Series(minus_dm).ewm(alpha=1 / period, adjust=False).mean() / atr
 
         # Calculate ADX
         dx = 100 * np.abs(plus_di - minus_di) / (plus_di + minus_di)
@@ -288,9 +274,7 @@ class TrendIndicators:
         return result
 
     @staticmethod
-    def supertrend(
-        data: pd.DataFrame, period: int = 10, multiplier: float = 3.0
-    ) -> pd.DataFrame:
+    def supertrend(data: pd.DataFrame, period: int = 10, multiplier: float = 3.0) -> pd.DataFrame:
         """
         Supertrend Indicator.
 
@@ -414,9 +398,7 @@ class TrendIndicators:
         # Senkou Span B (Leading Span B)
         high_senkou = result["high"].rolling(window=senkou_b_period).max()
         low_senkou = result["low"].rolling(window=senkou_b_period).min()
-        result["ichimoku_senkou_b"] = ((high_senkou + low_senkou) / 2).shift(
-            displacement
-        )
+        result["ichimoku_senkou_b"] = ((high_senkou + low_senkou) / 2).shift(displacement)
 
         # Chikou Span (Lagging Span)
         result["ichimoku_chikou"] = result["close"].shift(-displacement)
@@ -530,18 +512,10 @@ class TrendIndicators:
         result = data.copy()
 
         # Calculate ROCs
-        roc_1 = (
-            (result[column] - result[column].shift(roc1)) / result[column].shift(roc1)
-        ) * 100
-        roc_2 = (
-            (result[column] - result[column].shift(roc2)) / result[column].shift(roc2)
-        ) * 100
-        roc_3 = (
-            (result[column] - result[column].shift(roc3)) / result[column].shift(roc3)
-        ) * 100
-        roc_4 = (
-            (result[column] - result[column].shift(roc4)) / result[column].shift(roc4)
-        ) * 100
+        roc_1 = ((result[column] - result[column].shift(roc1)) / result[column].shift(roc1)) * 100
+        roc_2 = ((result[column] - result[column].shift(roc2)) / result[column].shift(roc2)) * 100
+        roc_3 = ((result[column] - result[column].shift(roc3)) / result[column].shift(roc3)) * 100
+        roc_4 = ((result[column] - result[column].shift(roc4)) / result[column].shift(roc4)) * 100
 
         # Smooth with SMAs
         roc_1_sma = roc_1.rolling(window=sma1).mean()
@@ -550,9 +524,7 @@ class TrendIndicators:
         roc_4_sma = roc_4.rolling(window=sma4).mean()
 
         # Calculate KST
-        result["kst"] = (
-            (roc_1_sma * 1) + (roc_2_sma * 2) + (roc_3_sma * 3) + (roc_4_sma * 4)
-        )
+        result["kst"] = (roc_1_sma * 1) + (roc_2_sma * 2) + (roc_3_sma * 3) + (roc_4_sma * 4)
         result["kst_signal"] = result["kst"].rolling(window=signal).mean()
 
         return result
@@ -587,9 +559,7 @@ class TrendIndicators:
         return result
 
     @staticmethod
-    def mass_index(
-        data: pd.DataFrame, period: int = 9, sum_period: int = 25
-    ) -> pd.DataFrame:
+    def mass_index(data: pd.DataFrame, period: int = 9, sum_period: int = 25) -> pd.DataFrame:
         """
         Mass Index.
 
@@ -633,9 +603,7 @@ class TrendIndicators:
             DataFrame with Qstick column
         """
         result = data.copy()
-        result["qstick"] = (
-            (result["close"] - result["open"]).rolling(window=period).mean()
-        )
+        result["qstick"] = (result["close"] - result["open"]).rolling(window=period).mean()
         return result
 
 

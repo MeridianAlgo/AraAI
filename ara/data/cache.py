@@ -128,9 +128,7 @@ class LRUCache:
         """
         with self._lock:
             total_requests = self._stats["hits"] + self._stats["misses"]
-            hit_rate = (
-                self._stats["hits"] / total_requests if total_requests > 0 else 0.0
-            )
+            hit_rate = self._stats["hits"] / total_requests if total_requests > 0 else 0.0
 
             return {
                 "hits": self._stats["hits"],
@@ -383,9 +381,7 @@ class CacheManager:
         self._warm_cache_enabled = False
         self._warm_cache_keys: Dict[str, Callable] = {}
 
-        logger.info(
-            "Initialized CacheManager", l1_size_mb=l1_size_mb, l2_enabled=l2_enabled
-        )
+        logger.info("Initialized CacheManager", l1_size_mb=l1_size_mb, l2_enabled=l2_enabled)
 
     def get(self, key: str) -> Optional[Any]:
         """
@@ -470,9 +466,7 @@ class CacheManager:
         """
         # L1 doesn't support pattern matching, so clear all
         # In production, you'd want to track keys by pattern
-        logger.warning(
-            f"Pattern invalidation not fully supported, clearing L1. Pattern: {pattern}"
-        )
+        logger.warning(f"Pattern invalidation not fully supported, clearing L1. Pattern: {pattern}")
         self.l1.clear()
 
         # L2 (Redis) supports pattern matching
@@ -513,9 +507,7 @@ class CacheManager:
 
         return stats
 
-    def enable_cache_warming(
-        self, keys: Dict[str, Callable], interval_seconds: int = 300
-    ) -> None:
+    def enable_cache_warming(self, keys: Dict[str, Callable], interval_seconds: int = 300) -> None:
         """
         Enable cache warming for frequently accessed data
 
@@ -529,9 +521,7 @@ class CacheManager:
         # Start background task
         asyncio.create_task(self._cache_warming_loop(interval_seconds))
 
-        logger.info(
-            f"Enabled cache warming for {len(keys)} keys", interval=interval_seconds
-        )
+        logger.info(f"Enabled cache warming for {len(keys)} keys", interval=interval_seconds)
 
     async def _cache_warming_loop(self, interval: int) -> None:
         """Background task for cache warming"""

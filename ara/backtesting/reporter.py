@@ -83,9 +83,7 @@ class BacktestReporter:
             "equity_curve": self._generate_equity_curve_data(returns, dates),
             "monthly_returns": self._calculate_monthly_returns(returns, dates),
             "yearly_returns": self._calculate_yearly_returns(returns, dates),
-            "trade_statistics": self._generate_trade_statistics(
-                predictions, actuals, returns
-            ),
+            "trade_statistics": self._generate_trade_statistics(predictions, actuals, returns),
             "drawdown_analysis": self._analyze_drawdowns(returns, dates),
         }
 
@@ -97,9 +95,7 @@ class BacktestReporter:
 
         return report
 
-    def save_report(
-        self, report: Dict[str, Any], filename: Optional[str] = None
-    ) -> Path:
+    def save_report(self, report: Dict[str, Any], filename: Optional[str] = None) -> Path:
         """
         Save report to JSON file.
 
@@ -175,11 +171,7 @@ class BacktestReporter:
         df = pd.DataFrame({"date": dates, "return": returns})
         df["year"] = df["date"].dt.year
 
-        yearly = (
-            df.groupby("year")["return"]
-            .apply(lambda x: (1 + x).prod() - 1)
-            .reset_index()
-        )
+        yearly = df.groupby("year")["return"].apply(lambda x: (1 + x).prod() - 1).reset_index()
 
         return {
             "data": yearly.to_dict("records"),
@@ -203,26 +195,16 @@ class BacktestReporter:
             "total_trades": len(returns),
             "winning_trades": len(winning_trades),
             "losing_trades": len(losing_trades),
-            "avg_win": (
-                float(np.mean(winning_trades)) if len(winning_trades) > 0 else 0.0
-            ),
-            "avg_loss": (
-                float(np.mean(losing_trades)) if len(losing_trades) > 0 else 0.0
-            ),
-            "largest_win": (
-                float(np.max(winning_trades)) if len(winning_trades) > 0 else 0.0
-            ),
-            "largest_loss": (
-                float(np.min(losing_trades)) if len(losing_trades) > 0 else 0.0
-            ),
+            "avg_win": (float(np.mean(winning_trades)) if len(winning_trades) > 0 else 0.0),
+            "avg_loss": (float(np.mean(losing_trades)) if len(losing_trades) > 0 else 0.0),
+            "largest_win": (float(np.max(winning_trades)) if len(winning_trades) > 0 else 0.0),
+            "largest_loss": (float(np.min(losing_trades)) if len(losing_trades) > 0 else 0.0),
             "avg_trade": float(np.mean(returns)),
             "median_trade": float(np.median(returns)),
             "std_trade": float(np.std(returns)),
         }
 
-    def _analyze_drawdowns(
-        self, returns: np.ndarray, dates: List[datetime]
-    ) -> Dict[str, Any]:
+    def _analyze_drawdowns(self, returns: np.ndarray, dates: List[datetime]) -> Dict[str, Any]:
         """Analyze drawdown periods."""
         cumulative_returns = np.cumprod(1 + returns)
         running_max = np.maximum.accumulate(cumulative_returns)
@@ -368,9 +350,7 @@ class BacktestReporter:
         fig.update_yaxes(title_text="Cumulative Return", row=1, col=1)
         fig.update_yaxes(title_text="Drawdown (%)", row=2, col=1)
 
-        fig.update_layout(
-            title=f"Backtest Results - {symbol}", height=800, showlegend=True
-        )
+        fig.update_layout(title=f"Backtest Results - {symbol}", height=800, showlegend=True)
 
         if save_path:
             fig.write_html(str(save_path))

@@ -19,9 +19,7 @@ class BaseDataProvider(IDataProvider):
     Implements common functionality and retry logic
     """
 
-    def __init__(
-        self, name: str, asset_type: AssetType, max_retries: int = 3, timeout: int = 30
-    ):
+    def __init__(self, name: str, asset_type: AssetType, max_retries: int = 3, timeout: int = 30):
         self.name = name
         self.asset_type = asset_type
         self.max_retries = max_retries
@@ -47,9 +45,7 @@ class BaseDataProvider(IDataProvider):
 
         for attempt in range(self.max_retries):
             try:
-                result = await asyncio.wait_for(
-                    fetch_func(*args, **kwargs), timeout=self.timeout
-                )
+                result = await asyncio.wait_for(fetch_func(*args, **kwargs), timeout=self.timeout)
                 return result
 
             except asyncio.TimeoutError as e:

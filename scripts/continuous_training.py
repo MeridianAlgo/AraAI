@@ -39,9 +39,7 @@ def run_command(cmd, log_file=None):
         with open(log_file, "a") as f:
             f.write(log_msg + "\n")
 
-    result = subprocess.run(
-        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
-    )
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
     # Always log stdout
     if result.stdout:
@@ -200,9 +198,7 @@ def upload_stock_model():
 def main():
     import traceback
 
-    parser = argparse.ArgumentParser(
-        description="Continuous Training Orchestrator for Ara AI"
-    )
+    parser = argparse.ArgumentParser(description="Continuous Training Orchestrator for Ara AI")
     parser.add_argument(
         "--workflow",
         choices=["stock"],
@@ -285,9 +281,7 @@ def main():
                 seed=args.seed,
             )
             if len(selected_stocks) <= 20:
-                print(
-                    f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}"
-                )
+                print(f"\nSelected {len(selected_stocks)} stocks: {', '.join(selected_stocks)}")
             else:
                 print(
                     f"\nSelected {len(selected_stocks)} stocks (showing first 20): {', '.join(selected_stocks[:20])}..."

@@ -27,9 +27,7 @@ class RateLimiter:
     Token bucket rate limiter for API requests
     """
 
-    def __init__(
-        self, requests_per_second: float = 5.0, burst_size: Optional[int] = None
-    ):
+    def __init__(self, requests_per_second: float = 5.0, burst_size: Optional[int] = None):
         """
         Initialize rate limiter
 
@@ -181,9 +179,7 @@ class DataAggregator:
         self.rate_limiters: Dict[str, RateLimiter] = {}
         for provider in providers:
             provider_name = provider.get_provider_name()
-            self.rate_limiters[provider_name] = RateLimiter(
-                requests_per_second=rate_limit
-            )
+            self.rate_limiters[provider_name] = RateLimiter(requests_per_second=rate_limit)
 
         # Provider statistics
         self.provider_stats: Dict[str, ProviderStats] = {}
@@ -259,9 +255,7 @@ class DataAggregator:
 
         return df
 
-    async def fetch_realtime(
-        self, symbol: str, use_cache: bool = True
-    ) -> Dict[str, Any]:
+    async def fetch_realtime(self, symbol: str, use_cache: bool = True) -> Dict[str, Any]:
         """
         Fetch real-time data with failover
 
@@ -342,9 +336,7 @@ class DataAggregator:
             {"providers": [p.get_provider_name() for p in providers]},
         )
 
-    async def _fetch_with_failover(
-        self, symbol: str, period: str, interval: str
-    ) -> pd.DataFrame:
+    async def _fetch_with_failover(self, symbol: str, period: str, interval: str) -> pd.DataFrame:
         """
         Fetch from providers with automatic failover
 
@@ -421,9 +413,7 @@ class DataAggregator:
             {"providers": [p.get_provider_name() for p in providers]},
         )
 
-    async def _fetch_and_aggregate(
-        self, symbol: str, period: str, interval: str
-    ) -> pd.DataFrame:
+    async def _fetch_and_aggregate(self, symbol: str, period: str, interval: str) -> pd.DataFrame:
         """
         Fetch from all providers and aggregate with conflict resolution
 
@@ -604,9 +594,7 @@ class DataAggregator:
                     break
 
         # Sort remaining by success rate
-        remaining = [
-            p for p in self.providers if p.get_provider_name() != self.primary_provider
-        ]
+        remaining = [p for p in self.providers if p.get_provider_name() != self.primary_provider]
 
         remaining.sort(
             key=lambda p: self.provider_stats[p.get_provider_name()].get_success_rate(),

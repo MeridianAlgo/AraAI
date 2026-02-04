@@ -61,9 +61,7 @@ class RedditSentimentAnalyzer(SentimentAnalyzer):
 
         self.client_id = self.config.get("reddit_client_id")
         self.client_secret = self.config.get("reddit_client_secret")
-        self.user_agent = self.config.get(
-            "reddit_user_agent", "ARA-AI-Sentiment-Analyzer/1.0"
-        )
+        self.user_agent = self.config.get("reddit_user_agent", "ARA-AI-Sentiment-Analyzer/1.0")
         self.subreddits = self.config.get(
             "subreddits", ["wallstreetbets", "stocks", "cryptocurrency"]
         )
@@ -91,9 +89,7 @@ class RedditSentimentAnalyzer(SentimentAnalyzer):
                     user_agent=self.user_agent,
                 )
             except ImportError:
-                raise RedditAPIError(
-                    "praw library not installed. Install with: pip install praw"
-                )
+                raise RedditAPIError("praw library not installed. Install with: pip install praw")
             except Exception as e:
                 raise RedditAPIError(f"Failed to initialize Reddit client: {e}")
         return self._reddit
@@ -110,9 +106,7 @@ class RedditSentimentAnalyzer(SentimentAnalyzer):
             SentimentScore with aggregated Reddit sentiment
         """
         if not self.client_id or not self.client_secret:
-            logger.warning(
-                f"Reddit API not configured, returning neutral sentiment for {symbol}"
-            )
+            logger.warning(f"Reddit API not configured, returning neutral sentiment for {symbol}")
             return SentimentScore(
                 score=0.0,
                 confidence=0.0,
@@ -195,9 +189,7 @@ class RedditSentimentAnalyzer(SentimentAnalyzer):
             logger.error(f"Error analyzing Reddit sentiment for {symbol}: {e}")
             raise RedditAPIError(f"Failed to analyze Reddit sentiment: {e}")
 
-    async def _fetch_posts(
-        self, symbol: str, lookback_hours: int
-    ) -> List[Dict[str, Any]]:
+    async def _fetch_posts(self, symbol: str, lookback_hours: int) -> List[Dict[str, Any]]:
         """
         Fetch Reddit posts mentioning the symbol.
 
@@ -252,9 +244,7 @@ class RedditSentimentAnalyzer(SentimentAnalyzer):
 
             # Search for symbol in subreddit
             search_results = await asyncio.to_thread(
-                lambda: list(
-                    subreddit.search(symbol, limit=self.max_posts, time_filter="day")
-                )
+                lambda: list(subreddit.search(symbol, limit=self.max_posts, time_filter="day"))
             )
 
             for submission in search_results:

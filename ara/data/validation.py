@@ -98,8 +98,7 @@ class DataValidator:
         # Check minimum data points
         if total_rows < self.config.min_data_points:
             issues.append(
-                f"Insufficient data: {total_rows} rows "
-                f"(minimum: {self.config.min_data_points})"
+                f"Insufficient data: {total_rows} rows " f"(minimum: {self.config.min_data_points})"
             )
             recommendations.append("Fetch more historical data")
 
@@ -112,9 +111,7 @@ class DataValidator:
                 f"Too much missing data: {missing_pct:.1f}% "
                 f"(max: {self.config.max_missing_percentage}%)"
             )
-            recommendations.append(
-                "Use data imputation or fetch from alternative source"
-            )
+            recommendations.append("Use data imputation or fetch from alternative source")
 
         # Detect outliers
         outliers = self._detect_outliers(df)
@@ -220,9 +217,7 @@ class DataValidator:
 
         return outliers
 
-    def _detect_outliers_iqr(
-        self, series: pd.Series, multiplier: float = 1.5
-    ) -> pd.Series:
+    def _detect_outliers_iqr(self, series: pd.Series, multiplier: float = 1.5) -> pd.Series:
         """
         Detect outliers using Interquartile Range method
 
@@ -317,17 +312,13 @@ class DataValidator:
         invalid_h_open = (df["High"] < df["Open"]).sum()
         invalid_h_close = (df["High"] < df["Close"]).sum()
         if invalid_h_open > 0 or invalid_h_close > 0:
-            issues.append(
-                f"High < Open/Close in {invalid_h_open + invalid_h_close} rows"
-            )
+            issues.append(f"High < Open/Close in {invalid_h_open + invalid_h_close} rows")
 
         # Check Low <= Open, Close
         invalid_l_open = (df["Low"] > df["Open"]).sum()
         invalid_l_close = (df["Low"] > df["Close"]).sum()
         if invalid_l_open > 0 or invalid_l_close > 0:
-            issues.append(
-                f"Low > Open/Close in {invalid_l_open + invalid_l_close} rows"
-            )
+            issues.append(f"Low > Open/Close in {invalid_l_open + invalid_l_close} rows")
 
         # Check for negative prices
         for col in ["Open", "High", "Low", "Close"]:
@@ -661,14 +652,12 @@ class DataQualityScorer:
 
         if best["quality_score"] < min_quality:
             raise ValidationError(
-                f"Best source quality {best['quality_score']:.2f} "
-                f"below minimum {min_quality}",
+                f"Best source quality {best['quality_score']:.2f} " f"below minimum {min_quality}",
                 {"scores": scores},
             )
 
         logger.info(
-            f"Selected best source: {best['source']} "
-            f"(quality: {best['quality_score']:.2f})"
+            f"Selected best source: {best['source']} " f"(quality: {best['quality_score']:.2f})"
         )
 
         return best["source"], sources[best["source"]]

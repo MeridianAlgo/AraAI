@@ -172,14 +172,8 @@ class SecurityAuditLogger:
             method: Authentication method (password, api_key, token)
             details: Additional details
         """
-        event_type = (
-            SecurityEventType.LOGIN_SUCCESS
-            if success
-            else SecurityEventType.LOGIN_FAILURE
-        )
-        severity = (
-            SecurityEventSeverity.INFO if success else SecurityEventSeverity.WARNING
-        )
+        event_type = SecurityEventType.LOGIN_SUCCESS if success else SecurityEventType.LOGIN_FAILURE
+        severity = SecurityEventSeverity.INFO if success else SecurityEventSeverity.WARNING
 
         event_details = {"method": method}
         if details:
@@ -215,13 +209,9 @@ class SecurityAuditLogger:
             details: Additional details
         """
         event_type = (
-            SecurityEventType.ACCESS_GRANTED
-            if success
-            else SecurityEventType.ACCESS_DENIED
+            SecurityEventType.ACCESS_GRANTED if success else SecurityEventType.ACCESS_DENIED
         )
-        severity = (
-            SecurityEventSeverity.INFO if success else SecurityEventSeverity.WARNING
-        )
+        severity = SecurityEventSeverity.INFO if success else SecurityEventSeverity.WARNING
 
         event_details = {"resource": resource, "action": action}
         if details:

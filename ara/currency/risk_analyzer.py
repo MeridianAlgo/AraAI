@@ -57,9 +57,7 @@ class CurrencyRiskAnalyzer:
             # Run in executor
             loop = asyncio.get_event_loop()
             ticker = await loop.run_in_executor(None, yf.Ticker, forex_symbol)
-            hist = await loop.run_in_executor(
-                None, lambda: ticker.history(period=period)
-            )
+            hist = await loop.run_in_executor(None, lambda: ticker.history(period=period))
 
             if hist.empty:
                 raise DataProviderError(
@@ -75,9 +73,7 @@ class CurrencyRiskAnalyzer:
                 to_currency=to_currency.value,
                 error=str(e),
             )
-            raise DataProviderError(
-                "Failed to fetch currency history", {"error": str(e)}
-            )
+            raise DataProviderError("Failed to fetch currency history", {"error": str(e)})
 
     async def calculate_currency_volatility(
         self,
@@ -235,8 +231,7 @@ class CurrencyRiskAnalyzer:
 
         # Calculate currency weights
         currency_weights = {
-            currency: amount / total_value
-            for currency, amount in converted_exposures.items()
+            currency: amount / total_value for currency, amount in converted_exposures.items()
         }
 
         # Calculate volatilities for each currency
@@ -245,9 +240,7 @@ class CurrencyRiskAnalyzer:
 
         for currency in unique_currencies:
             if currency != base_currency:
-                task = self.calculate_currency_volatility(
-                    currency, base_currency, period
-                )
+                task = self.calculate_currency_volatility(currency, base_currency, period)
                 volatility_tasks.append(task)
             else:
                 # Base currency has zero volatility vs itself
@@ -303,9 +296,7 @@ class CurrencyRiskAnalyzer:
         currency_return = 0.0
         for currency, weight in currency_weights.items():
             if currency != base_currency:
-                hist = await self._fetch_currency_history(
-                    currency, base_currency, period
-                )
+                hist = await self._fetch_currency_history(currency, base_currency, period)
                 curr_return = (hist["Close"].iloc[-1] / hist["Close"].iloc[0]) - 1
                 currency_return += weight * curr_return
 

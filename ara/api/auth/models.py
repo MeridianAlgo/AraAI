@@ -158,9 +158,7 @@ class APIKeyCreateRequest(BaseModel):
     """API key creation request"""
 
     name: str = Field(..., description="Friendly name for the API key")
-    expires_in_days: Optional[int] = Field(
-        None, description="Days until expiration (None = never)"
-    )
+    expires_in_days: Optional[int] = Field(None, description="Days until expiration (None = never)")
 
 
 class APIKeyResponse(BaseModel):

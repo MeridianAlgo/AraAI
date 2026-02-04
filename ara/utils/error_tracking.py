@@ -52,9 +52,7 @@ class ErrorTracker:
         self.environment = environment
 
         if not SENTRY_AVAILABLE and enabled and dsn:
-            logger.warning(
-                "Sentry SDK not available. Install with: pip install sentry-sdk"
-            )
+            logger.warning("Sentry SDK not available. Install with: pip install sentry-sdk")
             self.enabled = False
             return
 

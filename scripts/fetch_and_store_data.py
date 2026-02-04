@@ -182,9 +182,7 @@ def main():
     parser = argparse.ArgumentParser(description="Fetch and store market data")
     parser.add_argument("--db-file", required=True, help="Database file path")
     parser.add_argument("--asset-type", choices=["stock", "forex"], required=True)
-    parser.add_argument(
-        "--limit", type=int, default=10, help="Number of symbols to fetch"
-    )
+    parser.add_argument("--limit", type=int, default=10, help="Number of symbols to fetch")
     parser.add_argument("--period", default="2y", help="Data period")
     parser.add_argument("--interval", default="1d", help="Data interval")
 
@@ -229,13 +227,9 @@ def main():
         print(f"  Fetching {symbol}...")
 
         if args.asset_type == "stock":
-            rows = fetch_and_store_stock(
-                symbol, args.db_file, args.period, args.interval
-            )
+            rows = fetch_and_store_stock(symbol, args.db_file, args.period, args.interval)
         else:
-            rows = fetch_and_store_forex(
-                symbol, args.db_file, args.period, args.interval
-            )
+            rows = fetch_and_store_forex(symbol, args.db_file, args.period, args.interval)
 
         if rows > 0:
             print(f"    [OK] Stored {rows} rows")
@@ -244,9 +238,7 @@ def main():
         else:
             print("    [SKIP] No new data")
 
-    print(
-        f"\nSummary: {successful}/{len(symbols)} symbols, {total_rows} total rows stored"
-    )
+    print(f"\nSummary: {successful}/{len(symbols)} symbols, {total_rows} total rows stored")
 
     if total_rows == 0:
         print("[WARNING] No data was stored")

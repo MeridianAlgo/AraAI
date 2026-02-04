@@ -290,6 +290,4 @@ def _display_model_comparison(comparison, metric):
 
     # Recommendation
     best_model = comparison["models"][0]
-    console.print(
-        f"\n[green]Recommended: {best_model['id']} ({best_model['type']})[/green]"
-    )
+    console.print(f"\n[green]Recommended: {best_model['id']} ({best_model['type']})[/green]")

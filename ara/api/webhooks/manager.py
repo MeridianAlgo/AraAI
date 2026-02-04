@@ -126,9 +126,7 @@ class WebhookManager:
         # Filter by user if specified
         if user_id:
             webhook_ids = self.user_webhooks.get(user_id, set())
-            webhooks = [
-                self.webhooks[wh_id] for wh_id in webhook_ids if wh_id in self.webhooks
-            ]
+            webhooks = [self.webhooks[wh_id] for wh_id in webhook_ids if wh_id in self.webhooks]
         else:
             webhooks = list(self.webhooks.values())
 
@@ -216,9 +214,7 @@ class WebhookManager:
 
         return True
 
-    def get_webhooks_for_event(
-        self, event_type: WebhookEventType
-    ) -> List[WebhookResponse]:
+    def get_webhooks_for_event(self, event_type: WebhookEventType) -> List[WebhookResponse]:
         """
         Get all active webhooks subscribed to an event type
 

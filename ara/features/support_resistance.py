@@ -26,9 +26,7 @@ class SupportResistance:
         result = data.copy()
 
         # Calculate pivot point
-        pivot = (
-            result["high"].shift(1) + result["low"].shift(1) + result["close"].shift(1)
-        ) / 3
+        pivot = (result["high"].shift(1) + result["low"].shift(1) + result["close"].shift(1)) / 3
 
         # Calculate support and resistance levels
         result["pivot"] = pivot
@@ -55,9 +53,7 @@ class SupportResistance:
         result = data.copy()
 
         # Calculate pivot point
-        pivot = (
-            result["high"].shift(1) + result["low"].shift(1) + result["close"].shift(1)
-        ) / 3
+        pivot = (result["high"].shift(1) + result["low"].shift(1) + result["close"].shift(1)) / 3
         range_hl = result["high"].shift(1) - result["low"].shift(1)
 
         # Calculate Fibonacci levels
@@ -234,9 +230,7 @@ class SupportResistance:
         return result
 
     @staticmethod
-    def volume_profile(
-        data: pd.DataFrame, window: int = 100, num_levels: int = 20
-    ) -> pd.DataFrame:
+    def volume_profile(data: pd.DataFrame, window: int = 100, num_levels: int = 20) -> pd.DataFrame:
         """
         Volume Profile for Key Levels.
 
@@ -292,9 +286,7 @@ class SupportResistance:
                 # Expand to side with more volume
                 lower_vol = volume_at_price[lower_idx - 1] if lower_idx > 0 else 0
                 upper_vol = (
-                    volume_at_price[upper_idx + 1]
-                    if upper_idx < len(volume_at_price) - 1
-                    else 0
+                    volume_at_price[upper_idx + 1] if upper_idx < len(volume_at_price) - 1 else 0
                 )
 
                 if lower_vol > upper_vol and lower_idx > 0:

@@ -96,9 +96,7 @@ def deprecated(
                 msg_parts.append(f"Use {alternative} instead.")
 
             if removal_version:
-                msg_parts.append(
-                    f"This feature will be removed in version {removal_version}."
-                )
+                msg_parts.append(f"This feature will be removed in version {removal_version}.")
 
             message = " ".join(msg_parts)
 

@@ -55,9 +55,7 @@ class DataConfig:
         if self.cache_ttl < 0:
             raise ConfigurationError("data.cache_ttl must be non-negative")
         if self.cache_ttl > 86400:  # 24 hours
-            raise ConfigurationError(
-                "data.cache_ttl must not exceed 86400 seconds (24 hours)"
-            )
+            raise ConfigurationError("data.cache_ttl must not exceed 86400 seconds (24 hours)")
 
         if self.max_retries < 1:
             raise ConfigurationError("data.max_retries must be at least 1")
@@ -75,12 +73,8 @@ class DataConfig:
                 raise ConfigurationError(
                     f"Provider '{provider_name}' configuration must be a dictionary"
                 )
-            if "enabled" in provider_config and not isinstance(
-                provider_config["enabled"], bool
-            ):
-                raise ConfigurationError(
-                    f"Provider '{provider_name}' enabled flag must be boolean"
-                )
+            if "enabled" in provider_config and not isinstance(provider_config["enabled"], bool):
+                raise ConfigurationError(f"Provider '{provider_name}' enabled flag must be boolean")
 
 
 @dataclass
@@ -183,9 +177,7 @@ class CacheConfig:
 
         # Validate Redis URL format if provided
         if self.redis_url and not self.redis_url.startswith(("redis://", "rediss://")):
-            raise ConfigurationError(
-                "cache.redis_url must start with 'redis://' or 'rediss://'"
-            )
+            raise ConfigurationError("cache.redis_url must start with 'redis://' or 'rediss://'")
 
 
 @dataclass
@@ -215,9 +207,7 @@ class LoggingConfig:
         if self.file:
             log_path = Path(self.file)
             if log_path.exists() and not log_path.is_file():
-                raise ConfigurationError(
-                    f"Log file path exists but is not a file: {self.file}"
-                )
+                raise ConfigurationError(f"Log file path exists but is not a file: {self.file}")
 
 
 class Config:
@@ -435,9 +425,7 @@ class Config:
             yaml.dump(existing_config, f, default_flow_style=False, sort_keys=False)
 
     @staticmethod
-    def create_default_config(
-        path: Path, environments: Optional[List[str]] = None
-    ) -> None:
+    def create_default_config(path: Path, environments: Optional[List[str]] = None) -> None:
         """
         Create a default configuration file with all environments
 

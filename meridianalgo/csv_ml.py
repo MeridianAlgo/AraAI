@@ -136,9 +136,7 @@ class CSVML(UltimateStockML):
             }
 
             # Extract features and targets
-            features, targets = self._extract_ultimate_features(
-                data, self.symbol_name, sector_info
-            )
+            features, targets = self._extract_ultimate_features(data, self.symbol_name, sector_info)
 
             if features is None or len(features) == 0:
                 print("Error: Failed to extract features from CSV data")
@@ -201,9 +199,7 @@ class CSVML(UltimateStockML):
                 "country": "Unknown",
             }
 
-            features = self._extract_current_ultimate_features(
-                data, self.symbol_name, sector_info
-            )
+            features = self._extract_current_ultimate_features(data, self.symbol_name, sector_info)
 
             if features is None:
                 return {"error": "Failed to extract features"}
@@ -303,9 +299,7 @@ class CSVML(UltimateStockML):
 
             # Calculate trend
             sma_20 = data["Close"].rolling(20).mean().iloc[-1]
-            sma_50 = (
-                data["Close"].rolling(50).mean().iloc[-1] if len(data) >= 50 else sma_20
-            )
+            sma_50 = data["Close"].rolling(50).mean().iloc[-1] if len(data) >= 50 else sma_20
 
             if sma_20 > sma_50:
                 trend = "Bullish"

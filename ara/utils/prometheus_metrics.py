@@ -271,9 +271,7 @@ def track_prediction(asset_type: str = "stock"):
 
                 # Track metrics
                 duration = time.time() - start_time
-                metrics.prediction_duration.labels(asset_type=asset_type).observe(
-                    duration
-                )
+                metrics.prediction_duration.labels(asset_type=asset_type).observe(duration)
                 metrics.predictions_total.labels(
                     asset_type=asset_type, symbol=kwargs.get("symbol", "unknown")
                 ).inc()
@@ -285,9 +283,7 @@ def track_prediction(asset_type: str = "stock"):
                         if hasattr(result.confidence, "overall")
                         else result.confidence
                     )
-                    metrics.prediction_confidence.labels(asset_type=asset_type).observe(
-                        confidence
-                    )
+                    metrics.prediction_confidence.labels(asset_type=asset_type).observe(confidence)
 
                 return result
             except Exception as e:
@@ -306,9 +302,7 @@ def track_prediction(asset_type: str = "stock"):
 
                 # Track metrics
                 duration = time.time() - start_time
-                metrics.prediction_duration.labels(asset_type=asset_type).observe(
-                    duration
-                )
+                metrics.prediction_duration.labels(asset_type=asset_type).observe(duration)
                 metrics.predictions_total.labels(
                     asset_type=asset_type, symbol=kwargs.get("symbol", "unknown")
                 ).inc()
@@ -320,9 +314,7 @@ def track_prediction(asset_type: str = "stock"):
                         if hasattr(result.confidence, "overall")
                         else result.confidence
                     )
-                    metrics.prediction_confidence.labels(asset_type=asset_type).observe(
-                        confidence
-                    )
+                    metrics.prediction_confidence.labels(asset_type=asset_type).observe(confidence)
 
                 return result
             except Exception as e:
@@ -355,9 +347,7 @@ def track_model_inference(model_name: str):
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
-                metrics.model_inference_duration.labels(model_name=model_name).observe(
-                    duration
-                )
+                metrics.model_inference_duration.labels(model_name=model_name).observe(duration)
                 return result
             except Exception as e:
                 metrics.errors_total.labels(
@@ -388,9 +378,7 @@ def track_data_fetch(provider: str):
                 result = await func(*args, **kwargs)
                 duration = time.time() - start_time
                 metrics.data_fetch_duration.labels(provider=provider).observe(duration)
-                metrics.data_fetch_total.labels(
-                    provider=provider, status="success"
-                ).inc()
+                metrics.data_fetch_total.labels(provider=provider, status="success").inc()
                 return result
             except Exception as e:
                 metrics.data_fetch_total.labels(provider=provider, status="error").inc()
@@ -408,9 +396,7 @@ def track_data_fetch(provider: str):
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
                 metrics.data_fetch_duration.labels(provider=provider).observe(duration)
-                metrics.data_fetch_total.labels(
-                    provider=provider, status="success"
-                ).inc()
+                metrics.data_fetch_total.labels(provider=provider, status="success").inc()
                 return result
             except Exception as e:
                 metrics.data_fetch_total.labels(provider=provider, status="error").inc()

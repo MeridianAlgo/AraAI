@@ -66,9 +66,7 @@ def load_stock_data_for_symbols(db_file, symbols, limit=None):
     return df
 
 
-def train_unified_stock_model(
-    db_file, output_path, epochs=500, sample_size=1, seed=None
-):
+def train_unified_stock_model(db_file, output_path, epochs=500, sample_size=1, seed=None):
     """Train ONE model for ALL stocks"""
     print(f"\n{'=' * 60}")
     print("Training Unified Stock Model")
@@ -129,10 +127,10 @@ def train_unified_stock_model(
     else:
         print(f"\n[FAIL] Training failed: {result.get('error', 'Unknown error')}")
         return False
+
+
 def main():
-    parser = argparse.ArgumentParser(
-        description="Train unified model - ONE model for all stocks"
-    )
+    parser = argparse.ArgumentParser(description="Train unified model - ONE model for all stocks")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument(
         "--stock-output",

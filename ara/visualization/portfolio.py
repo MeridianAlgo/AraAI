@@ -119,9 +119,7 @@ class PortfolioChart:
         fig.update_yaxes(title_text="Cumulative Return", row=1, col=1)
         fig.update_yaxes(title_text="Drawdown (%)", row=2, col=1)
 
-        fig.update_layout(
-            title=title, template=self.theme, height=height, hovermode="x unified"
-        )
+        fig.update_layout(title=title, template=self.theme, height=height, hovermode="x unified")
 
         return fig
 
@@ -260,9 +258,7 @@ class PortfolioChart:
             Plotly figure
         """
         # Sort by contribution
-        sorted_contrib = sorted(
-            risk_contributions.items(), key=lambda x: x[1], reverse=True
-        )
+        sorted_contrib = sorted(risk_contributions.items(), key=lambda x: x[1], reverse=True)
         assets, contributions = zip(*sorted_contrib)
 
         fig = go.Figure()
@@ -339,9 +335,7 @@ class PortfolioChart:
 
         fig.update_xaxes(title_text="Date", row=num_metrics, col=1)
 
-        fig.update_layout(
-            title=title, template=self.theme, height=height, hovermode="x unified"
-        )
+        fig.update_layout(title=title, template=self.theme, height=height, hovermode="x unified")
 
         return fig
 
@@ -398,8 +392,7 @@ class PortfolioChart:
         ]
 
         text = [
-            [f"{val*100:.1f}%" if not pd.isna(val) else "" for val in row]
-            for row in pivot.values
+            [f"{val*100:.1f}%" if not pd.isna(val) else "" for val in row] for row in pivot.values
         ]
 
         fig.add_trace(

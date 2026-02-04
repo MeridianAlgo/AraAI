@@ -30,9 +30,7 @@ except ImportError:
     print("Warning: comet_ml not installed. Install with: pip install comet-ml")
 
 
-def load_data_from_db(
-    db_file, symbol, use_all_data=True, timeframe="1d", training_mode="full"
-):
+def load_data_from_db(db_file, symbol, use_all_data=True, timeframe="1d", training_mode="full"):
     """Load training data from database with timeframe awareness"""
     conn = sqlite3.connect(db_file)
 
@@ -71,9 +69,7 @@ def load_data_from_db(
         raise ValueError(f"No data found for {symbol}")
 
     # Store timeframe info
-    detected_timeframe = (
-        df["timeframe"].iloc[0] if "timeframe" in df.columns else timeframe
-    )
+    detected_timeframe = df["timeframe"].iloc[0] if "timeframe" in df.columns else timeframe
     detected_interval = df["interval"].iloc[0] if "interval" in df.columns else "1d"
 
     # Rename columns to match expected format
@@ -219,9 +215,7 @@ def train_model(
         )
 
         # Store metadata in database
-        store_model_metadata(
-            db_file, symbol, output_path, result, timeframe, training_mode, hour
-        )
+        store_model_metadata(db_file, symbol, output_path, result, timeframe, training_mode, hour)
 
         # Finish Comet ML experiment
         if experiment is not None:
@@ -232,9 +226,7 @@ def train_model(
         print(f"\n✗ Training failed: {result.get('error', 'Unknown error')}")
 
         # Log failure to Comet ML
-        log_to_comet(
-            experiment, {"training_success": 0, "error": result.get("error", "Unknown")}
-        )
+        log_to_comet(experiment, {"training_success": 0, "error": result.get("error", "Unknown")})
 
         if experiment is not None:
             experiment.end()
@@ -331,9 +323,7 @@ def main():
         help="Incremental training (default: True)",
     )
     parser.add_argument("--timeframe", default="1d", help="Timeframe identifier")
-    parser.add_argument(
-        "--training-mode", default="full", help="Training mode (full, hourly)"
-    )
+    parser.add_argument("--training-mode", default="full", help="Training mode (full, hourly)")
     parser.add_argument("--hour", type=int, help="Current hour (for hourly mode)")
     parser.add_argument("--wandb-project", help="Weights & Biases project name")
     parser.add_argument("--wandb-run-name", help="Weights & Biases run name")

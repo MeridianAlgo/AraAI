@@ -39,9 +39,7 @@ class PerformanceMonitor:
         """Start performance monitoring"""
         if not self.monitoring:
             self.monitoring = True
-            self.monitor_thread = threading.Thread(
-                target=self._monitor_loop, daemon=True
-            )
+            self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
             self.monitor_thread.start()
 
     def stop_monitoring(self):
@@ -99,9 +97,7 @@ class PerformanceMonitor:
                     "memory_allocated": torch.cuda.memory_allocated() / (1024**3),
                     "memory_reserved": torch.cuda.memory_reserved() / (1024**3),
                     "utilization": (
-                        torch.cuda.utilization()
-                        if hasattr(torch.cuda, "utilization")
-                        else 0
+                        torch.cuda.utilization() if hasattr(torch.cuda, "utilization") else 0
                     ),
                 }
         except Exception:
@@ -164,9 +160,7 @@ class PerformanceMonitor:
 
             # Memory statistics
             if self.metrics["memory_usage"]:
-                memory_values = [
-                    entry["percent"] for entry in self.metrics["memory_usage"]
-                ]
+                memory_values = [entry["percent"] for entry in self.metrics["memory_usage"]]
                 summary["memory_stats"] = {
                     "average_percent": sum(memory_values) / len(memory_values),
                     "max_percent": max(memory_values),
@@ -180,9 +174,7 @@ class PerformanceMonitor:
 
             # Prediction timing statistics
             if self.metrics["prediction_times"]:
-                times = [
-                    entry["time_seconds"] for entry in self.metrics["prediction_times"]
-                ]
+                times = [entry["time_seconds"] for entry in self.metrics["prediction_times"]]
                 summary["prediction_stats"] = {
                     "average_time": sum(times) / len(times),
                     "fastest": min(times),
@@ -192,12 +184,8 @@ class PerformanceMonitor:
 
             # Accuracy statistics
             if self.metrics["model_accuracy"]:
-                accuracies = [
-                    entry["accuracy"] for entry in self.metrics["model_accuracy"]
-                ]
-                errors = [
-                    entry["error_rate"] for entry in self.metrics["model_accuracy"]
-                ]
+                accuracies = [entry["accuracy"] for entry in self.metrics["model_accuracy"]]
+                errors = [entry["error_rate"] for entry in self.metrics["model_accuracy"]]
                 summary["accuracy_stats"] = {
                     "average_accuracy": sum(accuracies) / len(accuracies),
                     "best_accuracy": max(accuracies),
@@ -352,17 +340,11 @@ class ResourceOptimizer:
             # Model-specific optimizations
             if model_type == "lstm":
                 if memory_gb < 4:
-                    settings.update(
-                        {"hidden_size": 64, "num_layers": 2, "batch_size": 16}
-                    )
+                    settings.update({"hidden_size": 64, "num_layers": 2, "batch_size": 16})
                 elif memory_gb > 16:
-                    settings.update(
-                        {"hidden_size": 256, "num_layers": 4, "batch_size": 64}
-                    )
+                    settings.update({"hidden_size": 256, "num_layers": 4, "batch_size": 64})
                 else:
-                    settings.update(
-                        {"hidden_size": 128, "num_layers": 3, "batch_size": 32}
-                    )
+                    settings.update({"hidden_size": 128, "num_layers": 3, "batch_size": 32})
 
             elif model_type == "ensemble":
                 if cpu_count < 4:
@@ -419,9 +401,7 @@ class BenchmarkRunner:
     def __init__(self):
         self.benchmark_results = {}
 
-    def benchmark_prediction_speed(
-        self, ara_instance, symbols=["AAPL", "TSLA", "MSFT"]
-    ):
+    def benchmark_prediction_speed(self, ara_instance, symbols=["AAPL", "TSLA", "MSFT"]):
         """Benchmark prediction speed"""
         try:
             results = {
@@ -545,9 +525,7 @@ class BenchmarkRunner:
 
             # Generate recommendations based on results
             if "prediction_speed" in self.benchmark_results:
-                avg_time = self.benchmark_results["prediction_speed"].get(
-                    "average_time", 0
-                )
+                avg_time = self.benchmark_results["prediction_speed"].get("average_time", 0)
                 if avg_time > 10:
                     report["recommendations"].append(
                         "Consider enabling GPU acceleration for faster predictions"

@@ -74,12 +74,8 @@ def create_database(db_file):
     )
 
     # Create indexes
-    cursor.execute(
-        "CREATE INDEX IF NOT EXISTS idx_symbol_date ON market_data(symbol, date)"
-    )
-    cursor.execute(
-        "CREATE INDEX IF NOT EXISTS idx_asset_type ON market_data(asset_type)"
-    )
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_symbol_date ON market_data(symbol, date)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_asset_type ON market_data(asset_type)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_timeframe ON market_data(timeframe)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_hour ON market_data(hour)")
 
@@ -134,18 +130,14 @@ def store_data(data_dir, db_file, mode="full", timeframe="1d", hour=None):
             df["hour"] = df["date"].dt.hour
 
             # Get timeframe and interval from CSV if available
-            csv_timeframe = (
-                df["Timeframe"].iloc[0] if "Timeframe" in df.columns else timeframe
-            )
+            csv_timeframe = df["Timeframe"].iloc[0] if "Timeframe" in df.columns else timeframe
             csv_interval = df["Interval"].iloc[0] if "Interval" in df.columns else "1d"
 
             # Prepare insert dataframe with correct column mapping
             insert_df = pd.DataFrame()
             insert_df["symbol"] = df["Symbol"]
             insert_df["asset_type"] = df["AssetType"]
-            insert_df["date"] = df["date"].dt.strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )  # Convert to string
+            insert_df["date"] = df["date"].dt.strftime("%Y-%m-%d %H:%M:%S")  # Convert to string
             insert_df["open"] = df["Open"]
             insert_df["high"] = df["High"]
             insert_df["low"] = df["Low"]
@@ -228,9 +220,7 @@ def store_data(data_dir, db_file, mode="full", timeframe="1d", hour=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Store training data in database")
-    parser.add_argument(
-        "--data-dir", required=True, help="Directory containing CSV files"
-    )
+    parser.add_argument("--data-dir", required=True, help="Directory containing CSV files")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument("--mode", choices=["full", "hourly", "refresh"], default="full")
     parser.add_argument("--timeframe", default="1d", help="Timeframe identifier")

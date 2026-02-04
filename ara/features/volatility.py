@@ -130,9 +130,7 @@ class VolatilityIndicators:
 
         result["donchian_upper"] = result["high"].rolling(window=period).max()
         result["donchian_lower"] = result["low"].rolling(window=period).min()
-        result["donchian_middle"] = (
-            result["donchian_upper"] + result["donchian_lower"]
-        ) / 2
+        result["donchian_middle"] = (result["donchian_upper"] + result["donchian_lower"]) / 2
 
         return result
 
@@ -241,9 +239,7 @@ class VolatilityIndicators:
         return result
 
     @staticmethod
-    def ulcer_index(
-        data: pd.DataFrame, period: int = 14, column: str = "close"
-    ) -> pd.DataFrame:
+    def ulcer_index(data: pd.DataFrame, period: int = 14, column: str = "close") -> pd.DataFrame:
         """
         Ulcer Index.
 
@@ -285,9 +281,7 @@ class VolatilityIndicators:
         high_close = np.abs(result["high"] - result["close"].shift())
         low_close = np.abs(result["low"] - result["close"].shift())
 
-        result["true_range"] = pd.concat([high_low, high_close, low_close], axis=1).max(
-            axis=1
-        )
+        result["true_range"] = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
 
         return result
 
@@ -320,9 +314,7 @@ class VolatilityIndicators:
         return result
 
     @staticmethod
-    def rvi_volatility(
-        data: pd.DataFrame, period: int = 10, column: str = "close"
-    ) -> pd.DataFrame:
+    def rvi_volatility(data: pd.DataFrame, period: int = 10, column: str = "close") -> pd.DataFrame:
         """
         Relative Volatility Index (RVI).
 
@@ -469,9 +461,7 @@ class VolatilityIndicators:
         gk = 0.5 * (log_hl**2) - (2 * np.log(2) - 1) * (log_co**2)
 
         # Calculate rolling average and annualize
-        result["garman_klass_vol"] = (
-            np.sqrt(gk.rolling(window=period).mean() * 252) * 100
-        )
+        result["garman_klass_vol"] = np.sqrt(gk.rolling(window=period).mean() * 252) * 100
 
         return result
 

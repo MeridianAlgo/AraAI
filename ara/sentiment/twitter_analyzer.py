@@ -90,9 +90,7 @@ class TwitterSentimentAnalyzer(SentimentAnalyzer):
             SentimentScore with aggregated Twitter sentiment
         """
         if not self.bearer_token:
-            logger.warning(
-                f"Twitter API not configured, returning neutral sentiment for {symbol}"
-            )
+            logger.warning(f"Twitter API not configured, returning neutral sentiment for {symbol}")
             return SentimentScore(
                 score=0.0,
                 confidence=0.0,
@@ -162,9 +160,7 @@ class TwitterSentimentAnalyzer(SentimentAnalyzer):
             logger.error(f"Error analyzing Twitter sentiment for {symbol}: {e}")
             raise TwitterAPIError(f"Failed to analyze Twitter sentiment: {e}")
 
-    async def _fetch_tweets(
-        self, symbol: str, lookback_hours: int
-    ) -> List[Dict[str, Any]]:
+    async def _fetch_tweets(self, symbol: str, lookback_hours: int) -> List[Dict[str, Any]]:
         """
         Fetch tweets mentioning the symbol.
 

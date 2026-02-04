@@ -142,12 +142,8 @@ class ForexML:
             base = pair[:3]
             quote = pair[3:]
 
-            base_info = self.currency_info.get(
-                base, {"name": base, "region": "Unknown"}
-            )
-            quote_info = self.currency_info.get(
-                quote, {"name": quote, "region": "Unknown"}
-            )
+            base_info = self.currency_info.get(base, {"name": base, "region": "Unknown"})
+            quote_info = self.currency_info.get(quote, {"name": quote, "region": "Unknown"})
 
             return {
                 "pair": f"{base}/{quote}",
@@ -254,9 +250,7 @@ class ForexML:
                     hist_volatility * pred_close
 
                     # Generate realistic OHLC for next day
-                    pred_open = pred_close * (
-                        1 + np.random.normal(0, hist_volatility * 0.5)
-                    )
+                    pred_open = pred_close * (1 + np.random.normal(0, hist_volatility * 0.5))
                     pred_high = max(pred_open, pred_close) * (
                         1 + abs(np.random.normal(0, hist_volatility * 0.3))
                     )
@@ -293,9 +287,7 @@ class ForexML:
                 # Predict using PyTorch model
                 pred_return, _ = self.ml_system.predict(X_features)
                 pred_return = (
-                    float(pred_return)
-                    if np.isscalar(pred_return)
-                    else float(pred_return[0])
+                    float(pred_return) if np.isscalar(pred_return) else float(pred_return[0])
                 )
 
                 # Apply volatility-based bounds to prevent unrealistic predictions
@@ -324,9 +316,7 @@ class ForexML:
                 forecast_predictions.append(
                     {
                         "day": day,
-                        "date": (datetime.now() + timedelta(days=day)).strftime(
-                            "%Y-%m-%d"
-                        ),
+                        "date": (datetime.now() + timedelta(days=day)).strftime("%Y-%m-%d"),
                         "predicted_price": pred_price,
                         "predicted_return": change_pct / 100,
                         "pips": pips,
@@ -342,9 +332,7 @@ class ForexML:
 
             # Determine trend
             sma_20 = data["Close"].rolling(20).mean().iloc[-1]
-            sma_50 = (
-                data["Close"].rolling(50).mean().iloc[-1] if len(data) >= 50 else sma_20
-            )
+            sma_50 = data["Close"].rolling(50).mean().iloc[-1] if len(data) >= 50 else sma_20
 
             if sma_20 > sma_50:
                 trend = "Bullish"

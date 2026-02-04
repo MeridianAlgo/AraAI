@@ -130,9 +130,7 @@ def train_forex_model(
     if sample_size and sample_size < len(all_pairs):
         rng = random.Random(seed if seed is not None else time.time())
         selected_pairs = rng.sample(all_pairs, sample_size)
-        print(
-            f"Randomly selected {len(selected_pairs)} pairs from {len(all_pairs)} available"
-        )
+        print(f"Randomly selected {len(selected_pairs)} pairs from {len(all_pairs)} available")
     else:
         selected_pairs = all_pairs
         print(f"Training on all {len(selected_pairs)} pairs")
@@ -216,9 +214,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=60, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
-    parser.add_argument(
-        "--sample-size", type=int, help="Number of pairs to sample (default: all)"
-    )
+    parser.add_argument("--sample-size", type=int, help="Number of pairs to sample (default: all)")
     parser.add_argument(
         "--use-all-data",
         action="store_true",

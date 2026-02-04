@@ -33,13 +33,9 @@ def select_random_tickers(tickers, count=10, exclude=None):
 def main():
     parser = argparse.ArgumentParser(description="Select random stock tickers")
     parser.add_argument("--file", default="all_tickers.txt", help="Ticker file path")
-    parser.add_argument(
-        "--count", type=int, default=10, help="Number of tickers to select"
-    )
+    parser.add_argument("--count", type=int, default=10, help="Number of tickers to select")
     parser.add_argument("--exclude", help="Comma-separated list of tickers to exclude")
-    parser.add_argument(
-        "--output-format", choices=["comma", "json", "space"], default="comma"
-    )
+    parser.add_argument("--output-format", choices=["comma", "json", "space"], default="comma")
 
     args = parser.parse_args()
 

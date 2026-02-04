@@ -35,9 +35,7 @@ class LightweightAIAnalyzer:
     """
 
     def __init__(self, use_gpu=True):
-        self.use_gpu = (
-            use_gpu and torch.cuda.is_available() if TRANSFORMERS_AVAILABLE else False
-        )
+        self.use_gpu = use_gpu and torch.cuda.is_available() if TRANSFORMERS_AVAILABLE else False
         self.device = self._get_best_device()
 
         # Model cache directory
@@ -126,9 +124,7 @@ class LightweightAIAnalyzer:
                         "text-generation",
                         model=self.model_configs["main_ai"]["model_name"],
                         device=self.device,
-                        model_kwargs=(
-                            {"torch_dtype": torch.float16} if self.use_gpu else {}
-                        ),
+                        model_kwargs=({"torch_dtype": torch.float16} if self.use_gpu else {}),
                         max_length=300,
                         do_sample=True,
                         temperature=0.7,
@@ -211,13 +207,9 @@ class LightweightAIAnalyzer:
                 "ai_sentiment": sentiment_analysis,
                 "ai_risk_classification": risk_classification,
                 # Traditional metrics enhanced with AI interpretation
-                "financial_metrics": self._calculate_comprehensive_metrics(
-                    info, hist_data
-                ),
+                "financial_metrics": self._calculate_comprehensive_metrics(info, hist_data),
                 "technical_signals": self._get_enhanced_technical_signals(hist_data),
-                "market_position": self._assess_market_position_with_ai(
-                    info, ai_analysis
-                ),
+                "market_position": self._assess_market_position_with_ai(info, ai_analysis),
                 # AI-powered insights
                 "ai_insights": ai_analysis.get("insights", []),
                 "ai_recommendation": ai_analysis.get("recommendation", {}),
@@ -231,8 +223,8 @@ class LightweightAIAnalyzer:
             }
 
             # Calculate overall score based on AI analysis
-            analysis["overall_score"], analysis["recommendation"] = (
-                self._calculate_ai_score(analysis)
+            analysis["overall_score"], analysis["recommendation"] = self._calculate_ai_score(
+                analysis
             )
 
             return analysis
@@ -247,14 +239,10 @@ class LightweightAIAnalyzer:
 
             # Calculate key metrics
             price_change_1d = (
-                (current_price - hist_data["Close"].iloc[-2])
-                / hist_data["Close"].iloc[-2]
-                * 100
+                (current_price - hist_data["Close"].iloc[-2]) / hist_data["Close"].iloc[-2] * 100
             )
             price_change_30d = (
-                (current_price - hist_data["Close"].iloc[-31])
-                / hist_data["Close"].iloc[-31]
-                * 100
+                (current_price - hist_data["Close"].iloc[-31]) / hist_data["Close"].iloc[-31] * 100
             )
             price_change_1y = (
                 (current_price - hist_data["Close"].iloc[-253])
@@ -446,28 +434,18 @@ Analysis:"""
                     continue
 
                 # Identify sections
-                if any(
-                    word in line.lower()
-                    for word in ["thesis", "investment", "strengths"]
-                ):
+                if any(word in line.lower() for word in ["thesis", "investment", "strengths"]):
                     current_section = "insights"
-                elif any(
-                    word in line.lower() for word in ["risk", "concern", "challenge"]
-                ):
+                elif any(word in line.lower() for word in ["risk", "concern", "challenge"]):
                     current_section = "risks"
-                elif any(
-                    word in line.lower()
-                    for word in ["opportunity", "growth", "catalyst"]
-                ):
+                elif any(word in line.lower() for word in ["opportunity", "growth", "catalyst"]):
                     current_section = "opportunities"
                 elif any(
                     word in line.lower()
                     for word in ["recommendation", "rating", "buy", "sell", "hold"]
                 ):
                     current_section = "recommendation"
-                elif any(
-                    word in line.lower() for word in ["target", "price", "valuation"]
-                ):
+                elif any(word in line.lower() for word in ["target", "price", "valuation"]):
                     current_section = "price_targets"
 
                 # Extract content based on section
@@ -479,10 +457,7 @@ Analysis:"""
                     opportunities.append(line)
                 elif current_section == "recommendation":
                     # Extract recommendation
-                    if any(
-                        word in line.lower()
-                        for word in ["strong buy", "buy", "hold", "sell"]
-                    ):
+                    if any(word in line.lower() for word in ["strong buy", "buy", "hold", "sell"]):
                         if "strong buy" in line.lower():
                             recommendation["action"] = "STRONG BUY"
                             recommendation["confidence"] = 0.9
@@ -498,9 +473,7 @@ Analysis:"""
                         recommendation["reasoning"] = line
 
             # Generate price targets based on current price and analysis sentiment
-            current_price = company_data.get("market_performance", {}).get(
-                "current_price", 100
-            )
+            current_price = company_data.get("market_performance", {}).get("current_price", 100)
 
             if recommendation["action"] in ["STRONG BUY", "BUY"]:
                 price_targets = {
@@ -555,9 +528,7 @@ Analysis:"""
                 risks.append("Low or negative profitability")
 
             # Growth insights
-            revenue_growth = company_data.get("growth_metrics", {}).get(
-                "revenue_growth", 0
-            )
+            revenue_growth = company_data.get("growth_metrics", {}).get("revenue_growth", 0)
             if revenue_growth > 0.1:
                 opportunities.append("Strong revenue growth momentum")
             elif revenue_growth < 0:
@@ -639,24 +610,16 @@ Analysis:"""
             # Calculate comprehensive metrics
             current_price = hist_data["Close"].iloc[-1]
             price_change_1d = (
-                (current_price - hist_data["Close"].iloc[-2])
-                / hist_data["Close"].iloc[-2]
-                * 100
+                (current_price - hist_data["Close"].iloc[-2]) / hist_data["Close"].iloc[-2] * 100
             )
             price_change_7d = (
-                (current_price - hist_data["Close"].iloc[-8])
-                / hist_data["Close"].iloc[-8]
-                * 100
+                (current_price - hist_data["Close"].iloc[-8]) / hist_data["Close"].iloc[-8] * 100
             )
             price_change_30d = (
-                (current_price - hist_data["Close"].iloc[-31])
-                / hist_data["Close"].iloc[-31]
-                * 100
+                (current_price - hist_data["Close"].iloc[-31]) / hist_data["Close"].iloc[-31] * 100
             )
             price_change_90d = (
-                (current_price - hist_data["Close"].iloc[-91])
-                / hist_data["Close"].iloc[-91]
-                * 100
+                (current_price - hist_data["Close"].iloc[-91]) / hist_data["Close"].iloc[-91] * 100
             )
             price_change_1y = (
                 (current_price - hist_data["Close"].iloc[-253])
@@ -766,9 +729,7 @@ Analysis:"""
                 }
 
             # Analyze sentiment of company context
-            result = self.sentiment_analyzer(
-                context[:500]
-            )  # Limit to 500 chars for efficiency
+            result = self.sentiment_analyzer(context[:500])  # Limit to 500 chars for efficiency
 
             sentiment_map = {
                 "LABEL_0": "negative",
@@ -783,9 +744,7 @@ Analysis:"""
             confidence = result[0]["score"]
 
             # Generate reasoning
-            reasoning = self._generate_sentiment_reasoning(
-                sentiment, confidence, context
-            )
+            reasoning = self._generate_sentiment_reasoning(sentiment, confidence, context)
 
             return {
                 "sentiment": sentiment,
@@ -874,9 +833,7 @@ Analysis:"""
             }
 
             # Generate risk summary
-            risk_assessment["risk_summary"] = self._generate_risk_summary(
-                risk_assessment
-            )
+            risk_assessment["risk_summary"] = self._generate_risk_summary(risk_assessment)
 
             return risk_assessment
 
@@ -951,9 +908,7 @@ Analysis:"""
             return {
                 "recommendation": recommendation,
                 "confidence": confidence,
-                "reasoning": self._generate_recommendation_reasoning(
-                    recommendation, confidence
-                ),
+                "reasoning": self._generate_recommendation_reasoning(recommendation, confidence),
             }
 
         except Exception as e:
@@ -970,19 +925,13 @@ Analysis:"""
 
             # Price performance
             price_1m = (
-                (current_price - hist_data["Close"].iloc[-21])
-                / hist_data["Close"].iloc[-21]
-                * 100
+                (current_price - hist_data["Close"].iloc[-21]) / hist_data["Close"].iloc[-21] * 100
             )
             price_3m = (
-                (current_price - hist_data["Close"].iloc[-63])
-                / hist_data["Close"].iloc[-63]
-                * 100
+                (current_price - hist_data["Close"].iloc[-63]) / hist_data["Close"].iloc[-63] * 100
             )
             price_1y = (
-                (current_price - hist_data["Close"].iloc[0])
-                / hist_data["Close"].iloc[0]
-                * 100
+                (current_price - hist_data["Close"].iloc[0]) / hist_data["Close"].iloc[0] * 100
             )
 
             # Volatility
@@ -1258,9 +1207,7 @@ class ModelManager:
                     "sentiment-analysis",
                     model=model_name,
                     device=-1,  # CPU only for efficiency
-                    model_kwargs=(
-                        {"torch_dtype": torch.float16} if TRANSFORMERS_AVAILABLE else {}
-                    ),
+                    model_kwargs=({"torch_dtype": torch.float16} if TRANSFORMERS_AVAILABLE else {}),
                 )
 
         return self.models[model_name]
@@ -1324,15 +1271,9 @@ class ModelManager:
 
             # Calculate overall sentiment
             if sentiments:
-                avg_confidence = sum(s["confidence"] for s in sentiments) / len(
-                    sentiments
-                )
-                positive_count = sum(
-                    1 for s in sentiments if "positive" in s["sentiment"]
-                )
-                negative_count = sum(
-                    1 for s in sentiments if "negative" in s["sentiment"]
-                )
+                avg_confidence = sum(s["confidence"] for s in sentiments) / len(sentiments)
+                positive_count = sum(1 for s in sentiments if "positive" in s["sentiment"])
+                negative_count = sum(1 for s in sentiments if "negative" in s["sentiment"])
 
                 if positive_count > negative_count:
                     overall_sentiment = "positive"
@@ -1468,13 +1409,9 @@ class ModelManager:
             if self.text_generator and len(insights) < 5:
                 try:
                     prompt = f"Investment analysis for {info.get('longName', 'company')} shows"
-                    ai_result = self.text_generator(
-                        prompt, max_length=100, num_return_sequences=1
-                    )
+                    ai_result = self.text_generator(prompt, max_length=100, num_return_sequences=1)
                     if ai_result and len(ai_result) > 0:
-                        generated_text = (
-                            ai_result[0]["generated_text"].replace(prompt, "").strip()
-                        )
+                        generated_text = ai_result[0]["generated_text"].replace(prompt, "").strip()
                         if len(generated_text) > 20:
                             insights.append(f"AI Analysis: {generated_text[:150]}...")
                 except Exception:
@@ -1518,9 +1455,7 @@ class ModelManager:
             # Financial risks
             debt_to_equity = info.get("debtToEquity", 0)
             if debt_to_equity and debt_to_equity > 1.5:
-                risk_factors.append(
-                    {"type": "Financial Leverage", "level": "High", "impact": 0.8}
-                )
+                risk_factors.append({"type": "Financial Leverage", "level": "High", "impact": 0.8})
             elif debt_to_equity and debt_to_equity > 0.8:
                 risk_factors.append(
                     {"type": "Financial Leverage", "level": "Moderate", "impact": 0.5}
@@ -1529,31 +1464,21 @@ class ModelManager:
             # Liquidity risks
             current_ratio = info.get("currentRatio", 0)
             if current_ratio and current_ratio < 1.0:
-                risk_factors.append(
-                    {"type": "Liquidity", "level": "High", "impact": 0.7}
-                )
+                risk_factors.append({"type": "Liquidity", "level": "High", "impact": 0.7})
             elif current_ratio and current_ratio < 1.5:
-                risk_factors.append(
-                    {"type": "Liquidity", "level": "Moderate", "impact": 0.4}
-                )
+                risk_factors.append({"type": "Liquidity", "level": "Moderate", "impact": 0.4})
 
             # Profitability risks
             profit_margin = info.get("profitMargins", 0)
             if profit_margin < 0:
-                risk_factors.append(
-                    {"type": "Profitability", "level": "High", "impact": 0.9}
-                )
+                risk_factors.append({"type": "Profitability", "level": "High", "impact": 0.9})
             elif profit_margin < 0.05:
-                risk_factors.append(
-                    {"type": "Profitability", "level": "Moderate", "impact": 0.6}
-                )
+                risk_factors.append({"type": "Profitability", "level": "Moderate", "impact": 0.6})
 
             # Market risks
             beta = info.get("beta", 1.0)
             if beta > 1.5:
-                risk_factors.append(
-                    {"type": "Market Volatility", "level": "High", "impact": 0.6}
-                )
+                risk_factors.append({"type": "Market Volatility", "level": "High", "impact": 0.6})
             elif beta > 1.2:
                 risk_factors.append(
                     {"type": "Market Volatility", "level": "Moderate", "impact": 0.4}
@@ -1600,9 +1525,7 @@ class ModelManager:
                 "risk_confidence": result["scores"][0],
                 "risk_score": risk_score,
                 "risk_factors": risk_factors,
-                "risk_summary": self._generate_risk_summary_enhanced(
-                    risk_factors, risk_score
-                ),
+                "risk_summary": self._generate_risk_summary_enhanced(risk_factors, risk_score),
                 "mitigation_strategies": self._suggest_risk_mitigation(risk_factors),
             }
 
@@ -1654,12 +1577,8 @@ class ModelManager:
             # Sector-specific competitive analysis
             sector = info.get("sector", "")
             if sector == "Technology":
-                competitive_analysis["competitive_threats"].append(
-                    "Rapid technological change"
-                )
-                competitive_analysis["competitive_advantages"].append(
-                    "Innovation capabilities"
-                )
+                competitive_analysis["competitive_threats"].append("Rapid technological change")
+                competitive_analysis["competitive_advantages"].append("Innovation capabilities")
             elif sector == "Consumer Staples":
                 competitive_analysis["competitive_advantages"].append(
                     "Brand loyalty and distribution"
@@ -1707,9 +1626,7 @@ class ModelManager:
             # Institutional ownership
             if institutional_ownership > 0.7:
                 governance_score += 10
-                esg_analysis["governance_factors"].append(
-                    "Strong institutional oversight"
-                )
+                esg_analysis["governance_factors"].append("Strong institutional oversight")
 
             # Dividend policy (governance indicator)
             dividend_yield = info.get("dividendYield", 0)
@@ -1730,22 +1647,16 @@ class ModelManager:
                 esg_analysis["social_factors"].append(
                     "Data privacy and digital divide considerations"
                 )
-                esg_analysis["esg_opportunities"].append(
-                    "Digital transformation enabler"
-                )
+                esg_analysis["esg_opportunities"].append("Digital transformation enabler")
             elif sector == "Healthcare":
-                esg_analysis["social_factors"].append(
-                    "Healthcare access and affordability"
-                )
+                esg_analysis["social_factors"].append("Healthcare access and affordability")
                 esg_analysis["esg_opportunities"].append("Improving health outcomes")
 
             # Financial health as governance indicator
             debt_to_equity = info.get("debtToEquity", 0)
             if debt_to_equity and debt_to_equity < 0.5:
                 governance_score += 5
-                esg_analysis["governance_factors"].append(
-                    "Conservative financial management"
-                )
+                esg_analysis["governance_factors"].append("Conservative financial management")
 
             esg_analysis["esg_score"] = min(100, max(0, governance_score))
 
@@ -1772,9 +1683,7 @@ class ModelManager:
 
             if revenue_growth > 0.15 and earnings_growth > 0.15:
                 outlook["market_trend"] = "Bullish"
-                outlook["key_drivers"].append(
-                    "Strong revenue and earnings growth momentum"
-                )
+                outlook["key_drivers"].append("Strong revenue and earnings growth momentum")
             elif revenue_growth < -0.05 or earnings_growth < -0.1:
                 outlook["market_trend"] = "Bearish"
                 outlook["headwinds"].append("Declining financial performance")
@@ -1874,8 +1783,7 @@ class ModelManager:
             return {
                 "bull_case_target": current_price * bull_multiplier,
                 "bear_case_target": current_price * bear_multiplier,
-                "base_case_target": current_price
-                * ((bull_multiplier + bear_multiplier) / 2),
+                "base_case_target": current_price * ((bull_multiplier + bear_multiplier) / 2),
                 "time_horizon": "12 months",
                 "confidence": analysis.get("ai_confidence", 0.75),
                 "methodology": "AI-powered multi-factor analysis",
@@ -1961,21 +1869,13 @@ class ModelManager:
             versions = {}
 
             if self.financial_analyzer:
-                versions["financial_sentiment"] = self.model_configs["financial"][
-                    "model_name"
-                ]
+                versions["financial_sentiment"] = self.model_configs["financial"]["model_name"]
             if self.sentiment_analyzer:
-                versions["general_sentiment"] = self.model_configs["sentiment"][
-                    "model_name"
-                ]
+                versions["general_sentiment"] = self.model_configs["sentiment"]["model_name"]
             if self.financial_classifier:
-                versions["classifier"] = self.model_configs["classification"][
-                    "model_name"
-                ]
+                versions["classifier"] = self.model_configs["classification"]["model_name"]
             if self.text_generator:
-                versions["text_generator"] = self.model_configs["text_generation"][
-                    "model_name"
-                ]
+                versions["text_generator"] = self.model_configs["text_generation"]["model_name"]
 
             return versions
 
@@ -2249,13 +2149,11 @@ class ModelManager:
                     "model_name"
                 ]
             if self.sentiment_analyzer:
-                model_info["sentiment_model"] = self.model_configs[
-                    "financial_specialist"
-                ]["model_name"]
-            if self.financial_classifier:
-                model_info["classifier_model"] = self.model_configs["classifier"][
+                model_info["sentiment_model"] = self.model_configs["financial_specialist"][
                     "model_name"
                 ]
+            if self.financial_classifier:
+                model_info["classifier_model"] = self.model_configs["classifier"]["model_name"]
 
             return model_info
 

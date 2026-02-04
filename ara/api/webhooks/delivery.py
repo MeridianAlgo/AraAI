@@ -34,9 +34,7 @@ class WebhookDeliveryService:
     - Delivery logging and monitoring
     """
 
-    def __init__(
-        self, max_retries: int = 3, timeout: int = 30, retry_delays: List[int] = None
-    ):
+    def __init__(self, max_retries: int = 3, timeout: int = 30, retry_delays: List[int] = None):
         """
         Initialize webhook delivery service
 
@@ -165,9 +163,7 @@ class WebhookDeliveryService:
                         )
                     else:
                         # HTTP error
-                        raise Exception(
-                            f"HTTP {response.status}: {delivery['response_body']}"
-                        )
+                        raise Exception(f"HTTP {response.status}: {delivery['response_body']}")
 
         except Exception as e:
             # Delivery failed
@@ -202,9 +198,7 @@ class WebhookDeliveryService:
                     self._retry_task = asyncio.create_task(self._process_retries())
             else:
                 # Max retries reached
-                webhook_manager.update_delivery_stats(
-                    webhook.id, success=False, status="failed"
-                )
+                webhook_manager.update_delivery_stats(webhook.id, success=False, status="failed")
 
                 logger.error(
                     f"Webhook delivery failed permanently: {webhook.id} "
@@ -225,9 +219,7 @@ class WebhookDeliveryService:
             Hex-encoded signature
         """
         payload_bytes = json.dumps(payload, sort_keys=True).encode("utf-8")
-        signature = hmac.new(
-            secret.encode("utf-8"), payload_bytes, hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
         return f"sha256={signature}"
 
     def _get_retry_delay(self, attempt: int) -> int:

@@ -87,9 +87,7 @@ class UnifiedStockML:
 
         # Momentum
         df["momentum"] = df["Close"] - df["Close"].shift(10)
-        df["roc"] = (
-            (df["Close"] - df["Close"].shift(10)) / df["Close"].shift(10)
-        ) * 100
+        df["roc"] = ((df["Close"] - df["Close"].shift(10)) / df["Close"].shift(10)) * 100
 
         # Fill NaN values
         df = df.ffill().bfill().fillna(0)
@@ -204,9 +202,7 @@ class UnifiedStockML:
                 for j in range(i - lookback + 1, i + 1):
                     window_features.append(self._extract_features(df.iloc[: j + 1]))
 
-                target = (df["Close"].iloc[i + 1] - df["Close"].iloc[i]) / df[
-                    "Close"
-                ].iloc[i]
+                target = (df["Close"].iloc[i + 1] - df["Close"].iloc[i]) / df["Close"].iloc[i]
 
                 X.append(np.array(window_features))
                 y.append(target)
@@ -327,9 +323,7 @@ class UnifiedStockML:
                 # Predict
                 pred_return, _ = self.ml_system.predict(current_features.reshape(1, lookback, -1))
                 pred_return = (
-                    float(pred_return)
-                    if np.isscalar(pred_return)
-                    else float(pred_return[0])
+                    float(pred_return) if np.isscalar(pred_return) else float(pred_return[0])
                 )
 
                 # Apply volatility bounds
@@ -344,9 +338,7 @@ class UnifiedStockML:
                 predictions.append(
                     {
                         "day": day,
-                        "date": (datetime.now() + timedelta(days=day)).strftime(
-                            "%Y-%m-%d"
-                        ),
+                        "date": (datetime.now() + timedelta(days=day)).strftime("%Y-%m-%d"),
                         "predicted_price": pred_price,
                         "predicted_return": pred_return,
                         "confidence": confidence,

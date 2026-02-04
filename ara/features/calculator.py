@@ -135,9 +135,7 @@ class IndicatorCalculator:
         results = {}
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
             futures = {
-                executor.submit(
-                    self._calculate_worker, symbol, data, indicators, params
-                ): symbol
+                executor.submit(self._calculate_worker, symbol, data, indicators, params): symbol
                 for symbol, data in datasets.items()
             }
 
@@ -179,9 +177,7 @@ class IndicatorCalculator:
             elif "date" in data.columns:
                 data = data.set_index("date")
             else:
-                raise ValueError(
-                    "Data must have datetime index or timestamp/date column"
-                )
+                raise ValueError("Data must have datetime index or timestamp/date column")
 
         # Map timeframe to pandas frequency
         freq_map = {

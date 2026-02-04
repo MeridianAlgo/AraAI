@@ -103,23 +103,17 @@ class ConsoleManager:
             self.console.print(table)
 
             # Print current price info
-            self.console.print(
-                f"\n[bold white] Current Price: [green]${current_price:.2f}[/]"
-            )
+            self.console.print(f"\n[bold white] Current Price: [green]${current_price:.2f}[/]")
 
             # Print pattern analysis
             pattern_summary = result.get("pattern_summary", {})
             if pattern_summary.get("primary_pattern"):
-                pattern_name = (
-                    pattern_summary["primary_pattern"].replace("_", " ").title()
-                )
+                pattern_name = pattern_summary["primary_pattern"].replace("_", " ").title()
                 signal = pattern_summary["signal_direction"].upper()
                 confidence = pattern_summary["pattern_confidence"] * 100
 
                 signal_color = (
-                    "green"
-                    if signal == "BULLISH"
-                    else "red" if signal == "BEARISH" else "yellow"
+                    "green" if signal == "BULLISH" else "red" if signal == "BEARISH" else "yellow"
                 )
 
                 self.console.print(
@@ -166,9 +160,7 @@ class ConsoleManager:
             # Print cache info if available
             if result.get("cached"):
                 cache_age = result.get("cache_age", "Unknown")
-                self.console.print(
-                    f"[yellow] Using cached predictions (Age: {cache_age})[/]"
-                )
+                self.console.print(f"[yellow] Using cached predictions (Age: {cache_age})[/]")
 
         except Exception as e:
             self.console.print(f"[red] Error displaying results: {e}[/]")
@@ -183,21 +175,11 @@ class ConsoleManager:
                 fin_table.add_column("Metric", style="white")
                 fin_table.add_column("Value", style="cyan", justify="right")
 
-                fin_table.add_row(
-                    "Health Score", f"{financial.get('health_score', 0):.1f}/100"
-                )
-                fin_table.add_row(
-                    "Debt to Equity", f"{financial.get('debt_to_equity', 0):.2f}"
-                )
-                fin_table.add_row(
-                    "Current Ratio", f"{financial.get('current_ratio', 0):.2f}"
-                )
-                fin_table.add_row(
-                    "ROE", f"{financial.get('return_on_equity', 0)*100:.1f}%"
-                )
-                fin_table.add_row(
-                    "Profit Margin", f"{financial.get('profit_margin', 0)*100:.1f}%"
-                )
+                fin_table.add_row("Health Score", f"{financial.get('health_score', 0):.1f}/100")
+                fin_table.add_row("Debt to Equity", f"{financial.get('debt_to_equity', 0):.2f}")
+                fin_table.add_row("Current Ratio", f"{financial.get('current_ratio', 0):.2f}")
+                fin_table.add_row("ROE", f"{financial.get('return_on_equity', 0)*100:.1f}%")
+                fin_table.add_row("Profit Margin", f"{financial.get('profit_margin', 0)*100:.1f}%")
 
                 self.console.print(fin_table)
 
@@ -209,12 +191,8 @@ class ConsoleManager:
                 risk_table.add_column("Level", style="yellow", justify="right")
 
                 risk_table.add_row("Market Risk", risk.get("market_risk", "Medium"))
-                risk_table.add_row(
-                    "Volatility Risk", risk.get("volatility_risk", "Medium")
-                )
-                risk_table.add_row(
-                    "Liquidity Risk", risk.get("liquidity_risk", "Medium")
-                )
+                risk_table.add_row("Volatility Risk", risk.get("volatility_risk", "Medium"))
+                risk_table.add_row("Liquidity Risk", risk.get("liquidity_risk", "Medium"))
                 risk_table.add_row("Credit Risk", risk.get("credit_risk", "Medium"))
                 risk_table.add_row("Beta", f"{risk.get('beta', 1.0):.2f}")
 
@@ -227,15 +205,9 @@ class ConsoleManager:
                 tech_table.add_column("Indicator", style="white")
                 tech_table.add_column("Value", style="green", justify="right")
 
-                tech_table.add_row(
-                    "Trend Direction", technical.get("trend_direction", "Neutral")
-                )
-                tech_table.add_row(
-                    "Trend Strength", f"{technical.get('trend_strength', 0)}/100"
-                )
-                tech_table.add_row(
-                    "Momentum Score", f"{technical.get('momentum_score', 0)}/100"
-                )
+                tech_table.add_row("Trend Direction", technical.get("trend_direction", "Neutral"))
+                tech_table.add_row("Trend Strength", f"{technical.get('trend_strength', 0)}/100")
+                tech_table.add_row("Momentum Score", f"{technical.get('momentum_score', 0)}/100")
 
                 indicators = technical.get("indicators", {})
                 if indicators:
@@ -287,9 +259,7 @@ class ConsoleManager:
                     "Recent (30d) Accuracy",
                     f"{recent_stats.get('accuracy_rate', 0):.1f}%",
                 )
-                table.add_row(
-                    "Recent (30d) Avg Error", f"{recent_stats.get('avg_error', 0):.2f}%"
-                )
+                table.add_row("Recent (30d) Avg Error", f"{recent_stats.get('avg_error', 0):.2f}%")
 
             self.console.print(table)
 
@@ -419,9 +389,7 @@ class ConsoleManager:
                 val_score = valuation.get("valuation_score", 0)
                 val_grade = valuation.get("valuation_grade", "C")
                 val_summary = valuation.get("summary", "Fair Value")
-                summary_table.add_row(
-                    "Valuation", f"{val_score:.1f} ({val_grade})", val_summary
-                )
+                summary_table.add_row("Valuation", f"{val_score:.1f} ({val_grade})", val_summary)
 
             # Growth Potential
             growth = analysis.get("growth_analysis", {})
@@ -477,11 +445,7 @@ class ConsoleManager:
                 fin_table.add_row(
                     "Debt to Equity",
                     f"{debt_equity:.2f}",
-                    (
-                        "Good"
-                        if debt_equity < 0.5
-                        else "Fair" if debt_equity < 1.0 else "High"
-                    ),
+                    ("Good" if debt_equity < 0.5 else "Fair" if debt_equity < 1.0 else "High"),
                 )
 
                 current_ratio = financial.get("current_ratio", 0)
@@ -541,12 +505,8 @@ class ConsoleManager:
                     risk.get("volatility_risk", "Medium"),
                     f"{risk.get('volatility_52w', 0)*100:.1f}%",
                 )
-                risk_table.add_row(
-                    "Liquidity Risk", risk.get("liquidity_risk", "Medium"), "-"
-                )
-                risk_table.add_row(
-                    "Credit Risk", risk.get("credit_risk", "Medium"), "-"
-                )
+                risk_table.add_row("Liquidity Risk", risk.get("liquidity_risk", "Medium"), "-")
+                risk_table.add_row("Credit Risk", risk.get("credit_risk", "Medium"), "-")
                 risk_table.add_row(
                     "Max Drawdown",
                     "Historical",
@@ -569,11 +529,7 @@ class ConsoleManager:
                     tech_table.add_row(
                         "RSI",
                         f"{rsi:.1f}",
-                        (
-                            "Overbought"
-                            if rsi > 70
-                            else "Oversold" if rsi < 30 else "Neutral"
-                        ),
+                        ("Overbought" if rsi > 70 else "Oversold" if rsi < 30 else "Neutral"),
                     )
 
                     macd = indicators.get("macd", 0)
@@ -604,9 +560,7 @@ class ConsoleManager:
                 if resistance_levels:
                     tech_table.add_row(
                         "Resistance Levels",
-                        ", ".join(
-                            [f"${level:.2f}" for level in resistance_levels[-3:]]
-                        ),
+                        ", ".join([f"${level:.2f}" for level in resistance_levels[-3:]]),
                         "-",
                     )
 
@@ -637,9 +591,7 @@ class ConsoleManager:
 
                 price_targets = market_intel.get("price_targets", {})
                 if price_targets.get("mean", 0) > 0:
-                    intel_table.add_row(
-                        "Analyst Target (Mean)", f"${price_targets['mean']:.2f}"
-                    )
+                    intel_table.add_row("Analyst Target (Mean)", f"${price_targets['mean']:.2f}")
                     intel_table.add_row(
                         "Target Range",
                         f"${price_targets.get('low', 0):.2f} - ${price_targets.get('high', 0):.2f}",
@@ -734,9 +686,7 @@ class ConsoleManager:
                 # AI Insights
                 ai_insights = ai_analysis.get("insights", [])
                 if ai_insights:
-                    insights_text = "\n".join(
-                        [f"• {insight}" for insight in ai_insights[:3]]
-                    )
+                    insights_text = "\n".join([f"• {insight}" for insight in ai_insights[:3]])
                     self.console.print(
                         Panel(
                             insights_text,
@@ -797,9 +747,7 @@ class ConsoleManager:
             if ai_growth and "error" not in ai_growth:
                 growth_category = ai_growth.get("growth_category", "moderate growth")
                 growth_confidence = ai_growth.get("growth_confidence", 0.5)
-                growth_reasoning = ai_growth.get(
-                    "growth_reasoning", "Growth analysis completed"
-                )
+                growth_reasoning = ai_growth.get("growth_reasoning", "Growth analysis completed")
 
                 growth_color = (
                     "green"
@@ -839,11 +787,7 @@ class ConsoleManager:
                 metrics_table.add_row(
                     "Annual Volatility",
                     f"{volatility:.1f}%",
-                    (
-                        "High"
-                        if volatility > 30
-                        else "Moderate" if volatility > 15 else "Low"
-                    ),
+                    ("High" if volatility > 30 else "Moderate" if volatility > 15 else "Low"),
                 )
                 if pe_ratio > 0:
                     metrics_table.add_row(
@@ -867,9 +811,7 @@ class ConsoleManager:
                 momentum = technical_signals.get("momentum", "neutral")
 
                 trend_color = (
-                    "green"
-                    if trend == "bullish"
-                    else "red" if trend == "bearish" else "yellow"
+                    "green" if trend == "bullish" else "red" if trend == "bearish" else "yellow"
                 )
                 tech_table.add_row(
                     "Trend Direction",

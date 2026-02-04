@@ -30,9 +30,7 @@ router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
     summary="Create webhook",
     description="Register a new webhook for event notifications",
 )
-async def create_webhook(
-    webhook_data: WebhookCreate, user_id: str = Depends(get_current_user)
-):
+async def create_webhook(webhook_data: WebhookCreate, user_id: str = Depends(get_current_user)):
     """
     Create a new webhook
 
@@ -143,9 +141,7 @@ async def get_webhook(webhook_id: str, user_id: str = Depends(get_current_user))
 
     # Verify ownership
     if webhook.user_id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     return webhook
 
@@ -176,9 +172,7 @@ async def update_webhook(
         )
 
     if webhook.user_id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     # Update webhook
     try:
@@ -214,9 +208,7 @@ async def delete_webhook(webhook_id: str, user_id: str = Depends(get_current_use
         )
 
     if webhook.user_id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     # Delete webhook
     try:
@@ -257,9 +249,7 @@ async def list_webhook_deliveries(
         )
 
     if webhook.user_id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     # Get deliveries
     try:
@@ -311,9 +301,7 @@ async def test_webhook(
         )
 
     if webhook.user_id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     # Send test event
     try:

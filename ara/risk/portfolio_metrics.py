@@ -265,9 +265,7 @@ class PortfolioMetrics:
 
         return float(calmar)
 
-    def calculate_maximum_drawdown(
-        self, returns: Union[np.ndarray, pd.Series]
-    ) -> float:
+    def calculate_maximum_drawdown(self, returns: Union[np.ndarray, pd.Series]) -> float:
         """
         Calculate maximum drawdown (largest peak-to-trough decline).
 
@@ -302,9 +300,7 @@ class PortfolioMetrics:
 
         return float(max_drawdown)
 
-    def calculate_drawdown_series(
-        self, returns: Union[np.ndarray, pd.Series]
-    ) -> np.ndarray:
+    def calculate_drawdown_series(self, returns: Union[np.ndarray, pd.Series]) -> np.ndarray:
         """
         Calculate drawdown series over time.
 
@@ -588,15 +584,11 @@ class PortfolioMetrics:
             "volatility": self.calculate_portfolio_volatility(
                 returns, periods_per_year=periods_per_year
             ),
-            "sharpe_ratio": self.calculate_sharpe_ratio(
-                returns, periods_per_year=periods_per_year
-            ),
+            "sharpe_ratio": self.calculate_sharpe_ratio(returns, periods_per_year=periods_per_year),
             "sortino_ratio": self.calculate_sortino_ratio(
                 returns, periods_per_year=periods_per_year
             ),
-            "calmar_ratio": self.calculate_calmar_ratio(
-                returns, periods_per_year=periods_per_year
-            ),
+            "calmar_ratio": self.calculate_calmar_ratio(returns, periods_per_year=periods_per_year),
             "max_drawdown": self.calculate_maximum_drawdown(returns),
             "downside_deviation": self.calculate_downside_deviation(
                 returns, periods_per_year=periods_per_year

@@ -46,6 +46,7 @@ DELETE_PATHS = [
     "data/processed",
 ]
 
+
 def should_delete(path: Path) -> bool:
     """Return True if *path* matches any of the DELETE_PATHS patterns.
     The function works for both files and directories.
@@ -57,6 +58,7 @@ def should_delete(path: Path) -> bool:
         if path.is_dir() and path.name == pattern:
             return True
     return False
+
 
 def safe_remove(path: Path) -> None:
     """Delete *path* safely, logging the action.
@@ -71,6 +73,7 @@ def safe_remove(path: Path) -> None:
             logging.info(f"Removed file: {path}")
     except Exception as e:
         logging.error(f"Failed to remove {path}: {e}")
+
 
 def main() -> None:
     project_root = Path(__file__).resolve().parent.parent
@@ -92,6 +95,7 @@ def main() -> None:
                 safe_remove(file_path)
 
     logging.info("Cleanup completed.")
+
 
 if __name__ == "__main__":
     main()

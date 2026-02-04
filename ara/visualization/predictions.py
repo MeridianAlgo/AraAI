@@ -74,11 +74,7 @@ class PredictionChart:
         # Add predictions
         fig.add_trace(
             go.Scatter(
-                x=(
-                    predictions["date"]
-                    if "date" in predictions.columns
-                    else predictions.index
-                ),
+                x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                 y=predictions["predicted_price"],
                 mode="lines+markers",
                 name="Predicted Price",
@@ -88,18 +84,11 @@ class PredictionChart:
         )
 
         # Add confidence interval
-        if (
-            "upper_bound" in predictions.columns
-            and "lower_bound" in predictions.columns
-        ):
+        if "upper_bound" in predictions.columns and "lower_bound" in predictions.columns:
             # Upper bound
             fig.add_trace(
                 go.Scatter(
-                    x=(
-                        predictions["date"]
-                        if "date" in predictions.columns
-                        else predictions.index
-                    ),
+                    x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                     y=predictions["upper_bound"],
                     mode="lines",
                     name=f"{int(confidence_level*100)}% Upper Bound",
@@ -111,11 +100,7 @@ class PredictionChart:
             # Lower bound with fill
             fig.add_trace(
                 go.Scatter(
-                    x=(
-                        predictions["date"]
-                        if "date" in predictions.columns
-                        else predictions.index
-                    ),
+                    x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                     y=predictions["lower_bound"],
                     mode="lines",
                     name=f"{int(confidence_level*100)}% Lower Bound",
@@ -134,9 +119,7 @@ class PredictionChart:
             template=self.theme,
             height=height,
             hovermode="x unified",
-            legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-            ),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
 
         return fig
@@ -184,11 +167,7 @@ class PredictionChart:
 
             fig.add_trace(
                 go.Scatter(
-                    x=(
-                        predictions["date"]
-                        if "date" in predictions.columns
-                        else predictions.index
-                    ),
+                    x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                     y=predictions["predicted_price"],
                     mode="lines+markers",
                     name=f"{horizon} Prediction",
@@ -252,11 +231,7 @@ class PredictionChart:
 
         fig.add_trace(
             go.Scatter(
-                x=(
-                    predictions["date"]
-                    if "date" in predictions.columns
-                    else predictions.index
-                ),
+                x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                 y=predictions["predicted_price"],
                 mode="lines+markers",
                 name="Predicted Price",
@@ -323,11 +298,7 @@ class PredictionChart:
         # Predictions
         fig.add_trace(
             go.Scatter(
-                x=(
-                    predictions["date"]
-                    if "date" in predictions.columns
-                    else predictions.index
-                ),
+                x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                 y=predictions["predicted_price"],
                 mode="lines+markers",
                 name="Predicted Price",
@@ -352,11 +323,7 @@ class PredictionChart:
 
             fig.add_trace(
                 go.Bar(
-                    x=(
-                        predictions["date"]
-                        if "date" in predictions.columns
-                        else predictions.index
-                    ),
+                    x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                     y=predictions["confidence"],
                     name="Confidence",
                     marker_color=colors,

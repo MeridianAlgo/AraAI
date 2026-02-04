@@ -66,9 +66,7 @@ def backtest(symbol, start, end, period, strategy, initial_capital, report, plot
             BarColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task(
-                f"Running backtest for {symbol.upper()}...", total=100
-            )
+            task = progress.add_task(f"Running backtest for {symbol.upper()}...", total=100)
 
             from ara.backtesting.engine import BacktestEngine
 
@@ -106,9 +104,7 @@ def backtest(symbol, start, end, period, strategy, initial_capital, report, plot
 def _display_backtest_results(result, symbol, start_date, end_date):
     """Display backtest results"""
     console.print(f"\n[bold cyan]Backtest Results for {symbol.upper()}[/bold cyan]")
-    console.print(
-        f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
-    )
+    console.print(f"Period: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
     console.print(f"Total Predictions: {result['total_predictions']}")
 
     # Performance metrics table
@@ -201,16 +197,12 @@ def _generate_equity_plot(result, symbol):
             col=1,
         )
 
-        fig.update_layout(
-            title=f"Backtest Results - {symbol.upper()}", height=800, showlegend=True
-        )
+        fig.update_layout(title=f"Backtest Results - {symbol.upper()}", height=800, showlegend=True)
 
         fig.write_html(f"backtest_{symbol.lower()}_equity_curve.html")
 
     except ImportError:
-        console.print(
-            "[yellow]Plotly not installed. Skipping plot generation.[/yellow]"
-        )
+        console.print("[yellow]Plotly not installed. Skipping plot generation.[/yellow]")
 
 
 def _save_backtest_report(result, filepath):

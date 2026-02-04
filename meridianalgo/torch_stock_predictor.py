@@ -15,9 +15,7 @@ import matplotlib.pyplot as plt
 class StockDataset(Dataset):
     """PyTorch Dataset for stock price prediction"""
 
-    def __init__(
-        self, data: np.ndarray, sequence_length: int = 60, prediction_window: int = 1
-    ):
+    def __init__(self, data: np.ndarray, sequence_length: int = 60, prediction_window: int = 1):
         """
         Args:
             data: Normalized stock data (n_samples, n_features)
@@ -35,10 +33,7 @@ class StockDataset(Dataset):
             x.append(data[i : (i + self.sequence_length)])
             y.append(
                 data[
-                    i
-                    + self.sequence_length : i
-                    + self.sequence_length
-                    + self.prediction_window,
+                    i + self.sequence_length : i + self.sequence_length + self.prediction_window,
                     0,
                 ]
             )  # Predict only the close price
@@ -76,9 +71,7 @@ class StockPredictor(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model, nhead=nhead, dropout=dropout, batch_first=True
         )
-        self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer, num_layers=num_layers
-        )
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.decoder = nn.Sequential(
             nn.Linear(d_model, d_model // 2),
             nn.ReLU(),
@@ -147,9 +140,7 @@ class StockPredictorTrainer:
 
     def download_data(self) -> pd.DataFrame:
         """Download stock data from Yahoo Finance"""
-        print(
-            f"Downloading {self.ticker} data from {self.start_date} to {self.end_date}..."
-        )
+        print(f"Downloading {self.ticker} data from {self.start_date} to {self.end_date}...")
         data = yf.download(self.ticker, start=self.start_date, end=self.end_date)
 
         # Calculate additional technical indicators
@@ -177,12 +168,10 @@ class StockPredictorTrainer:
 
         # Bollinger Bands
         data["BB_upper"] = (
-            data["Close"].rolling(window=20).mean()
-            + 2 * data["Close"].rolling(window=20).std()
+            data["Close"].rolling(window=20).mean() + 2 * data["Close"].rolling(window=20).std()
         )
         data["BB_lower"] = (
-            data["Close"].rolling(window=20).mean()
-            - 2 * data["Close"].rolling(window=20).std()
+            data["Close"].rolling(window=20).mean() - 2 * data["Close"].rolling(window=20).std()
         )
 
         # Drop NaN values from technical indicators
@@ -190,9 +179,7 @@ class StockPredictorTrainer:
 
         return data
 
-    def prepare_data(
-        self, data: pd.DataFrame
-    ) -> Tuple[DataLoader, DataLoader, DataLoader]:
+    def prepare_data(self, data: pd.DataFrame) -> Tuple[DataLoader, DataLoader, DataLoader]:
         """Prepare data for training, validation, and testing"""
         # Select features (OHLCV + technical indicators)
         feature_columns = [
@@ -226,26 +213,14 @@ class StockPredictorTrainer:
         test_data = scaled_data[train_size + val_size :]
 
         # Create datasets
-        train_dataset = StockDataset(
-            train_data, self.sequence_length, self.prediction_window
-        )
-        val_dataset = StockDataset(
-            val_data, self.sequence_length, self.prediction_window
-        )
-        test_dataset = StockDataset(
-            test_data, self.sequence_length, self.prediction_window
-        )
+        train_dataset = StockDataset(train_data, self.sequence_length, self.prediction_window)
+        val_dataset = StockDataset(val_data, self.sequence_length, self.prediction_window)
+        test_dataset = StockDataset(test_data, self.sequence_length, self.prediction_window)
 
         # Create data loaders
-        self.train_loader = DataLoader(
-            train_dataset, batch_size=self.batch_size, shuffle=True
-        )
-        self.val_loader = DataLoader(
-            val_dataset, batch_size=self.batch_size, shuffle=False
-        )
-        self.test_loader = DataLoader(
-            test_dataset, batch_size=self.batch_size, shuffle=False
-        )
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
+        self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
 
         return self.train_loader, self.val_loader, self.test_loader
 
@@ -261,9 +236,7 @@ class StockPredictorTrainer:
             raise ValueError("Data loaders not initialized. Call prepare_data() first.")
 
         # Initialize model
-        input_dim = next(iter(self.train_loader))[0].shape[
-            2
-        ]  # Get input dimension from data
+        input_dim = next(iter(self.train_loader))[0].shape[2]  # Get input dimension from data
         self.model = StockPredictor(input_dim=input_dim).to(self.device)
 
         # Loss function and optimizer
@@ -408,16 +381,12 @@ class StockPredictorTrainer:
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.scaler = checkpoint["scaler"]
         self.sequence_length = checkpoint.get("sequence_length", self.sequence_length)
-        self.prediction_window = checkpoint.get(
-            "prediction_window", self.prediction_window
-        )
+        self.prediction_window = checkpoint.get("prediction_window", self.prediction_window)
         self.ticker = checkpoint.get("ticker", self.ticker)
 
         print(f"Model loaded from {filepath}")
 
-    def plot_predictions(
-        self, actual: np.ndarray, predicted: np.ndarray, title: str = ""
-    ) -> None:
+    def plot_predictions(self, actual: np.ndarray, predicted: np.ndarray, title: str = "") -> None:
         """Plot actual vs predicted values"""
         plt.figure(figsize=(12, 6))
         plt.plot(actual, label="Actual")
@@ -500,9 +469,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Train a stock price predictor model")
-    parser.add_argument(
-        "--ticker", type=str, default="AAPL", help="Stock ticker symbol"
-    )
+    parser.add_argument("--ticker", type=str, default="AAPL", help="Stock ticker symbol")
     parser.add_argument(
         "--start_date", type=str, default="2020-01-01", help="Start date (YYYY-MM-DD)"
     )
@@ -524,15 +491,9 @@ if __name__ == "__main__":
         default=1,
         help="Number of days to predict ahead",
     )
-    parser.add_argument(
-        "--batch_size", type=int, default=32, help="Batch size for training"
-    )
-    parser.add_argument(
-        "--num_epochs", type=int, default=100, help="Number of training epochs"
-    )
-    parser.add_argument(
-        "--learning_rate", type=float, default=1e-4, help="Learning rate"
-    )
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training")
+    parser.add_argument("--num_epochs", type=int, default=100, help="Number of training epochs")
+    parser.add_argument("--learning_rate", type=float, default=1e-4, help="Learning rate")
     parser.add_argument(
         "--model_dir",
         type=str,

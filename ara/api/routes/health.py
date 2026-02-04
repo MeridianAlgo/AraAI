@@ -143,9 +143,7 @@ async def liveness_check():
 async def prometheus_metrics():
     """Export Prometheus metrics"""
     metrics = get_prometheus_metrics()
-    return Response(
-        content=metrics.export_metrics(), media_type=metrics.get_content_type()
-    )
+    return Response(content=metrics.export_metrics(), media_type=metrics.get_content_type())
 
 
 def _calculate_cache_hit_rate(metrics: Dict[str, Any]) -> float:

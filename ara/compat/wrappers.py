@@ -46,9 +46,7 @@ class AraAI:
         else:
             self._engine = None
             if verbose:
-                print(
-                    "Warning: New prediction engine not available. Limited functionality."
-                )
+                print("Warning: New prediction engine not available. Limited functionality.")
 
         # Show migration guide on first use
         if verbose:
@@ -299,9 +297,7 @@ class StockPredictor:
     alternative="ara.api.PredictionEngine.predict()",
     level=DeprecationLevel.WARNING,
 )
-def predict_stock(
-    symbol: str, days: int = 5, verbose: bool = False
-) -> Optional[Dict[str, Any]]:
+def predict_stock(symbol: str, days: int = 5, verbose: bool = False) -> Optional[Dict[str, Any]]:
     """
     Predict stock prices using Ara AI (backward compatible)
 

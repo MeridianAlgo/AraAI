@@ -123,9 +123,7 @@ def main():
         nargs="+",
         help="List of symbols (space-separated) or a single comma-separated string",
     )
-    parser.add_argument(
-        "--output-dir", required=True, help="Output directory for CSV files"
-    )
+    parser.add_argument("--output-dir", required=True, help="Output directory for CSV files")
     parser.add_argument("--period", default="2y", help="Data period (e.g., 1y, 2y, 5y)")
     parser.add_argument("--interval", default="1d", help="Data interval (e.g., 1d, 1h)")
     parser.add_argument("--asset-type", choices=["stock", "forex"], default="stock")
@@ -168,9 +166,7 @@ def main():
             failed += 1
             print(f"    [FAIL] Failed to fetch {symbol}", flush=True)
 
-    print(
-        f"\nSummary: {successful} successful, {failed} failed out of {len(symbols)} symbols"
-    )
+    print(f"\nSummary: {successful} successful, {failed} failed out of {len(symbols)} symbols")
 
     if all_data:
         # Save combined CSV
