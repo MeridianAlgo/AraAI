@@ -162,9 +162,7 @@ class SQLProtection:
         return column_name
 
     @classmethod
-    def build_safe_where_clause(
-        cls, conditions: Dict[str, Any]
-    ) -> Tuple[str, Dict[str, Any]]:
+    def build_safe_where_clause(cls, conditions: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         """
         Build a safe WHERE clause with parameterized values
 
@@ -203,9 +201,7 @@ class SQLProtection:
         return where_clause, params
 
     @classmethod
-    def build_safe_insert(
-        cls, table_name: str, data: Dict[str, Any]
-    ) -> Tuple[str, Dict[str, Any]]:
+    def build_safe_insert(cls, table_name: str, data: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         """
         Build a safe INSERT statement with parameterized values
 

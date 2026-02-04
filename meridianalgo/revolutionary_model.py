@@ -10,7 +10,6 @@ Latest Technologies:
 - Mixture of Experts (MoE) for specialization
 """
 
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -175,9 +174,7 @@ class MambaBlock(nn.Module):
         )
 
         # SSM parameters
-        self.x_proj = nn.Linear(
-            inner_dim, state_dim + state_dim + inner_dim, bias=False
-        )
+        self.x_proj = nn.Linear(inner_dim, state_dim + state_dim + inner_dim, bias=False)
         self.dt_proj = nn.Linear(state_dim, inner_dim, bias=True)
 
         # Output projection
@@ -325,9 +322,7 @@ class RevolutionaryTransformerBlock(nn.Module):
             x = x + self.dropout(self.mamba(self.norm2(x)))
 
         # MoE with residual
-        x = x + self.dropout(
-            self.moe(self.norm3(x) if self.use_mamba else self.norm2(x))
-        )
+        x = x + self.dropout(self.moe(self.norm3(x) if self.use_mamba else self.norm2(x)))
 
         return x
 

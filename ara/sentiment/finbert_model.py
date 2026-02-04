@@ -38,9 +38,7 @@ class FinBERTModel:
 
             logger.info(f"Loading FinBERT model: {self.model_name}")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.model = AutoModelForSequenceClassification.from_pretrained(
-                self.model_name
-            )
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
             self.model.eval()
             self.use_finbert = True
             logger.info("FinBERT model loaded successfully")
@@ -65,8 +63,7 @@ class FinBERTModel:
             logger.info("Using VADER sentiment analyzer")
         except ImportError:
             logger.warning(
-                "vaderSentiment library not installed. "
-                "Install with: pip install vaderSentiment"
+                "vaderSentiment library not installed. " "Install with: pip install vaderSentiment"
             )
             self.vader = None
 

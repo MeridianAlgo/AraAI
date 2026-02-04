@@ -20,9 +20,7 @@ class OnChainMetricsProvider:
     Supports multiple blockchain data APIs
     """
 
-    def __init__(
-        self, api_key: Optional[str] = None, api_provider: str = "blockchain_info"
-    ):
+    def __init__(self, api_key: Optional[str] = None, api_provider: str = "blockchain_info"):
         """
         Initialize on-chain metrics provider
 
@@ -41,9 +39,7 @@ class OnChainMetricsProvider:
             "cryptoquant": "https://api.cryptoquant.com/v1",
         }
 
-        self.base_url = self.endpoints.get(
-            api_provider, self.endpoints["blockchain_info"]
-        )
+        self.base_url = self.endpoints.get(api_provider, self.endpoints["blockchain_info"])
 
         logger.info(
             "Initialized OnChainMetricsProvider",
@@ -114,9 +110,7 @@ class OnChainMetricsProvider:
             return data
 
         except Exception as e:
-            logger.error(
-                f"Failed to fetch on-chain metrics: {e}", symbol=symbol, error=str(e)
-            )
+            logger.error(f"Failed to fetch on-chain metrics: {e}", symbol=symbol, error=str(e))
             # Return sample data as fallback
             return self._generate_sample_metrics(symbol, metrics, days)
 
@@ -125,9 +119,7 @@ class OnChainMetricsProvider:
     ) -> pd.DataFrame:
         """Fetch from blockchain.info API"""
         if symbol != "BTC":
-            raise DataProviderError(
-                "blockchain.info only supports Bitcoin", {"symbol": symbol}
-            )
+            raise DataProviderError("blockchain.info only supports Bitcoin", {"symbol": symbol})
 
         data = {}
 
@@ -170,14 +162,10 @@ class OnChainMetricsProvider:
         df.index.name = "Date"
         return df
 
-    async def _fetch_glassnode(
-        self, symbol: str, metrics: List[str], days: int
-    ) -> pd.DataFrame:
+    async def _fetch_glassnode(self, symbol: str, metrics: List[str], days: int) -> pd.DataFrame:
         """Fetch from Glassnode API (requires API key)"""
         if not self.api_key:
-            raise DataProviderError(
-                "Glassnode requires API key", {"provider": "glassnode"}
-            )
+            raise DataProviderError("Glassnode requires API key", {"provider": "glassnode"})
 
         data = {}
         since = int((datetime.now() - timedelta(days=days)).timestamp())
@@ -206,9 +194,7 @@ class OnChainMetricsProvider:
                         timestamps = [r["t"] for r in result]
                         values = [r["v"] for r in result]
 
-                        data[metric] = pd.Series(
-                            values, index=pd.to_datetime(timestamps, unit="s")
-                        )
+                        data[metric] = pd.Series(values, index=pd.to_datetime(timestamps, unit="s"))
 
             except Exception as e:
                 logger.warning(f"Failed to fetch {metric} from Glassnode: {e}")
@@ -220,22 +206,16 @@ class OnChainMetricsProvider:
         df.index.name = "Date"
         return df
 
-    async def _fetch_cryptoquant(
-        self, symbol: str, metrics: List[str], days: int
-    ) -> pd.DataFrame:
+    async def _fetch_cryptoquant(self, symbol: str, metrics: List[str], days: int) -> pd.DataFrame:
         """Fetch from CryptoQuant API (requires API key)"""
         if not self.api_key:
-            raise DataProviderError(
-                "CryptoQuant requires API key", {"provider": "cryptoquant"}
-            )
+            raise DataProviderError("CryptoQuant requires API key", {"provider": "cryptoquant"})
 
         # Similar implementation to Glassnode
         # For now, fallback to sample data
         return self._generate_sample_metrics(symbol, metrics, days)
 
-    def _generate_sample_metrics(
-        self, symbol: str, metrics: List[str], days: int
-    ) -> pd.DataFrame:
+    def _generate_sample_metrics(self, symbol: str, metrics: List[str], days: int) -> pd.DataFrame:
         """
         Generate sample on-chain metrics for development/testing
 
@@ -326,10 +306,7 @@ class OnChainMetricsProvider:
         price = price.reindex(metrics_df.index, method="ffill")
 
         # NVT Ratio (Network Value to Transactions)
-        if (
-            "network_value" in metrics_df.columns
-            and "transaction_volume" in metrics_df.columns
-        ):
+        if "network_value" in metrics_df.columns and "transaction_volume" in metrics_df.columns:
             derived["nvt_ratio"] = (
                 metrics_df["network_value"]
                 / metrics_df["transaction_volume"].rolling(window=7).mean()
@@ -343,15 +320,13 @@ class OnChainMetricsProvider:
 
         # Active Addresses Growth
         if "active_addresses" in metrics_df.columns:
-            derived["active_addresses_growth"] = metrics_df[
-                "active_addresses"
-            ].pct_change(periods=7)
+            derived["active_addresses_growth"] = metrics_df["active_addresses"].pct_change(
+                periods=7
+            )
 
         # Transaction Volume Growth
         if "transaction_volume" in metrics_df.columns:
-            derived["tx_volume_growth"] = metrics_df["transaction_volume"].pct_change(
-                periods=7
-            )
+            derived["tx_volume_growth"] = metrics_df["transaction_volume"].pct_change(periods=7)
 
         # Hash Rate Growth (mining activity)
         if "hash_rate" in metrics_df.columns:
@@ -394,9 +369,7 @@ class OnChainMetricsProvider:
             df = pd.DataFrame(data, index=dates)
             df.index.name = "Date"
 
-            logger.info(
-                f"Fetched exchange flows for {symbol}", symbol=symbol, days=days
-            )
+            logger.info(f"Fetched exchange flows for {symbol}", symbol=symbol, days=days)
 
             return df
 
@@ -432,8 +405,7 @@ class OnChainMetricsProvider:
 
             for _ in range(num_transactions):
                 tx = {
-                    "timestamp": datetime.now()
-                    - timedelta(days=np.random.randint(0, days)),
+                    "timestamp": datetime.now() - timedelta(days=np.random.randint(0, days)),
                     "value_usd": np.random.uniform(threshold, threshold * 10),
                     "type": np.random.choice(["inflow", "outflow"]),
                     "from_exchange": np.random.choice([True, False]),
@@ -472,23 +444,16 @@ class OnChainMetricsProvider:
 
         # Active addresses score (higher is better)
         if "active_addresses" in metrics_df.columns:
-            aa_norm = (
-                metrics_df["active_addresses"] - metrics_df["active_addresses"].min()
-            ) / (
-                metrics_df["active_addresses"].max()
-                - metrics_df["active_addresses"].min()
+            aa_norm = (metrics_df["active_addresses"] - metrics_df["active_addresses"].min()) / (
+                metrics_df["active_addresses"].max() - metrics_df["active_addresses"].min()
             )
             scores["active_addresses_score"] = aa_norm * 25
 
         # Transaction volume score (higher is better)
         if "transaction_volume" in metrics_df.columns:
             tv_norm = (
-                metrics_df["transaction_volume"]
-                - metrics_df["transaction_volume"].min()
-            ) / (
-                metrics_df["transaction_volume"].max()
-                - metrics_df["transaction_volume"].min()
-            )
+                metrics_df["transaction_volume"] - metrics_df["transaction_volume"].min()
+            ) / (metrics_df["transaction_volume"].max() - metrics_df["transaction_volume"].min())
             scores["tx_volume_score"] = tv_norm * 25
 
         # Hash rate score (higher is better, indicates security)

@@ -86,12 +86,8 @@ class AlternativeDataProvider:
         # Gather all data
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        data["google_trends"] = (
-            results[0] if not isinstance(results[0], Exception) else None
-        )
-        data["insider_trading"] = (
-            results[1] if not isinstance(results[1], Exception) else None
-        )
+        data["google_trends"] = results[0] if not isinstance(results[0], Exception) else None
+        data["insider_trading"] = results[1] if not isinstance(results[1], Exception) else None
         data["institutional_holdings"] = (
             results[2] if not isinstance(results[2], Exception) else None
         )
@@ -129,24 +125,18 @@ class AlternativeDataProvider:
             interest_values = interest_df[symbol].values
 
             return {
-                "current_interest": (
-                    int(interest_values[-1]) if len(interest_values) > 0 else 0
-                ),
+                "current_interest": (int(interest_values[-1]) if len(interest_values) > 0 else 0),
                 "avg_interest": (
                     float(interest_values.mean()) if len(interest_values) > 0 else 0.0
                 ),
-                "max_interest": (
-                    int(interest_values.max()) if len(interest_values) > 0 else 0
-                ),
+                "max_interest": (int(interest_values.max()) if len(interest_values) > 0 else 0),
                 "trend": self._calculate_trend(interest_values),
                 "momentum": self._calculate_momentum(interest_values),
                 "data_points": len(interest_values),
             }
 
         except ImportError:
-            logger.warning(
-                "pytrends library not installed. Install with: pip install pytrends"
-            )
+            logger.warning("pytrends library not installed. Install with: pip install pytrends")
             return None
         except Exception as e:
             logger.error(f"Error fetching Google Trends for {symbol}: {e}")
@@ -190,17 +180,13 @@ class AlternativeDataProvider:
             }
 
         except ImportError:
-            logger.warning(
-                "aiohttp library not installed. Install with: pip install aiohttp"
-            )
+            logger.warning("aiohttp library not installed. Install with: pip install aiohttp")
             return None
         except Exception as e:
             logger.debug(f"Error fetching insider trading for {symbol}: {e}")
             return None
 
-    async def _fetch_institutional_holdings(
-        self, symbol: str
-    ) -> Optional[Dict[str, Any]]:
+    async def _fetch_institutional_holdings(self, symbol: str) -> Optional[Dict[str, Any]]:
         """
         Fetch institutional holdings data (13F filings).
 

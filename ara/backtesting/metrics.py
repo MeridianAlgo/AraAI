@@ -194,9 +194,7 @@ class PerformanceMetrics:
         precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1_score = (
-            2 * (precision * recall) / (precision + recall)
-            if (precision + recall) > 0
-            else 0.0
+            2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
         )
         directional_accuracy = np.mean(pred_direction == actual_direction)
 
@@ -222,10 +220,7 @@ class PerformanceMetrics:
         # Avoid division by zero
         mask = actuals != 0
         if np.any(mask):
-            mape = (
-                np.mean(np.abs((actuals[mask] - predictions[mask]) / actuals[mask]))
-                * 100
-            )
+            mape = np.mean(np.abs((actuals[mask] - predictions[mask]) / actuals[mask])) * 100
         else:
             mape = 0.0
 
@@ -260,18 +255,14 @@ class PerformanceMetrics:
         # Sharpe Ratio
         excess_returns = returns - (self.risk_free_rate / 252)
         sharpe_ratio = (
-            np.mean(excess_returns) / np.std(returns) * np.sqrt(252)
-            if np.std(returns) > 0
-            else 0.0
+            np.mean(excess_returns) / np.std(returns) * np.sqrt(252) if np.std(returns) > 0 else 0.0
         )
 
         # Sortino Ratio (only downside deviation)
         downside_returns = returns[returns < 0]
         downside_std = np.std(downside_returns) if len(downside_returns) > 0 else 0.0
         sortino_ratio = (
-            np.mean(excess_returns) / downside_std * np.sqrt(252)
-            if downside_std > 0
-            else 0.0
+            np.mean(excess_returns) / downside_std * np.sqrt(252) if downside_std > 0 else 0.0
         )
 
         # Maximum Drawdown
@@ -281,9 +272,7 @@ class PerformanceMetrics:
         max_drawdown = np.min(drawdown)
 
         # Calmar Ratio
-        calmar_ratio = (
-            annualized_return / abs(max_drawdown) if max_drawdown != 0 else 0.0
-        )
+        calmar_ratio = annualized_return / abs(max_drawdown) if max_drawdown != 0 else 0.0
 
         return {
             "sharpe_ratio": sharpe_ratio,
@@ -340,9 +329,7 @@ class PerformanceMetrics:
         Strategy: Go long if prediction is positive, short if negative.
         """
         # Calculate actual returns
-        actual_returns = (
-            actuals / prices[:-1] if len(prices) > len(actuals) else actuals / prices
-        )
+        actual_returns = actuals / prices[:-1] if len(prices) > len(actuals) else actuals / prices
 
         # Strategy returns: multiply by prediction direction
         pred_direction = np.sign(predictions)
@@ -365,9 +352,7 @@ class PerformanceMetrics:
         drawdown = (cumulative_returns - running_max) / running_max
         return drawdown
 
-    def calculate_rolling_sharpe(
-        self, returns: np.ndarray, window: int = 252
-    ) -> np.ndarray:
+    def calculate_rolling_sharpe(self, returns: np.ndarray, window: int = 252) -> np.ndarray:
         """
         Calculate rolling Sharpe ratio.
 

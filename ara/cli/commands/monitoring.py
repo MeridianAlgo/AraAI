@@ -48,9 +48,7 @@ def export_dashboards(output_dir):
         export_dashboard_to_file(dashboard, str(output_file))
         console.print(f"  ✓ Exported [green]{name}.json[/green]")
 
-    console.print(
-        f"\n[bold green]✓ All dashboards exported to:[/bold green] {output_path}\n"
-    )
+    console.print(f"\n[bold green]✓ All dashboards exported to:[/bold green] {output_path}\n")
 
     # Print import instructions
     panel = Panel(
@@ -99,9 +97,7 @@ def show_metrics():
 
     # Timings table
     if metrics.get("timings"):
-        table = Table(
-            title="Timings (ms)", show_header=True, header_style="bold magenta"
-        )
+        table = Table(title="Timings (ms)", show_header=True, header_style="bold magenta")
         table.add_column("Metric", style="cyan")
         table.add_column("Count", justify="right")
         table.add_column("Mean", justify="right")
@@ -146,9 +142,7 @@ def health_check():
             console.print()
 
             # Components table
-            table = Table(
-                title="Components", show_header=True, header_style="bold magenta"
-            )
+            table = Table(title="Components", show_header=True, header_style="bold magenta")
             table.add_column("Component", style="cyan")
             table.add_column("Status", style="green")
             table.add_column("Details", style="dim")
@@ -186,9 +180,7 @@ def health_check():
             # Performance
             if "performance" in data:
                 perf = data["performance"]
-                table = Table(
-                    title="Performance", show_header=True, header_style="bold magenta"
-                )
+                table = Table(title="Performance", show_header=True, header_style="bold magenta")
                 table.add_column("Metric", style="cyan")
                 table.add_column("Value", justify="right", style="green")
 
@@ -199,15 +191,11 @@ def health_check():
                 console.print()
 
         else:
-            console.print(
-                f"[bold red]✗ API returned status code {response.status_code}[/bold red]"
-            )
+            console.print(f"[bold red]✗ API returned status code {response.status_code}[/bold red]")
 
     except requests.exceptions.ConnectionError:
         console.print("[bold red]✗ Cannot connect to API[/bold red]")
-        console.print(
-            "[dim]Make sure the API is running on http://localhost:8000[/dim]\n"
-        )
+        console.print("[dim]Make sure the API is running on http://localhost:8000[/dim]\n")
     except Exception as e:
         console.print(f"[bold red]✗ Error: {e}[/bold red]\n")
 
@@ -247,9 +235,7 @@ def setup():
    Open Grafana → Dashboards → ARA AI
     """
 
-    panel = Panel(
-        instructions, title="Setup Instructions", border_style="cyan", padding=(1, 2)
-    )
+    panel = Panel(instructions, title="Setup Instructions", border_style="cyan", padding=(1, 2))
     console.print(panel)
 
     console.print("\n[dim]For more information, see ara/monitoring/README.md[/dim]\n")

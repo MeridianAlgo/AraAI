@@ -87,11 +87,7 @@ class IndicatorRegistry:
             List of indicator names
         """
         if category:
-            return [
-                name
-                for name, meta in self._metadata.items()
-                if meta.category == category
-            ]
+            return [name for name, meta in self._metadata.items() if meta.category == category]
         return list(self._indicators.keys())
 
     def list_categories(self) -> List[str]:
@@ -166,9 +162,7 @@ class IndicatorRegistry:
         if not enabled:
             self.clear_cache()
 
-    def _generate_cache_key(
-        self, name: str, data: pd.DataFrame, params: Dict[str, Any]
-    ) -> str:
+    def _generate_cache_key(self, name: str, data: pd.DataFrame, params: Dict[str, Any]) -> str:
         """Generate a cache key for an indicator calculation."""
         # Use data hash and parameters to create unique key
         data_hash = hash(tuple(data.index) + tuple(data.columns))

@@ -112,9 +112,7 @@ class MarketDataManager:
                 else 0
             )
             price_change_1m = (
-                (current_price - data["Close"].iloc[-21])
-                / data["Close"].iloc[-21]
-                * 100
+                (current_price - data["Close"].iloc[-21]) / data["Close"].iloc[-21] * 100
                 if len(data) >= 21
                 else 0
             )
@@ -290,9 +288,7 @@ class TechnicalIndicators:
             high_max = data["High"].rolling(window=period).max()
             low_min = data["Low"].rolling(window=period).min()
 
-            data["Williams_R"] = -100 * (
-                (high_max - data["Close"]) / (high_max - low_min)
-            )
+            data["Williams_R"] = -100 * ((high_max - data["Close"]) / (high_max - low_min))
 
             return data
         except Exception as e:
@@ -484,9 +480,7 @@ class MarketDataValidator:
             score = 100
 
             # Check for missing values
-            missing_pct = (
-                data.isnull().sum().sum() / (len(data) * len(data.columns)) * 100
-            )
+            missing_pct = data.isnull().sum().sum() / (len(data) * len(data.columns)) * 100
             if missing_pct > 5:
                 issues.append(f"High missing data: {missing_pct:.1f}%")
                 score -= 20
@@ -505,9 +499,7 @@ class MarketDataValidator:
                 price_changes = data["Close"].pct_change().abs()
                 extreme_changes = (price_changes > 0.5).sum()
                 if extreme_changes > len(data) * 0.01:  # More than 1% extreme changes
-                    issues.append(
-                        f"Extreme price changes: {extreme_changes} occurrences"
-                    )
+                    issues.append(f"Extreme price changes: {extreme_changes} occurrences")
                     score -= 10
 
             # Check data recency
@@ -532,9 +524,7 @@ class MarketDataValidator:
                     "A"
                     if score >= 90
                     else (
-                        "B"
-                        if score >= 80
-                        else "C" if score >= 70 else "D" if score >= 60 else "F"
+                        "B" if score >= 80 else "C" if score >= 70 else "D" if score >= 60 else "F"
                     )
                 ),
             }

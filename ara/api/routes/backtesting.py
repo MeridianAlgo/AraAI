@@ -22,12 +22,8 @@ class BacktestRequest(BaseModel):
     end_date: date = Field(..., description="Backtest end date")
     initial_capital: float = Field(10000.0, gt=0, description="Initial capital")
     strategy: str = Field("buy_and_hold", description="Trading strategy")
-    walk_forward_window: int = Field(
-        252, ge=30, description="Walk-forward window in days"
-    )
-    retraining_frequency: int = Field(
-        30, ge=1, description="Model retraining frequency in days"
-    )
+    walk_forward_window: int = Field(252, ge=30, description="Walk-forward window in days")
+    retraining_frequency: int = Field(30, ge=1, description="Model retraining frequency in days")
 
 
 class BacktestResponse(BaseModel):

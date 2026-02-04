@@ -76,9 +76,7 @@ class NewsSentimentAnalyzer(SentimentAnalyzer):
     def _validate_config(self) -> None:
         """Validate news API configuration"""
         if not self.newsapi_key and not self.alphavantage_key:
-            logger.warning(
-                "No news API keys provided. News sentiment analysis will be disabled."
-            )
+            logger.warning("No news API keys provided. News sentiment analysis will be disabled.")
 
     async def analyze(self, symbol: str, lookback_hours: int = 24) -> SentimentScore:
         """
@@ -92,9 +90,7 @@ class NewsSentimentAnalyzer(SentimentAnalyzer):
             SentimentScore with aggregated news sentiment
         """
         if not self.newsapi_key and not self.alphavantage_key:
-            logger.warning(
-                f"News APIs not configured, returning neutral sentiment for {symbol}"
-            )
+            logger.warning(f"News APIs not configured, returning neutral sentiment for {symbol}")
             return SentimentScore(
                 score=0.0,
                 confidence=0.0,
@@ -170,9 +166,7 @@ class NewsSentimentAnalyzer(SentimentAnalyzer):
             logger.error(f"Error analyzing news sentiment for {symbol}: {e}")
             raise NewsAPIError(f"Failed to analyze news sentiment: {e}")
 
-    async def _fetch_articles(
-        self, symbol: str, lookback_hours: int
-    ) -> List[Dict[str, Any]]:
+    async def _fetch_articles(self, symbol: str, lookback_hours: int) -> List[Dict[str, Any]]:
         """
         Fetch news articles from all available sources.
 
@@ -209,9 +203,7 @@ class NewsSentimentAnalyzer(SentimentAnalyzer):
 
         return unique_articles[: self.max_articles]
 
-    async def _fetch_from_newsapi(
-        self, symbol: str, lookback_hours: int
-    ) -> List[Dict[str, Any]]:
+    async def _fetch_from_newsapi(self, symbol: str, lookback_hours: int) -> List[Dict[str, Any]]:
         """
         Fetch articles from NewsAPI.org.
 
@@ -228,9 +220,7 @@ class NewsSentimentAnalyzer(SentimentAnalyzer):
             newsapi = NewsApiClient(api_key=self.newsapi_key)
 
             # Calculate date range
-            from_date = (datetime.now() - timedelta(hours=lookback_hours)).strftime(
-                "%Y-%m-%d"
-            )
+            from_date = (datetime.now() - timedelta(hours=lookback_hours)).strftime("%Y-%m-%d")
 
             # Normalize symbol for search
             normalized_symbol = self._normalize_symbol(symbol)
@@ -254,9 +244,7 @@ class NewsSentimentAnalyzer(SentimentAnalyzer):
                             "content": article.get("description", ""),
                             "source": article.get("source", {}).get("name", "unknown"),
                             "published_at": (
-                                datetime.strptime(
-                                    article["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"
-                                )
+                                datetime.strptime(article["publishedAt"], "%Y-%m-%dT%H:%M:%SZ")
                                 if article.get("publishedAt")
                                 else datetime.now()
                             ),
@@ -337,9 +325,7 @@ class NewsSentimentAnalyzer(SentimentAnalyzer):
             return articles
 
         except ImportError:
-            logger.warning(
-                "aiohttp library not installed. Install with: pip install aiohttp"
-            )
+            logger.warning("aiohttp library not installed. Install with: pip install aiohttp")
             return []
         except Exception as e:
             logger.error(f"Error fetching from Alpha Vantage: {e}")

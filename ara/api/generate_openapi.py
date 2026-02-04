@@ -50,9 +50,7 @@ def main():
         default="docs/api/openapi.json",
         help="Output file path (default: docs/api/openapi.json)",
     )
-    parser.add_argument(
-        "--pretty", action="store_true", help="Pretty print JSON output"
-    )
+    parser.add_argument("--pretty", action="store_true", help="Pretty print JSON output")
 
     args = parser.parse_args()
 

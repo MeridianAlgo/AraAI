@@ -62,18 +62,14 @@ class FeatureContributionAnalyzer:
         # Calculate contribution percentages
         total_abs_contribution = np.sum(abs_contributions)
         if total_abs_contribution > 0:
-            contribution_percentages = (
-                abs_contributions / total_abs_contribution
-            ) * 100
+            contribution_percentages = (abs_contributions / total_abs_contribution) * 100
         else:
             contribution_percentages = np.zeros_like(abs_contributions)
 
         # Build top features list
         top_features = []
         for idx in top_indices:
-            feature_name = (
-                self.feature_names[idx] if self.feature_names else f"feature_{idx}"
-            )
+            feature_name = self.feature_names[idx] if self.feature_names else f"feature_{idx}"
 
             feature_info = {
                 "rank": len(top_features) + 1,
@@ -101,15 +97,11 @@ class FeatureContributionAnalyzer:
                 "negative_contribution": negative_contribution,
                 "net_contribution": net_contribution,
                 "total_abs_contribution": float(total_abs_contribution),
-                "top_n_percentage": float(
-                    np.sum(contribution_percentages[top_indices])
-                ),
+                "top_n_percentage": float(np.sum(contribution_percentages[top_indices])),
             },
         }
 
-    def calculate_contribution_percentages(
-        self, contributions: np.ndarray
-    ) -> np.ndarray:
+    def calculate_contribution_percentages(self, contributions: np.ndarray) -> np.ndarray:
         """
         Calculate contribution percentages for all features
 
@@ -146,18 +138,12 @@ class FeatureContributionAnalyzer:
 
         result = []
         for idx in top_indices:
-            feature_name = (
-                self.feature_names[idx] if self.feature_names else f"feature_{idx}"
-            )
-            result.append(
-                (feature_name, float(feature_values[idx]), float(contributions[idx]))
-            )
+            feature_name = self.feature_names[idx] if self.feature_names else f"feature_{idx}"
+            result.append((feature_name, float(feature_values[idx]), float(contributions[idx])))
 
         return result
 
-    def generate_factor_descriptions(
-        self, top_features: List[Dict[str, Any]]
-    ) -> List[str]:
+    def generate_factor_descriptions(self, top_features: List[Dict[str, Any]]) -> List[str]:
         """
         Generate human-readable descriptions for top factors
 
@@ -233,9 +219,7 @@ class FeatureContributionAnalyzer:
 
         changed_features = []
         for idx in top_changed_indices:
-            feature_name = (
-                self.feature_names[idx] if self.feature_names else f"feature_{idx}"
-            )
+            feature_name = self.feature_names[idx] if self.feature_names else f"feature_{idx}"
 
             feature_info = {
                 "feature_name": feature_name,
@@ -243,17 +227,13 @@ class FeatureContributionAnalyzer:
                 "contribution_2": float(contributions2[idx]),
                 "change": float(contribution_diff[idx]),
                 "abs_change": float(abs_diff[idx]),
-                "change_direction": (
-                    "increased" if contribution_diff[idx] > 0 else "decreased"
-                ),
+                "change_direction": ("increased" if contribution_diff[idx] > 0 else "decreased"),
             }
 
             if feature_values1 is not None and feature_values2 is not None:
                 feature_info["value_1"] = float(feature_values1[idx])
                 feature_info["value_2"] = float(feature_values2[idx])
-                feature_info["value_change"] = float(
-                    feature_values2[idx] - feature_values1[idx]
-                )
+                feature_info["value_change"] = float(feature_values2[idx] - feature_values1[idx])
 
             changed_features.append(feature_info)
 
@@ -349,9 +329,7 @@ class FeatureContributionAnalyzer:
         # Create ranked list
         ranked_features = []
         for idx, score in enumerate(importance):
-            feature_name = (
-                self.feature_names[idx] if self.feature_names else f"feature_{idx}"
-            )
+            feature_name = self.feature_names[idx] if self.feature_names else f"feature_{idx}"
             ranked_features.append((feature_name, float(score)))
 
         # Sort by importance (descending)

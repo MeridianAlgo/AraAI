@@ -77,9 +77,7 @@ def crypto_predict(symbol, days, exchange, onchain, defi, export):
 
 
 @crypto.command("list")
-@click.option(
-    "--top", "-t", default=50, type=int, help="Number of top cryptocurrencies to list"
-)
+@click.option("--top", "-t", default=50, type=int, help="Number of top cryptocurrencies to list")
 def crypto_list(top):
     """List supported cryptocurrencies"""
     try:
@@ -88,9 +86,7 @@ def crypto_list(top):
         provider = CryptoExchangeProvider()
         symbols = provider.get_supported_symbols()[:top]
 
-        console.print(
-            f"\n[bold cyan]Top {top} Supported Cryptocurrencies[/bold cyan]\n"
-        )
+        console.print(f"\n[bold cyan]Top {top} Supported Cryptocurrencies[/bold cyan]\n")
 
         # Display in columns
         cols = 4
@@ -120,9 +116,7 @@ def crypto_compare(symbols, metric):
         ara crypto compare BTC ETH BNB --metric volatility
     """
     try:
-        console.print(
-            f"\n[bold cyan]Comparing {', '.join(symbols)} by {metric}[/bold cyan]\n"
-        )
+        console.print(f"\n[bold cyan]Comparing {', '.join(symbols)} by {metric}[/bold cyan]\n")
 
         from ara.correlation.analyzer import CorrelationAnalyzer
 
@@ -142,12 +136,8 @@ def crypto_compare(symbols, metric):
 
 def _display_crypto_results(result, show_onchain, show_defi):
     """Display cryptocurrency prediction results"""
-    console.print(
-        f"\n[bold cyan]Crypto Prediction Results for {result['symbol']}[/bold cyan]"
-    )
-    console.print(
-        f"Current Price: [green]{format_price(result['current_price'])}[/green]"
-    )
+    console.print(f"\n[bold cyan]Crypto Prediction Results for {result['symbol']}[/bold cyan]")
+    console.print(f"Current Price: [green]{format_price(result['current_price'])}[/green]")
     console.print(f"24h Volume: {result.get('volume_24h', 'N/A')}")
     console.print(f"Market Cap: {result.get('market_cap', 'N/A')}")
 

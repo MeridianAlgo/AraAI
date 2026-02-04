@@ -191,9 +191,7 @@ class RiskCalculator:
         elif method == "kendall":
             corr_matrix = df.corr(method="kendall")
         else:
-            raise ValueError(
-                f"Unknown method: {method}. Use 'pearson', 'spearman', or 'kendall'"
-            )
+            raise ValueError(f"Unknown method: {method}. Use 'pearson', 'spearman', or 'kendall'")
 
         return corr_matrix
 

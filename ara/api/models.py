@@ -35,9 +35,7 @@ class PredictionRequest(BaseModel):
     analysis_level: AnalysisLevel = Field(
         AnalysisLevel.STANDARD, description="Level of analysis detail"
     )
-    include_explanations: bool = Field(
-        True, description="Include prediction explanations"
-    )
+    include_explanations: bool = Field(True, description="Include prediction explanations")
 
     @validator("symbol")
     def validate_symbol(cls, v):
@@ -53,9 +51,7 @@ class BatchPredictionRequest(BaseModel):
         ..., min_items=1, max_items=100, description="List of symbols (max 100)"
     )
     days: int = Field(5, ge=1, le=30, description="Number of days to predict")
-    asset_type: Optional[AssetTypeEnum] = Field(
-        None, description="Asset type for all symbols"
-    )
+    asset_type: Optional[AssetTypeEnum] = Field(None, description="Asset type for all symbols")
     analysis_level: AnalysisLevel = Field(
         AnalysisLevel.BASIC, description="Level of analysis detail"
     )

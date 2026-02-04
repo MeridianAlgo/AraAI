@@ -101,9 +101,7 @@ class DeFiDataProvider:
 
                     return df
                 else:
-                    raise DataProviderError(
-                        f"Failed to fetch TVL data: HTTP {response.status}"
-                    )
+                    raise DataProviderError(f"Failed to fetch TVL data: HTTP {response.status}")
 
         except Exception as e:
             logger.error(f"Failed to fetch TVL data: {e}")
@@ -128,15 +126,11 @@ class DeFiDataProvider:
                 if response.status == 200:
                     protocols = await response.json()
 
-                    logger.info(
-                        f"Fetched {len(protocols)} DeFi protocols", count=len(protocols)
-                    )
+                    logger.info(f"Fetched {len(protocols)} DeFi protocols", count=len(protocols))
 
                     return protocols
                 else:
-                    raise DataProviderError(
-                        f"Failed to fetch protocols: HTTP {response.status}"
-                    )
+                    raise DataProviderError(f"Failed to fetch protocols: HTTP {response.status}")
 
         except Exception as e:
             logger.error(f"Failed to fetch protocol list: {e}")
@@ -232,14 +226,10 @@ class DeFiDataProvider:
 
         except Exception as e:
             logger.error(f"Failed to fetch liquidation data: {e}")
-            raise DataProviderError(
-                "Failed to fetch liquidation data", {"error": str(e)}
-            )
+            raise DataProviderError("Failed to fetch liquidation data", {"error": str(e)})
 
     @timed("defi_fetch_stablecoin_supply")
-    async def fetch_stablecoin_supply(
-        self, stablecoin: Optional[str] = None
-    ) -> pd.DataFrame:
+    async def fetch_stablecoin_supply(self, stablecoin: Optional[str] = None) -> pd.DataFrame:
         """
         Fetch stablecoin supply data
 
@@ -281,9 +271,7 @@ class DeFiDataProvider:
 
                                     df = pd.DataFrame(hist_data)
                                     if "date" in df.columns:
-                                        df["Date"] = pd.to_datetime(
-                                            df["date"], unit="s"
-                                        )
+                                        df["Date"] = pd.to_datetime(df["date"], unit="s")
                                         df = df.set_index("Date")
 
                                     logger.info(
@@ -295,9 +283,7 @@ class DeFiDataProvider:
                                     return df
 
                     # If no specific stablecoin or not found, return aggregate
-                    return self._generate_sample_stablecoin_supply(
-                        stablecoin or "total"
-                    )
+                    return self._generate_sample_stablecoin_supply(stablecoin or "total")
 
         except Exception as e:
             logger.error(f"Failed to fetch stablecoin supply: {e}")
@@ -321,9 +307,7 @@ class DeFiDataProvider:
 
         return df
 
-    def _generate_sample_stablecoin_supply(
-        self, stablecoin: str, days: int = 365
-    ) -> pd.DataFrame:
+    def _generate_sample_stablecoin_supply(self, stablecoin: str, days: int = 365) -> pd.DataFrame:
         """Generate sample stablecoin supply data"""
         import numpy as np
 
@@ -376,9 +360,7 @@ class DeFiDataProvider:
             metrics["tvl_growth_7d"] = tvl_df["tvl"].pct_change(periods=7)
             metrics["tvl_growth_30d"] = tvl_df["tvl"].pct_change(periods=30)
             metrics["tvl_momentum"] = (
-                tvl_df["tvl"].rolling(window=7).mean()
-                / tvl_df["tvl"].rolling(window=30).mean()
-                - 1
+                tvl_df["tvl"].rolling(window=7).mean() / tvl_df["tvl"].rolling(window=30).mean() - 1
             )
 
         # Price to TVL Ratio (similar to P/E ratio)
@@ -394,17 +376,15 @@ class DeFiDataProvider:
 
         # TVL Volatility
         if "tvl" in tvl_df.columns:
-            metrics["tvl_volatility"] = (
-                tvl_df["tvl"].pct_change().rolling(window=30).std()
-            )
+            metrics["tvl_volatility"] = tvl_df["tvl"].pct_change().rolling(window=30).std()
 
         # Add lending rate metrics if provided
         if lending_rates:
             metrics["supply_apy"] = lending_rates.get("supply_apy", 0)
             metrics["borrow_apy"] = lending_rates.get("borrow_apy", 0)
-            metrics["rate_spread"] = lending_rates.get(
-                "borrow_apy", 0
-            ) - lending_rates.get("supply_apy", 0)
+            metrics["rate_spread"] = lending_rates.get("borrow_apy", 0) - lending_rates.get(
+                "supply_apy", 0
+            )
             metrics["utilization_rate"] = lending_rates.get("utilization_rate", 0)
 
         logger.info(
@@ -434,18 +414,12 @@ class DeFiDataProvider:
 
                     if tvl_data:
                         latest_tvl = tvl_data[-1].get("tvl", 0)
-                        prev_tvl = (
-                            tvl_data[-30].get("tvl", 0)
-                            if len(tvl_data) > 30
-                            else latest_tvl
-                        )
+                        prev_tvl = tvl_data[-30].get("tvl", 0) if len(tvl_data) > 30 else latest_tvl
 
                         overview = {
                             "total_tvl": latest_tvl,
                             "tvl_change_30d": (
-                                (latest_tvl - prev_tvl) / prev_tvl
-                                if prev_tvl > 0
-                                else 0
+                                (latest_tvl - prev_tvl) / prev_tvl if prev_tvl > 0 else 0
                             ),
                             "timestamp": datetime.now(),
                             "num_protocols": 0,  # Would fetch from protocols endpoint
@@ -514,8 +488,7 @@ class DeFiDataProvider:
         # Positions at risk
         if "at_risk_positions" in liquidation_df.columns:
             risk_norm = (
-                liquidation_df["at_risk_positions"]
-                - liquidation_df["at_risk_positions"].min()
+                liquidation_df["at_risk_positions"] - liquidation_df["at_risk_positions"].min()
             ) / (
                 liquidation_df["at_risk_positions"].max()
                 - liquidation_df["at_risk_positions"].min()

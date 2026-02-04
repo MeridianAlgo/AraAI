@@ -13,9 +13,7 @@ from ara.api.websocket.connection_manager import connection_manager
 logger = logging.getLogger(__name__)
 
 
-async def handle_predictions_ws(
-    websocket: WebSocket, symbol: str, user_id: Optional[str] = None
-):
+async def handle_predictions_ws(websocket: WebSocket, symbol: str, user_id: Optional[str] = None):
     """
     WebSocket handler for real-time prediction updates
 
@@ -68,9 +66,7 @@ async def handle_predictions_ws(
                     # Change symbol subscription
                     new_symbol = message.get("symbol", "").upper()
                     if new_symbol:
-                        connection_manager.set_connection_symbol(
-                            connection_id, new_symbol
-                        )
+                        connection_manager.set_connection_symbol(connection_id, new_symbol)
                         await websocket.send_json(
                             {
                                 "type": "subscribed",
@@ -135,9 +131,7 @@ async def handle_predictions_ws(
         connection_manager.disconnect(connection_id)
 
 
-async def handle_market_data_ws(
-    websocket: WebSocket, symbol: str, user_id: Optional[str] = None
-):
+async def handle_market_data_ws(websocket: WebSocket, symbol: str, user_id: Optional[str] = None):
     """
     WebSocket handler for streaming real-time market data
 
@@ -190,9 +184,7 @@ async def handle_market_data_ws(
                     # Change symbol subscription
                     new_symbol = message.get("symbol", "").upper()
                     if new_symbol:
-                        connection_manager.set_connection_symbol(
-                            connection_id, new_symbol
-                        )
+                        connection_manager.set_connection_symbol(connection_id, new_symbol)
                         await websocket.send_json(
                             {
                                 "type": "subscribed",
@@ -259,9 +251,7 @@ async def handle_alerts_ws(websocket: WebSocket, user_id: Optional[str] = None):
         websocket: WebSocket connection
         user_id: Authenticated user ID (optional)
     """
-    connection_id = await connection_manager.connect(
-        websocket, channel="alerts", user_id=user_id
-    )
+    connection_id = await connection_manager.connect(websocket, channel="alerts", user_id=user_id)
 
     try:
         # Send initial connection confirmation
@@ -358,9 +348,7 @@ async def broadcast_prediction_update(symbol: str, prediction_data: dict):
         "timestamp": datetime.now().isoformat(),
     }
 
-    await connection_manager.broadcast(
-        message, channel="predictions", symbol=symbol.upper()
-    )
+    await connection_manager.broadcast(message, channel="predictions", symbol=symbol.upper())
 
 
 # Helper function to broadcast market data updates
@@ -379,9 +367,7 @@ async def broadcast_market_data(symbol: str, market_data: dict):
         "timestamp": datetime.now().isoformat(),
     }
 
-    await connection_manager.broadcast(
-        message, channel="market-data", symbol=symbol.upper()
-    )
+    await connection_manager.broadcast(message, channel="market-data", symbol=symbol.upper())
 
 
 # Helper function to send alerts

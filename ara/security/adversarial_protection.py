@@ -16,9 +16,7 @@ from datetime import datetime
 class AdversarialProtection:
     """Protects ML models from adversarial attacks"""
 
-    def __init__(
-        self, confidence_threshold: float = 0.3, anomaly_threshold: float = 3.0
-    ):
+    def __init__(self, confidence_threshold: float = 0.3, anomaly_threshold: float = 3.0):
         """
         Initialize adversarial protection
 
@@ -276,9 +274,7 @@ class AdversarialProtection:
         if not expected_checksum:
             return False, "Model checksum not found in metadata"
 
-        if not AdversarialProtection.verify_model_integrity(
-            model_path, expected_checksum
-        ):
+        if not AdversarialProtection.verify_model_integrity(model_path, expected_checksum):
             return (
                 False,
                 "Model checksum verification failed - file may be corrupted or tampered",
@@ -380,9 +376,7 @@ class ModelVersionManager:
 
         return None
 
-    def rollback(
-        self, model_name: str, target_version: Optional[str] = None
-    ) -> Optional[Path]:
+    def rollback(self, model_name: str, target_version: Optional[str] = None) -> Optional[Path]:
         """
         Rollback to a previous model version
 
@@ -421,9 +415,7 @@ class ModelVersionManager:
         is_valid, error = AdversarialProtection.verify_model_before_load(model_path)
 
         if not is_valid:
-            raise ValueError(
-                f"Cannot rollback to version {target_info['version']}: {error}"
-            )
+            raise ValueError(f"Cannot rollback to version {target_info['version']}: {error}")
 
         return model_path
 

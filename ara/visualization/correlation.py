@@ -208,12 +208,8 @@ class CorrelationChart:
 
         # Add correlation threshold lines
         fig.add_hline(y=0, line_dash="dash", line_color="gray", row=1, col=1)
-        fig.add_hline(
-            y=0.7, line_dash="dot", line_color="green", opacity=0.3, row=1, col=1
-        )
-        fig.add_hline(
-            y=-0.7, line_dash="dot", line_color="red", opacity=0.3, row=1, col=1
-        )
+        fig.add_hline(y=0.7, line_dash="dot", line_color="green", opacity=0.3, row=1, col=1)
+        fig.add_hline(y=-0.7, line_dash="dot", line_color="red", opacity=0.3, row=1, col=1)
 
         # Asset 1 price
         fig.add_trace(
@@ -348,9 +344,7 @@ class CorrelationChart:
                 x=x_pos,
                 y=y_pos,
                 mode="markers+text",
-                marker=dict(
-                    size=20, color="lightblue", line=dict(color="darkblue", width=2)
-                ),
+                marker=dict(size=20, color="lightblue", line=dict(color="darkblue", width=2)),
                 text=assets,
                 textposition="top center",
                 hoverinfo="text",
@@ -430,9 +424,7 @@ class CorrelationChart:
 
         for pair_name, scores in lead_lag_scores.items():
             fig.add_trace(
-                go.Scatter(
-                    x=dates, y=scores, mode="lines", name=pair_name, line=dict(width=2)
-                )
+                go.Scatter(x=dates, y=scores, mode="lines", name=pair_name, line=dict(width=2))
             )
 
         # Add zero line

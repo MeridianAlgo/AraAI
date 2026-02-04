@@ -36,18 +36,25 @@ env/
 .DS_Store
 
 # Models and Cache
-# models/  # Commented out to allow trained models to be committed
 .ara_cache/
 .ruff_cache/
+.cache/
 *.pkl
 *.joblib
 *.h5
-*.pt  # Allow PyTorch models to be tracked
-*.pth  # Allow PyTorch models to be tracked
 
 # Data
 datasets/*.csv
+datasets/temp_*.csv
 !datasets/README.md
+!datasets/test_data/
+!datasets/training_data/
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 
 # Logs
 *.log
@@ -78,3 +85,13 @@ Thumbs.db
 *.swp
 temp/
 tmp/
+
+# Analysis and test files
+training_analysis.md
+test_*.py
+!tests/test_*.py
+
+# Downloaded models (too large for git)
+models/models/*.pt
+models/*.pt
+download_models.py

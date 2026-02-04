@@ -100,9 +100,7 @@ class PerformanceManager:
         logger.info("Model optimization complete")
         return model
 
-    def export_model_to_onnx(
-        self, model, input_shape: tuple, output_path: Path
-    ) -> bool:
+    def export_model_to_onnx(self, model, input_shape: tuple, output_path: Path) -> bool:
         """
         Export model to ONNX format
 
@@ -129,9 +127,7 @@ class PerformanceManager:
         """
         return self.batch_processor.process_batch(items, predict_func)
 
-    def parallel_calculate_features(
-        self, data_list: list, feature_func: callable
-    ) -> list:
+    def parallel_calculate_features(self, data_list: list, feature_func: callable) -> list:
         """
         Calculate features in parallel
 
@@ -142,9 +138,7 @@ class PerformanceManager:
         Returns:
             List of features
         """
-        return self.parallel_calculator.calculate_features_parallel(
-            data_list, feature_func
-        )
+        return self.parallel_calculator.calculate_features_parallel(data_list, feature_func)
 
     def get_performance_stats(self) -> Dict[str, Any]:
         """
@@ -288,9 +282,7 @@ class ScalingManager:
         Returns:
             True if successful
         """
-        return self.service_discovery.register_service(
-            service_name, host, port, metadata
-        )
+        return self.service_discovery.register_service(service_name, host, port, metadata)
 
     def discover_service(self, service_name: str) -> list:
         """

@@ -20,7 +20,7 @@ from meridianalgo.revolutionary_model import (
     RMSNorm,
     MambaBlock,
     MixtureOfExperts,
-    RevolutionaryTransformerBlock
+    RevolutionaryTransformerBlock,
 )
 from meridianalgo.large_torch_model import AdvancedMLSystem
 from meridianalgo.unified_ml import UnifiedStockML
@@ -46,7 +46,7 @@ def test_grouped_query_attention():
     output = gqa(x)
     assert output.shape == (2, 10, 256), f"Expected (2, 10, 256), got {output.shape}"
     print("  PASS: GQA output shape correct")
-    
+
     # Test parameter efficiency
     total_params = sum(p.numel() for p in gqa.parameters())
     print(f"  INFO: GQA parameters: {total_params:,}")
@@ -69,9 +69,9 @@ def test_rmsnorm():
     x = torch.randn(2, 10, 256)
     output = norm(x)
     assert output.shape == (2, 10, 256), f"Expected (2, 10, 256), got {output.shape}"
-    
+
     # Check normalization
-    rms = torch.sqrt((output ** 2).mean(dim=-1))
+    rms = torch.sqrt((output**2).mean(dim=-1))
     print(f"  INFO: RMS values: mean={rms.mean():.4f}, std={rms.std():.4f}")
     print("  PASS: RMSNorm output shape correct")
 
@@ -118,16 +118,16 @@ def test_revolutionary_model():
         num_kv_heads=2,
         num_experts=4,
         num_prediction_heads=4,
-        dropout=0.1
+        dropout=0.1,
     )
-    
+
     # Test forward pass
     x = torch.randn(2, 30, 44)
     pred, all_preds = model(x)
-    
+
     assert pred.shape == (2, 1), f"Expected (2, 1), got {pred.shape}"
     assert all_preds.shape == (2, 4), f"Expected (2, 4), got {all_preds.shape}"
-    
+
     # Count parameters
     params = model.count_parameters()
     print(f"  INFO: Model parameters: {params:,}")
@@ -138,9 +138,7 @@ def test_ml_system_initialization():
     """Test AdvancedMLSystem with Revolutionary model"""
     print("\n[9/12] Testing ML System initialization...")
     ml_system = AdvancedMLSystem(
-        model_path="tests/test_model.pt",
-        model_type="stock",
-        use_revolutionary=True
+        model_path="tests/test_model.pt", model_type="stock", use_revolutionary=True
     )
     print("  PASS: ML System initialized with Revolutionary architecture")
 
@@ -148,50 +146,43 @@ def test_ml_system_initialization():
 def test_training_pipeline():
     """Test training pipeline"""
     print("\n[10/12] Testing training pipeline...")
-    
+
     # Create synthetic data
     np.random.seed(42)
     n_samples = 100
     seq_len = 30
     n_features = 44
-    
+
     X = np.random.randn(n_samples, seq_len, n_features).astype(np.float32)
     y = np.random.randn(n_samples).astype(np.float32) * 0.01  # Small returns
-    
+
     # Initialize system
     ml_system = AdvancedMLSystem(
-        model_path="tests/test_train_model.pt",
-        model_type="stock",
-        use_revolutionary=True
+        model_path="tests/test_train_model.pt", model_type="stock", use_revolutionary=True
     )
-    
+
     # Train
     result = ml_system.train(
-        X, y,
-        symbol="TEST",
-        epochs=10,
-        batch_size=16,
-        lr=0.001,
-        validation_split=0.2
+        X, y, symbol="TEST", epochs=10, batch_size=16, lr=0.001, validation_split=0.2
     )
-    
+
     assert result["success"], f"Training failed: {result.get('error')}"
     print(f"  INFO: Training loss: {result['final_loss']:.6f}")
     print("  PASS: Training pipeline successful")
-    
+
     return ml_system
 
 
 def test_prediction_pipeline(ml_system):
     """Test prediction pipeline"""
     print("\n[11/12] Testing prediction pipeline...")
-    
+
     # Create test input
     X_test = np.random.randn(5, 30, 44).astype(np.float32)
-    
+
     # Predict
     predictions, individual_preds = ml_system.predict(X_test)
-    
+
     assert predictions.shape[0] == 5, f"Expected 5 predictions, got {predictions.shape[0]}"
     print(f"  INFO: Predictions shape: {predictions.shape}")
     print(f"  INFO: Individual predictions shape: {individual_preds.shape}")
@@ -201,35 +192,34 @@ def test_prediction_pipeline(ml_system):
 def test_unified_ml_integration():
     """Test UnifiedStockML integration"""
     print("\n[12/12] Testing UnifiedStockML integration...")
-    
+
     # Create sample data
-    dates = pd.date_range(start='2024-01-01', periods=100, freq='D')
-    data = pd.DataFrame({
-        'Open': np.random.randn(100).cumsum() + 100,
-        'High': np.random.randn(100).cumsum() + 102,
-        'Low': np.random.randn(100).cumsum() + 98,
-        'Close': np.random.randn(100).cumsum() + 100,
-        'Volume': np.random.randint(1000000, 10000000, 100)
-    }, index=dates)
-    
+    dates = pd.date_range(start="2024-01-01", periods=100, freq="D")
+    data = pd.DataFrame(
+        {
+            "Open": np.random.randn(100).cumsum() + 100,
+            "High": np.random.randn(100).cumsum() + 102,
+            "Low": np.random.randn(100).cumsum() + 98,
+            "Close": np.random.randn(100).cumsum() + 100,
+            "Volume": np.random.randint(1000000, 10000000, 100),
+        },
+        index=dates,
+    )
+
     # Initialize
     ml = UnifiedStockML(model_path="tests/test_unified.pt")
-    
+
     # Test feature engineering
     data_with_indicators = ml._add_indicators(data)
     features = ml._extract_features(data_with_indicators)
-    
+
     assert features.shape[0] == 44, f"Expected 44 features, got {features.shape[0]}"
     print("  PASS: UnifiedStockML integration successful")
 
 
 def cleanup_test_files():
     """Clean up test model files"""
-    test_files = [
-        "tests/test_model.pt",
-        "tests/test_train_model.pt",
-        "tests/test_unified.pt"
-    ]
+    test_files = ["tests/test_model.pt", "tests/test_train_model.pt", "tests/test_unified.pt"]
     for file in test_files:
         path = Path(file)
         if path.exists():
@@ -240,11 +230,11 @@ def main():
     print("=" * 70)
     print("Revolutionary 2026 Model - Comprehensive Test Suite")
     print("=" * 70)
-    
+
     try:
         # Create tests directory
         Path("tests").mkdir(exist_ok=True)
-        
+
         # Run all tests
         test_rotary_embedding()
         test_grouped_query_attention()
@@ -258,7 +248,7 @@ def main():
         ml_system = test_training_pipeline()
         test_prediction_pipeline(ml_system)
         test_unified_ml_integration()
-        
+
         print("\n" + "=" * 70)
         print("ALL TESTS PASSED")
         print("=" * 70)
@@ -268,15 +258,16 @@ def main():
         print("  Parameters: ~71M")
         print("  Status: Production Ready")
         print("=" * 70)
-        
+
         # Cleanup
         cleanup_test_files()
-        
+
         return 0
-        
+
     except Exception as e:
         print(f"\n\nTEST FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         cleanup_test_files()
         return 1

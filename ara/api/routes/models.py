@@ -45,9 +45,7 @@ class TrainingRequest(BaseModel):
     symbol: str = Field(..., description="Asset symbol")
     data_period: str = Field("2y", description="Training data period")
     model_types: Optional[List[str]] = Field(None, description="Model types to train")
-    force_retrain: bool = Field(
-        False, description="Force retraining even if model exists"
-    )
+    force_retrain: bool = Field(False, description="Force retraining even if model exists")
 
 
 class TrainingJobResponse(BaseModel):
@@ -64,9 +62,7 @@ class ComparisonRequest(BaseModel):
     """Request for model comparison"""
 
     symbol: str = Field(..., description="Asset symbol")
-    model_versions: Optional[List[str]] = Field(
-        None, description="Model versions to compare"
-    )
+    model_versions: Optional[List[str]] = Field(None, description="Model versions to compare")
     metric: str = Field("accuracy", description="Comparison metric")
 
 
@@ -395,9 +391,7 @@ async def deploy_model(
         registry = ModelRegistry()
 
         # Deploy model
-        registry.deploy_model(
-            model_id=request.model_id, environment=request.environment
-        )
+        registry.deploy_model(model_id=request.model_id, environment=request.environment)
 
         return DeployResponse(
             model_id=request.model_id,

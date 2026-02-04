@@ -60,8 +60,7 @@ class ModelMigrator:
         # Create backup if requested
         if backup:
             backup_dir = (
-                old_dir.parent
-                / f"{old_dir.name}_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                old_dir.parent / f"{old_dir.name}_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             )
             if self.verbose:
                 print(f"Creating backup: {backup_dir}")
@@ -178,9 +177,7 @@ class ModelMigrator:
                 "migrated_to": "v4.0",
                 "migration_date": datetime.now().isoformat(),
                 "model_type": (
-                    type(old_model).__name__
-                    if hasattr(old_model, "__name__")
-                    else "unknown"
+                    type(old_model).__name__ if hasattr(old_model, "__name__") else "unknown"
                 ),
             }
 

@@ -110,12 +110,7 @@ class PredictionEngine:
         if not feature_cols:
             raise ValidationError("No features available for prediction")
 
-        X = (
-            features[feature_cols]
-            .fillna(method="ffill")
-            .fillna(method="bfill")
-            .fillna(0)
-        )
+        X = features[feature_cols].fillna(method="ffill").fillna(method="bfill").fillna(0)
         return X.values[-60:]  # Use last 60 days for prediction
 
     async def predict(
@@ -233,7 +228,9 @@ class PredictionEngine:
             "regime": {
                 "current_regime": str(regime_info.get("regime", "unknown")),
                 "confidence": float(regime_info.get("confidence", 0.5)),
-                "transition_probabilities": {k: float(v) for k, v in regime_info.get("transition_probabilities", {}).items()},
+                "transition_probabilities": {
+                    k: float(v) for k, v in regime_info.get("transition_probabilities", {}).items()
+                },
                 "duration_in_regime": int(regime_info.get("duration", 0)),
                 "expected_duration": int(regime_info.get("expected_duration", 0)),
             },
@@ -262,8 +259,7 @@ class PredictionEngine:
 
         # Process predictions concurrently
         tasks = [
-            self.predict(symbol, days, asset_type, include_explanations=False)
-            for symbol in symbols
+            self.predict(symbol, days, asset_type, include_explanations=False) for symbol in symbols
         ]
 
         # Gather results

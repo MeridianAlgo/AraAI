@@ -34,9 +34,7 @@ class FlashMultiHeadAttention(nn.Module):
         self.head_dim = embed_dim // num_heads
         self.use_flash = use_flash and hasattr(F, "scaled_dot_product_attention")
 
-        assert self.head_dim * num_heads == embed_dim, (
-            "embed_dim must be divisible by num_heads"
-        )
+        assert self.head_dim * num_heads == embed_dim, "embed_dim must be divisible by num_heads"
 
         self.qkv_proj = nn.Linear(embed_dim, 3 * embed_dim, bias=False)
         self.out_proj = nn.Linear(embed_dim, embed_dim)
@@ -47,9 +45,7 @@ class FlashMultiHeadAttention(nn.Module):
         batch_size, seq_len, embed_dim = x.shape
 
         # Generate Q, K, V in one go
-        qkv = self.qkv_proj(x).reshape(
-            batch_size, seq_len, 3, self.num_heads, self.head_dim
-        )
+        qkv = self.qkv_proj(x).reshape(batch_size, seq_len, 3, self.num_heads, self.head_dim)
         qkv = qkv.permute(2, 0, 3, 1, 4)  # [3, batch, heads, seq, head_dim]
         q, k, v = qkv[0], qkv[1], qkv[2]
 
@@ -64,9 +60,7 @@ class FlashMultiHeadAttention(nn.Module):
                 is_causal=False,
             )
             attn_output = (
-                attn_output.transpose(1, 2)
-                .contiguous()
-                .view(batch_size, seq_len, embed_dim)
+                attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, embed_dim)
             )
         else:
             # Fallback to standard attention
@@ -77,9 +71,7 @@ class FlashMultiHeadAttention(nn.Module):
             attn_weights = self.dropout(attn_weights)
             attn_output = torch.matmul(attn_weights, v)
             attn_output = (
-                attn_output.transpose(1, 2)
-                .contiguous()
-                .view(batch_size, seq_len, embed_dim)
+                attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, embed_dim)
             )
 
         return self.out_proj(attn_output), attn_weights if not self.use_flash else None
@@ -278,9 +270,7 @@ class EliteEnsembleModel(nn.Module):
         all_predictions = torch.cat(predictions, dim=-1)  # [batch, num_heads]
 
         # Ensemble weighting
-        ensemble_input = torch.cat(
-            [pooled_features] * len(self.prediction_heads), dim=-1
-        )
+        ensemble_input = torch.cat([pooled_features] * len(self.prediction_heads), dim=-1)
         ensemble_weights = self.ensemble_attention(ensemble_input)
 
         # Weighted ensemble
@@ -303,9 +293,7 @@ class AdvancedMLSystem:
     Mamba SSM, RoPE, GQA, MoE, SwiGLU, RMSNorm, Flash Attention 2
     """
 
-    def __init__(
-        self, model_path, model_type="stock", device="cpu", use_revolutionary=True
-    ):
+    def __init__(self, model_path, model_type="stock", device="cpu", use_revolutionary=True):
         self.model_path = Path(model_path)
         self.model_type = model_type  # 'stock' or 'forex'
         self.use_revolutionary = use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE
@@ -380,9 +368,7 @@ class AdvancedMLSystem:
                         num_heads=int(checkpoint.get("num_heads", 8)),
                         num_kv_heads=int(checkpoint.get("num_kv_heads", 2)),
                         num_experts=int(checkpoint.get("num_experts", 4)),
-                        num_prediction_heads=int(
-                            checkpoint.get("num_prediction_heads", 4)
-                        ),
+                        num_prediction_heads=int(checkpoint.get("num_prediction_heads", 4)),
                         dropout=float(checkpoint.get("dropout", 0.1)),
                         use_mamba=bool(checkpoint.get("use_mamba", True)),
                     )
@@ -391,10 +377,7 @@ class AdvancedMLSystem:
                     # Load elite model (fallback)
 
                     # Load elite model (fallback)
-                    if any(
-                        k.startswith("residual_blocks.")
-                        for k in model_state_dict.keys()
-                    ):
+                    if any(k.startswith("residual_blocks.") for k in model_state_dict.keys()):
                         print(
                             "Could not load model: legacy checkpoint format detected "
                             f"in {self.model_path} (residual_blocks.*). Please retrain."
@@ -404,21 +387,14 @@ class AdvancedMLSystem:
 
                     inferred_hidden0 = None
                     if "input_proj.weight" in model_state_dict:
-                        inferred_hidden0 = int(
-                            model_state_dict["input_proj.weight"].shape[0]
-                        )
+                        inferred_hidden0 = int(model_state_dict["input_proj.weight"].shape[0])
 
                     inferred_seq_len = None
                     if "pos_encoding" in model_state_dict:
-                        inferred_seq_len = int(
-                            model_state_dict["pos_encoding"].shape[0]
-                        )
+                        inferred_seq_len = int(model_state_dict["pos_encoding"].shape[0])
 
                     hidden_dims = checkpoint.get("hidden_dims")
-                    if (
-                        not isinstance(hidden_dims, (list, tuple))
-                        or len(hidden_dims) < 2
-                    ):
+                    if not isinstance(hidden_dims, (list, tuple)) or len(hidden_dims) < 2:
                         hidden_dims = [256, 192, 128, 64]
                     if inferred_hidden0 is not None:
                         hidden_dims = [inferred_hidden0] + list(hidden_dims[1:])
@@ -457,9 +433,7 @@ class AdvancedMLSystem:
                 print(f"Loaded {self.model_type} model from {self.model_path}")
                 print(f"Parameters: {param_count:,}")
                 print(f"Training date: {self.metadata.get('training_date', 'Unknown')}")
-                print(
-                    f"Trained symbols: {len(self.metadata.get('trained_symbols', []))}"
-                )
+                print(f"Trained symbols: {len(self.metadata.get('trained_symbols', []))}")
 
             except Exception as e:
                 print(f"Could not load model: {e}")
@@ -482,9 +456,7 @@ class AdvancedMLSystem:
             }
 
             # Add model-specific parameters
-            if self.use_revolutionary and isinstance(
-                unwrapped_model, RevolutionaryFinancialModel
-            ):
+            if self.use_revolutionary and isinstance(unwrapped_model, RevolutionaryFinancialModel):
                 checkpoint.update(
                     {
                         "architecture": "RevolutionaryFinancialModel-2026",
@@ -684,7 +656,7 @@ class AdvancedMLSystem:
                 print(
                     f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}, LR: {current_lr:.2e}"
                 )
-                
+
                 # Log to Comet ML
                 if comet_experiment:
                     comet_experiment.log_metrics(
@@ -761,10 +733,7 @@ class AdvancedMLSystem:
             if X_tensor.dim() == 1:
                 X_tensor = X_tensor.unsqueeze(0)
 
-            if (
-                X_tensor.dim() == 2
-                and getattr(self.scaler_mean, "dim", lambda: 0)() == 2
-            ):
+            if X_tensor.dim() == 2 and getattr(self.scaler_mean, "dim", lambda: 0)() == 2:
                 seq_len = int(self.scaler_mean.shape[0])
                 X_tensor = X_tensor.unsqueeze(1).repeat(1, seq_len, 1)
 
@@ -778,9 +747,7 @@ class AdvancedMLSystem:
                 target_min = self.metadata["target_min"]
                 target_max = self.metadata["target_max"]
                 pred = pred * (target_max - target_min) + target_min
-                individual_preds = (
-                    individual_preds * (target_max - target_min) + target_min
-                )
+                individual_preds = individual_preds * (target_max - target_min) + target_min
 
             # Return as numpy arrays
             pred_np = pred.cpu().numpy()
@@ -805,7 +772,5 @@ class AdvancedMLSystem:
         # Model can predict any symbol of the same type (stock/forex)
         # But warn if symbol wasn't in training set
         if symbol not in self.metadata.get("trained_symbols", []):
-            print(
-                f"Warning: {symbol} was not in training set. Predictions may be less accurate."
-            )
+            print(f"Warning: {symbol} was not in training set. Predictions may be less accurate.")
         return True

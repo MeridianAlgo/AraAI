@@ -104,9 +104,7 @@ class PairsTradingAnalyzer:
                 asset2 = assets[j]
 
                 try:
-                    opportunity = self.analyze_pair(
-                        data[asset1], data[asset2], asset1, asset2
-                    )
+                    opportunity = self.analyze_pair(data[asset1], data[asset2], asset1, asset2)
 
                     if opportunity and opportunity.correlation >= min_correlation:
                         opportunities.append(opportunity)
@@ -153,22 +151,16 @@ class PairsTradingAnalyzer:
             return None
 
         # Test for cointegration
-        cointegration_score = self._test_cointegration(
-            recent_data["asset1"], recent_data["asset2"]
-        )
+        cointegration_score = self._test_cointegration(recent_data["asset1"], recent_data["asset2"])
 
         # Calculate spread
-        spread_analysis = self._analyze_spread(
-            recent_data["asset1"], recent_data["asset2"]
-        )
+        spread_analysis = self._analyze_spread(recent_data["asset1"], recent_data["asset2"])
 
         # Determine trading signal
         signal = self._generate_signal(spread_analysis.z_score)
 
         # Calculate confidence
-        confidence = self._calculate_confidence(
-            correlation, cointegration_score, spread_analysis
-        )
+        confidence = self._calculate_confidence(correlation, cointegration_score, spread_analysis)
 
         opportunity = PairsTradingOpportunity(
             asset1=asset1_name,

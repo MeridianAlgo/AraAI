@@ -102,11 +102,7 @@ def display_dashboard():
     summary_table.add_row("Avg Loss", f"{stats['avg_loss']:.6f}")
 
     console.print("\n")
-    console.print(
-        Panel(
-            summary_table, title="[bold]Training Summary[/bold]", border_style="green"
-        )
-    )
+    console.print(Panel(summary_table, title="[bold]Training Summary[/bold]", border_style="green"))
 
     # Latest trainings
     if stats["latest_trainings"]:

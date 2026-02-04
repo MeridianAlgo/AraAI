@@ -66,9 +66,7 @@ async def predict(
     """
     try:
         # Check cache first
-        cache_key = get_cache_key(
-            request.symbol, request.days, request.analysis_level.value
-        )
+        cache_key = get_cache_key(request.symbol, request.days, request.analysis_level.value)
 
         cached = get_cached_prediction(cache_key)
         if cached:
@@ -191,9 +189,7 @@ async def batch_predict(
     summary="Get prediction status",
     description="Retrieve the status and result of a prediction request",
 )
-async def get_prediction_status(
-    prediction_id: str, api_key: str = Depends(verify_api_key)
-):
+async def get_prediction_status(prediction_id: str, api_key: str = Depends(verify_api_key)):
     """
     Get prediction status by ID
 

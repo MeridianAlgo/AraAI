@@ -139,18 +139,14 @@ class ModelValidator:
         )
 
         # Check if retraining is needed
-        needs_retraining = bool(
-            current_metrics.directional_accuracy < self.accuracy_threshold
-        )
+        needs_retraining = bool(current_metrics.directional_accuracy < self.accuracy_threshold)
 
         # Check for degradation
         degradation_detected = False
         degradation_score = 0.0
 
         if baseline_metrics:
-            degradation_score = self._calculate_degradation_score(
-                current_metrics, baseline_metrics
-            )
+            degradation_score = self._calculate_degradation_score(current_metrics, baseline_metrics)
             degradation_detected = bool(degradation_score > self.degradation_threshold)
 
         # Generate recommendations
@@ -228,9 +224,7 @@ class ModelValidator:
 
         # Calculate rolling average
         recent_accuracies = [h["accuracy"] for h in history[-7:]]  # Last 7 days
-        rolling_avg = (
-            np.mean(recent_accuracies) if recent_accuracies else daily_accuracy
-        )
+        rolling_avg = np.mean(recent_accuracies) if recent_accuracies else daily_accuracy
 
         # Check if intervention needed
         needs_attention = rolling_avg < self.accuracy_threshold
@@ -259,9 +253,7 @@ class ModelValidator:
             Dictionary with degradation analysis
         """
         # Load historical validation results
-        historical_results = self._load_historical_validations(
-            model_name, lookback_days
-        )
+        historical_results = self._load_historical_validations(model_name, lookback_days)
 
         if not historical_results:
             return {
@@ -278,8 +270,7 @@ class ModelValidator:
             avg_historical_accuracy - current_metrics.accuracy
         ) / avg_historical_accuracy
         sharpe_degradation = (
-            (avg_historical_sharpe - current_metrics.sharpe_ratio)
-            / avg_historical_sharpe
+            (avg_historical_sharpe - current_metrics.sharpe_ratio) / avg_historical_sharpe
             if avg_historical_sharpe != 0
             else 0
         )
@@ -298,9 +289,7 @@ class ModelValidator:
             "historical_avg_accuracy": float(avg_historical_accuracy),
             "current_sharpe": current_metrics.sharpe_ratio,
             "historical_avg_sharpe": float(avg_historical_sharpe),
-            "recommendation": (
-                "Retrain model" if degradation_detected else "Continue monitoring"
-            ),
+            "recommendation": ("Retrain model" if degradation_detected else "Continue monitoring"),
         }
 
     def validate_on_holdout(
@@ -338,9 +327,7 @@ class ModelValidator:
             else None
         )
 
-        metrics = self.metrics_calculator.calculate_all_metrics(
-            predictions, y_holdout, dates
-        )
+        metrics = self.metrics_calculator.calculate_all_metrics(predictions, y_holdout, dates)
 
         return metrics
 
@@ -392,14 +379,12 @@ class ModelValidator:
                 else 0
             ),
             "sharpe_ratio": (
-                (metrics_b.sharpe_ratio - metrics_a.sharpe_ratio)
-                / abs(metrics_a.sharpe_ratio)
+                (metrics_b.sharpe_ratio - metrics_a.sharpe_ratio) / abs(metrics_a.sharpe_ratio)
                 if metrics_a.sharpe_ratio != 0
                 else 0
             ),
             "max_drawdown": (
-                (metrics_a.max_drawdown - metrics_b.max_drawdown)
-                / abs(metrics_a.max_drawdown)
+                (metrics_a.max_drawdown - metrics_b.max_drawdown) / abs(metrics_a.max_drawdown)
                 if metrics_a.max_drawdown != 0
                 else 0
             ),
@@ -547,9 +532,7 @@ class ModelValidator:
         with open(filepath, "w") as f:
             json.dump(history, f, indent=2)
 
-    def _load_historical_validations(
-        self, model_name: str, lookback_days: int
-    ) -> List[Dict]:
+    def _load_historical_validations(self, model_name: str, lookback_days: int) -> List[Dict]:
         """Load historical validation results."""
         cutoff_date = datetime.now() - timedelta(days=lookback_days)
         historical_results = []

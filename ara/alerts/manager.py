@@ -295,9 +295,7 @@ class AlertManager:
 
         # Get active alerts for this symbol
         active_alerts = [
-            a
-            for a in self.alerts.values()
-            if a.symbol == symbol and a.status == AlertStatus.ACTIVE
+            a for a in self.alerts.values() if a.symbol == symbol and a.status == AlertStatus.ACTIVE
         ]
 
         for alert in active_alerts:
@@ -307,9 +305,7 @@ class AlertManager:
                     continue
 
                 # Evaluate condition
-                condition_met, actual_value = self.evaluator.evaluate(
-                    alert.condition, data, symbol
-                )
+                condition_met, actual_value = self.evaluator.evaluate(alert.condition, data, symbol)
 
                 if condition_met:
                     # Create history record
@@ -330,9 +326,9 @@ class AlertManager:
                     }
 
                     # Format message
-                    history.message = self.notifiers[
-                        NotificationChannel.EMAIL
-                    ].format_message(alert, history)
+                    history.message = self.notifiers[NotificationChannel.EMAIL].format_message(
+                        alert, history
+                    )
 
                     # Update alert
                     with self._lock:
@@ -461,12 +457,8 @@ class AlertManager:
             }
         else:
             # Global statistics
-            active_alerts = len(
-                [a for a in self.alerts.values() if a.status == AlertStatus.ACTIVE]
-            )
-            paused_alerts = len(
-                [a for a in self.alerts.values() if a.status == AlertStatus.PAUSED]
-            )
+            active_alerts = len([a for a in self.alerts.values() if a.status == AlertStatus.ACTIVE])
+            paused_alerts = len([a for a in self.alerts.values() if a.status == AlertStatus.PAUSED])
 
             return {
                 "total_alerts": len(self.alerts),
@@ -487,8 +479,7 @@ class AlertManager:
                 data = json.load(f)
 
             self.alerts = {
-                alert_id: Alert.from_dict(alert_data)
-                for alert_id, alert_data in data.items()
+                alert_id: Alert.from_dict(alert_data) for alert_id, alert_data in data.items()
             }
 
             logger.info(f"Loaded {len(self.alerts)} alerts from storage")
@@ -499,9 +490,7 @@ class AlertManager:
     def _save_alerts(self) -> None:
         """Save alerts to storage"""
         try:
-            data = {
-                alert_id: alert.to_dict() for alert_id, alert in self.alerts.items()
-            }
+            data = {alert_id: alert.to_dict() for alert_id, alert in self.alerts.items()}
 
             with open(self.alerts_file, "w") as f:
                 json.dump(data, f, indent=2)
@@ -529,9 +518,9 @@ class AlertManager:
         """Save history to storage (keep last 10000 records)"""
         try:
             # Keep only recent history to prevent file from growing too large
-            recent_history = sorted(
-                self.history, key=lambda h: h.triggered_at, reverse=True
-            )[:10000]
+            recent_history = sorted(self.history, key=lambda h: h.triggered_at, reverse=True)[
+                :10000
+            ]
 
             data = [h.to_dict() for h in recent_history]
 

@@ -62,9 +62,7 @@ class VolumeIndicators:
                 window=period
             ).sum() / result["volume"].rolling(window=period).sum()
         else:  # Intraday data, use cumulative
-            result["vwap"] = (typical_price * result["volume"]).cumsum() / result[
-                "volume"
-            ].cumsum()
+            result["vwap"] = (typical_price * result["volume"]).cumsum() / result["volume"].cumsum()
 
         return result
 
@@ -118,9 +116,9 @@ class VolumeIndicators:
         result = data.copy()
 
         # Calculate Money Flow Multiplier
-        mfm = (
-            (result["close"] - result["low"]) - (result["high"] - result["close"])
-        ) / (result["high"] - result["low"])
+        mfm = ((result["close"] - result["low"]) - (result["high"] - result["close"])) / (
+            result["high"] - result["low"]
+        )
 
         # Handle division by zero
         mfm = mfm.fillna(0)
@@ -148,9 +146,9 @@ class VolumeIndicators:
         result = data.copy()
 
         # Calculate Money Flow Multiplier
-        mfm = (
-            (result["close"] - result["low"]) - (result["high"] - result["close"])
-        ) / (result["high"] - result["low"])
+        mfm = ((result["close"] - result["low"]) - (result["high"] - result["close"])) / (
+            result["high"] - result["low"]
+        )
         mfm = mfm.fillna(0)
 
         # Calculate Money Flow Volume
@@ -158,8 +156,7 @@ class VolumeIndicators:
 
         # Calculate CMF
         result["cmf"] = (
-            mfv.rolling(window=period).sum()
-            / result["volume"].rolling(window=period).sum()
+            mfv.rolling(window=period).sum() / result["volume"].rolling(window=period).sum()
         )
 
         return result
@@ -179,8 +176,7 @@ class VolumeIndicators:
         result = data.copy()
 
         result["volume_roc"] = (
-            (result["volume"] - result["volume"].shift(period))
-            / result["volume"].shift(period)
+            (result["volume"] - result["volume"].shift(period)) / result["volume"].shift(period)
         ) * 100
 
         return result
@@ -238,9 +234,7 @@ class VolumeIndicators:
         return result
 
     @staticmethod
-    def volume_oscillator(
-        data: pd.DataFrame, fast: int = 5, slow: int = 10
-    ) -> pd.DataFrame:
+    def volume_oscillator(data: pd.DataFrame, fast: int = 5, slow: int = 10) -> pd.DataFrame:
         """
         Volume Oscillator.
 
@@ -280,9 +274,9 @@ class VolumeIndicators:
         for i in range(1, len(result)):
             if result["volume"].iloc[i] < result["volume"].iloc[i - 1]:
                 # Volume decreased, update NVI
-                price_change = (
-                    result["close"].iloc[i] - result["close"].iloc[i - 1]
-                ) / result["close"].iloc[i - 1]
+                price_change = (result["close"].iloc[i] - result["close"].iloc[i - 1]) / result[
+                    "close"
+                ].iloc[i - 1]
                 nvi.iloc[i] = nvi.iloc[i - 1] * (1 + price_change)
             else:
                 # Volume increased or same, keep previous value
@@ -311,9 +305,9 @@ class VolumeIndicators:
         for i in range(1, len(result)):
             if result["volume"].iloc[i] > result["volume"].iloc[i - 1]:
                 # Volume increased, update PVI
-                price_change = (
-                    result["close"].iloc[i] - result["close"].iloc[i - 1]
-                ) / result["close"].iloc[i - 1]
+                price_change = (result["close"].iloc[i] - result["close"].iloc[i - 1]) / result[
+                    "close"
+                ].iloc[i - 1]
                 pvi.iloc[i] = pvi.iloc[i - 1] * (1 + price_change)
             else:
                 # Volume decreased or same, keep previous value
@@ -356,9 +350,7 @@ class VolumeIndicators:
 
         # Calculate MACD
         result["vw_macd"] = fast_ema - slow_ema
-        result["vw_macd_signal"] = (
-            result["vw_macd"].ewm(span=signal, adjust=False).mean()
-        )
+        result["vw_macd_signal"] = result["vw_macd"].ewm(span=signal, adjust=False).mean()
         result["vw_macd_histogram"] = result["vw_macd"] - result["vw_macd_signal"]
 
         return result
@@ -397,9 +389,7 @@ class VolumeIndicators:
         slow_ema = vf.ewm(span=slow, adjust=False).mean()
 
         result["klinger_osc"] = fast_ema - slow_ema
-        result["klinger_signal"] = (
-            result["klinger_osc"].ewm(span=signal, adjust=False).mean()
-        )
+        result["klinger_signal"] = result["klinger_osc"].ewm(span=signal, adjust=False).mean()
 
         return result
 

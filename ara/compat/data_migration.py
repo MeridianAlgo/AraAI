@@ -45,9 +45,7 @@ class CacheMigrator:
         Returns:
             Migration statistics
         """
-        logger.info(
-            f"Starting cache migration from {self.old_cache_dir} to {self.new_cache_dir}"
-        )
+        logger.info(f"Starting cache migration from {self.old_cache_dir} to {self.new_cache_dir}")
 
         stats = {
             "total_files": 0,
@@ -175,9 +173,7 @@ class ModelMigrator:
         Returns:
             Migration statistics
         """
-        logger.info(
-            f"Starting model migration from {self.old_models_dir} to {self.new_models_dir}"
-        )
+        logger.info(f"Starting model migration from {self.old_models_dir} to {self.new_models_dir}")
 
         stats = {
             "total_models": 0,
@@ -307,9 +303,7 @@ class ConfigMigrator:
         Returns:
             Migration statistics
         """
-        logger.info(
-            f"Migrating config from {self.old_config_file} to {self.new_config_file}"
-        )
+        logger.info(f"Migrating config from {self.old_config_file} to {self.new_config_file}")
 
         if not self.old_config_file.exists():
             logger.warning(f"Old config file not found: {self.old_config_file}")
@@ -325,9 +319,7 @@ class ConfigMigrator:
             with open(self.old_config_file, "r") as f:
                 old_config = json.load(f)
         else:
-            raise ValueError(
-                f"Unsupported config format: {self.old_config_file.suffix}"
-            )
+            raise ValueError(f"Unsupported config format: {self.old_config_file.suffix}")
 
         # Convert to new format
         new_config = self._convert_config_format(old_config)
@@ -466,9 +458,7 @@ class DatabaseMigrator:
             except Exception as e:
                 logger.error(f"Migration {migration['version']} failed: {e}")
                 stats["failed"] += 1
-                stats["errors"].append(
-                    {"version": migration["version"], "error": str(e)}
-                )
+                stats["errors"].append({"version": migration["version"], "error": str(e)})
                 break  # Stop on first failure
 
         logger.info(f"Database migration complete: {stats}")
@@ -508,9 +498,7 @@ class DataValidator:
 
         results = {"total_files": 0, "valid": 0, "invalid": 0, "errors": []}
 
-        cache_files = list(cache_dir.glob("**/*.pkl")) + list(
-            cache_dir.glob("**/*.json")
-        )
+        cache_files = list(cache_dir.glob("**/*.pkl")) + list(cache_dir.glob("**/*.json"))
         results["total_files"] = len(cache_files)
 
         for cache_file in cache_files:
@@ -620,9 +608,7 @@ class DataValidator:
                 with open(config_file, "r") as f:
                     config = json.load(f)
             else:
-                results["errors"].append(
-                    f"Unsupported config format: {config_file.suffix}"
-                )
+                results["errors"].append(f"Unsupported config format: {config_file.suffix}")
                 return results
 
             # Validate structure
@@ -643,9 +629,7 @@ class DataValidator:
         return results
 
 
-def migrate_all(
-    old_root: Path, new_root: Path, validate: bool = True
-) -> Dict[str, Any]:
+def migrate_all(old_root: Path, new_root: Path, validate: bool = True) -> Dict[str, Any]:
     """
     Migrate all data from old structure to new structure.
 
@@ -684,19 +668,13 @@ def migrate_all(
         validator = DataValidator()
 
         if (new_root / "cache").exists():
-            results["validation"]["cache"] = validator.validate_cache(
-                new_root / "cache"
-            )
+            results["validation"]["cache"] = validator.validate_cache(new_root / "cache")
 
         if (new_root / "models").exists():
-            results["validation"]["models"] = validator.validate_models(
-                new_root / "models"
-            )
+            results["validation"]["models"] = validator.validate_models(new_root / "models")
 
         if (new_root / "config.yaml").exists():
-            results["validation"]["config"] = validator.validate_config(
-                new_root / "config.yaml"
-            )
+            results["validation"]["config"] = validator.validate_config(new_root / "config.yaml")
 
     logger.info(f"Complete migration finished: {results}")
     return results

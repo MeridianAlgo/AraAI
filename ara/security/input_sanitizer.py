@@ -276,9 +276,7 @@ class InputSanitizer:
             except ValueError:
                 continue
 
-        raise ValueError(
-            "Invalid date format. Use ISO format (YYYY-MM-DD) or common formats"
-        )
+        raise ValueError("Invalid date format. Use ISO format (YYYY-MM-DD) or common formats")
 
     @classmethod
     def sanitize_list(
@@ -309,9 +307,7 @@ class InputSanitizer:
         sanitized = []
         for i, item in enumerate(value):
             if not isinstance(item, item_type):
-                raise ValueError(
-                    f"{field_name}[{i}] must be of type {item_type.__name__}"
-                )
+                raise ValueError(f"{field_name}[{i}] must be of type {item_type.__name__}")
             sanitized.append(item)
 
         return sanitized
@@ -351,9 +347,7 @@ class InputSanitizer:
         return value
 
     @classmethod
-    def sanitize_enum(
-        cls, value: Any, allowed_values: List[str], field_name: str = "value"
-    ) -> str:
+    def sanitize_enum(cls, value: Any, allowed_values: List[str], field_name: str = "value") -> str:
         """
         Sanitize and validate enum input
 
@@ -375,8 +369,7 @@ class InputSanitizer:
 
         if value not in [v.lower() for v in allowed_values]:
             raise ValueError(
-                f"Invalid {field_name}: {value}. "
-                f"Allowed values: {', '.join(allowed_values)}"
+                f"Invalid {field_name}: {value}. " f"Allowed values: {', '.join(allowed_values)}"
             )
 
         return value

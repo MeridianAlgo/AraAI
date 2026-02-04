@@ -36,9 +36,7 @@ Examples:
         help="Number of days to predict (default: 5)",
     )
 
-    parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Enable verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
 
     parser.add_argument(
         "--no-cache",
@@ -180,11 +178,7 @@ def analyze_company_cli(console, symbol, verbose):
         if analysis and "error" not in analysis:
             console.print_company_analysis(analysis)
         else:
-            error_msg = (
-                analysis.get("error", "Unknown error")
-                if analysis
-                else "Analysis failed"
-            )
+            error_msg = analysis.get("error", "Unknown error") if analysis else "Analysis failed"
             console.print_error(f"Company analysis failed: {error_msg}")
 
     except Exception as e:
@@ -194,12 +188,8 @@ def analyze_company_cli(console, symbol, verbose):
 def ai_analyze_company_cli(console, symbol, verbose):
     """Handle AI-powered company analysis via CLI"""
     try:
-        console.print_info(
-            f"Performing comprehensive AI analysis for {symbol.upper()}..."
-        )
-        console.print_warning(
-            "Note: AI analysis takes longer but provides detailed insights"
-        )
+        console.print_info(f"Performing comprehensive AI analysis for {symbol.upper()}...")
+        console.print_warning("Note: AI analysis takes longer but provides detailed insights")
 
         # Initialize Ara AI
         ara = AraAI(verbose=verbose)
@@ -210,21 +200,13 @@ def ai_analyze_company_cli(console, symbol, verbose):
         if analysis and "error" not in analysis:
             console.print_ai_analysis(analysis)
         else:
-            error_msg = (
-                analysis.get("error", "Unknown error")
-                if analysis
-                else "AI analysis failed"
-            )
+            error_msg = analysis.get("error", "Unknown error") if analysis else "AI analysis failed"
             console.print_error(f"AI analysis failed: {error_msg}")
-            console.print_info(
-                "Try using regular analysis: python ara.py " + symbol.upper()
-            )
+            console.print_info("Try using regular analysis: python ara.py " + symbol.upper())
 
     except Exception as e:
         console.print_error(f"AI analysis failed: {e}")
-        console.print_info(
-            "Try using regular analysis: python ara.py " + symbol.upper()
-        )
+        console.print_info("Try using regular analysis: python ara.py " + symbol.upper())
 
 
 def validate_predictions(console, verbose):
@@ -278,9 +260,7 @@ def show_system_info(console):
 
         # Print version info
         version_info = get_version_info()
-        console.console.print(
-            f"\n[bold green]MeridianAlgo v{version_info['version']}[/]"
-        )
+        console.console.print(f"\n[bold green]MeridianAlgo v{version_info['version']}[/]")
 
         # Print features
         console.console.print("\n[bold blue]Features:[/]")
@@ -310,9 +290,7 @@ def show_system_info(console):
                 f"   Total Predictions: {cache_stats.get('total_predictions', 0)}"
             )
             console.console.print(f"   Symbols: {cache_stats.get('symbols', 0)}")
-            console.console.print(
-                f"   File Size: {cache_stats.get('file_size', 0)} bytes"
-            )
+            console.console.print(f"   File Size: {cache_stats.get('file_size', 0)} bytes")
 
         # Print accuracy stats
         accuracy_stats = system_info.get("accuracy_stats", {})
@@ -324,9 +302,7 @@ def show_system_info(console):
             console.console.print(
                 f"   Total Predictions: {accuracy_stats.get('total_predictions', 0)}"
             )
-            console.console.print(
-                f"   Average Error: {accuracy_stats.get('avg_error', 0):.2f}%"
-            )
+            console.console.print(f"   Average Error: {accuracy_stats.get('avg_error', 0):.2f}%")
 
     except Exception as e:
         console.print_error(f"Failed to get system info: {e}")

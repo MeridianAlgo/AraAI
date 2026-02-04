@@ -20,9 +20,7 @@ router = APIRouter(prefix="/api/v1/portfolio", tags=["portfolio"])
 class OptimizationRequest(BaseModel):
     """Request model for portfolio optimization"""
 
-    assets: List[str] = Field(
-        ..., min_items=2, max_items=50, description="List of assets"
-    )
+    assets: List[str] = Field(..., min_items=2, max_items=50, description="List of assets")
     risk_tolerance: str = Field(
         "moderate", description="Risk tolerance: conservative, moderate, aggressive"
     )
@@ -55,9 +53,7 @@ class AnalysisRequest(BaseModel):
     """Request model for portfolio analysis"""
 
     assets: List[str] = Field(..., min_items=2, description="List of assets")
-    weights: Dict[str, float] = Field(
-        ..., description="Asset weights (must sum to 1.0)"
-    )
+    weights: Dict[str, float] = Field(..., description="Asset weights (must sum to 1.0)")
     period: str = Field("1y", description="Analysis period")
 
 
@@ -82,12 +78,8 @@ class AnalysisResponse(BaseModel):
 class RebalanceRequest(BaseModel):
     """Request model for portfolio rebalancing"""
 
-    current_weights: Dict[str, float] = Field(
-        ..., description="Current portfolio weights"
-    )
-    target_weights: Dict[str, float] = Field(
-        ..., description="Target portfolio weights"
-    )
+    current_weights: Dict[str, float] = Field(..., description="Current portfolio weights")
+    target_weights: Dict[str, float] = Field(..., description="Target portfolio weights")
     current_prices: Dict[str, float] = Field(..., description="Current asset prices")
     portfolio_value: float = Field(..., gt=0, description="Total portfolio value")
 

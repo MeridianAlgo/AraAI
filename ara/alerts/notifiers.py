@@ -100,9 +100,7 @@ class EmailNotifier(BaseNotifier):
         self.use_tls = use_tls
 
         if not self.smtp_username or not self.smtp_password:
-            logger.warning(
-                "SMTP credentials not configured. Email notifications will fail."
-            )
+            logger.warning("SMTP credentials not configured. Email notifications will fail.")
 
     def send(self, alert: Alert, history: AlertHistory) -> bool:
         """Send email notification"""
@@ -228,9 +226,7 @@ class SMSNotifier(BaseNotifier):
         self.from_phone = from_phone or os.getenv("TWILIO_PHONE_NUMBER", "")
 
         if not self.account_sid or not self.auth_token or not self.from_phone:
-            logger.warning(
-                "Twilio credentials not configured. SMS notifications will fail."
-            )
+            logger.warning("Twilio credentials not configured. SMS notifications will fail.")
 
         self.client = None
         if self.account_sid and self.auth_token:
@@ -239,9 +235,7 @@ class SMSNotifier(BaseNotifier):
 
                 self.client = Client(self.account_sid, self.auth_token)
             except ImportError:
-                logger.warning(
-                    "Twilio library not installed. Install with: pip install twilio"
-                )
+                logger.warning("Twilio library not installed. Install with: pip install twilio")
 
     def send(self, alert: Alert, history: AlertHistory) -> bool:
         """Send SMS notification"""
@@ -266,9 +260,7 @@ class SMSNotifier(BaseNotifier):
                     )
                     success_count += 1
                 except Exception as e:
-                    logger.error(
-                        f"Failed to send SMS to {phone_number}: {e}", alert_id=alert.id
-                    )
+                    logger.error(f"Failed to send SMS to {phone_number}: {e}", alert_id=alert.id)
 
             if success_count > 0:
                 logger.info(
@@ -281,9 +273,7 @@ class SMSNotifier(BaseNotifier):
             return False
 
         except Exception as e:
-            logger.error(
-                f"Failed to send SMS notification: {e}", alert_id=alert.id, error=str(e)
-            )
+            logger.error(f"Failed to send SMS notification: {e}", alert_id=alert.id, error=str(e))
             return False
 
     def _format_sms_message(self, alert: Alert, history: AlertHistory) -> str:

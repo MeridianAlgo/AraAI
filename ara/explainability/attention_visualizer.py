@@ -25,9 +25,7 @@ class AttentionVisualizer:
     Provides insights into which time steps the model focuses on
     """
 
-    def __init__(
-        self, model: Optional[Any] = None, layer_names: Optional[List[str]] = None
-    ):
+    def __init__(self, model: Optional[Any] = None, layer_names: Optional[List[str]] = None):
         """
         Initialize attention visualizer
 
@@ -166,9 +164,7 @@ class AttentionVisualizer:
 
         # Calculate attention entropy (measure of focus)
         epsilon = 1e-10
-        attention_entropy = -np.sum(
-            avg_attention * np.log(avg_attention + epsilon), axis=1
-        )
+        attention_entropy = -np.sum(avg_attention * np.log(avg_attention + epsilon), axis=1)
 
         # Identify which positions receive most attention overall
         total_attention_received = avg_attention.sum(axis=0)
@@ -227,9 +223,7 @@ class AttentionVisualizer:
 
         return results
 
-    def analyze_attention_patterns(
-        self, attention_weights: np.ndarray
-    ) -> Dict[str, Any]:
+    def analyze_attention_patterns(self, attention_weights: np.ndarray) -> Dict[str, Any]:
         """
         Analyze attention patterns to identify interesting behaviors
 
@@ -345,9 +339,7 @@ class AttentionVisualizer:
             "ylabel": "Query Position",
         }
 
-    def get_temporal_attention_flow(
-        self, attention_weights: np.ndarray
-    ) -> Dict[str, Any]:
+    def get_temporal_attention_flow(self, attention_weights: np.ndarray) -> Dict[str, Any]:
         """
         Analyze how attention flows through time
 
@@ -370,9 +362,7 @@ class AttentionVisualizer:
             # How much this position attends to past vs future
             past_attention = avg_attention[pos, :pos].sum() if pos > 0 else 0
             current_attention = avg_attention[pos, pos]
-            future_attention = (
-                avg_attention[pos, pos + 1 :].sum() if pos < seq_len - 1 else 0
-            )
+            future_attention = avg_attention[pos, pos + 1 :].sum() if pos < seq_len - 1 else 0
 
             flow_data.append(
                 {
@@ -380,21 +370,13 @@ class AttentionVisualizer:
                     "past_attention": float(past_attention),
                     "current_attention": float(current_attention),
                     "future_attention": float(future_attention),
-                    "total_attention": float(
-                        past_attention + current_attention + future_attention
-                    ),
+                    "total_attention": float(past_attention + current_attention + future_attention),
                 }
             )
 
         return {
             "flow_by_position": flow_data,
-            "overall_past_bias": float(
-                np.mean([d["past_attention"] for d in flow_data])
-            ),
-            "overall_current_bias": float(
-                np.mean([d["current_attention"] for d in flow_data])
-            ),
-            "overall_future_bias": float(
-                np.mean([d["future_attention"] for d in flow_data])
-            ),
+            "overall_past_bias": float(np.mean([d["past_attention"] for d in flow_data])),
+            "overall_current_bias": float(np.mean([d["current_attention"] for d in flow_data])),
+            "overall_future_bias": float(np.mean([d["future_attention"] for d in flow_data])),
         }

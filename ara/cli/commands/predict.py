@@ -21,12 +21,8 @@ console = Console()
     default="basic",
     help="Analysis level",
 )
-@click.option(
-    "--no-cache", is_flag=True, help="Skip cache and generate fresh predictions"
-)
-@click.option(
-    "--export", "-e", type=click.Path(), help="Export results to file (JSON/CSV)"
-)
+@click.option("--no-cache", is_flag=True, help="Skip cache and generate fresh predictions")
+@click.option("--export", "-e", type=click.Path(), help="Export results to file (JSON/CSV)")
 @click.option(
     "--confidence-threshold",
     "-c",
@@ -94,9 +90,7 @@ def predict(ctx, symbol, days, analysis, no_cache, export, confidence_threshold)
 def _display_prediction_results(result, analysis_level):
     """Display prediction results in a formatted table"""
     console.print(f"\n[bold cyan]Prediction Results for {result['symbol']}[/bold cyan]")
-    console.print(
-        f"Current Price: [green]{format_price(result['current_price'])}[/green]"
-    )
+    console.print(f"Current Price: [green]{format_price(result['current_price'])}[/green]")
 
     # Confidence score
     confidence = result.get("confidence", {})
@@ -105,9 +99,7 @@ def _display_prediction_results(result, analysis_level):
         if confidence.get("overall", 0) > 0.75
         else "yellow" if confidence.get("overall", 0) > 0.5 else "red"
     )
-    console.print(
-        f"Confidence: [{conf_color}]{confidence.get('overall', 0):.1%}[/{conf_color}]"
-    )
+    console.print(f"Confidence: [{conf_color}]{confidence.get('overall', 0):.1%}[/{conf_color}]")
 
     # Predictions table
     table = Table(title="\nPrice Predictions")
@@ -134,9 +126,7 @@ def _display_prediction_results(result, analysis_level):
     # Market regime
     if "regime" in result:
         regime = result["regime"]
-        console.print(
-            f"\n[bold]Market Regime:[/bold] {regime['current_regime'].upper()}"
-        )
+        console.print(f"\n[bold]Market Regime:[/bold] {regime['current_regime'].upper()}")
         console.print(f"Regime Confidence: {regime['confidence']:.1%}")
 
     # Top factors (if full analysis)

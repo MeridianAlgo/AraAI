@@ -97,9 +97,7 @@ class PortfolioOptimizer:
             max_weight = constraints.get("max_weight", 1.0)
 
         # Bounds for each asset
-        bounds = Bounds(
-            lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight)
-        )
+        bounds = Bounds(lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight))
 
         # Constraint: weights sum to 1
         constraints_list = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
@@ -118,8 +116,7 @@ class PortfolioOptimizer:
             constraints_list.append(
                 {
                     "type": "eq",
-                    "fun": lambda w: np.sqrt(np.dot(w, np.dot(cov_matrix, w)))
-                    - target_risk,
+                    "fun": lambda w: np.sqrt(np.dot(w, np.dot(cov_matrix, w))) - target_risk,
                 }
             )
 
@@ -169,11 +166,7 @@ class PortfolioOptimizer:
         # Calculate portfolio metrics
         port_return = np.dot(optimal_weights, expected_returns)
         port_vol = np.sqrt(np.dot(optimal_weights, np.dot(cov_matrix, optimal_weights)))
-        sharpe = (
-            (port_return - self.risk_free_rate / 252) / port_vol
-            if port_vol > 0
-            else 0.0
-        )
+        sharpe = (port_return - self.risk_free_rate / 252) / port_vol if port_vol > 0 else 0.0
 
         # Annualize metrics
         annual_return = (1 + port_return) ** 252 - 1
@@ -242,9 +235,7 @@ class PortfolioOptimizer:
 
         # Calculate market equilibrium weights (based on market caps)
         total_market_cap = sum(market_caps.values())
-        market_weights = np.array(
-            [market_caps[asset] / total_market_cap for asset in assets]
-        )
+        market_weights = np.array([market_caps[asset] / total_market_cap for asset in assets])
 
         # Calculate implied equilibrium returns (reverse optimization)
         # Pi = delta * Sigma * w_mkt
@@ -277,9 +268,7 @@ class PortfolioOptimizer:
         for asset in assets:
             confidence = view_confidence.get(asset, 0.5)
             # View variance inversely proportional to confidence
-            view_var = (
-                tau * cov_matrix[assets.index(asset), assets.index(asset)] / confidence
-            )
+            view_var = tau * cov_matrix[assets.index(asset), assets.index(asset)] / confidence
             omega_diag.append(view_var)
         Omega = np.diag(omega_diag)
 
@@ -310,9 +299,7 @@ class PortfolioOptimizer:
             min_weight = constraints.get("min_weight", 0.0)
             max_weight = constraints.get("max_weight", 1.0)
 
-        bounds = Bounds(
-            lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight)
-        )
+        bounds = Bounds(lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight))
 
         constraints_list = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
 
@@ -347,11 +334,7 @@ class PortfolioOptimizer:
         # Calculate portfolio metrics
         port_return = np.dot(optimal_weights, bl_returns)
         port_vol = np.sqrt(np.dot(optimal_weights, np.dot(cov_matrix, optimal_weights)))
-        sharpe = (
-            (port_return - self.risk_free_rate / 252) / port_vol
-            if port_vol > 0
-            else 0.0
-        )
+        sharpe = (port_return - self.risk_free_rate / 252) / port_vol if port_vol > 0 else 0.0
 
         # Annualize metrics
         annual_return = (1 + port_return) ** 252 - 1
@@ -363,12 +346,8 @@ class PortfolioOptimizer:
             "expected_return": float(annual_return),
             "volatility": float(annual_vol),
             "sharpe_ratio": float(annual_sharpe),
-            "bl_returns": {
-                asset: float(r * 252) for asset, r in zip(assets, bl_returns)
-            },
-            "implied_returns": {
-                asset: float(r * 252) for asset, r in zip(assets, implied_returns)
-            },
+            "bl_returns": {asset: float(r * 252) for asset, r in zip(assets, bl_returns)},
+            "implied_returns": {asset: float(r * 252) for asset, r in zip(assets, implied_returns)},
         }
 
     def optimize_risk_parity(
@@ -417,9 +396,7 @@ class PortfolioOptimizer:
             min_weight = constraints.get("min_weight", 0.0)
             max_weight = constraints.get("max_weight", 1.0)
 
-        bounds = Bounds(
-            lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight)
-        )
+        bounds = Bounds(lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight))
 
         constraints_list = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
 
@@ -465,17 +442,11 @@ class PortfolioOptimizer:
         expected_returns = df.mean().values
         port_return = np.dot(optimal_weights, expected_returns)
         port_vol = np.sqrt(np.dot(optimal_weights, np.dot(cov_matrix, optimal_weights)))
-        sharpe = (
-            (port_return - self.risk_free_rate / 252) / port_vol
-            if port_vol > 0
-            else 0.0
-        )
+        sharpe = (port_return - self.risk_free_rate / 252) / port_vol if port_vol > 0 else 0.0
 
         # Calculate risk contributions
         marginal_risk = (
-            np.dot(cov_matrix, optimal_weights) / port_vol
-            if port_vol > 0
-            else np.zeros(n_assets)
+            np.dot(cov_matrix, optimal_weights) / port_vol if port_vol > 0 else np.zeros(n_assets)
         )
         risk_contrib = optimal_weights * marginal_risk
 
@@ -489,9 +460,7 @@ class PortfolioOptimizer:
             "expected_return": float(annual_return),
             "volatility": float(annual_vol),
             "sharpe_ratio": float(annual_sharpe),
-            "risk_contributions": {
-                asset: float(rc) for asset, rc in zip(assets, risk_contrib)
-            },
+            "risk_contributions": {asset: float(rc) for asset, rc in zip(assets, risk_contrib)},
         }
 
     def calculate_kelly_criterion(
@@ -623,9 +592,7 @@ class PortfolioOptimizer:
         # Normalize weights to sum to 1
         total_weight = sum(kelly_weights.values())
         if total_weight > 0:
-            kelly_weights = {
-                asset: w / total_weight for asset, w in kelly_weights.items()
-            }
+            kelly_weights = {asset: w / total_weight for asset, w in kelly_weights.items()}
 
         return kelly_weights
 
@@ -684,9 +651,7 @@ class PortfolioOptimizer:
             min_weight = constraints.get("min_weight", 0.0)
             max_weight = constraints.get("max_weight", 1.0)
 
-        bounds = Bounds(
-            lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight)
-        )
+        bounds = Bounds(lb=np.full(n_assets, min_weight), ub=np.full(n_assets, max_weight))
 
         constraints_list = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
 
@@ -775,9 +740,7 @@ class PortfolioOptimizer:
             "volatility": float(annual_vol),
             "var_95": float(annual_var),
             "cvar_95": float(annual_cvar),
-            "return_cvar_ratio": (
-                float(annual_return / annual_cvar) if annual_cvar > 0 else 0.0
-            ),
+            "return_cvar_ratio": (float(annual_return / annual_cvar) if annual_cvar > 0 else 0.0),
         }
 
     def calculate_efficient_frontier(
@@ -856,9 +819,7 @@ class PortfolioOptimizer:
 
             except Exception as e:
                 # Skip points that fail to optimize
-                warnings.warn(
-                    f"Failed to optimize for target return {target_return}: {e}"
-                )
+                warnings.warn(f"Failed to optimize for target return {target_return}: {e}")
                 continue
 
         if not frontier_results:
@@ -1017,11 +978,7 @@ class PortfolioOptimizer:
             weight_array = np.array([equal_weights[asset] for asset in df.columns])
             port_return = np.dot(weight_array, expected_returns)
             port_vol = np.sqrt(np.dot(weight_array, np.dot(cov_matrix, weight_array)))
-            sharpe = (
-                (port_return - self.risk_free_rate / 252) / port_vol
-                if port_vol > 0
-                else 0.0
-            )
+            sharpe = (port_return - self.risk_free_rate / 252) / port_vol if port_vol > 0 else 0.0
 
             annual_return = (1 + port_return) ** 252 - 1
             annual_vol = port_vol * np.sqrt(252)

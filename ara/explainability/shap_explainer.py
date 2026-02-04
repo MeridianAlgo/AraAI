@@ -41,9 +41,7 @@ class SHAPExplainer:
             explainer_type: Type of SHAP explainer ('auto', 'tree', 'kernel', 'deep', 'linear')
         """
         if not SHAP_AVAILABLE:
-            raise ImportError(
-                "SHAP library not available. Install with: pip install shap"
-            )
+            raise ImportError("SHAP library not available. Install with: pip install shap")
 
         self.model = model
         self.background_data = background_data
@@ -137,9 +135,7 @@ class SHAPExplainer:
 
         # Calculate SHAP values
         try:
-            shap_values = self.explainer.shap_values(
-                X, check_additivity=check_additivity
-            )
+            shap_values = self.explainer.shap_values(X, check_additivity=check_additivity)
         except TypeError:
             # Some explainers don't support check_additivity
             shap_values = self.explainer.shap_values(X)
@@ -164,9 +160,7 @@ class SHAPExplainer:
             "data": X,
         }
 
-    def get_feature_importance(
-        self, X: np.ndarray, method: str = "mean_abs"
-    ) -> Dict[str, float]:
+    def get_feature_importance(self, X: np.ndarray, method: str = "mean_abs") -> Dict[str, float]:
         """
         Calculate feature importance from SHAP values
 
@@ -199,9 +193,7 @@ class SHAPExplainer:
                 name: float(imp) for name, imp in zip(self.feature_names, importance)
             }
         else:
-            feature_importance = {
-                f"feature_{i}": float(imp) for i, imp in enumerate(importance)
-            }
+            feature_importance = {f"feature_{i}": float(imp) for i, imp in enumerate(importance)}
 
         # Sort by importance
         feature_importance = dict(
@@ -243,9 +235,7 @@ class SHAPExplainer:
         # Build result
         top_features = []
         for idx in top_indices:
-            feature_name = (
-                self.feature_names[idx] if self.feature_names else f"feature_{idx}"
-            )
+            feature_name = self.feature_names[idx] if self.feature_names else f"feature_{idx}"
 
             top_features.append(
                 {
@@ -313,9 +303,7 @@ class SHAPExplainer:
         """
         # Only TreeExplainer supports interaction values
         if not isinstance(self.explainer, shap.TreeExplainer):
-            warnings.warn(
-                "Interaction values only supported for TreeExplainer", UserWarning
-            )
+            warnings.warn("Interaction values only supported for TreeExplainer", UserWarning)
             return None
 
         try:

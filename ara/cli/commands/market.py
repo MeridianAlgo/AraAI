@@ -80,9 +80,7 @@ def regime(symbol, history):
     default=["all"],
     help="Sentiment sources",
 )
-@click.option(
-    "--timeframe", "-t", type=str, default="24h", help="Timeframe (1h, 24h, 7d)"
-)
+@click.option("--timeframe", "-t", type=str, default="24h", help="Timeframe (1h, 24h, 7d)")
 def sentiment(symbol, sources, timeframe):
     """
     Analyze market sentiment
@@ -135,9 +133,7 @@ def correlations(symbols, window, heatmap):
         analyzer = CorrelationAnalyzer()
 
         # Calculate correlations
-        result = analyzer.calculate_correlation_matrix(
-            assets=list(symbols), window=window
-        )
+        result = analyzer.calculate_correlation_matrix(assets=list(symbols), window=window)
 
         # Display correlation matrix
         _display_correlation_matrix(result, symbols)
@@ -225,12 +221,8 @@ def _display_sentiment_results(result, symbol):
 
     # Overall sentiment
     overall = result["overall_sentiment"]
-    sentiment_color = (
-        "green" if overall > 0.2 else "red" if overall < -0.2 else "yellow"
-    )
-    console.print(
-        f"Overall Sentiment: [{sentiment_color}]{overall:+.2f}[/{sentiment_color}]"
-    )
+    sentiment_color = "green" if overall > 0.2 else "red" if overall < -0.2 else "yellow"
+    console.print(f"Overall Sentiment: [{sentiment_color}]{overall:+.2f}[/{sentiment_color}]")
 
     # By source
     table = Table(title="\nSentiment by Source")
@@ -297,9 +289,7 @@ def _display_indicators(result, category):
 
     for indicator, data in result.items():
         signal_color = (
-            "green"
-            if data["signal"] == "BUY"
-            else "red" if data["signal"] == "SELL" else "yellow"
+            "green" if data["signal"] == "BUY" else "red" if data["signal"] == "SELL" else "yellow"
         )
         table.add_row(
             indicator,
@@ -340,6 +330,4 @@ def _generate_correlation_heatmap(matrix, symbols):
         fig.write_html("correlation_heatmap.html")
 
     except ImportError:
-        console.print(
-            "[yellow]Plotly not installed. Skipping heatmap generation.[/yellow]"
-        )
+        console.print("[yellow]Plotly not installed. Skipping heatmap generation.[/yellow]")

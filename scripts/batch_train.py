@@ -95,9 +95,7 @@ def batch_train(symbols, epochs=50, period="2y", interval="1d"):
                 results.append({"symbol": symbol, "success": True, "time": symbol_time})
             else:
                 print(f"\n✗ {symbol} training failed after {symbol_time:.2f}s")
-                results.append(
-                    {"symbol": symbol, "success": False, "time": symbol_time}
-                )
+                results.append({"symbol": symbol, "success": False, "time": symbol_time})
 
         except Exception as e:
             symbol_time = time.time() - symbol_start
@@ -142,19 +140,11 @@ def batch_train(symbols, epochs=50, period="2y", interval="1d"):
 
 def main():
     parser = argparse.ArgumentParser(description="Batch train multiple models")
-    parser.add_argument(
-        "--symbols", nargs="+", help="Stock symbols to train (space-separated)"
-    )
+    parser.add_argument("--symbols", nargs="+", help="Stock symbols to train (space-separated)")
     parser.add_argument("--file", help="File containing symbols (one per line)")
-    parser.add_argument(
-        "--random", type=int, help="Train N random symbols from all_tickers.txt"
-    )
-    parser.add_argument(
-        "--epochs", type=int, default=50, help="Number of training epochs"
-    )
-    parser.add_argument(
-        "--period", default="2y", help="Data period (e.g., 2y, 1y, 6mo)"
-    )
+    parser.add_argument("--random", type=int, help="Train N random symbols from all_tickers.txt")
+    parser.add_argument("--epochs", type=int, default=50, help="Number of training epochs")
+    parser.add_argument("--period", default="2y", help="Data period (e.g., 2y, 1y, 6mo)")
     parser.add_argument("--interval", default="1d", help="Data interval (e.g., 1d, 1h)")
 
     args = parser.parse_args()

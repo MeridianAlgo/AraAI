@@ -99,12 +99,8 @@ class BacktestResult:
             },
             "metrics": self.metrics.to_dict(),
             "walk_forward_results": self.walk_forward_results,
-            "holdout_metrics": (
-                self.holdout_metrics.to_dict() if self.holdout_metrics else None
-            ),
-            "cv_metrics": (
-                [m.to_dict() for m in self.cv_metrics] if self.cv_metrics else None
-            ),
+            "holdout_metrics": (self.holdout_metrics.to_dict() if self.holdout_metrics else None),
+            "cv_metrics": ([m.to_dict() for m in self.cv_metrics] if self.cv_metrics else None),
             "monte_carlo_results": self.monte_carlo_results,
         }
 
@@ -112,9 +108,7 @@ class BacktestResult:
 class BacktestEngine:
     """Comprehensive backtesting engine with multiple validation methods."""
 
-    def __init__(
-        self, config: Optional[BacktestConfig] = None, output_dir: Optional[Path] = None
-    ):
+    def __init__(self, config: Optional[BacktestConfig] = None, output_dir: Optional[Path] = None):
         """
         Initialize backtest engine.
 
@@ -126,9 +120,7 @@ class BacktestEngine:
         self.output_dir = output_dir or Path("backtest_results")
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.metrics_calculator = PerformanceMetrics(
-            risk_free_rate=self.config.risk_free_rate
-        )
+        self.metrics_calculator = PerformanceMetrics(risk_free_rate=self.config.risk_free_rate)
         self.reporter = BacktestReporter(output_dir=self.output_dir)
         self.validator = ModelValidator()
 
@@ -187,9 +179,7 @@ class BacktestEngine:
         all_prices = np.array(all_prices)
 
         # Apply transaction costs
-        returns = self._apply_transaction_costs(
-            all_predictions, all_actuals, all_prices
-        )
+        returns = self._apply_transaction_costs(all_predictions, all_actuals, all_prices)
 
         # Calculate overall metrics
         logger.info("Calculating performance metrics...")
@@ -353,9 +343,7 @@ class BacktestEngine:
             else None
         )
 
-        metrics = self.metrics_calculator.calculate_all_metrics(
-            predictions, actuals, dates, prices
-        )
+        metrics = self.metrics_calculator.calculate_all_metrics(predictions, actuals, dates, prices)
 
         logger.info(f"Holdout test - Accuracy: {metrics.directional_accuracy:.2%}")
         return metrics
@@ -398,9 +386,7 @@ class BacktestEngine:
             actuals = test_data[target_column].values
             prices = test_data[price_column].values
             dates = (
-                test_data.index.tolist()
-                if isinstance(test_data.index, pd.DatetimeIndex)
-                else None
+                test_data.index.tolist() if isinstance(test_data.index, pd.DatetimeIndex) else None
             )
 
             # Calculate metrics
@@ -463,9 +449,7 @@ class BacktestEngine:
             Returns after transaction costs
         """
         # Calculate base returns
-        actual_returns = (
-            actuals / prices[:-1] if len(prices) > len(actuals) else actuals / prices
-        )
+        actual_returns = actuals / prices[:-1] if len(prices) > len(actuals) else actuals / prices
 
         # Strategy returns based on predictions
         pred_direction = np.sign(predictions)
@@ -517,9 +501,7 @@ class BacktestEngine:
 
         return regime_performance
 
-    def save_results(
-        self, result: BacktestResult, generate_plots: bool = True
-    ) -> Dict[str, Path]:
+    def save_results(self, result: BacktestResult, generate_plots: bool = True) -> Dict[str, Path]:
         """
         Save backtest results to disk.
 
@@ -537,9 +519,7 @@ class BacktestEngine:
             metrics=result.metrics,
             returns=result.returns,
             dates=result.dates,
-            predictions=np.concatenate(
-                [r["predictions"] for r in result.walk_forward_results]
-            ),
+            predictions=np.concatenate([r["predictions"] for r in result.walk_forward_results]),
             actuals=np.concatenate([r["actuals"] for r in result.walk_forward_results]),
             symbol=result.symbol,
             regime_performance=(

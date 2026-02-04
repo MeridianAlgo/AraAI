@@ -18,9 +18,7 @@ class IntelligentEnsembleModel(nn.Module):
     - Advanced dropout strategies
     """
 
-    def __init__(
-        self, input_size=44, hidden_sizes=[768, 512, 384, 256, 128], dropout=0.2
-    ):
+    def __init__(self, input_size=44, hidden_sizes=[768, 512, 384, 256, 128], dropout=0.2):
         super(IntelligentEnsembleModel, self).__init__()
 
         # Input projection with residual
@@ -207,9 +205,7 @@ class MultiHeadAttention(nn.Module):
         self.hidden_size = hidden_size
         self.head_dim = hidden_size // num_heads
 
-        assert (
-            hidden_size % num_heads == 0
-        ), "hidden_size must be divisible by num_heads"
+        assert hidden_size % num_heads == 0, "hidden_size must be divisible by num_heads"
 
         self.query = nn.Linear(hidden_size, hidden_size)
         self.key = nn.Linear(hidden_size, hidden_size)
@@ -242,9 +238,7 @@ class MultiHeadAttention(nn.Module):
 
         # Apply attention
         context = torch.matmul(attn_weights, V)
-        context = (
-            context.transpose(1, 2).contiguous().view(batch_size, 1, self.hidden_size)
-        )
+        context = context.transpose(1, 2).contiguous().view(batch_size, 1, self.hidden_size)
 
         # Output projection
         out = self.out(context).squeeze(1)

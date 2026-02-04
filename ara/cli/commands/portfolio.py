@@ -185,9 +185,7 @@ def rebalance(symbols, current_weights, target_weights, capital):
 def _display_optimization_results(result):
     """Display portfolio optimization results"""
     console.print("\n[bold cyan]Portfolio Optimization Results[/bold cyan]")
-    console.print(
-        f"Expected Return: [green]{format_percentage(result['expected_return'])}[/green]"
-    )
+    console.print(f"Expected Return: [green]{format_percentage(result['expected_return'])}[/green]")
     console.print(
         f"Expected Volatility: [yellow]{format_percentage(result['expected_volatility'])}[/yellow]"
     )
@@ -239,9 +237,7 @@ def _display_analysis_results(result, show_correlations, show_risk):
     if show_risk:
         console.print("\n[bold]Risk Metrics:[/bold]")
         metrics = result["risk_metrics"]
-        console.print(
-            f"  Portfolio Volatility: {format_percentage(metrics['volatility'])}"
-        )
+        console.print(f"  Portfolio Volatility: {format_percentage(metrics['volatility'])}")
         console.print(f"  Portfolio Beta: {metrics['beta']:.2f}")
         console.print(f"  Sharpe Ratio: {metrics['sharpe_ratio']:.2f}")
         console.print(f"  Sortino Ratio: {metrics['sortino_ratio']:.2f}")
@@ -302,9 +298,7 @@ def _display_rebalancing_trades(trades, capital):
 
     # Transaction costs
     total_cost = sum(trade.get("transaction_cost", 0) for trade in trades)
-    console.print(
-        f"\n[yellow]Estimated Transaction Costs: {format_price(total_cost)}[/yellow]"
-    )
+    console.print(f"\n[yellow]Estimated Transaction Costs: {format_price(total_cost)}[/yellow]")
 
 
 def _export_portfolio_results(result, filepath):

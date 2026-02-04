@@ -75,9 +75,7 @@ class ChartExporter:
             raise ImportError("Plotly is required for HTML export")
 
         filepath = self.output_dir / f"{filename}.html"
-        fig.write_html(
-            str(filepath), include_plotlyjs=include_plotlyjs, auto_open=auto_open
-        )
+        fig.write_html(str(filepath), include_plotlyjs=include_plotlyjs, auto_open=auto_open)
         return filepath
 
     def export_to_png(
@@ -107,9 +105,7 @@ class ChartExporter:
         filepath = self.output_dir / f"{filename}.png"
 
         try:
-            fig.write_image(
-                str(filepath), format="png", width=width, height=height, scale=scale
-            )
+            fig.write_image(str(filepath), format="png", width=width, height=height, scale=scale)
         except Exception as e:
             print("Warning: PNG export failed. Install kaleido: pip install kaleido")
             print(f"Error: {e}")
@@ -175,9 +171,7 @@ class ChartExporter:
 
         return filepath
 
-    def export_to_json(
-        self, fig: go.Figure, filename: str, pretty: bool = True
-    ) -> Path:
+    def export_to_json(self, fig: go.Figure, filename: str, pretty: bool = True) -> Path:
         """
         Export chart data to JSON.
 
@@ -242,9 +236,7 @@ class ChartExporter:
             else:
                 data.to_excel(filepath, index=False)
         except ImportError:
-            print(
-                "Warning: Excel export requires openpyxl. Install with: pip install openpyxl"
-            )
+            print("Warning: Excel export requires openpyxl. Install with: pip install openpyxl")
             return None
 
         return filepath
@@ -262,8 +254,7 @@ class ReportGenerator:
         """
         if not REPORTLAB_AVAILABLE:
             raise ImportError(
-                "ReportLab is required for PDF reports. "
-                "Install with: pip install reportlab"
+                "ReportLab is required for PDF reports. " "Install with: pip install reportlab"
             )
 
         self.output_dir = output_dir or Path("reports")
@@ -460,9 +451,7 @@ class ReportGenerator:
         # Trade statistics
         if "trade_statistics" in backtest_results:
             story.append(Paragraph("Trade Statistics", self.styles["CustomHeading"]))
-            trade_table = self._create_metrics_table(
-                backtest_results["trade_statistics"]
-            )
+            trade_table = self._create_metrics_table(backtest_results["trade_statistics"])
             story.append(trade_table)
             story.append(Spacer(1, 0.3 * inch))
 
@@ -541,9 +530,7 @@ class ReportGenerator:
 
         # Portfolio allocation
         if "allocation" in portfolio_data:
-            story.append(
-                Paragraph("Portfolio Allocation", self.styles["CustomHeading"])
-            )
+            story.append(Paragraph("Portfolio Allocation", self.styles["CustomHeading"]))
             alloc_table = self._create_allocation_table(portfolio_data["allocation"])
             story.append(alloc_table)
             story.append(Spacer(1, 0.3 * inch))
@@ -655,9 +642,7 @@ class ReportGenerator:
                 ]
             )
 
-        table = Table(
-            data, colWidths=[1.2 * inch, 1.2 * inch, 1.2 * inch, 1.2 * inch, 1.2 * inch]
-        )
+        table = Table(data, colWidths=[1.2 * inch, 1.2 * inch, 1.2 * inch, 1.2 * inch, 1.2 * inch])
         table.setStyle(
             TableStyle(
                 [
@@ -685,9 +670,7 @@ class ReportGenerator:
         """Create a formatted allocation table."""
         data = [["Asset", "Weight"]]
 
-        for asset, weight in sorted(
-            allocation.items(), key=lambda x: x[1], reverse=True
-        ):
+        for asset, weight in sorted(allocation.items(), key=lambda x: x[1], reverse=True):
             data.append([asset, f"{weight:.2%}"])
 
         table = Table(data, colWidths=[3 * inch, 2 * inch])

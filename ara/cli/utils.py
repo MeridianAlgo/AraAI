@@ -49,9 +49,7 @@ def handle_error(error: Exception, context: str = "Operation failed"):
     # Custom error messages for known exceptions
     if isinstance(error, DataProviderError):
         console.print(f"[red]Data Provider Error:[/red] {str(error)}")
-        console.print(
-            "[yellow]Tip: Check your internet connection and API keys[/yellow]"
-        )
+        console.print("[yellow]Tip: Check your internet connection and API keys[/yellow]")
     elif isinstance(error, ModelError):
         console.print(f"[red]Model Error:[/red] {str(error)}")
         console.print(
@@ -62,9 +60,7 @@ def handle_error(error: Exception, context: str = "Operation failed"):
         console.print("[yellow]Tip: Check your input parameters[/yellow]")
     elif isinstance(error, CacheError):
         console.print(f"[red]Cache Error:[/red] {str(error)}")
-        console.print(
-            "[yellow]Tip: Try clearing the cache with --no-cache flag[/yellow]"
-        )
+        console.print("[yellow]Tip: Try clearing the cache with --no-cache flag[/yellow]")
     elif isinstance(error, APIError):
         console.print(f"[red]API Error:[/red] {str(error)}")
         console.print("[yellow]Tip: Check API rate limits and authentication[/yellow]")

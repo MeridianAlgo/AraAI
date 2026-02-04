@@ -52,9 +52,7 @@ class PatternRecognition:
         upper_shadow = result["high"] - np.maximum(result["open"], result["close"])
 
         # Hammer criteria: small body, long lower shadow, small upper shadow
-        is_hammer = (
-            (body / range_hl < 0.3) & (lower_shadow > 2 * body) & (upper_shadow < body)
-        )
+        is_hammer = (body / range_hl < 0.3) & (lower_shadow > 2 * body) & (upper_shadow < body)
 
         result["pattern_hammer"] = is_hammer.astype(int)
 
@@ -154,9 +152,7 @@ class PatternRecognition:
             (body_2 < 0)  # First candle is bearish
             & (np.abs(body_1) < np.abs(body_2) * 0.3)  # Second candle has small body
             & (body_0 > 0)  # Third candle is bullish
-            & (
-                result["close"] > result["open"].shift(2)
-            )  # Third closes above first open
+            & (result["close"] > result["open"].shift(2))  # Third closes above first open
         )
 
         result["pattern_morning_star"] = is_morning_star.astype(int)
@@ -186,9 +182,7 @@ class PatternRecognition:
             (body_2 > 0)  # First candle is bullish
             & (np.abs(body_1) < np.abs(body_2) * 0.3)  # Second candle has small body
             & (body_0 < 0)  # Third candle is bearish
-            & (
-                result["close"] < result["open"].shift(2)
-            )  # Third closes below first open
+            & (result["close"] < result["open"].shift(2))  # Third closes below first open
         )
 
         result["pattern_evening_star"] = is_evening_star.astype(int)
@@ -285,9 +279,7 @@ class PatternRecognition:
         return result
 
     @staticmethod
-    def double_top(
-        data: pd.DataFrame, window: int = 20, tolerance: float = 0.02
-    ) -> pd.DataFrame:
+    def double_top(data: pd.DataFrame, window: int = 20, tolerance: float = 0.02) -> pd.DataFrame:
         """
         Double Top pattern detection (simplified).
 
@@ -385,9 +377,7 @@ class PatternRecognition:
             result["high"]
             .rolling(window=window)
             .apply(
-                lambda x: (
-                    np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0
-                ),
+                lambda x: (np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0),
                 raw=True,
             )
         )
@@ -396,9 +386,7 @@ class PatternRecognition:
             result["low"]
             .rolling(window=window)
             .apply(
-                lambda x: (
-                    np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0
-                ),
+                lambda x: (np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0),
                 raw=True,
             )
         )
@@ -414,9 +402,9 @@ class PatternRecognition:
         ).astype(int)
 
         # Symmetrical triangle: converging highs and lows
-        result["pattern_symmetrical_triangle"] = (
-            (high_slope < -0.01) & (low_slope > 0.01)
-        ).astype(int)
+        result["pattern_symmetrical_triangle"] = ((high_slope < -0.01) & (low_slope > 0.01)).astype(
+            int
+        )
 
         return result
 
@@ -439,9 +427,7 @@ class PatternRecognition:
             result["high"]
             .rolling(window=window)
             .apply(
-                lambda x: (
-                    np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0
-                ),
+                lambda x: (np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0),
                 raw=True,
             )
         )
@@ -450,9 +436,7 @@ class PatternRecognition:
             result["low"]
             .rolling(window=window)
             .apply(
-                lambda x: (
-                    np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0
-                ),
+                lambda x: (np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0),
                 raw=True,
             )
         )
@@ -491,9 +475,7 @@ class PatternRecognition:
             result["high"]
             .rolling(window=window)
             .apply(
-                lambda x: (
-                    np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0
-                ),
+                lambda x: (np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0),
                 raw=True,
             )
         )
@@ -502,17 +484,13 @@ class PatternRecognition:
             result["low"]
             .rolling(window=window)
             .apply(
-                lambda x: (
-                    np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0
-                ),
+                lambda x: (np.polyfit(np.arange(len(x)), x, 1)[0] if len(x) == window else 0),
                 raw=True,
             )
         )
 
         # Channel: parallel slopes
-        result["pattern_channel"] = (np.abs(high_slope - low_slope) < tolerance).astype(
-            int
-        )
+        result["pattern_channel"] = (np.abs(high_slope - low_slope) < tolerance).astype(int)
 
         return result
 
@@ -535,9 +513,9 @@ class PatternRecognition:
         rolling_max = result["high"].rolling(window=window).max()
 
         # Cup: price near rolling max after touching rolling min
-        cup_formed = (
-            result["low"].shift(window // 2) <= rolling_min.shift(window // 2) * 1.05
-        ) & (result["high"] >= rolling_max * 0.95)
+        cup_formed = (result["low"].shift(window // 2) <= rolling_min.shift(window // 2) * 1.05) & (
+            result["high"] >= rolling_max * 0.95
+        )
 
         result["pattern_cup_handle"] = cup_formed.astype(int)
 

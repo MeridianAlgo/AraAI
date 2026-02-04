@@ -157,9 +157,7 @@ async def list_api_keys(current_user: User = Depends(get_current_user)):
     ]
 
 
-@router.delete(
-    "/api-keys/{key_id}", summary="Delete API key", description="Delete an API key"
-)
+@router.delete("/api-keys/{key_id}", summary="Delete API key", description="Delete an API key")
 async def delete_api_key(key_id: str, current_user: User = Depends(get_current_user)):
     """Delete an API key"""
     try:

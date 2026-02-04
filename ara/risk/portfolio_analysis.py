@@ -75,9 +75,7 @@ class PortfolioAnalyzer:
                 name="Efficient Frontier",
                 line=dict(color="blue", width=2),
                 marker=dict(size=6),
-                hovertemplate=(
-                    "Return: %{y:.2%}<br>" "Volatility: %{x:.2%}<br>" "<extra></extra>"
-                ),
+                hovertemplate=("Return: %{y:.2%}<br>" "Volatility: %{x:.2%}<br>" "<extra></extra>"),
             )
         )
 
@@ -204,9 +202,7 @@ class PortfolioAnalyzer:
                         labels=assets,
                         values=values,
                         textinfo="label+percent",
-                        hovertemplate=(
-                            "%{label}<br>" "Weight: %{percent}<br>" "<extra></extra>"
-                        ),
+                        hovertemplate=("%{label}<br>" "Weight: %{percent}<br>" "<extra></extra>"),
                     )
                 ]
             )
@@ -219,9 +215,7 @@ class PortfolioAnalyzer:
                         y=values,
                         text=[f"{v:.1%}" for v in values],
                         textposition="auto",
-                        hovertemplate=(
-                            "%{x}<br>" "Weight: %{y:.2%}<br>" "<extra></extra>"
-                        ),
+                        hovertemplate=("%{x}<br>" "Weight: %{y:.2%}<br>" "<extra></extra>"),
                     )
                 ]
             )
@@ -267,8 +261,7 @@ class PortfolioAnalyzer:
         assets = list(risk_decomposition["assets"].keys())
         weights = [risk_decomposition["assets"][asset]["weight"] for asset in assets]
         risk_contrib = [
-            risk_decomposition["assets"][asset]["percent_contribution"]
-            for asset in assets
+            risk_decomposition["assets"][asset]["percent_contribution"] for asset in assets
         ]
 
         # Create subplots
@@ -315,9 +308,7 @@ class PortfolioAnalyzer:
         fig.update_yaxes(title_text="Weight", tickformat=".0%", row=1, col=1)
         fig.update_yaxes(title_text="Risk Contribution (%)", row=1, col=2)
 
-        fig.update_layout(
-            title=title, template="plotly_white", showlegend=False, height=400
-        )
+        fig.update_layout(title=title, template="plotly_white", showlegend=False, height=400)
 
         return fig
 
@@ -451,9 +442,9 @@ class PortfolioAnalyzer:
         weight_array = np.array([weights.get(asset, 0.0) for asset in df.columns])
 
         baseline_return = np.dot(weight_array, expected_returns) * 252
-        baseline_vol = np.sqrt(
-            np.dot(weight_array, np.dot(cov_matrix, weight_array))
-        ) * np.sqrt(252)
+        baseline_vol = np.sqrt(np.dot(weight_array, np.dot(cov_matrix, weight_array))) * np.sqrt(
+            252
+        )
 
         # Add baseline
         results.append(
@@ -521,9 +512,7 @@ class PortfolioAnalyzer:
             go.Bar(
                 x=stress_test_results["scenario"],
                 y=stress_test_results["portfolio_value_change"],
-                text=[
-                    f"{v:.1%}" for v in stress_test_results["portfolio_value_change"]
-                ],
+                text=[f"{v:.1%}" for v in stress_test_results["portfolio_value_change"]],
                 textposition="auto",
                 marker=dict(
                     color=stress_test_results["portfolio_value_change"],
@@ -533,9 +522,7 @@ class PortfolioAnalyzer:
                     showscale=True,
                     colorbar=dict(title="Return"),
                 ),
-                hovertemplate=(
-                    "%{x}<br>" "Value Change: %{y:.2%}<br>" "<extra></extra>"
-                ),
+                hovertemplate=("%{x}<br>" "Value Change: %{y:.2%}<br>" "<extra></extra>"),
             )
         )
 
@@ -721,8 +708,6 @@ Performance Metrics:
         # Stress test results
         if stress_test_results is not None:
             report["stress_test_table"] = stress_test_results
-            report["stress_test_chart"] = self.plot_stress_test_results(
-                stress_test_results
-            )
+            report["stress_test_chart"] = self.plot_stress_test_results(stress_test_results)
 
         return report

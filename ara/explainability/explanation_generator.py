@@ -36,7 +36,7 @@ class ExplanationGenerator:
         return {
             "top_factors": [],
             "feature_importance": {name: 0.1 for name in feature_names[:5]},
-            "natural_language": "Explanation generated based on model features."
+            "natural_language": "Explanation generated based on model features.",
         }
 
     def generate_prediction_explanation(
@@ -64,14 +64,10 @@ class ExplanationGenerator:
 
         # Opening statement
         if prediction_type == "price":
-            explanation_parts.append(
-                f"The model predicts a price of ${prediction:.2f}."
-            )
+            explanation_parts.append(f"The model predicts a price of ${prediction:.2f}.")
         elif prediction_type == "return":
             direction = "gain" if prediction > 0 else "loss"
-            explanation_parts.append(
-                f"The model predicts a {abs(prediction):.2f}% {direction}."
-            )
+            explanation_parts.append(f"The model predicts a {abs(prediction):.2f}% {direction}.")
         else:
             explanation_parts.append(f"The model predicts a value of {prediction:.4f}.")
 
@@ -154,12 +150,12 @@ class ExplanationGenerator:
             strength = "slightly"
 
         # Build explanation
-        explanation = f"{rank}. {description} (value: {value:.4f}) {strength} {impact} the prediction"
+        explanation = (
+            f"{rank}. {description} (value: {value:.4f}) {strength} {impact} the prediction"
+        )
 
         if percentage > 0:
-            explanation += (
-                f", contributing {percentage:.1f}% of the total {direction} pressure"
-            )
+            explanation += f", contributing {percentage:.1f}% of the total {direction} pressure"
 
         explanation += "."
 
@@ -256,24 +252,18 @@ class ExplanationGenerator:
         ]
 
         # Sort by importance
-        sorted_features = sorted(
-            feature_importance.items(), key=lambda x: abs(x[1]), reverse=True
-        )[:top_n]
+        sorted_features = sorted(feature_importance.items(), key=lambda x: abs(x[1]), reverse=True)[
+            :top_n
+        ]
 
         # Calculate total importance for percentages
         total_importance = sum(abs(score) for _, score in sorted_features)
 
         for i, (feature_name, importance) in enumerate(sorted_features, 1):
             description = self.feature_descriptions.get(feature_name, feature_name)
-            percentage = (
-                (abs(importance) / total_importance * 100)
-                if total_importance > 0
-                else 0
-            )
+            percentage = (abs(importance) / total_importance * 100) if total_importance > 0 else 0
 
-            explanation_parts.append(
-                f"{i}. {description}: {percentage:.1f}% of total importance"
-            )
+            explanation_parts.append(f"{i}. {description}: {percentage:.1f}% of total importance")
 
         return "\n".join(explanation_parts)
 
@@ -299,18 +289,14 @@ class ExplanationGenerator:
 
         # Explain confidence level
         if confidence >= 0.75:
-            explanation_parts.append(
-                "\nThe model is confident in this prediction because:"
-            )
+            explanation_parts.append("\nThe model is confident in this prediction because:")
             reasons = [
                 "- Multiple models agree on the prediction",
                 "- Input data quality is high",
                 "- Similar historical patterns have been accurate",
             ]
         else:
-            explanation_parts.append(
-                "\nThe model has lower confidence in this prediction due to:"
-            )
+            explanation_parts.append("\nThe model has lower confidence in this prediction due to:")
             reasons = [
                 "- Models show some disagreement",
                 "- Market conditions are uncertain",
@@ -380,9 +366,7 @@ class ExplanationGenerator:
             "volatile": "The predictions show high volatility with no clear trend.",
         }
 
-        explanation_parts.append(
-            trend_descriptions.get(trend, "Trend analysis unavailable.")
-        )
+        explanation_parts.append(trend_descriptions.get(trend, "Trend analysis unavailable."))
 
         # Key points
         if len(predictions) >= 3:
@@ -456,9 +440,7 @@ class ExplanationGenerator:
         sections = []
 
         # Prediction explanation
-        if all(
-            k in prediction_data for k in ["prediction", "base_value", "top_features"]
-        ):
+        if all(k in prediction_data for k in ["prediction", "base_value", "top_features"]):
             pred_explanation = self.generate_prediction_explanation(
                 prediction=prediction_data["prediction"],
                 base_value=prediction_data["base_value"],
@@ -486,8 +468,6 @@ class ExplanationGenerator:
             sections.append("\n" + model_explanation)
 
         # Timestamp
-        sections.append(
-            f"\n\nGenerated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        )
+        sections.append(f"\n\nGenerated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         return "\n".join(sections)

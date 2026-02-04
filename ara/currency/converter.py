@@ -94,9 +94,7 @@ class CurrencyConverter:
         # Check cache
         cache_key = (from_currency, to_currency)
         if use_cache and self._is_cache_valid(from_currency, to_currency):
-            logger.debug(
-                f"Using cached rate for {from_currency.value}/{to_currency.value}"
-            )
+            logger.debug(f"Using cached rate for {from_currency.value}/{to_currency.value}")
             return self._rate_cache[cache_key]
 
         # Fetch from Yahoo Finance
@@ -240,9 +238,7 @@ class CurrencyConverter:
 
         for target_currency in target_currencies:
             if target_currency != base_currency:
-                task = self.get_exchange_rate(
-                    base_currency, target_currency, use_cache=use_cache
-                )
+                task = self.get_exchange_rate(base_currency, target_currency, use_cache=use_cache)
                 tasks.append(task)
             else:
                 # Identity rate
@@ -259,9 +255,7 @@ class CurrencyConverter:
 
         results = await asyncio.gather(*tasks)
 
-        return {
-            currency: result for currency, result in zip(target_currencies, results)
-        }
+        return {currency: result for currency, result in zip(target_currencies, results)}
 
     def clear_cache(self):
         """Clear the exchange rate cache"""

@@ -101,9 +101,7 @@ class CrossAssetPredictor:
 
             try:
                 # Calculate correlation
-                aligned = pd.DataFrame(
-                    {"target": target_data, "other": asset_data}
-                ).dropna()
+                aligned = pd.DataFrame({"target": target_data, "other": asset_data}).dropna()
 
                 if len(aligned) < self.feature_lookback:
                     continue
@@ -114,9 +112,7 @@ class CrossAssetPredictor:
                     correlations.append((asset_name, corr))
 
             except Exception as e:
-                logger.warning(
-                    f"Failed to calculate correlation with {asset_name}: {e}"
-                )
+                logger.warning(f"Failed to calculate correlation with {asset_name}: {e}")
                 continue
 
         # Sort by absolute correlation
@@ -233,13 +229,13 @@ class CrossAssetPredictor:
                 else:
                     continue
 
-                feature_name = f"{feature.source_asset}_{feature.feature_type}_lag{feature.lag_days}"
+                feature_name = (
+                    f"{feature.source_asset}_{feature.feature_type}_lag{feature.lag_days}"
+                )
                 feature_values[feature_name] = value
 
             except Exception as e:
-                logger.warning(
-                    f"Failed to calculate feature {feature.feature_type}: {e}"
-                )
+                logger.warning(f"Failed to calculate feature {feature.feature_type}: {e}")
                 continue
 
         return feature_values
@@ -282,9 +278,7 @@ class CrossAssetPredictor:
             related_data = asset_data[related_asset]
 
             # Calculate correlation
-            aligned = pd.DataFrame(
-                {"target": target_data, "related": related_data}
-            ).dropna()
+            aligned = pd.DataFrame({"target": target_data, "related": related_data}).dropna()
 
             if len(aligned) < 30:
                 continue
@@ -310,14 +304,11 @@ class CrossAssetPredictor:
 
         # Calculate weighted average of implied predictions
         total_weight = sum(weights)
-        weighted_implied = (
-            sum(p * w for p, w in zip(implied_predictions, weights)) / total_weight
-        )
+        weighted_implied = sum(p * w for p, w in zip(implied_predictions, weights)) / total_weight
 
         # Blend base prediction with correlation-adjusted prediction
         adjusted_prediction = (
-            base_prediction * (1 - adjustment_strength)
-            + weighted_implied * adjustment_strength
+            base_prediction * (1 - adjustment_strength) + weighted_implied * adjustment_strength
         )
 
         logger.info(
@@ -370,9 +361,7 @@ class CrossAssetPredictor:
                         opportunities.append(opportunity)
 
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to check arbitrage for {asset1}-{asset2}: {e}"
-                    )
+                    logger.warning(f"Failed to check arbitrage for {asset1}-{asset2}: {e}")
                     continue
 
         # Sort by mispricing percentage
@@ -497,9 +486,7 @@ class CrossAssetPredictor:
                 related_data = asset_data[related_asset]
 
                 # Calculate relationship strength
-                aligned = pd.DataFrame(
-                    {"target": target_data, "related": related_data}
-                ).dropna()
+                aligned = pd.DataFrame({"target": target_data, "related": related_data}).dropna()
 
                 if len(aligned) < 30:
                     continue

@@ -82,9 +82,7 @@ class CorrelationAnalyzer:
         self.breakdown_threshold = breakdown_threshold
         self.significance_level = significance_level
 
-        logger.info(
-            f"Initialized CorrelationAnalyzer with windows {min_window}-{max_window} days"
-        )
+        logger.info(f"Initialized CorrelationAnalyzer with windows {min_window}-{max_window} days")
 
     def calculate_rolling_correlation(
         self, data1: pd.Series, data2: pd.Series, window: int = 30
@@ -101,9 +99,7 @@ class CorrelationAnalyzer:
             Series of rolling correlations
         """
         if window < self.min_window or window > self.max_window:
-            raise ValueError(
-                f"Window must be between {self.min_window} and {self.max_window} days"
-            )
+            raise ValueError(f"Window must be between {self.min_window} and {self.max_window} days")
 
         # Align the two series
         aligned_data = pd.DataFrame({"asset1": data1, "asset2": data2}).dropna()
@@ -114,9 +110,7 @@ class CorrelationAnalyzer:
             )
 
         # Calculate rolling correlation
-        rolling_corr = (
-            aligned_data["asset1"].rolling(window=window).corr(aligned_data["asset2"])
-        )
+        rolling_corr = aligned_data["asset1"].rolling(window=window).corr(aligned_data["asset2"])
 
         return rolling_corr
 
@@ -229,8 +223,7 @@ class CorrelationAnalyzer:
 
         if len(aligned_data) < max_lag + 30:
             logger.warning(
-                f"Insufficient data for lead-lag analysis: need at least "
-                f"{max_lag + 30} points"
+                f"Insufficient data for lead-lag analysis: need at least " f"{max_lag + 30} points"
             )
             return None
 
@@ -242,18 +235,10 @@ class CorrelationAnalyzer:
                 corr = aligned_data["asset1"].corr(aligned_data["asset2"])
             elif lag > 0:
                 # asset1 leads asset2 by 'lag' days
-                corr = (
-                    aligned_data["asset1"]
-                    .iloc[:-lag]
-                    .corr(aligned_data["asset2"].iloc[lag:])
-                )
+                corr = aligned_data["asset1"].iloc[:-lag].corr(aligned_data["asset2"].iloc[lag:])
             else:
                 # asset2 leads asset1 by 'abs(lag)' days
-                corr = (
-                    aligned_data["asset1"]
-                    .iloc[-lag:]
-                    .corr(aligned_data["asset2"].iloc[:lag])
-                )
+                corr = aligned_data["asset1"].iloc[-lag:].corr(aligned_data["asset2"].iloc[:lag])
 
             lag_correlations[lag] = corr
 

@@ -79,12 +79,8 @@ class WebhookResponse(BaseModel):
     delivery_count: int = Field(0, description="Total delivery attempts")
     success_count: int = Field(0, description="Successful deliveries")
     failure_count: int = Field(0, description="Failed deliveries")
-    last_delivery_at: Optional[datetime] = Field(
-        None, description="Last delivery timestamp"
-    )
-    last_delivery_status: Optional[str] = Field(
-        None, description="Last delivery status"
-    )
+    last_delivery_at: Optional[datetime] = Field(None, description="Last delivery timestamp")
+    last_delivery_status: Optional[str] = Field(None, description="Last delivery status")
 
     class Config:
         json_schema_extra = {

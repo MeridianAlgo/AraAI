@@ -180,9 +180,7 @@ class CryptoExchangeProvider(BaseDataProvider):
 
             # Check if exchange supports WebSocket
             if not self.exchange.has["watchTicker"]:
-                raise DataProviderError(
-                    f"{self.exchange_id} does not support WebSocket streaming"
-                )
+                raise DataProviderError(f"{self.exchange_id} does not support WebSocket streaming")
 
             logger.info(f"Starting WebSocket stream for {symbol} on {self.exchange_id}")
 
@@ -425,9 +423,7 @@ class CryptoDataAggregator:
             {"providers": [p.exchange_id for p in self.providers]},
         )
 
-    async def _fetch_and_aggregate(
-        self, symbol: str, period: str, interval: str
-    ) -> pd.DataFrame:
+    async def _fetch_and_aggregate(self, symbol: str, period: str, interval: str) -> pd.DataFrame:
         """
         Fetch from all providers and aggregate with conflict resolution
 
@@ -621,14 +617,10 @@ class CryptoDataAggregator:
             try:
                 return await provider.fetch_realtime(symbol)
             except Exception as e:
-                logger.warning(
-                    f"Failed to fetch realtime from {provider.exchange_id}: {e}"
-                )
+                logger.warning(f"Failed to fetch realtime from {provider.exchange_id}: {e}")
                 continue
 
-        raise DataProviderError(
-            f"All providers failed to fetch realtime data for {symbol}"
-        )
+        raise DataProviderError(f"All providers failed to fetch realtime data for {symbol}")
 
     def get_supported_symbols(self) -> List[str]:
         """
@@ -644,9 +636,7 @@ class CryptoDataAggregator:
                 symbols = provider.get_supported_symbols()
                 all_symbols.update(symbols)
             except Exception as e:
-                logger.warning(
-                    f"Failed to get symbols from {provider.exchange_id}: {e}"
-                )
+                logger.warning(f"Failed to get symbols from {provider.exchange_id}: {e}")
 
         return sorted(list(all_symbols))
 

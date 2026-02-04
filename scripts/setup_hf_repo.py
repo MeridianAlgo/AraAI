@@ -56,9 +56,7 @@ def setup_huggingface():
 
             for file_path in to_delete:
                 print(f"  Deleting {file_path}...")
-                api.delete_file(
-                    path_in_repo=file_path, repo_id=repo_id, repo_type="model"
-                )
+                api.delete_file(path_in_repo=file_path, repo_id=repo_id, repo_type="model")
             print("✓ Repository models cleaned.")
         except Exception as e:
             print(f"✗ Failed to clean repository: {e}")

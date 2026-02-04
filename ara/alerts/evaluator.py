@@ -39,9 +39,7 @@ class ConditionEvaluator:
             field_value = self._get_field_value(data, condition.field)
 
             if field_value is None:
-                logger.warning(
-                    f"Field '{condition.field}' not found in data", symbol=symbol
-                )
+                logger.warning(f"Field '{condition.field}' not found in data", symbol=symbol)
                 return False, None
 
             # Evaluate based on operator
@@ -182,9 +180,7 @@ class ConditionEvaluator:
         if historical_value is None or historical_value == 0:
             return False
 
-        percent_change = (
-            (current_value - historical_value) / abs(historical_value)
-        ) * 100
+        percent_change = ((current_value - historical_value) / abs(historical_value)) * 100
 
         return abs(percent_change) >= abs(threshold_percent)
 
@@ -201,9 +197,7 @@ class ConditionEvaluator:
             symbol: If provided, clear only for this symbol. Otherwise clear all.
         """
         if symbol:
-            keys_to_remove = [
-                k for k in self._previous_values.keys() if k.startswith(f"{symbol}:")
-            ]
+            keys_to_remove = [k for k in self._previous_values.keys() if k.startswith(f"{symbol}:")]
             for key in keys_to_remove:
                 del self._previous_values[key]
         else:

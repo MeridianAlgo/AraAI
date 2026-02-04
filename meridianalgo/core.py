@@ -82,13 +82,9 @@ class AraAI:
             # Check for existing predictions
             if use_cache:
                 try:
-                    cached_result = self.cache_manager.check_cached_predictions(
-                        symbol, days
-                    )
+                    cached_result = self.cache_manager.check_cached_predictions(symbol, days)
                     if cached_result:
-                        choice = self.cache_manager.ask_user_choice(
-                            symbol, cached_result
-                        )
+                        choice = self.cache_manager.ask_user_choice(symbol, cached_result)
                         if choice == "use_cached":
                             return self._format_cached_result(cached_result)
                 except Exception as cache_error:
@@ -160,20 +156,14 @@ class AraAI:
                 current_price = enhanced_data["Close"].iloc[-1]
 
                 # Use fast ML system (no training required)
-                fast_result = self.fast_ml.predict_fast(
-                    enhanced_data, current_price, days=days
-                )
+                fast_result = self.fast_ml.predict_fast(enhanced_data, current_price, days=days)
 
                 if fast_result and "predictions" in fast_result:
                     predictions = fast_result["predictions"]
-                    confidence_scores = fast_result.get(
-                        "confidence_scores", [0.75] * days
-                    )
+                    confidence_scores = fast_result.get("confidence_scores", [0.75] * days)
 
                     # Fast pattern recognition
-                    patterns = self.fast_patterns.detect_patterns_fast(
-                        enhanced_data["Close"]
-                    )
+                    patterns = self.fast_patterns.detect_patterns_fast(enhanced_data["Close"])
 
                     if self.verbose:
                         self.console.print_success(
@@ -184,9 +174,7 @@ class AraAI:
 
             except Exception as fast_error:
                 if self.verbose:
-                    self.console.print_warning(
-                        f"Fast ML failed, using fallback: {fast_error}"
-                    )
+                    self.console.print_warning(f"Fast ML failed, using fallback: {fast_error}")
 
                 # Fallback to simple trend prediction
                 try:
@@ -195,18 +183,14 @@ class AraAI:
 
                     # Simple trend calculation
                     if len(enhanced_data) >= 10:
-                        recent_trend = (
-                            enhanced_data["Close"].tail(10).pct_change().mean()
-                        )
+                        recent_trend = enhanced_data["Close"].tail(10).pct_change().mean()
                     else:
                         recent_trend = 0.001  # Small positive trend
 
                     for i in range(days):
                         pred_price = current_price * (1 + recent_trend * (i + 1))
                         # Keep predictions reasonable
-                        pred_price = max(
-                            current_price * 0.9, min(current_price * 1.1, pred_price)
-                        )
+                        pred_price = max(current_price * 0.9, min(current_price * 1.1, pred_price))
                         predictions.append(pred_price)
 
                     confidence_scores = [0.6 - (i * 0.05) for i in range(days)]
@@ -214,14 +198,10 @@ class AraAI:
 
                 except Exception as fallback_error:
                     if self.verbose:
-                        self.console.print_error(
-                            f"All prediction methods failed: {fallback_error}"
-                        )
+                        self.console.print_error(f"All prediction methods failed: {fallback_error}")
                     # Ultimate fallback
                     current_price = enhanced_data["Close"].iloc[-1]
-                    predictions = [
-                        current_price * (1 + 0.01 * i) for i in range(1, days + 1)
-                    ]
+                    predictions = [current_price * (1 + 0.01 * i) for i in range(1, days + 1)]
                     confidence_scores = [0.5] * days
                     patterns = []
 
@@ -239,9 +219,7 @@ class AraAI:
                     info = ticker.info
 
                     # Use fast analyzer (instant results)
-                    company_analysis = self.fast_analyzer.analyze_fast(
-                        symbol, info, data
-                    )
+                    company_analysis = self.fast_analyzer.analyze_fast(symbol, info, data)
 
                     if self.verbose:
                         self.console.print_success(
@@ -250,9 +228,7 @@ class AraAI:
 
                 except Exception as analysis_error:
                     if self.verbose:
-                        self.console.print_warning(
-                            f"Fast analysis failed: {analysis_error}"
-                        )
+                        self.console.print_warning(f"Fast analysis failed: {analysis_error}")
                     company_analysis = {
                         "overall_score": 50,
                         "recommendation": "HOLD",
@@ -271,18 +247,14 @@ class AraAI:
                 self.cache_manager.save_predictions(symbol, result)
             except Exception as cache_error:
                 if self.verbose:
-                    self.console.print_warning(
-                        f"Failed to save to cache: {cache_error}"
-                    )
+                    self.console.print_warning(f"Failed to save to cache: {cache_error}")
 
             # Update online learning (non-critical)
             try:
                 self._update_online_learning(symbol, predictions, data)
             except Exception as learning_error:
                 if self.verbose:
-                    self.console.print_warning(
-                        f"Online learning update failed: {learning_error}"
-                    )
+                    self.console.print_warning(f"Online learning update failed: {learning_error}")
 
             return result
 
@@ -290,9 +262,7 @@ class AraAI:
             self.console.print_error(str(e))
             return None
         except Exception as e:
-            self.console.print_error(
-                f"Unexpected error generating predictions for {symbol}: {e}"
-            )
+            self.console.print_error(f"Unexpected error generating predictions for {symbol}: {e}")
             if self.verbose:
                 import traceback
 
@@ -333,9 +303,7 @@ class AraAI:
 
             # Ensure we have at least basic OHLCV data
             required_columns = ["Close", "Volume", "High", "Low", "Open"]
-            missing_required = [
-                col for col in required_columns if col not in available_columns
-            ]
+            missing_required = [col for col in required_columns if col not in available_columns]
 
             if missing_required:
                 raise ValueError(f"Missing required columns: {missing_required}")
@@ -350,9 +318,7 @@ class AraAI:
             features_df = data[available_columns].copy()
 
             # Handle missing values more robustly
-            features_df = (
-                features_df.fillna(method="ffill").fillna(method="bfill").fillna(0)
-            )
+            features_df = features_df.fillna(method="ffill").fillna(method="bfill").fillna(0)
 
             # Check for infinite values
             features_df = features_df.replace([float("inf"), float("-inf")], 0)
@@ -375,13 +341,9 @@ class AraAI:
             if zero_columns.any():
                 if self.verbose:
                     zero_col_names = [
-                        available_columns[i]
-                        for i, is_zero in enumerate(zero_columns)
-                        if is_zero
+                        available_columns[i] for i, is_zero in enumerate(zero_columns) if is_zero
                     ]
-                    self.console.print_warning(
-                        f"Zero-value columns detected: {zero_col_names}"
-                    )
+                    self.console.print_warning(f"Zero-value columns detected: {zero_col_names}")
 
             return features_array
 
@@ -422,9 +384,7 @@ class AraAI:
             for i in range(days):
                 # Apply trend with some dampening to avoid extreme predictions
                 dampening_factor = 0.8**i  # Reduce trend impact over time
-                predicted_price = current_price + (
-                    trend_slope * (i + 1) * dampening_factor
-                )
+                predicted_price = current_price + (trend_slope * (i + 1) * dampening_factor)
 
                 # Ensure prediction is reasonable (within 20% of current price)
                 max_change = current_price * 0.2
@@ -477,9 +437,7 @@ class AraAI:
                 pred_date = datetime.now() + timedelta(days=i + 1)
                 change = pred_price - current_price
                 change_pct = (change / current_price) * 100
-                confidence = (
-                    confidence_scores[i] if i < len(confidence_scores) else 0.75
-                )
+                confidence = confidence_scores[i] if i < len(confidence_scores) else 0.75
 
                 result["predictions"].append(
                     {
@@ -521,12 +479,12 @@ class AraAI:
                     "risk_grade": company_analysis.get("risk_assessment", {}).get(
                         "risk_grade", "C"
                     ),
-                    "valuation_summary": company_analysis.get(
-                        "valuation_metrics", {}
-                    ).get("summary", "Fair Value"),
-                    "market_sentiment": company_analysis.get(
-                        "market_intelligence", {}
-                    ).get("market_sentiment", "Neutral"),
+                    "valuation_summary": company_analysis.get("valuation_metrics", {}).get(
+                        "summary", "Fair Value"
+                    ),
+                    "market_sentiment": company_analysis.get("market_intelligence", {}).get(
+                        "market_sentiment", "Neutral"
+                    ),
                 }
 
             return result
@@ -705,14 +663,10 @@ def analyze_stock(symbol, verbose=False):
         """
         try:
             if self.verbose:
-                self.console.print_info(
-                    f"Running comprehensive AI analysis for {symbol}..."
-                )
+                self.console.print_info(f"Running comprehensive AI analysis for {symbol}...")
 
             # Use the full AI system for comprehensive analysis
-            return self.predict(
-                symbol, days=days, use_cache=use_cache, include_analysis=True
-            )
+            return self.predict(symbol, days=days, use_cache=use_cache, include_analysis=True)
 
         except Exception as e:
             self.console.print_error(f"AI prediction failed for {symbol}: {e}")
@@ -730,9 +684,7 @@ def analyze_stock(symbol, verbose=False):
         """
         try:
             if self.verbose:
-                self.console.print_info(
-                    f"Running comprehensive AI analysis for {symbol}..."
-                )
+                self.console.print_info(f"Running comprehensive AI analysis for {symbol}...")
 
             # Use AI analyzer for detailed analysis
             return self.ai_analyzer.analyze_company_with_ai(symbol)

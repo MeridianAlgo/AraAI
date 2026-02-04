@@ -166,9 +166,7 @@ class XSSProtection:
                     # Additional validation for href and src
                     if attr_name in ("href", "src"):
                         if cls._is_safe_url(attr_value):
-                            safe_attrs.append(
-                                f'{attr_name}="{html.escape(attr_value)}"'
-                            )
+                            safe_attrs.append(f'{attr_name}="{html.escape(attr_value)}"')
                     else:
                         safe_attrs.append(f'{attr_name}="{html.escape(attr_value)}"')
 
@@ -233,11 +231,7 @@ class XSSProtection:
                     (
                         html.escape(item)
                         if isinstance(item, str)
-                        else (
-                            cls.sanitize_json_response(item)
-                            if isinstance(item, dict)
-                            else item
-                        )
+                        else (cls.sanitize_json_response(item) if isinstance(item, dict) else item)
                     )
                     for item in value
                 ]

@@ -53,9 +53,7 @@ class CompanyAnalyzer:
                 # Valuation Analysis
                 "valuation_metrics": self._analyze_valuation(info, hist_data),
                 # Market Intelligence
-                "market_intelligence": self._gather_market_intelligence(
-                    info, hist_data
-                ),
+                "market_intelligence": self._gather_market_intelligence(info, hist_data),
                 # Growth Analysis
                 "growth_analysis": self._analyze_growth_potential(info, hist_data),
                 # Competitive Analysis
@@ -68,8 +66,8 @@ class CompanyAnalyzer:
             }
 
             # Calculate overall score and recommendation
-            analysis["overall_score"], analysis["recommendation"] = (
-                self._calculate_overall_score(analysis)
+            analysis["overall_score"], analysis["recommendation"] = self._calculate_overall_score(
+                analysis
             )
 
             return analysis
@@ -172,9 +170,7 @@ class CompanyAnalyzer:
                 score += 5
 
             financial_health["health_score"] = (score / max_score) * 100
-            financial_health["health_grade"] = self._get_grade(
-                financial_health["health_score"]
-            )
+            financial_health["health_grade"] = self._get_grade(financial_health["health_score"])
 
             return financial_health
 
@@ -415,9 +411,7 @@ class CompanyAnalyzer:
             technical["volume_analysis"] = {
                 "current_vs_average": recent_volume / avg_volume,
                 "volume_trend": (
-                    "Increasing"
-                    if volume.tail(5).mean() > volume.tail(10).mean()
-                    else "Decreasing"
+                    "Increasing" if volume.tail(5).mean() > volume.tail(10).mean() else "Decreasing"
                 ),
                 "volume_strength": (
                     "High"
@@ -427,9 +421,7 @@ class CompanyAnalyzer:
             }
 
             # Pattern signals
-            technical["pattern_signals"] = self._detect_simple_patterns(
-                close, high, low
-            )
+            technical["pattern_signals"] = self._detect_simple_patterns(close, high, low)
 
             # Technical indicators summary
             technical["indicators"] = {
@@ -893,9 +885,7 @@ class CompanyAnalyzer:
                     support_levels.append(prices.iloc[i])
 
             # Remove duplicates and sort
-            support_levels = sorted(
-                list(set([round(level, 2) for level in support_levels]))
-            )
+            support_levels = sorted(list(set([round(level, 2) for level in support_levels])))
 
             # Return top 3 strongest support levels
             return support_levels[-3:] if len(support_levels) >= 3 else support_levels
@@ -919,16 +909,10 @@ class CompanyAnalyzer:
                     resistance_levels.append(prices.iloc[i])
 
             # Remove duplicates and sort
-            resistance_levels = sorted(
-                list(set([round(level, 2) for level in resistance_levels]))
-            )
+            resistance_levels = sorted(list(set([round(level, 2) for level in resistance_levels])))
 
             # Return top 3 strongest resistance levels
-            return (
-                resistance_levels[-3:]
-                if len(resistance_levels) >= 3
-                else resistance_levels
-            )
+            return resistance_levels[-3:] if len(resistance_levels) >= 3 else resistance_levels
 
         except Exception:
             return []
@@ -950,18 +934,14 @@ class CompanyAnalyzer:
                 recent_close.iloc[-1] > recent_close.iloc[-5]
                 and recent_close.iloc[-5] > recent_close.iloc[-10]
             ):
-                patterns.append(
-                    {"pattern": "Uptrend", "signal": "Bullish", "strength": "Medium"}
-                )
+                patterns.append({"pattern": "Uptrend", "signal": "Bullish", "strength": "Medium"})
 
             # Bearish patterns
             if (
                 recent_close.iloc[-1] < recent_close.iloc[-5]
                 and recent_close.iloc[-5] < recent_close.iloc[-10]
             ):
-                patterns.append(
-                    {"pattern": "Downtrend", "signal": "Bearish", "strength": "Medium"}
-                )
+                patterns.append({"pattern": "Downtrend", "signal": "Bearish", "strength": "Medium"})
 
             # Consolidation
             if (max(recent_high) - min(recent_low)) / recent_close.iloc[-1] < 0.05:
@@ -1028,25 +1008,16 @@ class CompanyAnalyzer:
                     elif aspect == "risk_assessment" and "risk_score" in aspect_data:
                         total_score += aspect_data["risk_score"] * weight
                         total_weight += weight
-                    elif (
-                        aspect == "technical_analysis"
-                        and "momentum_score" in aspect_data
-                    ):
+                    elif aspect == "technical_analysis" and "momentum_score" in aspect_data:
                         total_score += aspect_data["momentum_score"] * weight
                         total_weight += weight
-                    elif (
-                        aspect == "valuation_metrics"
-                        and "valuation_score" in aspect_data
-                    ):
+                    elif aspect == "valuation_metrics" and "valuation_score" in aspect_data:
                         total_score += aspect_data["valuation_score"] * weight
                         total_weight += weight
                     elif aspect == "growth_analysis" and "growth_score" in aspect_data:
                         total_score += aspect_data["growth_score"] * weight
                         total_weight += weight
-                    elif (
-                        aspect == "market_intelligence"
-                        and "sentiment_score" in aspect_data
-                    ):
+                    elif aspect == "market_intelligence" and "sentiment_score" in aspect_data:
                         total_score += aspect_data["sentiment_score"] * weight
                         total_weight += weight
 

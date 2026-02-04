@@ -142,9 +142,7 @@ class ConnectionManager:
                 logger.error(f"Error sending message to {connection_id}: {e}")
                 self.disconnect(connection_id)
 
-    async def broadcast(
-        self, message: Dict[str, Any], channel: str, symbol: Optional[str] = None
-    ):
+    async def broadcast(self, message: Dict[str, Any], channel: str, symbol: Optional[str] = None):
         """
         Broadcast message to all connections on a channel
 
@@ -223,9 +221,7 @@ class ConnectionManager:
 
                 for conn_id, last_pong in list(self.heartbeats.items()):
                     # Check if connection is stale (no pong in 2x heartbeat interval)
-                    if (
-                        current_time - last_pong
-                    ).total_seconds() > self.heartbeat_interval * 2:
+                    if (current_time - last_pong).total_seconds() > self.heartbeat_interval * 2:
                         dead_connections.append(conn_id)
                         continue
 

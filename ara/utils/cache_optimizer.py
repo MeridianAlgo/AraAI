@@ -30,9 +30,7 @@ class CacheHitRateMonitor:
         self.window_size = window_size
         self._hits = deque(maxlen=window_size)
         self._misses = deque(maxlen=window_size)
-        self._key_stats = defaultdict(
-            lambda: {"hits": 0, "misses": 0, "last_access": None}
-        )
+        self._key_stats = defaultdict(lambda: {"hits": 0, "misses": 0, "last_access": None})
         self._lock = threading.RLock()
 
         # Thresholds for optimization
@@ -101,9 +99,7 @@ class CacheHitRateMonitor:
             List of (key, stats) tuples
         """
         with self._lock:
-            sorted_keys = sorted(
-                self._key_stats.items(), key=lambda x: x[1][by], reverse=True
-            )
+            sorted_keys = sorted(self._key_stats.items(), key=lambda x: x[1][by], reverse=True)
             return [(k, self.get_key_stats(k)) for k, _ in sorted_keys[:n]]
 
     def get_optimization_recommendations(self) -> List[Dict[str, Any]]:
@@ -199,9 +195,7 @@ class IntelligentCacheWarmer:
 
         logger.info("Initialized IntelligentCacheWarmer")
 
-    def register_warming_task(
-        self, key: str, fetch_func: Callable, priority: int = 1
-    ) -> None:
+    def register_warming_task(self, key: str, fetch_func: Callable, priority: int = 1) -> None:
         """
         Register a cache warming task
 
@@ -296,9 +290,7 @@ class IntelligentCacheWarmer:
                     key: {
                         "priority": info["priority"],
                         "last_warmed": (
-                            info["last_warmed"].isoformat()
-                            if info["last_warmed"]
-                            else None
+                            info["last_warmed"].isoformat() if info["last_warmed"] else None
                         ),
                         "warm_count": info["warm_count"],
                         "errors": info["errors"],
@@ -324,9 +316,7 @@ class IntelligentCacheWarmer:
             if stats["hits"] >= min_hits and key not in self._warming_tasks:
                 # We can't automatically create fetch functions,
                 # so this is a placeholder for manual registration
-                logger.info(
-                    f"Popular key identified for warming: {key} ({stats['hits']} hits)"
-                )
+                logger.info(f"Popular key identified for warming: {key} ({stats['hits']} hits)")
                 registered += 1
 
         return registered

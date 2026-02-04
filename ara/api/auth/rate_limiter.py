@@ -12,9 +12,7 @@ from ara.core.exceptions import AraAIException
 class RateLimitExceeded(AraAIException):
     """Rate limit exceeded error"""
 
-    def __init__(
-        self, message: str = "Rate limit exceeded", retry_after: Optional[int] = None
-    ):
+    def __init__(self, message: str = "Rate limit exceeded", retry_after: Optional[int] = None):
         details = {"type": "rate_limit_exceeded"}
         if retry_after:
             details["retry_after"] = retry_after
@@ -152,9 +150,7 @@ class RateLimiter:
 
         return True, None
 
-    def _check_per_minute_limit(
-        self, user: User, quotas: TierQuotas
-    ) -> Tuple[bool, Optional[int]]:
+    def _check_per_minute_limit(self, user: User, quotas: TierQuotas) -> Tuple[bool, Optional[int]]:
         """Check per-minute rate limit"""
         bucket_key = f"user:{user.id}:minute"
 
@@ -169,9 +165,7 @@ class RateLimiter:
                 quotas.requests_per_minute / 60.0,  # refill rate per second
             )
 
-    def _check_daily_limit(
-        self, user: User, quotas: TierQuotas
-    ) -> Tuple[bool, Optional[int]]:
+    def _check_daily_limit(self, user: User, quotas: TierQuotas) -> Tuple[bool, Optional[int]]:
         """Check daily rate limit"""
         user_id = user.id
 
@@ -229,9 +223,7 @@ class RateLimiter:
 
         return False, retry_after
 
-    def _check_redis_limit(
-        self, key: str, limit: int, window: int
-    ) -> Tuple[bool, Optional[int]]:
+    def _check_redis_limit(self, key: str, limit: int, window: int) -> Tuple[bool, Optional[int]]:
         """Check rate limit using Redis"""
         if not self.redis_client:
             return True, None
@@ -267,9 +259,7 @@ class RateLimiter:
             print(f"Redis error: {e}")
             return True, None
 
-    def get_rate_limit_headers(
-        self, user: User, endpoint: Optional[str] = None
-    ) -> dict:
+    def get_rate_limit_headers(self, user: User, endpoint: Optional[str] = None) -> dict:
         """
         Get rate limit headers for response
 
@@ -325,9 +315,7 @@ class RateLimiter:
 
         # Clear endpoint buckets
         keys_to_remove = [
-            key
-            for key in self._endpoint_buckets.keys()
-            if key.startswith(f"{user_id}:")
+            key for key in self._endpoint_buckets.keys() if key.startswith(f"{user_id}:")
         ]
         for key in keys_to_remove:
             del self._endpoint_buckets[key]
