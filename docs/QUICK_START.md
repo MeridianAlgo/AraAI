@@ -55,19 +55,19 @@ $env:PYTHONIOENCODING="utf-8"
 # Train stock model (5 random stocks)
 python scripts/train_stock_model.py \
   --db-file training.db \
-  --output models/unified_stock_model.pt \
-  --epochs 500 \
+  --output models/Stock_Pred.pt \
+  --epochs 60 \
   --sample-size 5
 
 # Train forex model (3 random pairs)
 python scripts/train_forex_model.py \
   --db-file training.db \
-  --output models/unified_forex_model.pt \
-  --epochs 500 \
+  --output models/Forex_Pred.pt \
+  --epochs 60 \
   --sample-size 3
 
 # Fetch training data first
-python scripts/fetch_training_data.py \
+python scripts/fetch_and_store_data.py \
   --db-file training.db \
   --asset-type stock \
   --limit 100
@@ -76,9 +76,6 @@ python scripts/fetch_training_data.py \
 ### Monitoring
 
 ```bash
-# View training dashboard
-python scripts/training_dashboard.py
-
 # Check database
 sqlite3 training.db "SELECT * FROM model_metadata ORDER BY training_date DESC LIMIT 10"
 
@@ -114,7 +111,7 @@ ruff check --fix scripts/ meridianalgo/ ara/
 from meridianalgo.unified_ml import UnifiedStockML
 
 # Load model
-ml = UnifiedStockML(model_path="models/unified_stock_model.pt")
+ml = UnifiedStockML(model_path="models/Stock_Pred.pt")
 
 # Make prediction
 prediction = ml.predict_ultimate('AAPL', days=5)
@@ -130,7 +127,7 @@ for pred in prediction['predictions']:
 from meridianalgo.forex_ml import ForexML
 
 # Load model
-forex_ml = ForexML(model_path="models/unified_forex_model.pt")
+forex_ml = ForexML(model_path="models/Forex_Pred.pt")
 
 # Make prediction
 prediction = forex_ml.predict_forex('EURUSD', days=5)
@@ -196,16 +193,16 @@ Actions tab → Select workflow → Run workflow
 # Stock model with tracking
 python scripts/train_stock_model.py \
   --db-file training.db \
-  --output models/unified_stock_model.pt \
-  --epochs 500 \
+  --output models/Stock_Pred.pt \
+  --epochs 60 \
   --sample-size 5 \
   --comet-api-key $COMET_API_KEY
 
 # Forex model with tracking
 python scripts/train_forex_model.py \
   --db-file training.db \
-  --output models/unified_forex_model.pt \
-  --epochs 500 \
+  --output models/Forex_Pred.pt \
+  --epochs 60 \
   --sample-size 3 \
   --comet-api-key $COMET_API_KEY
 ```
@@ -215,12 +212,12 @@ python scripts/train_forex_model.py \
 ```bash
 # Upload stock model
 python scripts/push_elite_models.py \
-  --model-path models/unified_stock_model.pt \
+  --model-path models/Stock_Pred.pt \
   --model-type stock
 
 # Upload forex model
 python scripts/push_elite_models.py \
-  --model-path models/unified_forex_model.pt \
+  --model-path models/Forex_Pred.pt \
   --model-type forex
 ```
 
@@ -247,7 +244,7 @@ pip install -r requirements.txt --force-reinstall
 ```bash
 # Reset database
 rm training.db
-python scripts/fetch_training_data.py --db-file training.db --asset-type stock --limit 10
+python scripts/fetch_and_store_data.py --db-file training.db --asset-type stock --limit 10
 ```
 
 ---

@@ -113,14 +113,14 @@ Input Layer (OHLCV + 44 Technical Indicators)
 - **Schedule**: Every hour at :00
 - **Workflow**: `.github/workflows/hourly-train-stock.yml`
 - **Default**: 5 random stocks per session
-- **Model**: `models/unified_stock_model.pt`
+- **Model**: `models/Stock_Pred.pt`
 - **Tracking**: Comet ML project `ara-ai-stock`
 
 #### 2. Forex Model Training (Hourly)
 - **Schedule**: Every hour at :30
 - **Workflow**: `.github/workflows/hourly-train-forex.yml`
 - **Default**: 3 random forex pairs per session
-- **Model**: `models/unified_forex_model.pt`
+- **Model**: `models/Forex_Pred.pt`
 - **Tracking**: Comet ML project `ara-ai-forex`
 
 #### 3. Code Quality (Automated)
@@ -147,10 +147,10 @@ from meridianalgo.unified_ml import UnifiedStockML
 from meridianalgo.forex_ml import ForexML
 from huggingface_hub import hf_hub_download
 
-# Download unified stock model
+# Download stock prediction model
 stock_model_path = hf_hub_download(
     repo_id="MeridianAlgo/ARA.AI",
-    filename="models/unified_stock_model.pt"
+    filename="models/Stock_Pred.pt"
 )
 
 # Load and predict for any stock
@@ -161,10 +161,10 @@ print(f"Current: ${prediction['current_price']:.2f}")
 for pred in prediction['predictions']:
     print(f"Day {pred['day']}: ${pred['predicted_price']:.2f}")
 
-# Download unified forex model
+# Download forex prediction model
 forex_model_path = hf_hub_download(
     repo_id="MeridianAlgo/ARA.AI",
-    filename="models/unified_forex_model.pt"
+    filename="models/Forex_Pred.pt"
 )
 
 # Load and predict forex
@@ -178,17 +178,17 @@ forex_pred = forex_ml.predict_forex('EURUSD', days=5)
 # Train stock model with Comet ML tracking
 python scripts/train_stock_model.py \
   --db-file training.db \
-  --output models/unified_stock_model.pt \
-  --epochs 500 \
-  --sample-size 10 \
+  --output models/Stock_Pred.pt \
+  --epochs 60 \
+  --sample-size 5 \
   --comet-api-key $COMET_API_KEY
 
 # Train forex model with Comet ML tracking
 python scripts/train_forex_model.py \
   --db-file training.db \
-  --output models/unified_forex_model.pt \
-  --epochs 500 \
-  --sample-size 5 \
+  --output models/Forex_Pred.pt \
+  --epochs 60 \
+  --sample-size 3 \
   --comet-api-key $COMET_API_KEY
 ```
 
@@ -208,12 +208,15 @@ AraAI/
 │   ├── train_stock_model.py
 │   ├── train_forex_model.py
 │   ├── fetch_training_data.py
+│   ├── fetch_and_store_data.py
 │   └── push_elite_models.py
 ├── meridianalgo/              # Core ML algorithms
-│   ├── unified_ml.py
-│   ├── forex_ml.py
-│   ├── revolutionary_model.py
-│   └── large_torch_model.py
+│   ├── unified_ml.py          # Unified stock model
+│   ├── forex_ml.py            # Forex model
+│   ├── revolutionary_model.py # Model architecture
+│   ├── large_torch_model.py   # Training system
+│   ├── direction_loss.py      # Direction-aware loss
+│   └── utils.py               # Utilities
 ├── ara/                       # Advanced features
 │   ├── api/                  # FastAPI REST API
 │   ├── alerts/               # Alert system

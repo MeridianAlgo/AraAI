@@ -2,28 +2,29 @@
 
 Core Python package for ARA AI stock prediction system.
 
-## Modules
+## Active Modules
 
-- `ultimate_ml.py` - Ultimate ML system with 8-model ensemble
-- `core.py` - Core prediction engine
-- `console.py` - Console output formatting
-- `data.py` - Data management and technical indicators
+- `unified_ml.py` - Unified stock prediction model
+- `forex_ml.py` - Forex prediction model
+- `revolutionary_model.py` - Revolutionary 2026 architecture (71M parameters)
+- `large_torch_model.py` - Advanced ML training system
+- `direction_loss.py` - Direction-aware loss functions
 - `utils.py` - Utility functions and helpers
-- `ai_analysis.py` - AI-powered company analysis
-- `company_analysis.py` - Financial health and risk analysis
-- `advanced_ml.py` - Advanced ML models
-- `real_time_ml.py` - Real-time prediction system
-- `fast_ml.py` - Fast inference models
-- `performance.py` - Performance monitoring
 
 ## Usage
 
 ```python
-from meridianalgo.ultimate_ml import UltimateStockML
+from meridianalgo.unified_ml import UnifiedStockML
+from meridianalgo.forex_ml import ForexML
 
-ml = UltimateStockML()
+# Stock predictions
+ml = UnifiedStockML()
 result = ml.predict_ultimate('AAPL', days=5)
+
+# Forex predictions
+forex = ForexML()
+result = forex.predict_forex('EURUSD', days=5)
 ```
 
 **Maintained by**: MeridianAlgo  
-**Last Updated**: October 22, 2025
+**Last Updated**: February 2026

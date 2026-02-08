@@ -82,7 +82,7 @@ jobs:
           
           python scripts/train_forex_model.py \
             --db-file training.db \
-            --output models/unified_forex_model.pt \
+            --output models/Forex_Pred.pt \
             --epochs "$EPOCHS" \
             --sample-size "$SAMPLE_SIZE" \
             --comet-api-key "$COMET_API_KEY"
@@ -92,7 +92,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python scripts/push_elite_models.py --model-path models/unified_forex_model.pt --model-type forex
+          python scripts/push_elite_models.py --model-path models/Forex_Pred.pt --model-type forex
       
       - name: Upload Artifacts
         if: always()
@@ -100,7 +100,7 @@ jobs:
         with:
           name: forex-training-${{ github.run_number }}
           path: |
-            models/unified_forex_model.pt
+            models/Forex_Pred.pt
             training.db
           retention-days: 7
       

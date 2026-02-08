@@ -82,7 +82,7 @@ jobs:
           
           python scripts/train_stock_model.py \
             --db-file training.db \
-            --output models/unified_stock_model.pt \
+            --output models/Stock_Pred.pt \
             --epochs "$EPOCHS" \
             --sample-size "$SAMPLE_SIZE" \
             --comet-api-key "$COMET_API_KEY"
@@ -92,7 +92,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python scripts/push_elite_models.py --model-path models/unified_stock_model.pt --model-type stock
+          python scripts/push_elite_models.py --model-path models/Stock_Pred.pt --model-type stock
       
       - name: Upload Artifacts
         if: always()
@@ -100,7 +100,7 @@ jobs:
         with:
           name: stock-training-${{ github.run_number }}
           path: |
-            models/unified_stock_model.pt
+            models/Stock_Pred.pt
             training.db
           retention-days: 7
       
