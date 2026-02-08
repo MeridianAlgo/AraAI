@@ -209,7 +209,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train unified forex prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument(
-        "--output", default="models/unified_forex_model.pt", help="Output model path"
+        "--output", default="models/Forex_Pred.pt", help="Output model path"
     )
     parser.add_argument("--epochs", type=int, default=60, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")

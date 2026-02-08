@@ -143,7 +143,7 @@ def train_stock_model(
 
     # Initialize Comet ML
     config = {
-        "model_type": "unified_stock",
+        "model_type": "Stock_Pred",
         "epochs": epochs,
         "batch_size": batch_size,
         "learning_rate": lr,
@@ -151,11 +151,12 @@ def train_stock_model(
         "data_rows": len(data),
         "use_all_data": use_all_data,
         "seed": seed,
+        "direction_loss": True,
     }
 
     experiment = init_comet(
         project_name="ara-ai-stock",
-        experiment_name=f"stock-unified-{int(time.time())}",
+        experiment_name=f"Stock_Pred-{int(time.time())}",
         config=config,
         api_key=comet_api_key,
     )
@@ -212,7 +213,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train unified stock prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument(
-        "--output", default="models/unified_stock_model.pt", help="Output model path"
+        "--output", default="models/Stock_Pred.pt", help="Output model path"
     )
     parser.add_argument("--epochs", type=int, default=60, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
