@@ -11,9 +11,9 @@ import torch.nn.functional as F
 class DirectionAwareLoss(nn.Module):
     """
     Combined loss that penalizes both price errors and direction errors
-    
+
     Loss = α * MSE(price) + β * DirectionLoss + γ * MagnitudeLoss
-    
+
     Where:
     - MSE(price): Standard mean squared error for price prediction
     - DirectionLoss: Binary cross-entropy for direction (up/down)
@@ -40,7 +40,7 @@ class DirectionAwareLoss(nn.Module):
             pred_returns: Predicted returns [batch_size]
             true_returns: Actual returns [batch_size]
             prev_prices: Previous prices for calculating direction [batch_size] (optional)
-        
+
         Returns:
             Combined loss value
         """
@@ -87,7 +87,7 @@ class DirectionAccuracyMetric:
     def update(self, pred_returns, true_returns):
         """
         Update metrics with batch predictions
-        
+
         Args:
             pred_returns: Predicted returns [batch_size]
             true_returns: Actual returns [batch_size]
@@ -127,7 +127,7 @@ class BalancedDirectionLoss(nn.Module):
         Args:
             pred_returns: Predicted returns [batch_size]
             true_returns: Actual returns [batch_size]
-        
+
         Returns:
             Combined loss with balanced direction component
         """
@@ -173,7 +173,7 @@ class BalancedDirectionLoss(nn.Module):
 def calculate_direction_metrics(pred_returns, true_returns):
     """
     Calculate comprehensive direction metrics
-    
+
     Returns:
         dict with direction accuracy, precision, recall, F1
     """

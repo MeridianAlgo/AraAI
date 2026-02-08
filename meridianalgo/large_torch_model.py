@@ -604,9 +604,10 @@ class AdvancedMLSystem:
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
                 optimizer, T_0=200, T_mult=2, eta_min=lr * 0.0001
             )
-            
+
             # Use direction-aware loss for better trading performance
             from .direction_loss import BalancedDirectionLoss, calculate_direction_metrics
+
             criterion = BalancedDirectionLoss(alpha=0.5, beta=0.5)
 
             train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
@@ -652,7 +653,7 @@ class AdvancedMLSystem:
                     val_pred, _ = self.model(X_val_device)
                     val_loss, val_loss_components = criterion(val_pred, y_val_device)
                     val_loss = val_loss.item()
-                    
+
                     # Calculate direction metrics
                     direction_metrics = calculate_direction_metrics(val_pred, y_val_device)
 
@@ -672,10 +673,10 @@ class AdvancedMLSystem:
                             "train_loss": train_loss,
                             "val_loss": val_loss,
                             "learning_rate": current_lr,
-                            "direction_accuracy": direction_metrics['direction_accuracy'],
-                            "precision": direction_metrics['precision'],
-                            "recall": direction_metrics['recall'],
-                            "f1_score": direction_metrics['f1_score'],
+                            "direction_accuracy": direction_metrics["direction_accuracy"],
+                            "precision": direction_metrics["precision"],
+                            "recall": direction_metrics["recall"],
+                            "f1_score": direction_metrics["f1_score"],
                         },
                         epoch=epoch + 1,
                     )
