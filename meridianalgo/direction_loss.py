@@ -37,13 +37,19 @@ class DirectionAwareLoss(nn.Module):
     def forward(self, pred_returns, true_returns, prev_prices=None):
         """
         Args:
-            pred_returns: Predicted returns [batch_size]
-            true_returns: Actual returns [batch_size]
+            pred_returns: Predicted returns [batch_size] or [batch_size, 1]
+            true_returns: Actual returns [batch_size] or [batch_size, 1]
             prev_prices: Previous prices for calculating direction [batch_size] (optional)
 
         Returns:
             Combined loss value
         """
+        # Ensure tensors are 1D
+        if pred_returns.dim() > 1:
+            pred_returns = pred_returns.squeeze(-1)
+        if true_returns.dim() > 1:
+            true_returns = true_returns.squeeze(-1)
+
         # 1. MSE Loss on returns
         mse_loss = self.mse(pred_returns, true_returns)
 
@@ -125,12 +131,18 @@ class BalancedDirectionLoss(nn.Module):
     def forward(self, pred_returns, true_returns):
         """
         Args:
-            pred_returns: Predicted returns [batch_size]
-            true_returns: Actual returns [batch_size]
+            pred_returns: Predicted returns [batch_size] or [batch_size, 1]
+            true_returns: Actual returns [batch_size] or [batch_size, 1]
 
         Returns:
             Combined loss with balanced direction component
         """
+        # Ensure tensors are 1D
+        if pred_returns.dim() > 1:
+            pred_returns = pred_returns.squeeze(-1)
+        if true_returns.dim() > 1:
+            true_returns = true_returns.squeeze(-1)
+
         # 1. MSE Loss
         mse_loss = self.mse(pred_returns, true_returns)
 
@@ -177,6 +189,12 @@ def calculate_direction_metrics(pred_returns, true_returns):
     Returns:
         dict with direction accuracy, precision, recall, F1
     """
+    # Ensure tensors are 1D
+    if pred_returns.dim() > 1:
+        pred_returns = pred_returns.squeeze(-1)
+    if true_returns.dim() > 1:
+        true_returns = true_returns.squeeze(-1)
+
     pred_direction = (pred_returns > 0).float()
     true_direction = (true_returns > 0).float()
 
