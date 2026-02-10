@@ -114,7 +114,6 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         """
 
     df = pd.read_sql_query(query, conn, params=list(symbols))
-    conn.close()
 
     if df.empty:
         raise ValueError("No stock data found in database")
@@ -127,7 +126,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         print(
             f"  ⚠️  Warning: Only {rows_per_symbol:.0f} rows per symbol (minimum {min_rows_per_symbol} recommended)"
         )
-        print(f"  Fetching all available data instead...")
+        print("  Fetching all available data instead...")
 
         # Fallback to all data
         query = f"""
@@ -141,6 +140,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
     print(
         f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} stocks ({len(df) / df['symbol'].nunique():.0f} rows/stock)"
     )
+    conn.close()
     return df
 
 

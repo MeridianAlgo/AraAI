@@ -90,7 +90,8 @@ class UnifiedStockML:
         df["momentum"] = df["Close"] - df["Close"].shift(10)
         df["roc"] = ((df["Close"] - df["Close"].shift(10)) / df["Close"].shift(10)) * 100
 
-        # Fill NaN values
+        # Fill NaN and Inf values
+        df = df.replace([np.inf, -np.inf], np.nan)
         df = df.ffill().bfill().fillna(0)
 
         return df
@@ -211,8 +212,8 @@ class UnifiedStockML:
             X = np.array(X)
             y = np.array(y)
 
-            # Remove NaN
-            mask = ~(np.isnan(X).any(axis=(1, 2)) | np.isnan(y))
+            # Remove NaN and Inf to prevent training explosion
+            mask = np.isfinite(X).all(axis=(1, 2)) & np.isfinite(y)
             X = X[mask]
             y = y[mask]
 

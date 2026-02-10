@@ -114,7 +114,6 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
         """
 
     df = pd.read_sql_query(query, conn, params=list(pairs))
-    conn.close()
 
     if df.empty:
         raise ValueError("No forex data found in database")
@@ -127,7 +126,7 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
         print(
             f"  ⚠️  Warning: Only {rows_per_pair:.0f} rows per pair (minimum {min_rows_per_pair} recommended)"
         )
-        print(f"  Fetching all available data instead...")
+        print("  Fetching all available data instead...")
 
         # Fallback to all data
         query = f"""
@@ -141,6 +140,7 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
     print(
         f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} pairs ({len(df) / df['symbol'].nunique():.0f} rows/pair)"
     )
+    conn.close()
     return df
 
 
