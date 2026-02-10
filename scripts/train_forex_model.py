@@ -79,11 +79,11 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
     conn = sqlite3.connect(db_file)
     placeholders = ",".join(["?"] * len(pairs))
 
-    # Timeframe to days mapping
+    # Timeframe to days mapping - increased for sufficient data
     timeframe_days = {
-        "15m": 3,  # 3 days for 15-minute
-        "1h": 7,  # 1 week for hourly
-        "4h": 30,  # 1 month for 4-hour
+        "15m": 30,  # 30 days for 15-minute (more data needed)
+        "1h": 60,  # 60 days for hourly
+        "4h": 90,  # 90 days for 4-hour
         "1d": 365,  # 1 year for daily
     }
 
@@ -103,7 +103,7 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
             AND date >= datetime('now', '-{days} days')
             ORDER BY symbol, date ASC
         """
-        print(f"  Using timeframe: {timeframe} ({days} days)")
+        print(f"  Using timeframe: {timeframe} ({days} days of data)")
     else:
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
@@ -119,7 +119,28 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
     if df.empty:
         raise ValueError("No forex data found in database")
 
-    print(f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} pairs")
+    # Check if we have sufficient data
+    min_rows_per_pair = 30  # Minimum rows needed per pair
+    rows_per_pair = len(df) / len(pairs)
+
+    if rows_per_pair < min_rows_per_pair:
+        print(
+            f"  ⚠️  Warning: Only {rows_per_pair:.0f} rows per pair (minimum {min_rows_per_pair} recommended)"
+        )
+        print(f"  Fetching all available data instead...")
+
+        # Fallback to all data
+        query = f"""
+            SELECT symbol, date, open, high, low, close, volume
+            FROM market_data
+            WHERE asset_type = 'forex' AND symbol IN ({placeholders})
+            ORDER BY symbol, date ASC
+        """
+        df = pd.read_sql_query(query, conn, params=list(pairs))
+
+    print(
+        f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} pairs ({len(df) / df['symbol'].nunique():.0f} rows/pair)"
+    )
     return df
 
 
