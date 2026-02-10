@@ -10,10 +10,11 @@ This module implements comprehensive performance metrics including:
 - Win rate and profit factor
 """
 
-import numpy as np
-from typing import Dict, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Dict, List, Optional
+
+import numpy as np
 
 
 @dataclass

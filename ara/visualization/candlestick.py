@@ -4,7 +4,8 @@ Candlestick chart visualization with technical indicators.
 This module provides candlestick charts with overlaid technical indicators.
 """
 
-from typing import Optional, Dict, List, Any
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 
 try:

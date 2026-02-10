@@ -5,9 +5,10 @@ Implements comprehensive portfolio-level risk metrics including Sharpe ratio,
 Sortino ratio, maximum drawdown, and other performance measures.
 """
 
+from typing import Dict, Optional, Union
+
 import numpy as np
 import pandas as pd
-from typing import Dict, Optional, Union
 
 
 class PortfolioMetrics:

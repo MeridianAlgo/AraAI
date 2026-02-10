@@ -3,8 +3,8 @@ Grafana dashboard configurations
 Provides JSON configurations for Grafana dashboards
 """
 
-from typing import Dict, Any, List
 import json
+from typing import Any, Dict, List
 
 
 def get_system_metrics_dashboard() -> Dict[str, Any]:

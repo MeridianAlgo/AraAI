@@ -5,11 +5,12 @@ Supports stocks and forex pairs
 """
 
 import argparse
+import sys
+from datetime import datetime
+from pathlib import Path
+
 import pandas as pd
 import yfinance as yf
-from pathlib import Path
-from datetime import datetime
-import sys
 
 
 def fetch_stock_data(symbol, period="2y", interval="1d"):

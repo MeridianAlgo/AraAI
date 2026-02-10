@@ -3,9 +3,10 @@ Attention Visualizer for Transformer Models
 Extracts and visualizes attention weights for explainability
 """
 
-import numpy as np
-from typing import Dict, List, Any, Optional
 import warnings
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 try:
     import torch
@@ -324,7 +325,7 @@ class AttentionVisualizer:
 
         # Create labels if not provided
         if time_labels is None:
-            time_labels = [f"t-{seq_len-i-1}" for i in range(seq_len)]
+            time_labels = [f"t-{seq_len - i - 1}" for i in range(seq_len)]
 
         return {
             "data": heatmap_data.tolist(),

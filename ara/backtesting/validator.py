@@ -9,15 +9,16 @@ This module provides:
 - A/B testing for model comparison
 """
 
+import json
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Callable, Any
-from datetime import datetime, timedelta
-from dataclasses import dataclass
-from pathlib import Path
-import json
 
-from ara.backtesting.metrics import PerformanceMetrics, MetricsResult
+from ara.backtesting.metrics import MetricsResult, PerformanceMetrics
 
 
 @dataclass
@@ -521,7 +522,7 @@ class ModelValidator:
         filepath = self.validation_dir / f"accuracy_history_{model_name}.json"
 
         if filepath.exists():
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 return json.load(f)
         return []
 
@@ -540,7 +541,7 @@ class ModelValidator:
         # Find all validation files for this model
         pattern = f"validation_{model_name}_*.json"
         for filepath in self.validation_dir.glob(pattern):
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 result = json.load(f)
                 result_date = datetime.fromisoformat(result["validation_date"])
 

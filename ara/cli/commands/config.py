@@ -4,8 +4,9 @@ Configuration management commands
 
 import click
 from rich.console import Console
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
+
 from ara.cli.utils import handle_error
 
 console = Console()
@@ -28,8 +29,9 @@ def init(interactive):
         ara config init --interactive
     """
     try:
-        from ara.config.config import Config
         from pathlib import Path
+
+        from ara.config.config import Config
 
         config_path = Path.home() / ".ara" / "config.yaml"
 
@@ -152,8 +154,9 @@ def reset(force):
             if not Confirm.ask("Are you sure you want to reset configuration to defaults?"):
                 return
 
-        from ara.config.config import Config
         from pathlib import Path
+
+        from ara.config.config import Config
 
         config_path = Path.home() / ".ara" / "config.yaml"
         Config.create_default_config(config_path)

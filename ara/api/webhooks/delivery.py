@@ -3,22 +3,23 @@ Webhook delivery service with retry logic
 """
 
 import asyncio
-import aiohttp
-import hmac
 import hashlib
+import hmac
 import json
-import uuid
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
 import logging
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+import aiohttp
+
+from ara.api.webhooks.manager import webhook_manager
 from ara.api.webhooks.models import (
+    WebhookDelivery,
     WebhookEvent,
     WebhookEventType,
-    WebhookDelivery,
     WebhookResponse,
 )
-from ara.api.webhooks.manager import webhook_manager
 
 logger = logging.getLogger(__name__)
 
@@ -201,8 +202,7 @@ class WebhookDeliveryService:
                 webhook_manager.update_delivery_stats(webhook.id, success=False, status="failed")
 
                 logger.error(
-                    f"Webhook delivery failed permanently: {webhook.id} "
-                    f"(event: {event.event_type})"
+                    f"Webhook delivery failed permanently: {webhook.id} (event: {event.event_type})"
                 )
 
         return WebhookDelivery(**delivery)

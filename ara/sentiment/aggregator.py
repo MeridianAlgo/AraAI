@@ -5,8 +5,9 @@ Aggregates sentiment from multiple sources and calculates overall sentiment metr
 """
 
 import asyncio
-from typing import List, Dict, Optional, Any
 import logging
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 
 from ara.sentiment.base_analyzer import (
@@ -14,9 +15,9 @@ from ara.sentiment.base_analyzer import (
     SentimentScore,
     SentimentType,
 )
-from ara.sentiment.twitter_analyzer import TwitterSentimentAnalyzer
-from ara.sentiment.reddit_analyzer import RedditSentimentAnalyzer
 from ara.sentiment.news_analyzer import NewsSentimentAnalyzer
+from ara.sentiment.reddit_analyzer import RedditSentimentAnalyzer
+from ara.sentiment.twitter_analyzer import TwitterSentimentAnalyzer
 
 logger = logging.getLogger(__name__)
 

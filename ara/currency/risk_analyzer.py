@@ -2,16 +2,17 @@
 Currency risk analysis for multi-currency portfolios
 """
 
+import asyncio
+from datetime import datetime
+from typing import Dict, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Dict, Optional, Tuple
-from datetime import datetime
 import yfinance as yf
-import asyncio
 
-from ara.currency.models import Currency, CurrencyRiskMetrics
-from ara.currency.converter import CurrencyConverter
 from ara.core.exceptions import DataProviderError
+from ara.currency.converter import CurrencyConverter
+from ara.currency.models import Currency, CurrencyRiskMetrics
 from ara.utils import get_logger
 
 logger = get_logger(__name__)

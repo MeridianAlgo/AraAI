@@ -9,11 +9,12 @@ Implements multiple portfolio optimization strategies including:
 - Mean-CVaR optimization
 """
 
+import warnings
+from typing import Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Union
-from scipy.optimize import minimize, Bounds
-import warnings
+from scipy.optimize import Bounds, minimize
 
 
 class PortfolioOptimizer:
@@ -260,7 +261,7 @@ class PortfolioOptimizer:
         # Omega matrix: uncertainty in views
         if view_confidence is None:
             # Default: equal confidence for all views
-            view_confidence = {asset: 0.5 for asset in assets}
+            view_confidence = dict.fromkeys(assets, 0.5)
 
         # Omega is diagonal with view variances
         # Higher confidence = lower variance

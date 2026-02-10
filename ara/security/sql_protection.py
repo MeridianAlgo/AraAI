@@ -7,6 +7,7 @@ queries and input validation.
 
 import re
 from typing import Any, Dict, Optional, Tuple
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 

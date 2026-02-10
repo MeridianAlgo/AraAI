@@ -2,10 +2,11 @@
 API Key management
 """
 
-import secrets
 import hashlib
+import secrets
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
+
 from ara.api.auth.models import APIKey, User
 from ara.core.exceptions import AraAIException
 

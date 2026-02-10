@@ -3,8 +3,9 @@ Feature Contribution Analyzer
 Analyzes and ranks feature contributions to predictions
 """
 
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
-from typing import Dict, List, Any, Optional, Tuple
 
 from ara.core.exceptions import ValidationError
 

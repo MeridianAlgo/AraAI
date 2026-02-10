@@ -10,12 +10,13 @@ This module provides comprehensive reporting capabilities including:
 - PDF report generation
 """
 
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Any
-from datetime import datetime
-import json
-from pathlib import Path
 
 try:
     import plotly.graph_objects as go
@@ -26,8 +27,8 @@ except ImportError:
     PLOTLY_AVAILABLE = False
 
 try:
-    import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
 
     MATPLOTLIB_AVAILABLE = True
 except ImportError:

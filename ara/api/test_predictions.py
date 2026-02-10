@@ -2,12 +2,14 @@
 Tests for prediction endpoints
 """
 
+from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
+
 from ara.api.app import create_app
-from unittest.mock import patch, MagicMock
-import pandas as pd
-import numpy as np
 
 
 @pytest.fixture

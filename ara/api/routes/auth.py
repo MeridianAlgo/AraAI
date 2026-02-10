@@ -4,26 +4,27 @@ Authentication and authorization routes
 
 from datetime import timedelta
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from ara.api.auth.models import (
-    LoginRequest,
-    LoginResponse,
-    APIKeyCreateRequest,
-    APIKeyResponse,
-    APIKeyListResponse,
-    User,
-    UserRole,
-    AccessTier,
-)
+
+from ara.api.auth.api_key_manager import APIKeyError, APIKeyManager
+from ara.api.auth.dependencies import get_current_user, require_role
 from ara.api.auth.jwt_handler import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
     authenticate_user,
     create_access_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
-from ara.api.auth.api_key_manager import APIKeyManager, APIKeyError
+from ara.api.auth.models import (
+    AccessTier,
+    APIKeyCreateRequest,
+    APIKeyListResponse,
+    APIKeyResponse,
+    LoginRequest,
+    LoginResponse,
+    User,
+    UserRole,
+)
 from ara.api.auth.user_manager import UserManager
-from ara.api.auth.dependencies import get_current_user, require_role
-
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 

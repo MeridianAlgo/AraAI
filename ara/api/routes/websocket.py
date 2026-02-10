@@ -2,16 +2,17 @@
 WebSocket routes for real-time updates
 """
 
-from fastapi import APIRouter, WebSocket, Query
-from typing import Optional
 import logging
+from typing import Optional
 
-from ara.api.websocket.handlers import (
-    handle_predictions_ws,
-    handle_market_data_ws,
-    handle_alerts_ws,
-)
+from fastapi import APIRouter, Query, WebSocket
+
 from ara.api.auth.dependencies import get_current_user_ws
+from ara.api.websocket.handlers import (
+    handle_alerts_ws,
+    handle_market_data_ws,
+    handle_predictions_ws,
+)
 
 logger = logging.getLogger(__name__)
 

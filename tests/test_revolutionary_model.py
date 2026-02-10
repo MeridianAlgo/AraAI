@@ -5,26 +5,27 @@ Tests all components and ensures production readiness
 """
 
 import sys
-import torch
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+import torch
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from meridianalgo.forex_ml import ForexML
+from meridianalgo.large_torch_model import AdvancedMLSystem
 from meridianalgo.revolutionary_model import (
-    RevolutionaryFinancialModel,
-    RotaryEmbedding,
     GroupedQueryAttention,
-    SwiGLU,
-    RMSNorm,
     MambaBlock,
     MixtureOfExperts,
+    RevolutionaryFinancialModel,
     RevolutionaryTransformerBlock,
+    RMSNorm,
+    RotaryEmbedding,
+    SwiGLU,
 )
-from meridianalgo.large_torch_model import AdvancedMLSystem
 from meridianalgo.unified_ml import UnifiedStockML
-from meridianalgo.forex_ml import ForexML
 
 
 def test_rotary_embedding():

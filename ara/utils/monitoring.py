@@ -3,12 +3,12 @@ Performance monitoring and metrics collection
 Provides decorators and utilities for tracking system performance
 """
 
-import time
 import functools
 import inspect
-from typing import Callable, Any, Dict, Optional
-from collections import defaultdict
 import threading
+import time
+from collections import defaultdict
+from typing import Any, Callable, Dict, Optional
 
 from ara.utils.logging import get_logger
 

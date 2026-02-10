@@ -1,0 +1,264 @@
+name: Train Stock Model
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'  # Every 3 hours
+  workflow_dispatch:
+    inputs:
+      train_all_stocks:
+        description: 'Train with all stocks (no sampling)'
+        type: boolean
+        required: false
+        default: false
+      epochs:
+        description: 'Training epochs'
+        required: false
+        default: '60'
+      sample_size:
+        description: 'Number of stocks to sample (0 = all)'
+        required: false
+        default: '5'
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  PYTHON_VERSION: '3.11'
+  CACHE_VERSION: v1
+
+jobs:
+  setup:
+    name: Setup & Fetch Stock Data
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      timeframe: ${{ steps.randomize.outputs.timeframe }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Cache Dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+          pip install comet-ml
+      
+      - name: Randomize Timeframe
+        id: randomize
+        run: |
+          TIMEFRAMES=("1h" "4h" "1d" "1w")
+          SELECTED=${TIMEFRAMES[$RANDOM % ${#TIMEFRAMES[@]}]}
+          echo "timeframe=$SELECTED" >> $GITHUB_OUTPUT
+          echo "📊 Selected timeframe: $SELECTED"
+      
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          df -h
+      
+      - name: Fetch Stock Data
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "📥 Fetching stock data..."
+          python scripts/fetch_and_store_data.py \
+            --db-file training.db \
+            --asset-type stock \
+            --limit 100
+      
+      - name: Upload Database
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-training-db-${{ github.run_number }}
+          path: training.db
+          retention-days: 1
+
+  train:
+    name: Train Stock Model
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    environment:
+      name: stock-training
+      url: https://www.comet.com/meridianalgo/ara-ai-stock
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Download Database
+        uses: actions/download-artifact@v4
+        with:
+          name: stock-training-db-${{ github.run_number }}
+      
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+          pip install comet-ml
+      
+      - name: Train Model
+        env:
+          COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
+        run: |
+          EPOCHS="${{ inputs.epochs || '60' }}"
+          SAMPLE_SIZE="${{ inputs.sample_size || '5' }}"
+          ALL_STOCKS="${{ inputs.train_all_stocks }}"
+          TIMEFRAME="${{ needs.setup.outputs.timeframe }}"
+          
+          echo "🚀 Training Stock Model"
+          echo "  Timeframe: $TIMEFRAME"
+          echo "  Epochs: $EPOCHS"
+          
+          if [ "$ALL_STOCKS" = "true" ] || [ "$SAMPLE_SIZE" = "0" ]; then
+            echo "  Mode: ALL STOCKS"
+            python scripts/train_stock_model.py \
+              --db-file training.db \
+              --output models/Stock_Pred.pt \
+              --epochs "$EPOCHS" \
+              --use-all-data \
+              --timeframe "$TIMEFRAME" \
+              --comet-api-key "$COMET_API_KEY" \
+              --seed $RANDOM
+          else
+            echo "  Sample Size: $SAMPLE_SIZE"
+            python scripts/train_stock_model.py \
+              --db-file training.db \
+              --output models/Stock_Pred.pt \
+              --epochs "$EPOCHS" \
+              --sample-size "$SAMPLE_SIZE" \
+              --timeframe "$TIMEFRAME" \
+              --comet-api-key "$COMET_API_KEY" \
+              --seed $RANDOM
+          fi
+      
+      - name: Upload Model
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-model-${{ github.run_number }}
+          path: models/Stock_Pred.pt
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Hugging Face
+    needs: train
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: huggingface-stock
+      url: https://huggingface.co/MeridianAlgo/ARA.AI
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Dependencies
+        run: |
+          pip install huggingface_hub python-dotenv
+      
+      - name: Download Model
+        uses: actions/download-artifact@v4
+        with:
+          name: stock-model-${{ github.run_number }}
+          path: models/
+      
+      - name: Upload to HF Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "📤 Uploading Stock Model to Hugging Face..."
+          python scripts/push_elite_models.py \
+            --model-path models/Stock_Pred.pt \
+            --model-type stock
+
+  cleanup:
+    name: Cleanup
+    needs: [setup, train, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Delete Artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: stock-training-db-${{ github.run_number }}
+        continue-on-error: true
+      
+      - name: Create Failure Issue
+        if: |
+          needs.train.result == 'failure' ||
+          needs.deploy.result == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `Stock Training Failed - Run ${context.runNumber}`;
+            const body = `## Stock Model Training Failure
+            
+            **Workflow:** [Run ${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            **Timeframe:** ${{ needs.setup.outputs.timeframe }}
+            **Triggered:** ${context.eventName}
+            **Commit:** ${context.sha.substring(0, 7)}
+            
+            ### Job Results
+            - Setup: ${{ needs.setup.result }}
+            - Training: ${{ needs.train.result }}
+            - Deployment: ${{ needs.deploy.result }}
+            
+            ### Configuration
+            - Epochs: ${{ inputs.epochs || '60' }}
+            - Sample Size: ${{ inputs.sample_size || '5' }}
+            - All Stocks: ${{ inputs.train_all_stocks || 'false' }}
+            
+            ### Action Items
+            - [ ] Review training logs
+            - [ ] Check data quality
+            - [ ] Verify Comet ML integration
+            - [ ] Test locally with same parameters
+            
+            [View Logs](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'stock-training', 'automated']
+            });

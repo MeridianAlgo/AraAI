@@ -3,15 +3,16 @@ Cryptocurrency exchange data providers
 Supports multiple exchanges with unified interface
 """
 
-import ccxt
 import asyncio
-import pandas as pd
-from typing import Dict, List, Any, Optional, Callable
 from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional
 
-from ara.data.base_provider import BaseDataProvider
-from ara.core.interfaces import AssetType
+import ccxt
+import pandas as pd
+
 from ara.core.exceptions import DataProviderError
+from ara.core.interfaces import AssetType
+from ara.data.base_provider import BaseDataProvider
 from ara.utils import get_logger, timed
 
 logger = get_logger(__name__)
@@ -507,7 +508,7 @@ class CryptoDataAggregator:
                 df,
                 on="timestamp",
                 how="outer",
-                suffixes=("", f'_{df["source"].iloc[0]}'),
+                suffixes=("", f"_{df['source'].iloc[0]}"),
             )
 
         # Resolve conflicts using weighted average based on quality scores

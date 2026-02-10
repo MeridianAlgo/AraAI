@@ -3,9 +3,10 @@ Visualization Module for Explainability
 Creates visual explanations including bar charts and heatmaps
 """
 
-import numpy as np
-from typing import Dict, List, Any, Optional, Tuple
 import warnings
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     import matplotlib

@@ -4,11 +4,12 @@ Defines abstract base classes for all major components
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Callable, Any
-from pathlib import Path
-import pandas as pd
-import numpy as np
 from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Tuple
+
+import numpy as np
+import pandas as pd
 
 
 class AssetType(Enum):

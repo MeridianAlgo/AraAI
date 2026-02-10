@@ -5,8 +5,9 @@ This module provides a centralized registry for all technical indicators,
 allowing dynamic registration and retrieval of indicator functions.
 """
 
-from typing import Dict, Callable, List, Any, Optional
 from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional
+
 import pandas as pd
 
 

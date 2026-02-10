@@ -8,10 +8,10 @@ to the new ARA architecture.
 import json
 import pickle
 import shutil
-from pathlib import Path
-from typing import Dict, Any, List
-from datetime import datetime
 import warnings
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List
 
 
 class ModelMigrator:
@@ -238,7 +238,7 @@ class ModelMigrator:
         """Migrate JSON model configuration"""
         try:
             # Load old config
-            with open(old_file, "r") as f:
+            with open(old_file) as f:
                 old_config = json.load(f)
 
             # Update config format if needed
@@ -396,7 +396,7 @@ class DataMigrator:
         """Migrate a single cache file"""
         try:
             # Load old cache data
-            with open(old_file, "r") as f:
+            with open(old_file) as f:
                 old_data = json.load(f)
 
             # Update format
@@ -473,7 +473,7 @@ class DataMigrator:
         for file in files:
             if file.suffix == ".json":
                 try:
-                    with open(file, "r") as f:
+                    with open(file) as f:
                         data = json.load(f)
 
                     # Check for required fields

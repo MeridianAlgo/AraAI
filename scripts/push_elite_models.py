@@ -83,7 +83,7 @@ def update_model_card(api, hf_token, repo_id, model_type):
         model_card_path = Path(__file__).parent.parent / "docs" / "MODEL_CARD.md"
 
         if model_card_path.exists():
-            with open(model_card_path, "r", encoding="utf-8") as f:
+            with open(model_card_path, encoding="utf-8") as f:
                 model_card_content = f.read()
         else:
             # Fallback to basic model card

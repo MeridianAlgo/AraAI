@@ -2,9 +2,10 @@
 User management
 """
 
-from typing import Optional, Dict
-from ara.api.auth.models import User, UserRole, AccessTier
+from typing import Dict, Optional
+
 from ara.api.auth.jwt_handler import get_password_hash
+from ara.api.auth.models import AccessTier, User, UserRole
 from ara.core.exceptions import AraAIException
 
 

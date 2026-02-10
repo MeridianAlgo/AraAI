@@ -3,15 +3,17 @@ Forex ML System - Currency pair prediction with Ultimate ML
 Supports major forex pairs with technical analysis
 """
 
+import warnings
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from datetime import datetime, timedelta
-import warnings
 
 warnings.filterwarnings("ignore")
 
 from pathlib import Path
+
 from .unified_ml import UnifiedStockML
 
 

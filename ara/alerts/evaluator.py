@@ -3,7 +3,7 @@ Alert condition evaluation engine
 Evaluates alert conditions against market data and predictions
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from ara.alerts.models import AlertCondition, ConditionOperator
 from ara.core.exceptions import ValidationError

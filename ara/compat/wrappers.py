@@ -6,8 +6,8 @@ All functions and classes in this module are deprecated and will be removed in v
 """
 
 import asyncio
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 try:
     from ara.api.prediction_engine import PredictionEngine
@@ -20,7 +20,7 @@ except ImportError:
     PredictionEngine = None
     AssetType = None
 
-from .deprecation import deprecated, DeprecationLevel, get_warning_manager
+from .deprecation import DeprecationLevel, deprecated, get_warning_manager
 
 
 class AraAI:

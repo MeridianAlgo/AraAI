@@ -4,9 +4,10 @@ Chart factory for creating various types of visualizations.
 This module provides a unified interface for creating different chart types.
 """
 
-from typing import Optional, List
-import pandas as pd
+from typing import List, Optional
+
 import numpy as np
+import pandas as pd
 
 try:
     import plotly.graph_objects as go

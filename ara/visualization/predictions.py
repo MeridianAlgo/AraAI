@@ -4,9 +4,10 @@ Prediction visualization with confidence intervals.
 This module provides visualization for predictions with confidence bounds.
 """
 
-from typing import Dict
-import pandas as pd
 from datetime import datetime
+from typing import Dict
+
+import pandas as pd
 
 try:
     import plotly.graph_objects as go
@@ -91,7 +92,7 @@ class PredictionChart:
                     x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                     y=predictions["upper_bound"],
                     mode="lines",
-                    name=f"{int(confidence_level*100)}% Upper Bound",
+                    name=f"{int(confidence_level * 100)}% Upper Bound",
                     line=dict(color="rgba(255, 0, 0, 0.3)", width=1),
                     showlegend=True,
                 )
@@ -103,7 +104,7 @@ class PredictionChart:
                     x=(predictions["date"] if "date" in predictions.columns else predictions.index),
                     y=predictions["lower_bound"],
                     mode="lines",
-                    name=f"{int(confidence_level*100)}% Lower Bound",
+                    name=f"{int(confidence_level * 100)}% Lower Bound",
                     line=dict(color="rgba(255, 0, 0, 0.3)", width=1),
                     fill="tonexty",
                     fillcolor="rgba(255, 0, 0, 0.1)",
@@ -113,7 +114,7 @@ class PredictionChart:
 
         # Update layout
         fig.update_layout(
-            title=f"{symbol} Price Predictions with {int(confidence_level*100)}% Confidence Interval",
+            title=f"{symbol} Price Predictions with {int(confidence_level * 100)}% Confidence Interval",
             xaxis_title="Date",
             yaxis_title="Price",
             template=self.theme,
@@ -405,7 +406,7 @@ class PredictionChart:
         )
 
         fig.update_layout(
-            title=f'{symbol} Top {top_n} Feature Contributions<br>{prediction_date.strftime("%Y-%m-%d")}',
+            title=f"{symbol} Top {top_n} Feature Contributions<br>{prediction_date.strftime('%Y-%m-%d')}",
             xaxis_title="Contribution to Prediction",
             yaxis_title="Feature",
             template=self.theme,

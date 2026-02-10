@@ -13,12 +13,12 @@ This module provides comprehensive visualization capabilities including:
 - Data export (CSV, Excel, JSON)
 """
 
-from ara.visualization.chart_factory import ChartFactory
 from ara.visualization.candlestick import CandlestickChart
-from ara.visualization.predictions import PredictionChart
-from ara.visualization.portfolio import PortfolioChart
+from ara.visualization.chart_factory import ChartFactory
 from ara.visualization.correlation import CorrelationChart
 from ara.visualization.exporter import ChartExporter, ReportGenerator
+from ara.visualization.portfolio import PortfolioChart
+from ara.visualization.predictions import PredictionChart
 
 __all__ = [
     "ChartFactory",

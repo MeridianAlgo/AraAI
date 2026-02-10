@@ -2,12 +2,14 @@
 Yahoo Finance data provider for stocks and forex
 """
 
-import yfinance as yf
+from typing import Any, Dict
+
 import pandas as pd
-from typing import Dict, Any, List
-from ara.data.base_provider import BaseDataProvider
-from ara.core.interfaces import AssetType
+import yfinance as yf
+
 from ara.core.exceptions import DataProviderError
+from ara.core.interfaces import AssetType
+from ara.data.base_provider import BaseDataProvider
 
 
 class YahooFinanceProvider(BaseDataProvider):

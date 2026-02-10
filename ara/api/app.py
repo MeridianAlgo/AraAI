@@ -2,27 +2,28 @@
 FastAPI application factory
 """
 
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
-from ara.api.models import HealthResponse
-from ara.api.routes import (
-    predictions,
-    backtesting,
-    portfolio,
-    models,
-    market,
-    auth,
-    websocket,
-    webhooks,
-    health,
-)
-from ara.api.middleware import RateLimitMiddleware
-from ara.api.openapi_config import get_openapi_config, TAGS_METADATA
-from ara.core.exceptions import AraAIException
+from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
 from ara import __version__
+from ara.api.middleware import RateLimitMiddleware
+from ara.api.models import HealthResponse
+from ara.api.openapi_config import TAGS_METADATA, get_openapi_config
+from ara.api.routes import (
+    auth,
+    backtesting,
+    health,
+    market,
+    models,
+    portfolio,
+    predictions,
+    webhooks,
+    websocket,
+)
+from ara.core.exceptions import AraAIException
 
 
 def create_app() -> FastAPI:

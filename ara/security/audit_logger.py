@@ -8,9 +8,9 @@ compliance requirements.
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 
 class SecurityEventType(Enum):
@@ -419,7 +419,7 @@ class SecurityAuditLogger:
         events = []
 
         try:
-            with open(self.log_file, "r") as f:
+            with open(self.log_file) as f:
                 for line in f:
                     try:
                         event = json.loads(line.strip())

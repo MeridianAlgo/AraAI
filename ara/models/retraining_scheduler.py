@@ -2,7 +2,7 @@
 Retraining scheduler for ARA AI
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class ModelRetrainingScheduler:

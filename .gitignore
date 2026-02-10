@@ -43,6 +43,10 @@ env/
 *.joblib
 *.h5
 
+# Keep models in models/ directory only
+/models/*.pt
+!/models/README.md
+
 # Data
 datasets/*.csv
 datasets/temp_*.csv
@@ -55,6 +59,9 @@ datasets/temp_*.csv
 *.db-journal
 *.sqlite
 *.sqlite3
+
+# Keep training.db out of root (should be in data/ or ignored)
+/training.db
 
 # Logs
 *.log

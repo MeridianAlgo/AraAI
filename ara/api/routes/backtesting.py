@@ -2,14 +2,14 @@
 Backtesting API endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from datetime import date, datetime
 from typing import Dict
-from datetime import datetime, date
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ara.api.dependencies import get_request_id, verify_api_key
 from ara.backtesting.engine import BacktestEngine
-
 
 router = APIRouter(prefix="/api/v1", tags=["backtesting"])
 

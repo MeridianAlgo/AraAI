@@ -74,18 +74,36 @@ def load_stock_symbols(db_file, limit=None):
     return symbols
 
 
-def load_stock_data(db_file, symbols, use_all_data=True):
-    """Load stock data for training"""
+def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
+    """Load stock data for training with optional timeframe filtering"""
     conn = sqlite3.connect(db_file)
     placeholders = ",".join(["?"] * len(symbols))
 
-    if use_all_data:
+    # Timeframe to days mapping
+    timeframe_days = {
+        "1h": 7,  # 1 week for hourly
+        "4h": 30,  # 1 month for 4-hour
+        "1d": 365,  # 1 year for daily
+        "1w": 730,  # 2 years for weekly
+    }
+
+    if use_all_data and not timeframe:
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
             WHERE asset_type = 'stock' AND symbol IN ({placeholders})
             ORDER BY symbol, date ASC
         """
+    elif timeframe and timeframe in timeframe_days:
+        days = timeframe_days[timeframe]
+        query = f"""
+            SELECT symbol, date, open, high, low, close, volume
+            FROM market_data
+            WHERE asset_type = 'stock' AND symbol IN ({placeholders})
+            AND date >= datetime('now', '-{days} days')
+            ORDER BY symbol, date ASC
+        """
+        print(f"  Using timeframe: {timeframe} ({days} days)")
     else:
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
@@ -115,6 +133,7 @@ def train_stock_model(
     use_all_data=True,
     comet_api_key=None,
     seed=None,
+    timeframe=None,
 ):
     """Train unified stock model with Comet ML tracking"""
     print(f"\n{'=' * 60}")
@@ -139,7 +158,7 @@ def train_stock_model(
 
     # Load data
     print("Loading stock data from database...")
-    data = load_stock_data(db_file, selected_symbols, use_all_data)
+    data = load_stock_data(db_file, selected_symbols, use_all_data, timeframe)
 
     # Initialize Comet ML
     config = {
@@ -151,6 +170,7 @@ def train_stock_model(
         "data_rows": len(data),
         "use_all_data": use_all_data,
         "seed": seed,
+        "timeframe": timeframe or "all",
         "direction_loss": True,
     }
 
@@ -227,6 +247,11 @@ def main():
     )
     parser.add_argument("--comet-api-key", help="Comet ML API key")
     parser.add_argument("--seed", type=int, help="Random seed for sampling")
+    parser.add_argument(
+        "--timeframe",
+        choices=["1h", "4h", "1d", "1w"],
+        help="Timeframe for data filtering",
+    )
 
     args = parser.parse_args()
 
@@ -249,6 +274,7 @@ def main():
         use_all_data=args.use_all_data,
         comet_api_key=comet_api_key,
         seed=args.seed,
+        timeframe=args.timeframe,
     )
 
     sys.exit(0 if success else 1)

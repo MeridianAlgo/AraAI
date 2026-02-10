@@ -5,10 +5,11 @@ This module provides functionality to export charts to various formats
 and generate comprehensive PDF reports.
 """
 
-from typing import Optional, List, Dict, Any, Union
-from pathlib import Path
 import json
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
 
 try:
@@ -19,20 +20,20 @@ except ImportError:
     PLOTLY_AVAILABLE = False
 
 try:
-    from reportlab.lib.pagesizes import letter, A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+    from reportlab.lib.pagesizes import A4, letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import inch
     from reportlab.platypus import (
-        SimpleDocTemplate,
+        Image,
+        PageBreak,
         Paragraph,
+        SimpleDocTemplate,
         Spacer,
         Table,
         TableStyle,
-        PageBreak,
-        Image,
     )
-    from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
     REPORTLAB_AVAILABLE = True
 except ImportError:
@@ -254,7 +255,7 @@ class ReportGenerator:
         """
         if not REPORTLAB_AVAILABLE:
             raise ImportError(
-                "ReportLab is required for PDF reports. " "Install with: pip install reportlab"
+                "ReportLab is required for PDF reports. Install with: pip install reportlab"
             )
 
         self.output_dir = output_dir or Path("reports")
@@ -339,7 +340,7 @@ class ReportGenerator:
 
         # Report metadata
         metadata_text = f"""
-        <b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}<br/>
+        <b>Generated:</b> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br/>
         <b>Symbol:</b> {symbol}<br/>
         <b>Report Type:</b> Price Prediction Analysis
         """
@@ -433,9 +434,9 @@ class ReportGenerator:
 
         # Report metadata
         metadata_text = f"""
-        <b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}<br/>
+        <b>Generated:</b> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br/>
         <b>Symbol:</b> {symbol}<br/>
-        <b>Period:</b> {backtest_results.get('start_date', 'N/A')} to {backtest_results.get('end_date', 'N/A')}<br/>
+        <b>Period:</b> {backtest_results.get("start_date", "N/A")} to {backtest_results.get("end_date", "N/A")}<br/>
         <b>Report Type:</b> Backtest Analysis
         """
         story.append(Paragraph(metadata_text, self.styles["Normal"]))
@@ -522,7 +523,7 @@ class ReportGenerator:
 
         # Metadata
         metadata_text = f"""
-        <b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}<br/>
+        <b>Generated:</b> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br/>
         <b>Report Type:</b> Portfolio Analysis
         """
         story.append(Paragraph(metadata_text, self.styles["Normal"]))

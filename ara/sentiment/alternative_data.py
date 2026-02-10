@@ -6,9 +6,9 @@ and institutional holdings for enhanced predictions.
 """
 
 import asyncio
-from datetime import datetime
-from typing import Dict, Optional, Any
 import logging
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from ara.core.exceptions import AraAIException
 

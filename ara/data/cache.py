@@ -3,13 +3,13 @@ Multi-level caching system for ARA AI
 Implements L1 (in-memory) and L2 (Redis) caching with LRU eviction
 """
 
+import asyncio
 import hashlib
 import pickle
-from typing import Any, Optional, Dict, Callable
-from datetime import datetime, timedelta
-from collections import OrderedDict
 import threading
-import asyncio
+from collections import OrderedDict
+from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, Optional
 
 from ara.utils import get_logger
 

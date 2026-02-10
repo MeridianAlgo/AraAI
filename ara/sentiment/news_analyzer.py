@@ -5,13 +5,13 @@ Analyzes sentiment from financial news articles using multiple news APIs.
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+from ara.core.exceptions import AraAIException
 from ara.sentiment.base_analyzer import SentimentAnalyzer, SentimentScore, SentimentType
 from ara.sentiment.finbert_model import FinBERTModel
-from ara.core.exceptions import AraAIException
 
 logger = logging.getLogger(__name__)
 

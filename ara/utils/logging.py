@@ -3,13 +3,13 @@ Structured logging system with context
 Supports JSON and text formats
 """
 
-import logging
 import json
+import logging
 import sys
-from datetime import datetime
-from typing import Any, Dict, Optional
-from pathlib import Path
 import traceback
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from ara.config import get_config
 

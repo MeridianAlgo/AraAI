@@ -2,12 +2,14 @@
 Backtesting commands
 """
 
+from datetime import datetime, timedelta
+
 import click
 from rich.console import Console
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+
 from ara.cli.utils import handle_error
-from datetime import datetime, timedelta
 
 console = Console()
 
@@ -242,9 +244,9 @@ def _generate_html_report(result, filepath):
         <h2>Performance Metrics</h2>
         <table>
             <tr><th>Metric</th><th>Value</th></tr>
-            <tr><td>Accuracy</td><td>{result['accuracy']:.2%}</td></tr>
-            <tr><td>Sharpe Ratio</td><td>{result['sharpe_ratio']:.2f}</td></tr>
-            <tr><td>Max Drawdown</td><td>{result['max_drawdown']:.2%}</td></tr>
+            <tr><td>Accuracy</td><td>{result["accuracy"]:.2%}</td></tr>
+            <tr><td>Sharpe Ratio</td><td>{result["sharpe_ratio"]:.2f}</td></tr>
+            <tr><td>Max Drawdown</td><td>{result["max_drawdown"]:.2%}</td></tr>
         </table>
     </body>
     </html>

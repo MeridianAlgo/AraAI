@@ -4,11 +4,12 @@ Supports email (SMTP), SMS (Twilio), and webhooks
 """
 
 import smtplib
-import requests
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from typing import Optional
 from abc import ABC, abstractmethod
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import Optional
+
+import requests
 
 from ara.alerts.models import Alert, AlertHistory
 from ara.utils.logging import get_logger
@@ -191,7 +192,7 @@ class EmailNotifier(BaseNotifier):
                     </tr>
                     <tr style="background-color: #f8f9fa;">
                         <td style="padding: 8px; font-weight: bold;">Time:</td>
-                        <td style="padding: 8px;">{history.triggered_at.strftime('%Y-%m-%d %H:%M:%S UTC')}</td>
+                        <td style="padding: 8px;">{history.triggered_at.strftime("%Y-%m-%d %H:%M:%S UTC")}</td>
                     </tr>
                 </table>
             </div>

@@ -5,20 +5,16 @@ This module provides technical indicators, pattern recognition, and feature calc
 for financial time series data.
 """
 
-from ara.features.indicator_registry import IndicatorRegistry, get_registry
 from ara.features.calculator import IndicatorCalculator
-from ara.features.trend import TrendIndicators
-from ara.features.momentum import MomentumIndicators
-from ara.features.volatility import VolatilityIndicators
-from ara.features.volume import VolumeIndicators
+from ara.features.indicator_registry import IndicatorRegistry, get_registry
+from ara.features.momentum import MomentumIndicators, register_momentum_indicators
 from ara.features.patterns import PatternRecognition
 from ara.features.support_resistance import SupportResistance
 
 # Register all indicators
-from ara.features.trend import register_trend_indicators
-from ara.features.momentum import register_momentum_indicators
-from ara.features.volatility import register_volatility_indicators
-from ara.features.volume import register_volume_indicators
+from ara.features.trend import TrendIndicators, register_trend_indicators
+from ara.features.volatility import VolatilityIndicators, register_volatility_indicators
+from ara.features.volume import VolumeIndicators, register_volume_indicators
 
 register_trend_indicators()
 register_momentum_indicators()

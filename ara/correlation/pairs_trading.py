@@ -5,11 +5,12 @@ Identifies pairs trading opportunities based on correlation analysis,
 cointegration testing, and spread analysis.
 """
 
+import logging
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
-import logging
 
 logger = logging.getLogger(__name__)
 

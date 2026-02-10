@@ -2,11 +2,12 @@
 WebSocket endpoint handlers for real-time updates
 """
 
-from fastapi import WebSocket, WebSocketDisconnect
-from typing import Optional
 import json
 import logging
 from datetime import datetime
+from typing import Optional
+
+from fastapi import WebSocket, WebSocketDisconnect
 
 from ara.api.websocket.connection_manager import connection_manager
 

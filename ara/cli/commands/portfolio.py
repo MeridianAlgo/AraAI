@@ -4,9 +4,10 @@ Portfolio management commands
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from ara.cli.utils import format_price, format_percentage, handle_error
+from rich.table import Table
+
+from ara.cli.utils import format_percentage, format_price, handle_error
 
 console = Console()
 
@@ -64,7 +65,7 @@ def optimize(symbols, risk_tolerance, method, constraints, export):
             if constraints:
                 import json
 
-                with open(constraints, "r") as f:
+                with open(constraints) as f:
                     constraint_dict = json.load(f)
 
             # Optimize portfolio

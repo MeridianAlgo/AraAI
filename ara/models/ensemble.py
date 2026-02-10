@@ -3,9 +3,11 @@ Ensemble model implementation for ARA AI
 Wraps the core MeridianAlgo unified ML system
 """
 
-import numpy as np
-from typing import Dict, Any, Tuple, Optional
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
+import numpy as np
+
 from ara.models.base_model import BaseModel
 from meridianalgo.large_torch_model import AdvancedMLSystem
 

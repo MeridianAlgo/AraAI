@@ -6,8 +6,8 @@ injection attacks and ensure data integrity.
 """
 
 import re
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 class InputSanitizer:
@@ -369,7 +369,7 @@ class InputSanitizer:
 
         if value not in [v.lower() for v in allowed_values]:
             raise ValueError(
-                f"Invalid {field_name}: {value}. " f"Allowed values: {', '.join(allowed_values)}"
+                f"Invalid {field_name}: {value}. Allowed values: {', '.join(allowed_values)}"
             )
 
         return value

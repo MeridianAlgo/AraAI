@@ -2,9 +2,9 @@
 Market regime detection for ARA AI
 """
 
+from typing import Any, Dict
+
 import pandas as pd
-import numpy as np
-from typing import Dict, Any
 
 
 class RegimeDetector:

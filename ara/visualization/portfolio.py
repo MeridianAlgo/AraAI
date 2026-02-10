@@ -4,9 +4,10 @@ Portfolio visualization including equity curves and efficient frontier.
 This module provides portfolio-related visualizations.
 """
 
-from typing import Optional, List, Dict, Tuple
-import pandas as pd
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
+import pandas as pd
 
 try:
     import plotly.graph_objects as go
@@ -392,7 +393,7 @@ class PortfolioChart:
         ]
 
         text = [
-            [f"{val*100:.1f}%" if not pd.isna(val) else "" for val in row] for row in pivot.values
+            [f"{val * 100:.1f}%" if not pd.isna(val) else "" for val in row] for row in pivot.values
         ]
 
         fig.add_trace(

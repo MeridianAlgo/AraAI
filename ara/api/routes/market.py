@@ -2,19 +2,19 @@
 Market analysis API endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional, Dict
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from ara.api.dependencies import get_request_id, verify_api_key
+from ara.core.exceptions import AraAIException
+from ara.correlation.analyzer import CorrelationAnalyzer
+from ara.data.base_provider import BaseDataProvider
+from ara.features.calculator import IndicatorCalculator
 from ara.models.regime_detector import RegimeDetector
 from ara.sentiment.aggregator import SentimentAggregator
-from ara.correlation.analyzer import CorrelationAnalyzer
-from ara.features.calculator import IndicatorCalculator
-from ara.data.base_provider import BaseDataProvider
-from ara.core.exceptions import AraAIException
-
 
 router = APIRouter(prefix="/api/v1/market", tags=["market"])
 

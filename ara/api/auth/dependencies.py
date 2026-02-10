@@ -3,13 +3,14 @@ FastAPI dependencies for authentication and authorization
 """
 
 from typing import Optional
-from fastapi import Depends, HTTPException, status, Security
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
-from ara.api.auth.models import User, UserRole, AccessTier
-from ara.api.auth.jwt_handler import verify_token, AuthenticationError
-from ara.api.auth.api_key_manager import APIKeyManager
-from ara.api.auth.user_manager import UserManager
 
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
+
+from ara.api.auth.api_key_manager import APIKeyManager
+from ara.api.auth.jwt_handler import AuthenticationError, verify_token
+from ara.api.auth.models import AccessTier, User, UserRole
+from ara.api.auth.user_manager import UserManager
 
 # Security schemes
 bearer_scheme = HTTPBearer(auto_error=False)

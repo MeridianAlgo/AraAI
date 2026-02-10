@@ -2,16 +2,16 @@
 Model management API endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from typing import List, Optional, Dict
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ara.api.dependencies import get_request_id, verify_api_key
+from ara.core.exceptions import AraAIException
 from ara.models.model_registry import ModelRegistry
 from ara.models.retraining_scheduler import ModelRetrainingScheduler
-from ara.core.exceptions import AraAIException
-
 
 router = APIRouter(prefix="/api/v1/models", tags=["models"])
 

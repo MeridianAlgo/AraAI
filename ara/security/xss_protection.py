@@ -5,10 +5,10 @@ Provides protection against XSS attacks through HTML sanitization
 and content security policies.
 """
 
-import re
 import html
-from typing import Dict
+import re
 from enum import Enum
+from typing import Dict
 
 
 class SanitizationLevel(Enum):
@@ -171,7 +171,7 @@ class XSSProtection:
                         safe_attrs.append(f'{attr_name}="{html.escape(attr_value)}"')
 
             if safe_attrs:
-                return f'<{tag} {" ".join(safe_attrs)}>'
+                return f"<{tag} {' '.join(safe_attrs)}>"
             return f"<{tag}>"
 
         content = re.sub(r"<(\w+)([^>]*)>", sanitize_attributes, content)

@@ -2,16 +2,17 @@
 Health check and monitoring endpoints
 """
 
-from fastapi import APIRouter, Response
-from datetime import datetime
-from typing import Dict, Any
-import psutil
 import sys
+from datetime import datetime
+from typing import Any, Dict
 
-from ara.api.models import HealthResponse
-from ara.utils.prometheus_metrics import get_prometheus_metrics
-from ara.utils.monitoring import get_metrics
+import psutil
+from fastapi import APIRouter, Response
+
 from ara import __version__
+from ara.api.models import HealthResponse
+from ara.utils.monitoring import get_metrics
+from ara.utils.prometheus_metrics import get_prometheus_metrics
 
 router = APIRouter(prefix="/health", tags=["health"])
 

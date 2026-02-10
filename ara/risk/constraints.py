@@ -4,11 +4,12 @@ Portfolio Constraints and Rebalancing
 Implements portfolio constraints, transaction cost modeling, and rebalancing logic.
 """
 
-import numpy as np
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 
 
 class RebalanceFrequency(Enum):
@@ -727,7 +728,7 @@ class PortfolioRebalancer:
         """
         if holding_periods is None:
             # Assume all holdings are long-term
-            holding_periods = {asset: 366 for asset in current_weights.keys()}
+            holding_periods = dict.fromkeys(current_weights.keys(), 366)
 
         # Calculate tax liability for each potential sale
         tax_liabilities = {}

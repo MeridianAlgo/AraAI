@@ -2,9 +2,9 @@
 Model registry for ARA AI
 """
 
-from typing import List, Dict, Optional, Any
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class ModelRegistry:

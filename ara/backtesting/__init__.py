@@ -8,8 +8,8 @@ This module provides comprehensive backtesting capabilities including:
 - Automated model validation
 """
 
-from ara.backtesting.metrics import PerformanceMetrics
 from ara.backtesting.engine import BacktestEngine
+from ara.backtesting.metrics import PerformanceMetrics
 from ara.backtesting.reporter import BacktestReporter
 from ara.backtesting.validator import ModelValidator
 

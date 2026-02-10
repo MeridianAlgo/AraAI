@@ -4,6 +4,7 @@ Main CLI entry point with Click framework
 
 import click
 from rich.console import Console
+
 from ara.cli import commands
 
 console = Console()

@@ -4,9 +4,10 @@ Prediction commands for stocks and forex
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from ara.cli.utils import format_price, format_percentage, handle_error
+from rich.table import Table
+
+from ara.cli.utils import format_percentage, format_price, handle_error
 
 console = Console()
 

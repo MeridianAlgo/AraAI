@@ -3,13 +3,14 @@ Performance Optimization Utilities
 GPU acceleration, model quantization, ONNX export, and batch processing
 """
 
-import numpy as np
-from typing import Optional, Dict, Any, List, Tuple
-from pathlib import Path
 import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
-from ara.utils import get_logger
+import numpy as np
+
 from ara.core.exceptions import ModelError
+from ara.utils import get_logger
 
 logger = get_logger(__name__)
 
@@ -100,7 +101,6 @@ class GPUAccelerator:
             Model on device
         """
         try:
-
             device = self.get_device()
             model = model.to(device)
             logger.info(f"Moved model to {self.device}")
@@ -181,7 +181,6 @@ class ModelQuantizer:
             Quantized model
         """
         try:
-
             if not inplace:
                 model = model.clone() if hasattr(model, "clone") else model
 
@@ -234,7 +233,6 @@ class ModelQuantizer:
             Dict with size metrics
         """
         try:
-
             # Count parameters
             param_count = sum(p.numel() for p in model.parameters())
 
@@ -430,7 +428,7 @@ class BatchProcessor:
         self._stats["total_time"] += elapsed
 
         logger.debug(
-            f"Processed {len(items)} items in {elapsed:.2f}s " f"({len(items)/elapsed:.1f} items/s)"
+            f"Processed {len(items)} items in {elapsed:.2f}s ({len(items) / elapsed:.1f} items/s)"
         )
 
         return results
@@ -501,7 +499,7 @@ class ParallelFeatureCalculator:
             elapsed = time.time() - start_time
             logger.info(
                 f"Calculated features for {len(data_list)} items in {elapsed:.2f}s "
-                f"({len(data_list)/elapsed:.1f} items/s)"
+                f"({len(data_list) / elapsed:.1f} items/s)"
             )
 
             return results

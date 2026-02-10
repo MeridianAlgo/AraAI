@@ -3,28 +3,28 @@ Performance Integration Module
 Integrates all performance optimizations into a unified system
 """
 
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 from ara.utils import get_logger
-from ara.utils.performance import (
-    GPUAccelerator,
-    ModelQuantizer,
-    ONNXExporter,
-    BatchProcessor,
-    ParallelFeatureCalculator,
-    PerformanceProfiler,
-)
 from ara.utils.cache_optimizer import (
     CacheHitRateMonitor,
     LazyLoader,
 )
+from ara.utils.performance import (
+    BatchProcessor,
+    GPUAccelerator,
+    ModelQuantizer,
+    ONNXExporter,
+    ParallelFeatureCalculator,
+    PerformanceProfiler,
+)
 from ara.utils.scaling import (
-    StatelessAPIHandler,
     DistributedCache,
-    WorkerPool,
-    ServiceDiscovery,
     LoadBalancer,
+    ServiceDiscovery,
+    StatelessAPIHandler,
+    WorkerPool,
 )
 
 logger = get_logger(__name__)

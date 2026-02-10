@@ -7,8 +7,9 @@ Provides abstract base class for all sentiment analyzers with common functionali
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Optional, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 
 

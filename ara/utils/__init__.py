@@ -4,13 +4,13 @@ Utilities package
 
 from ara.utils.logging import get_logger, setup_logging
 from ara.utils.monitoring import (
+    Timer,
+    counted,
     get_metrics,
     increment_counter,
-    set_gauge,
     record_histogram,
+    set_gauge,
     timed,
-    counted,
-    Timer,
 )
 
 __all__ = [

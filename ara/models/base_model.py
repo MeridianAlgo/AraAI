@@ -4,7 +4,8 @@ Base model interface for ARA AI
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
+
 import numpy as np
 
 

@@ -3,13 +3,13 @@ Error tracking integration (Sentry-compatible)
 Provides error tracking and reporting capabilities
 """
 
-from typing import Optional, Dict, Any, Callable
 from functools import wraps
+from typing import Any, Callable, Dict, Optional
 
 try:
     import sentry_sdk
-    from sentry_sdk.integrations.fastapi import FastApiIntegration
     from sentry_sdk.integrations.asyncio import AsyncioIntegration
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
 
     SENTRY_AVAILABLE = True
 except ImportError:

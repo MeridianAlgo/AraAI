@@ -3,9 +3,10 @@ SHAP (SHapley Additive exPlanations) Explainer
 Provides model-agnostic explanations using SHAP values
 """
 
-import numpy as np
-from typing import Dict, List, Any, Optional
 import warnings
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 try:
     import shap

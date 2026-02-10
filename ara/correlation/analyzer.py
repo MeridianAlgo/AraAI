@@ -5,11 +5,12 @@ Implements rolling correlation calculation, correlation breakdown detection,
 and lead-lag relationship analysis.
 """
 
-import pandas as pd
-from typing import Dict, List, Optional
+import logging
 from dataclasses import dataclass
 from datetime import datetime
-import logging
+from typing import Dict, List, Optional
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -223,7 +224,7 @@ class CorrelationAnalyzer:
 
         if len(aligned_data) < max_lag + 30:
             logger.warning(
-                f"Insufficient data for lead-lag analysis: need at least " f"{max_lag + 30} points"
+                f"Insufficient data for lead-lag analysis: need at least {max_lag + 30} points"
             )
             return None
 

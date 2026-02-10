@@ -3,10 +3,11 @@ DeFi (Decentralized Finance) data provider
 Integrates DeFi protocol metrics for enhanced crypto predictions
 """
 
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import aiohttp
 import pandas as pd
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 
 from ara.core.exceptions import DataProviderError
 from ara.utils import get_logger, timed

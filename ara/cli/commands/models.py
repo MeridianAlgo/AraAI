@@ -4,8 +4,9 @@ Model management commands
 
 import click
 from rich.console import Console
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+
 from ara.cli.utils import handle_error
 
 console = Console()

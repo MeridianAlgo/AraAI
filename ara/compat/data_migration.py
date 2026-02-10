@@ -9,14 +9,13 @@ This module provides tools for migrating data between different versions:
 - Data validation after migration
 """
 
-import json
-import pickle
 import hashlib
-from pathlib import Path
-from typing import Dict, Any
-from datetime import datetime
+import json
 import logging
-
+import pickle
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +92,7 @@ class CacheMigrator:
             with open(old_file, "rb") as f:
                 data = pickle.load(f)
         elif old_file.suffix == ".json":
-            with open(old_file, "r") as f:
+            with open(old_file) as f:
                 data = json.load(f)
         else:
             raise ValueError(f"Unsupported file type: {old_file.suffix}")
@@ -313,10 +312,10 @@ class ConfigMigrator:
         if self.old_config_file.suffix in [".yaml", ".yml"]:
             import yaml
 
-            with open(self.old_config_file, "r") as f:
+            with open(self.old_config_file) as f:
                 old_config = yaml.safe_load(f)
         elif self.old_config_file.suffix == ".json":
-            with open(self.old_config_file, "r") as f:
+            with open(self.old_config_file) as f:
                 old_config = json.load(f)
         else:
             raise ValueError(f"Unsupported config format: {self.old_config_file.suffix}")
@@ -508,7 +507,7 @@ class DataValidator:
                     with open(cache_file, "rb") as f:
                         data = pickle.load(f)
                 elif cache_file.suffix == ".json":
-                    with open(cache_file, "r") as f:
+                    with open(cache_file) as f:
                         data = json.load(f)
 
                 # Validate structure
@@ -559,7 +558,7 @@ class DataValidator:
                     continue
 
                 # Validate metadata
-                with open(metadata_file, "r") as f:
+                with open(metadata_file) as f:
                     metadata = json.load(f)
 
                 required_fields = ["model_name", "version", "model_type"]
@@ -602,10 +601,10 @@ class DataValidator:
             if config_file.suffix in [".yaml", ".yml"]:
                 import yaml
 
-                with open(config_file, "r") as f:
+                with open(config_file) as f:
                     config = yaml.safe_load(f)
             elif config_file.suffix == ".json":
-                with open(config_file, "r") as f:
+                with open(config_file) as f:
                     config = json.load(f)
             else:
                 results["errors"].append(f"Unsupported config format: {config_file.suffix}")

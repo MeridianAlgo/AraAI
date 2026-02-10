@@ -2,10 +2,12 @@
 Rate limiting middleware
 """
 
+from datetime import datetime
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from datetime import datetime
+
 from ara.api.auth.rate_limiter import rate_limiter
 
 

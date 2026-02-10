@@ -5,11 +5,12 @@ Supports multiple environments (dev, staging, prod)
 """
 
 import os
-import yaml
-from pathlib import Path
-from typing import Any, Dict, Optional, List
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 from ara.core.exceptions import ConfigurationError
 
@@ -268,7 +269,7 @@ class Config:
             return
 
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 config_data = yaml.safe_load(f)
 
             if not config_data:
@@ -407,7 +408,7 @@ class Config:
         existing_config = {}
         if save_path.exists():
             try:
-                with open(save_path, "r") as f:
+                with open(save_path) as f:
                     existing_config = yaml.safe_load(f) or {}
             except Exception:
                 pass  # If load fails, start fresh

@@ -7,10 +7,11 @@ input validation, anomaly detection, and model integrity verification.
 
 import hashlib
 import json
-import numpy as np
-from typing import Any, Dict, List, Optional, Tuple
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 
 class AdversarialProtection:
@@ -245,7 +246,7 @@ class AdversarialProtection:
         if not metadata_path.exists():
             return None
 
-        with open(metadata_path, "r") as f:
+        with open(metadata_path) as f:
             return json.load(f)
 
     @staticmethod
@@ -302,7 +303,7 @@ class ModelVersionManager:
     def _load_versions(self) -> Dict[str, List[Dict[str, Any]]]:
         """Load version history from file"""
         if self.versions_file.exists():
-            with open(self.versions_file, "r") as f:
+            with open(self.versions_file) as f:
                 return json.load(f)
         return {}
 

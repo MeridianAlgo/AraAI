@@ -2,17 +2,17 @@
 Portfolio management API endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional, Dict
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ara.api.dependencies import get_request_id, verify_api_key
+from ara.core.exceptions import AraAIException
+from ara.risk.constraints import PortfolioConstraints
 from ara.risk.optimizer import PortfolioOptimizer
 from ara.risk.portfolio_analysis import PortfolioAnalyzer
-from ara.risk.constraints import PortfolioConstraints
-from ara.core.exceptions import AraAIException
-
 
 router = APIRouter(prefix="/api/v1/portfolio", tags=["portfolio"])
 

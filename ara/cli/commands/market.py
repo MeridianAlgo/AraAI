@@ -5,6 +5,7 @@ Market analysis commands
 import click
 from rich.console import Console
 from rich.table import Table
+
 from ara.cli.utils import handle_error
 
 console = Console()
@@ -303,8 +304,8 @@ def _display_indicators(result, category):
 def _generate_correlation_heatmap(matrix, symbols):
     """Generate correlation heatmap"""
     try:
-        import plotly.graph_objects as go
         import numpy as np
+        import plotly.graph_objects as go
 
         fig = go.Figure(
             data=go.Heatmap(

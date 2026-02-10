@@ -4,8 +4,9 @@ Support and Resistance Detection
 This module implements various methods for detecting support and resistance levels.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from ara.features.indicator_registry import get_registry
 
 
@@ -220,7 +221,7 @@ class SupportResistance:
 
             # Assign to result (pad with NaN if fewer clusters)
             for j in range(num_clusters):
-                col_name = f"cluster_level_{j+1}"
+                col_name = f"cluster_level_{j + 1}"
                 if col_name not in result.columns:
                     result[col_name] = np.nan
 

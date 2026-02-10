@@ -3,9 +3,10 @@ Redis-based token bucket rate limiter
 """
 
 import time
-from typing import Optional, Tuple
 from datetime import datetime, timedelta
-from ara.api.auth.models import User, TierQuotas
+from typing import Optional, Tuple
+
+from ara.api.auth.models import TierQuotas, User
 from ara.core.exceptions import AraAIException
 
 
@@ -156,7 +157,9 @@ class RateLimiter:
 
         if self.use_redis and self.redis_client:
             return self._check_redis_limit(
-                bucket_key, quotas.requests_per_minute, 60  # 60 seconds window
+                bucket_key,
+                quotas.requests_per_minute,
+                60,  # 60 seconds window
             )
         else:
             return self._check_memory_limit(

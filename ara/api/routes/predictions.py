@@ -2,28 +2,28 @@
 Prediction API endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict
 from datetime import datetime
+from typing import Dict
 
-from ara.api.models import (
-    PredictionRequest,
-    PredictionResponse,
-    BatchPredictionRequest,
-    BatchPredictionResponse,
-    PredictionStatus,
-)
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from ara.api.dependencies import (
-    get_request_id,
-    verify_api_key,
+    cache_prediction,
     get_cache_key,
     get_cached_prediction,
-    cache_prediction,
+    get_request_id,
+    verify_api_key,
+)
+from ara.api.models import (
+    BatchPredictionRequest,
+    BatchPredictionResponse,
+    PredictionRequest,
+    PredictionResponse,
+    PredictionStatus,
 )
 from ara.api.prediction_engine import PredictionEngine
-from ara.core.interfaces import AssetType
 from ara.core.exceptions import AraAIException
-
+from ara.core.interfaces import AssetType
 
 router = APIRouter(prefix="/api/v1", tags=["predictions"])
 

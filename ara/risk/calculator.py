@@ -4,9 +4,10 @@ Risk Calculator
 Implements comprehensive risk metrics including VaR, CVaR, and correlation analysis.
 """
 
+from typing import Dict, Optional, Union
+
 import numpy as np
 import pandas as pd
-from typing import Dict, Optional, Union
 from scipy import stats
 
 

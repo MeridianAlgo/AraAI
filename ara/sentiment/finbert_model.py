@@ -33,8 +33,8 @@ class FinBERTModel:
     def _initialize_model(self) -> None:
         """Initialize the sentiment model"""
         try:
-            from transformers import AutoTokenizer, AutoModelForSequenceClassification
             import torch
+            from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
             logger.info(f"Loading FinBERT model: {self.model_name}")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
@@ -45,8 +45,7 @@ class FinBERTModel:
 
         except ImportError:
             logger.warning(
-                "transformers library not installed. "
-                "Install with: pip install transformers torch"
+                "transformers library not installed. Install with: pip install transformers torch"
             )
             self._initialize_vader()
         except Exception as e:
@@ -63,7 +62,7 @@ class FinBERTModel:
             logger.info("Using VADER sentiment analyzer")
         except ImportError:
             logger.warning(
-                "vaderSentiment library not installed. " "Install with: pip install vaderSentiment"
+                "vaderSentiment library not installed. Install with: pip install vaderSentiment"
             )
             self.vader = None
 

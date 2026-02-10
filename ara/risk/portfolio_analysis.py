@@ -9,12 +9,13 @@ Implements portfolio analysis, visualization, and reporting capabilities includi
 - Portfolio comparison reports
 """
 
+from datetime import datetime
+from typing import Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Union
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime
 
 
 class PortfolioAnalyzer:
@@ -75,7 +76,7 @@ class PortfolioAnalyzer:
                 name="Efficient Frontier",
                 line=dict(color="blue", width=2),
                 marker=dict(size=6),
-                hovertemplate=("Return: %{y:.2%}<br>" "Volatility: %{x:.2%}<br>" "<extra></extra>"),
+                hovertemplate=("Return: %{y:.2%}<br>Volatility: %{x:.2%}<br><extra></extra>"),
             )
         )
 
@@ -97,7 +98,7 @@ class PortfolioAnalyzer:
                         "Max Sharpe Portfolio<br>"
                         "Return: %{y:.2%}<br>"
                         "Volatility: %{x:.2%}<br>"
-                        f'Sharpe: {max_sharpe_portfolio["sharpe_ratio"]:.3f}<br>'
+                        f"Sharpe: {max_sharpe_portfolio['sharpe_ratio']:.3f}<br>"
                         "<extra></extra>"
                     ),
                 )
@@ -121,7 +122,7 @@ class PortfolioAnalyzer:
                         "Min Risk Portfolio<br>"
                         "Return: %{y:.2%}<br>"
                         "Volatility: %{x:.2%}<br>"
-                        f'Sharpe: {min_risk_portfolio["sharpe_ratio"]:.3f}<br>'
+                        f"Sharpe: {min_risk_portfolio['sharpe_ratio']:.3f}<br>"
                         "<extra></extra>"
                     ),
                 )
@@ -145,7 +146,7 @@ class PortfolioAnalyzer:
                         "Current Portfolio<br>"
                         "Return: %{y:.2%}<br>"
                         "Volatility: %{x:.2%}<br>"
-                        f'Sharpe: {current_portfolio.get("sharpe_ratio", 0):.3f}<br>'
+                        f"Sharpe: {current_portfolio.get('sharpe_ratio', 0):.3f}<br>"
                         "<extra></extra>"
                     ),
                 )
@@ -202,7 +203,7 @@ class PortfolioAnalyzer:
                         labels=assets,
                         values=values,
                         textinfo="label+percent",
-                        hovertemplate=("%{label}<br>" "Weight: %{percent}<br>" "<extra></extra>"),
+                        hovertemplate=("%{label}<br>Weight: %{percent}<br><extra></extra>"),
                     )
                 ]
             )
@@ -215,7 +216,7 @@ class PortfolioAnalyzer:
                         y=values,
                         text=[f"{v:.1%}" for v in values],
                         textposition="auto",
-                        hovertemplate=("%{x}<br>" "Weight: %{y:.2%}<br>" "<extra></extra>"),
+                        hovertemplate=("%{x}<br>Weight: %{y:.2%}<br><extra></extra>"),
                     )
                 ]
             )
@@ -522,7 +523,7 @@ class PortfolioAnalyzer:
                     showscale=True,
                     colorbar=dict(title="Return"),
                 ),
-                hovertemplate=("%{x}<br>" "Value Change: %{y:.2%}<br>" "<extra></extra>"),
+                hovertemplate=("%{x}<br>Value Change: %{y:.2%}<br><extra></extra>"),
             )
         )
 
@@ -680,15 +681,15 @@ class PortfolioAnalyzer:
         # Summary text
         summary = f"""
 Portfolio Analysis Report
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 Portfolio Composition:
 {len(weights)} assets
 
 Performance Metrics:
-- Expected Return: {portfolio_metrics.get('expected_return', 0):.2%}
-- Volatility: {portfolio_metrics.get('volatility', 0):.2%}
-- Sharpe Ratio: {portfolio_metrics.get('sharpe_ratio', 0):.3f}
+- Expected Return: {portfolio_metrics.get("expected_return", 0):.2%}
+- Volatility: {portfolio_metrics.get("volatility", 0):.2%}
+- Sharpe Ratio: {portfolio_metrics.get("sharpe_ratio", 0):.3f}
 """
         report["summary"] = summary
 

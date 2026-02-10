@@ -2,13 +2,14 @@
 Monitoring and observability CLI commands
 """
 
-import click
 from pathlib import Path
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
 
-from ara.monitoring import get_all_dashboards, export_dashboard_to_file
+import click
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+from ara.monitoring import export_dashboard_to_file, get_all_dashboards
 from ara.utils.monitoring import get_metrics
 
 console = Console()

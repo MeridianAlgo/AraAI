@@ -3,16 +3,16 @@ Distributed tracing with OpenTelemetry
 Provides tracing capabilities for monitoring request flows
 """
 
-from typing import Optional, Dict, Any, Callable
-from functools import wraps
 import inspect
+from functools import wraps
+from typing import Any, Callable, Dict, Optional
 
 try:
     from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-    from opentelemetry.sdk.resources import Resource
-    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
     from opentelemetry.trace import Status, StatusCode
 
     OPENTELEMETRY_AVAILABLE = True

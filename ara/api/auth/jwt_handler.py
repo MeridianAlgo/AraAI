@@ -4,8 +4,9 @@ JWT token handling
 
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt
+
 import bcrypt
+from jose import JWTError, jwt
 
 from ara.api.auth.models import TokenData, User
 from ara.core.exceptions import AraAIException

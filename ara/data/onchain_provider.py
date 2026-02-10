@@ -3,10 +3,11 @@ On-chain metrics provider for cryptocurrency analysis
 Integrates blockchain data for enhanced predictions
 """
 
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import aiohttp
 import pandas as pd
-from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta
 
 from ara.core.exceptions import DataProviderError
 from ara.utils import get_logger, timed

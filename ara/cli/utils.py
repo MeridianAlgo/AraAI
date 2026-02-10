@@ -2,8 +2,9 @@
 CLI utility functions
 """
 
-from rich.console import Console
 from typing import Any
+
+from rich.console import Console
 
 console = Console()
 
@@ -26,9 +27,9 @@ def format_percentage(value: float) -> str:
 def format_number(value: float, decimals: int = 2) -> str:
     """Format number with thousands separator"""
     if abs(value) >= 1_000_000:
-        return f"{value/1_000_000:.{decimals}f}M"
+        return f"{value / 1_000_000:.{decimals}f}M"
     elif abs(value) >= 1_000:
-        return f"{value/1_000:.{decimals}f}K"
+        return f"{value / 1_000:.{decimals}f}K"
     else:
         return f"{value:.{decimals}f}"
 
@@ -36,12 +37,12 @@ def format_number(value: float, decimals: int = 2) -> str:
 def handle_error(error: Exception, context: str = "Operation failed"):
     """Handle and display errors"""
     from ara.core.exceptions import (
+        APIError,
         AraAIException,
+        CacheError,
         DataProviderError,
         ModelError,
         ValidationError,
-        CacheError,
-        APIError,
     )
 
     error_type = type(error).__name__
@@ -94,7 +95,7 @@ def prompt_choice(message: str, choices: list, default: Any = None) -> str:
 
 def display_progress(message: str, total: int = None):
     """Create a progress bar"""
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+    from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
     progress = Progress(
         SpinnerColumn(),

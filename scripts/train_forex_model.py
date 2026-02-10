@@ -74,18 +74,36 @@ def load_forex_pairs(db_file, limit=None):
     return pairs
 
 
-def load_forex_data(db_file, pairs, use_all_data=True):
-    """Load forex data for training"""
+def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
+    """Load forex data for training with optional timeframe filtering"""
     conn = sqlite3.connect(db_file)
     placeholders = ",".join(["?"] * len(pairs))
 
-    if use_all_data:
+    # Timeframe to days mapping
+    timeframe_days = {
+        "15m": 3,  # 3 days for 15-minute
+        "1h": 7,  # 1 week for hourly
+        "4h": 30,  # 1 month for 4-hour
+        "1d": 365,  # 1 year for daily
+    }
+
+    if use_all_data and not timeframe:
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
             WHERE asset_type = 'forex' AND symbol IN ({placeholders})
             ORDER BY symbol, date ASC
         """
+    elif timeframe and timeframe in timeframe_days:
+        days = timeframe_days[timeframe]
+        query = f"""
+            SELECT symbol, date, open, high, low, close, volume
+            FROM market_data
+            WHERE asset_type = 'forex' AND symbol IN ({placeholders})
+            AND date >= datetime('now', '-{days} days')
+            ORDER BY symbol, date ASC
+        """
+        print(f"  Using timeframe: {timeframe} ({days} days)")
     else:
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
@@ -115,6 +133,7 @@ def train_forex_model(
     use_all_data=True,
     comet_api_key=None,
     seed=None,
+    timeframe=None,
 ):
     """Train unified forex model with Comet ML tracking"""
     print(f"\n{'=' * 60}")
@@ -137,7 +156,7 @@ def train_forex_model(
 
     # Load data
     print("Loading forex data from database...")
-    data = load_forex_data(db_file, selected_pairs, use_all_data)
+    data = load_forex_data(db_file, selected_pairs, use_all_data, timeframe)
 
     # Initialize Comet ML
     config = {
@@ -149,6 +168,7 @@ def train_forex_model(
         "data_rows": len(data),
         "use_all_data": use_all_data,
         "seed": seed,
+        "timeframe": timeframe or "all",
     }
 
     experiment = init_comet(
@@ -221,6 +241,11 @@ def main():
     )
     parser.add_argument("--comet-api-key", help="Comet ML API key")
     parser.add_argument("--seed", type=int, help="Random seed for sampling")
+    parser.add_argument(
+        "--timeframe",
+        choices=["15m", "1h", "4h", "1d"],
+        help="Timeframe for data filtering",
+    )
 
     args = parser.parse_args()
 
@@ -243,6 +268,7 @@ def main():
         use_all_data=args.use_all_data,
         comet_api_key=comet_api_key,
         seed=args.seed,
+        timeframe=args.timeframe,
     )
 
     sys.exit(0 if success else 1)

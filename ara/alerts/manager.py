@@ -4,25 +4,25 @@ Central management for alerts, evaluation, and notifications
 """
 
 import json
-from pathlib import Path
-from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
+from pathlib import Path
 from threading import Lock
+from typing import Any, Dict, List, Optional
 
+from ara.alerts.evaluator import ConditionEvaluator
 from ara.alerts.models import (
     Alert,
     AlertCondition,
-    AlertStatus,
-    AlertPriority,
-    NotificationChannel,
     AlertHistory,
+    AlertPriority,
+    AlertStatus,
+    NotificationChannel,
 )
-from ara.alerts.evaluator import ConditionEvaluator
 from ara.alerts.notifiers import (
+    BaseNotifier,
     EmailNotifier,
     SMSNotifier,
     WebhookNotifier,
-    BaseNotifier,
 )
 from ara.core.exceptions import ValidationError
 from ara.utils.logging import get_logger
@@ -475,7 +475,7 @@ class AlertManager:
             return
 
         try:
-            with open(self.alerts_file, "r") as f:
+            with open(self.alerts_file) as f:
                 data = json.load(f)
 
             self.alerts = {
@@ -504,7 +504,7 @@ class AlertManager:
             return
 
         try:
-            with open(self.history_file, "r") as f:
+            with open(self.history_file) as f:
                 data = json.load(f)
 
             self.history = [AlertHistory.from_dict(h) for h in data]

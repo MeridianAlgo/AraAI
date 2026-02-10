@@ -3,11 +3,12 @@ Data validation and cleaning pipeline for ARA AI
 Implements missing data handling, outlier detection, and quality scoring
 """
 
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Tuple, Optional, Any
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 
 from ara.core.exceptions import ValidationError
 from ara.utils import get_logger
@@ -98,7 +99,7 @@ class DataValidator:
         # Check minimum data points
         if total_rows < self.config.min_data_points:
             issues.append(
-                f"Insufficient data: {total_rows} rows " f"(minimum: {self.config.min_data_points})"
+                f"Insufficient data: {total_rows} rows (minimum: {self.config.min_data_points})"
             )
             recommendations.append("Fetch more historical data")
 
@@ -652,12 +653,12 @@ class DataQualityScorer:
 
         if best["quality_score"] < min_quality:
             raise ValidationError(
-                f"Best source quality {best['quality_score']:.2f} " f"below minimum {min_quality}",
+                f"Best source quality {best['quality_score']:.2f} below minimum {min_quality}",
                 {"scores": scores},
             )
 
         logger.info(
-            f"Selected best source: {best['source']} " f"(quality: {best['quality_score']:.2f})"
+            f"Selected best source: {best['source']} (quality: {best['quality_score']:.2f})"
         )
 
         return best["source"], sources[best["source"]]

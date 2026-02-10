@@ -9,8 +9,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ara.api.app import create_app
 from fastapi.testclient import TestClient
+
+from ara.api.app import create_app
 
 
 def test_api():

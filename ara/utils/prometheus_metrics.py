@@ -3,18 +3,19 @@ Prometheus metrics exporter
 Provides metrics collection and export for Prometheus monitoring
 """
 
+import inspect
+import time
+from functools import wraps
+from typing import Optional
+
 from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
     Counter,
     Gauge,
     Histogram,
-    CollectorRegistry,
     generate_latest,
-    CONTENT_TYPE_LATEST,
 )
-from typing import Optional
-import time
-from functools import wraps
-import inspect
 
 from ara.utils.logging import get_logger
 

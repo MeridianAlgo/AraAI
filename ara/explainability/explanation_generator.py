@@ -3,9 +3,10 @@ Natural Language Explanation Generator
 Generates human-readable explanations for predictions
 """
 
-import numpy as np
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 from ara.core.exceptions import ValidationError
 
@@ -35,7 +36,7 @@ class ExplanationGenerator:
         """Bridge method for PredictionEngine"""
         return {
             "top_factors": [],
-            "feature_importance": {name: 0.1 for name in feature_names[:5]},
+            "feature_importance": dict.fromkeys(feature_names[:5], 0.1),
             "natural_language": "Explanation generated based on model features.",
         }
 
@@ -75,7 +76,7 @@ class ExplanationGenerator:
         if confidence is not None:
             confidence_level = self._get_confidence_level(confidence)
             explanation_parts.append(
-                f"This prediction has {confidence_level} confidence ({confidence*100:.1f}%)."
+                f"This prediction has {confidence_level} confidence ({confidence * 100:.1f}%)."
             )
 
         # Baseline comparison
@@ -284,7 +285,7 @@ class ExplanationGenerator:
 
         confidence_level = self._get_confidence_level(confidence)
         explanation_parts.append(
-            f"Prediction Confidence: {confidence_level} ({confidence*100:.1f}%)"
+            f"Prediction Confidence: {confidence_level} ({confidence * 100:.1f}%)"
         )
 
         # Explain confidence level

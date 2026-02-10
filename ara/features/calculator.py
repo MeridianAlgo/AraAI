@@ -5,9 +5,11 @@ This module provides high-performance indicator calculations using vectorized
 NumPy operations and supports multi-timeframe analysis.
 """
 
-from typing import Dict, List, Optional, Union
-import pandas as pd
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from typing import Dict, List, Optional, Union
+
+import pandas as pd
+
 from ara.features.indicator_registry import get_registry
 
 

@@ -5,6 +5,7 @@ Currency preference management
 import json
 from pathlib import Path
 from typing import Optional
+
 from ara.currency.models import Currency, CurrencyPreference
 from ara.utils import get_logger
 
@@ -52,7 +53,7 @@ class CurrencyPreferenceManager:
             return self._preference
 
         try:
-            with open(self.preference_file, "r") as f:
+            with open(self.preference_file) as f:
                 data = json.load(f)
 
             self._preference = CurrencyPreference.from_dict(data)

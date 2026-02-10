@@ -3,11 +3,12 @@ Base data provider with common functionality
 """
 
 import asyncio
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 
-from ara.core.interfaces import IDataProvider, AssetType
 from ara.core.exceptions import DataProviderError
+from ara.core.interfaces import AssetType, IDataProvider
 from ara.utils import get_logger
 
 logger = get_logger(__name__)

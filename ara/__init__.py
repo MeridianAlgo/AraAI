@@ -7,34 +7,33 @@ __version__ = "4.0.0"
 __author__ = "MeridianAlgo"
 
 # Core interfaces
-from ara.core.interfaces import IDataProvider, IMLModel, IFeatureEngine, AssetType
-from ara.models.base_model import BaseModel
+# CLI entry point
+from ara.cli import main
 from ara.core.exceptions import (
-    AraAIException,
-    DataProviderError,
-    ModelError,
-    ValidationError,
-    CacheError,
     APIError,
-    ConfigurationError,
-    FeatureEngineeringError,
+    AraAIException,
     BacktestError,
+    CacheError,
+    ConfigurationError,
+    DataProviderError,
+    FeatureEngineeringError,
+    ModelError,
     PortfolioError,
+    ValidationError,
 )
-
-# Risk management
-from ara.risk import RiskCalculator, PortfolioMetrics
+from ara.core.interfaces import AssetType, IDataProvider, IFeatureEngine, IMLModel
 
 # Currency support
 from ara.currency import (
-    CurrencyConverter,
-    CurrencyRiskAnalyzer,
-    CurrencyPreferenceManager,
     Currency,
+    CurrencyConverter,
+    CurrencyPreferenceManager,
+    CurrencyRiskAnalyzer,
 )
+from ara.models.base_model import BaseModel
 
-# CLI entry point
-from ara.cli import main
+# Risk management
+from ara.risk import PortfolioMetrics, RiskCalculator
 
 __all__ = [
     # Interfaces

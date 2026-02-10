@@ -2,10 +2,10 @@
 FastAPI dependencies for dependency injection
 """
 
-from typing import Optional
-from fastapi import Header
 import uuid
+from typing import Optional
 
+from fastapi import Header
 
 # Simple in-memory cache for request tracking
 _request_cache = {}

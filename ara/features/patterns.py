@@ -4,8 +4,9 @@ Pattern Recognition
 This module implements 20+ candlestick and chart pattern detection algorithms.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from ara.features.indicator_registry import get_registry
 
 

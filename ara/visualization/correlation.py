@@ -4,14 +4,15 @@ Correlation visualization including heatmaps and network graphs.
 This module provides correlation analysis visualizations.
 """
 
-from typing import List, Dict
-import pandas as pd
+from typing import Dict, List
+
 import numpy as np
+import pandas as pd
 
 try:
+    import plotly.figure_factory as ff
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-    import plotly.figure_factory as ff
 
     PLOTLY_AVAILABLE = True
 except ImportError:
@@ -322,7 +323,7 @@ class CorrelationChart:
                     edge_x.extend([x_pos[i], x_pos[j], None])
                     edge_y.extend([y_pos[i], y_pos[j], None])
                     # Color by correlation strength
-                    color = f'rgba({"255,0,0" if corr < 0 else "0,255,0"},{abs(corr)})'
+                    color = f"rgba({'255,0,0' if corr < 0 else '0,255,0'},{abs(corr)})"
                     edge_colors.append(color)
 
         # Add edges

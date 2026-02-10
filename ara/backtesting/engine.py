@@ -9,15 +9,16 @@ This module provides:
 - Slippage and transaction cost modeling
 """
 
+import logging
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Tuple, Callable, Any
-from datetime import datetime
-from dataclasses import dataclass
-from pathlib import Path
-import logging
 
-from ara.backtesting.metrics import PerformanceMetrics, MetricsResult
+from ara.backtesting.metrics import MetricsResult, PerformanceMetrics
 from ara.backtesting.reporter import BacktestReporter
 from ara.backtesting.validator import ModelValidator
 

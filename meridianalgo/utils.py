@@ -4,10 +4,11 @@ Utility classes for GPU management, caching, and accuracy tracking
 
 import json
 import pickle
-import torch
+import warnings
 from datetime import datetime, timedelta
 from pathlib import Path
-import warnings
+
+import torch
 
 warnings.filterwarnings("ignore")
 
@@ -198,7 +199,7 @@ class CacheManager:
         """Load predictions cache"""
         try:
             if self.predictions_file.exists():
-                with open(self.predictions_file, "r") as f:
+                with open(self.predictions_file) as f:
                     return json.load(f)
             return {}
         except Exception:
@@ -564,7 +565,7 @@ class AccuracyTracker:
         """Load accuracy tracking data"""
         try:
             if self.accuracy_file.exists():
-                with open(self.accuracy_file, "r") as f:
+                with open(self.accuracy_file) as f:
                     return json.load(f)
             return {}
         except Exception:
@@ -574,7 +575,7 @@ class AccuracyTracker:
         """Load validation results data"""
         try:
             if self.validation_file.exists():
-                with open(self.validation_file, "r") as f:
+                with open(self.validation_file) as f:
                     return json.load(f)
             return {}
         except Exception:
