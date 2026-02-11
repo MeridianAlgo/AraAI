@@ -218,6 +218,7 @@ def train_forex_model(
         batch_size=batch_size,
         lr=lr,
         quick_mode=False,
+        comet_experiment=experiment,
     )
 
     training_time = time.time() - start_time

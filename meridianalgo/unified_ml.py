@@ -240,6 +240,7 @@ class UnifiedStockML:
                 lr=lr,
                 validation_split=validation_split,
                 cpu_limit=kwargs.get("cpu_limit", 80),
+                comet_experiment=kwargs.get("comet_experiment"),
             )
 
             return result
