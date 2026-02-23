@@ -136,7 +136,7 @@ jobs:
           SAMPLE_SIZE="${{ inputs.sample_size || '10' }}"
           ALL_STOCKS="${{ inputs.train_all_stocks }}"
           
-          echo "🚀 Training Stock Model"
+          echo "Training Stock Model"
           echo "  Epochs: $EPOCHS"
           
           if [ "$ALL_STOCKS" = "true" ] || [ "$SAMPLE_SIZE" = "0" ]; then
@@ -198,7 +198,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "📤 Uploading Stock Model to Hugging Face..."
+          echo "Uploading Stock Model to Hugging Face..."
           python scripts/push_elite_models.py \
             --model-path models/MeridianAlgo_Stocks.pt \
             --model-type stock

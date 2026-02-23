@@ -130,7 +130,7 @@ jobs:
           EPOCHS="${{ inputs.epochs || '8' }}"
           SAMPLE_SIZE="${{ inputs.sample_size || '10' }}"
           
-          echo "🚀 Training Forex Model"
+          echo "Training Forex Model"
           echo "  Epochs: $EPOCHS"
           
           if [ "$SAMPLE_SIZE" = "0" ]; then
@@ -192,7 +192,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "📤 Uploading Forex Model to Hugging Face..."
+          echo "Uploading Forex Model to Hugging Face..."
           python scripts/push_elite_models.py \
             --model-path models/MeridianAlgo_Forex.pt \
             --model-type forex

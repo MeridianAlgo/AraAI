@@ -7,6 +7,16 @@ Revolutionary Stock Model Training System
 - Efficient batch processing
 """
 
+# Comet ML integration (must be before torch)
+try:
+    import comet_ml
+
+    COMET_AVAILABLE = True
+except ImportError:
+    COMET_AVAILABLE = False
+    print("Warning: comet_ml not installed. Install with: pip install comet-ml")
+
+
 import argparse
 import os
 import random
@@ -24,15 +34,6 @@ warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from meridianalgo.unified_ml import UnifiedStockML
-
-# Comet ML integration
-try:
-    import comet_ml
-
-    COMET_AVAILABLE = True
-except ImportError:
-    COMET_AVAILABLE = False
-    print("Warning: comet_ml not installed. Install with: pip install comet-ml")
 
 
 def init_comet(project_name, experiment_name, config, api_key=None):
@@ -239,14 +240,14 @@ def train_stock_model(
         experiment.end()
 
     if result.get("success"):
-        print("\n✓ Training completed successfully")
+        print("\nTraining completed successfully")
         print(f"  Final loss: {result.get('final_loss', 'N/A')}")
         print(f"  Training time: {training_time:.2f}s")
         print(f"  Stocks trained: {len(selected_symbols)}")
         print(f"  Model saved to: {output_path}")
         return True
     else:
-        print(f"\n✗ Training failed: {result.get('error', 'Unknown error')}")
+        print(f"\nTraining failed: {result.get('error', 'Unknown error')}")
         return False
 
 

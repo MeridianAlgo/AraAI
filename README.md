@@ -4,11 +4,9 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Training: Active](https://img.shields.io/badge/Training-Active-green.svg)
-![Models: MeridianAlgo](https://img.shields.io/badge/Models-MeridianAlgo-orange.svg)
-![Architecture: Revolutionary_2026](https://img.shields.io/badge/Architecture-Revolutionary_2026-red.svg)
-![Automated_Training: Enabled](https://img.shields.io/badge/Automated_Training-Enabled-blueviolet.svg)
-
+[![Train Forex Model](https://github.com/MeridianAlgo/AraAI/actions/workflows/train-forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/train-forex.yml)
+[![Train Stock Model](https://github.com/MeridianAlgo/AraAI/actions/workflows/train-stock.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/train-stock.yml)
+[![Lint & Format](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
 ---
 
 ## Table of Contents
