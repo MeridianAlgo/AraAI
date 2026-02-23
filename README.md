@@ -118,7 +118,7 @@ The platform includes a comprehensive feature extraction suite calculating over 
 Automated GitHub Workflows maintain a continuous model evolution cycle.
 
 ### Automated Pipelines
-- Frequency: Models updated every 3 hours.
+- Frequency: Models updated every 1 hour 30 minutes.
 - Generalization: Randomized timeframes (1h, 4h, 1d, 1w for stocks; 15m, 1h, 4h, 1d for forex).
 - Lifecycle:
   1. Fetch: Incremental ingestion into SQLite training databases.
@@ -137,7 +137,7 @@ Automated GitHub Workflows maintain a continuous model evolution cycle.
 | Validation Accuracy | >99.9% | >99.5% |
 | Average Training Time | 300 - 450 Seconds | 300 - 450 Seconds |
 | Typical Loss (MSE) | <0.0004 | <0.0006 |
-| Update Frequency | 8 Sessions / Day | 8 Sessions / Day |
+| Update Frequency | 16 Sessions / Day | 16 Sessions / Day |
 
 ---
 

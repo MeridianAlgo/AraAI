@@ -2,7 +2,8 @@ name: Train Forex Model
 
 on:
   schedule:
-    - cron: '30 */3 * * *'  # Every 3 hours at :30
+    - cron: '30 0,3,6,9,12,15,18,21 * * *'
+    - cron: '0 2,5,8,11,14,17,20,23 * * *'
   workflow_dispatch:
     inputs:
       epochs:
