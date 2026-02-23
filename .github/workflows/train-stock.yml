@@ -13,7 +13,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '60'
+        default: '8'
       sample_size:
         description: 'Number of stocks to sample (0 = all)'
         required: false
