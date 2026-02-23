@@ -29,7 +29,7 @@ class FlashMultiHeadAttention(nn.Module):
     """Flash Attention for better memory efficiency and speed"""
 
     def __init__(self, embed_dim, num_heads, dropout=0.1, use_flash=True):
-        super(FlashMultiHeadAttention, self).__init__()
+        super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
@@ -155,12 +155,14 @@ class EliteEnsembleModel(nn.Module):
         self,
         input_size=44,
         seq_len=1,
-        hidden_dims=[256, 192, 128, 64],
+        hidden_dims=None,
         num_heads=4,
         num_layers=3,
         dropout=0.1,
     ):
         super().__init__()
+        if hidden_dims is None:
+            hidden_dims = [256, 192, 128, 64]
 
         self.input_size = input_size
         self.seq_len = seq_len
@@ -566,7 +568,9 @@ class AdvancedMLSystem:
             # Create model if not already loaded/trained
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print("  Creating new Revolutionary 2026 architecture (300M-500M Parameters)...")
+                    print(
+                        "  Creating new Revolutionary 2026 architecture (300M-500M Parameters)..."
+                    )
                     # Optimized for ~300M-400M parameters and CPU efficiency
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
@@ -645,7 +649,7 @@ class AdvancedMLSystem:
                     optimizer.step()
 
                     train_loss += loss.item()
-                    
+
                     if (step + 1) % 10 == 0:
                         print(f"  Step {step+1}/{len(train_loader)} - loss: {loss.item():.6f}")
 

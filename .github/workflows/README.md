@@ -26,12 +26,12 @@
 
 ## Features
 
-✅ Randomized timeframes for diversity
-✅ Dependency caching between jobs
-✅ Automatic issue creation on failure
-✅ Progress tracking via environments
-✅ Easy cancellation (separate workflows)
-✅ Artifact cleanup after completion
+- Randomized timeframes for diversity
+- Dependency caching between jobs
+- Automatic issue creation on failure
+- Progress tracking via environments
+- Easy cancellation (separate workflows)
+- Artifact cleanup after completion
 
 ## Manual Trigger
 

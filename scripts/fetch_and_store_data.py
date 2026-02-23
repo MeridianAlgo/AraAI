@@ -84,7 +84,7 @@ def fetch_and_store_stock(symbol, db_file, period="2y", interval="1d"):
             try:
                 cursor.execute(
                     """
-                    INSERT OR REPLACE INTO market_data 
+                    INSERT OR REPLACE INTO market_data
                     (symbol, date, open, high, low, close, volume, asset_type, timeframe, interval, fetch_date)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
@@ -142,7 +142,7 @@ def fetch_and_store_forex(pair, db_file, period="2y", interval="1d"):
             try:
                 cursor.execute(
                     """
-                    INSERT OR REPLACE INTO market_data 
+                    INSERT OR REPLACE INTO market_data
                     (symbol, date, open, high, low, close, volume, asset_type, timeframe, interval, fetch_date)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
