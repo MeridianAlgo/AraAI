@@ -46,9 +46,9 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
 
         # Determine filename based on model type
         if model_type == "stock":
-            filename = "models/unified_stock_model.pt"
+            filename = "models/MeridianAlgo_Stocks.pt"
         elif model_type == "forex":
-            filename = "models/unified_forex_model.pt"
+            filename = "models/MeridianAlgo_Forex.pt"
         else:
             filename = f"models/{model_path.name}"
 

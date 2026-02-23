@@ -1,101 +1,33 @@
-# Ara AI Stock Analysis Platform - Enhanced Dependencies
-# Production-ready requirements for advanced ensemble ML stock prediction with self-learning
+# AraAI: Advanced Financial Prediction Platform
+# Core Dependencies for Revolutionary 2026 Model Architecture
 
-# Core ML and Data Science
-scikit-learn>=1.1.0             # Machine learning models (Enhanced RF, GB)
-pandas>=1.5.0                   # Data manipulation and analysis
-numpy>=1.21.0                   # Numerical computing and array operations
+# Machine Learning & Core
+torch>=2.0.0
+accelerate>=0.20.0
+numpy>=1.21.0
+pandas>=1.5.0
+scikit-learn>=1.1.0
 
-# Market Data and Financial APIs
-yfinance>=0.1.87                # Yahoo Finance data (free, no API key required)
-requests>=2.28.0                # HTTP requests for data fetching
+# Market Data
+yfinance>=0.2.0
+requests>=2.28.0
 
-# User Interface and Console Output
-rich>=12.0.0                    # Beautiful console output with enhanced tables and panels
-click>=8.1.0                    # Command-line interface framework
+# Infrastructure & Experiment Tracking
+comet-ml>=3.35.0
+huggingface_hub>=0.19.0
+python-dotenv>=1.0.0
+psutil>=5.9.0
 
-# Enhanced Performance and Analysis
-scipy>=1.9.0                    # Scientific computing for advanced pattern recognition
-matplotlib>=3.5.0               # Plotting for chart pattern visualization (optional)
-seaborn>=0.11.0                 # Statistical visualization (optional)
+# API Server
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+pydantic>=2.0.0
 
-# Enhanced AI Analysis (Hugging Face) - Lightweight & Accurate Models
-transformers>=4.21.0            # AI models for comprehensive company analysis
-tokenizers>=0.13.0              # Fast tokenization for AI models
-datasets>=2.0.0                 # Dataset utilities (optional)
-accelerate>=0.20.0              # GPU acceleration for transformers
-bitsandbytes>=0.39.0            # Memory optimization for large models (optional)
-torch>=2.0.0                    # PyTorch for deep learning models
+# UI & Console
+rich>=12.0.0
+click>=8.1.0
 
-# Sentiment Analysis Dependencies
-vaderSentiment>=3.3.2           # VADER sentiment analyzer (fallback)
-tweepy>=4.14.0                  # Twitter API v2 integration
-praw>=7.7.0                     # Reddit API integration
-newsapi-python>=0.2.7           # NewsAPI integration
-aiohttp>=3.8.0                  # Async HTTP client for API calls
-pytrends>=4.9.0                 # Google Trends API
-
-# Optional: Performance Optimization (uncomment for better performance)
-# numba>=0.56.0                 # JIT compilation for numerical functions
-# joblib>=1.2.0                 # Parallel processing for ML models
-
-# Development and Testing (uncomment for development)
-# pytest>=7.0.0                 # Testing framework
-# flake8>=5.0.0                 # Code style checking
-# black>=22.0.0                 # Code formatting
-# jupyter>=1.0.0                # Jupyter notebooks for analysis
-
-# Platform-specific GPU acceleration (install separately if needed)
-# For NVIDIA GPUs: CUDA support (automatically detected by transformers)
-# For AMD GPUs: ROCm support (automatically detected)
-# For Apple Silicon: MPS support (automatically detected)
-
-# Advanced Features:
-# - Self-learning LSTM with attention mechanisms
-# - Chart pattern recognition (triangles, wedges, head & shoulders)
-# - Comprehensive company analysis and risk assessment
-# - Advanced technical indicators and market intelligence
-# - Real-time error correction and model improvement
-
-# Minimum Python version: 3.9+ (Python 3.8 has compatibility issues with multitasking package)
-# Recommended Python version: 3.11+ for best performance
-# GPU recommended for optimal LSTM training speed
-
-# Python 3.9+ specific dependencies
-typing-extensions>=4.0.0        # Type hints for Python 3.9+
-
-# API Framework (Task 16)
-fastapi>=0.100.0                # Modern async web framework
-uvicorn[standard]>=0.23.0       # ASGI server
-pydantic>=2.0.0                 # Data validation
-python-multipart>=0.0.6         # Form data parsing
-
-# Authentication and Security (Task 17)
-python-jose[cryptography]>=3.3.0  # JWT token handling
-passlib[bcrypt]>=1.7.4          # Password hashing
-python-dotenv>=1.0.0            # Environment variables
-sqlalchemy>=2.0.0               # Database ORM for security features
-
-# Rate Limiting (Task 17.1)
-redis>=4.6.0                    # Redis client for rate limiting (optional)
-
-# Visualization (Task 21)
-plotly>=5.15.0                  # Interactive charts and visualizations
-kaleido>=0.2.1                  # Static image export for plotly (optional)
-reportlab>=4.0.0                # PDF report generation (optional)
-openpyxl>=3.1.0                 # Excel export (optional)
-
-# Monitoring and Observability (optional)
-prometheus-client>=0.17.0       # Prometheus metrics exporter
-psutil>=5.9.0                   # System and process utilities
-comet-ml>=3.35.0                # Comet ML experiment tracking (replaces wandb)
-huggingface_hub>=0.19.0         # Hugging Face Hub for model storage
-# opentelemetry-api>=1.20.0     # OpenTelemetry tracing API (optional)
-# opentelemetry-sdk>=1.20.0     # OpenTelemetry SDK (optional)
-# opentelemetry-exporter-otlp>=1.20.0  # OTLP exporter (optional)
-# sentry-sdk>=1.32.0            # Sentry error tracking (optional)
-
-# Code Quality
-isort>=5.12.0                   # Import sorting
-black>=23.0.0                   # Code formatting
-ruff>=0.1.0                     # Fast Python linter
+# Code Quality (Dev)
+ruff>=0.1.0
+black>=23.0.0
+isort>=5.12.0

@@ -566,16 +566,17 @@ class AdvancedMLSystem:
             # Create model if not already loaded/trained
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print("  Creating new Revolutionary 2026 architecture...")
+                    print("  Creating new Revolutionary 2026 architecture (300M-500M Parameters)...")
+                    # Optimized for ~300M-400M parameters and CPU efficiency
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
                         seq_len=seq_len,
-                        dim=512,
+                        dim=768,
                         num_layers=6,
-                        num_heads=8,
-                        num_kv_heads=2,
-                        num_experts=4,
-                        num_prediction_heads=4,
+                        num_heads=12,
+                        num_kv_heads=4,
+                        num_experts=12,
+                        num_prediction_heads=8,
                         dropout=0.1,
                         use_mamba=True,
                     )
@@ -630,21 +631,25 @@ class AdvancedMLSystem:
                 self.model.train()
                 train_loss = 0
 
-                for batch_X, batch_y in train_loader:
+                for step, (batch_X, batch_y) in enumerate(train_loader):
                     # CPU Limiter - Check every batch for smoother control
                     if psutil.cpu_percent(interval=None) > cpu_limit:
                         time.sleep(0.05)  # Short sleep to let CPU cool down
 
                     optimizer.zero_grad()
-                    pred, _ = self.model(batch_X)
-                    loss, loss_components = criterion(pred, batch_y)
+                    predictions, _ = self.model(batch_X)
+                    loss, loss_dict = criterion(predictions, batch_y)
+
                     self.accelerator.backward(loss)
                     self.accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
                     optimizer.step()
 
                     train_loss += loss.item()
+                    
+                    if (step + 1) % 10 == 0:
+                        print(f"  Step {step+1}/{len(train_loader)} - loss: {loss.item():.6f}")
 
-                train_loss /= len(train_loader)
+                scheduler.step()
 
                 # Validation
                 self.model.eval()
@@ -679,6 +684,7 @@ class AdvancedMLSystem:
                             "recall": direction_metrics["recall"],
                             "f1_score": direction_metrics["f1_score"],
                         },
+                        step=epoch + 1,
                         epoch=epoch + 1,
                     )
 

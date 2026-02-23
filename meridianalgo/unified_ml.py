@@ -21,9 +21,9 @@ class UnifiedStockML:
     Stock prediction using single PyTorch .pt model
     """
 
-    def __init__(self, model_path="models/stock_model.pt"):
+    def __init__(self, model_path="models/stock_model.pt", model_type="stock"):
         self.model_path = Path(model_path)
-        self.ml_system = AdvancedMLSystem(self.model_path, model_type="stock")
+        self.ml_system = AdvancedMLSystem(self.model_path, model_type=model_type)
         self.feature_count = 44
 
     def get_model_status(self):

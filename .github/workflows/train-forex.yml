@@ -127,32 +127,28 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          EPOCHS="${{ inputs.epochs || '60' }}"
-          SAMPLE_SIZE="${{ inputs.sample_size || '3' }}"
-          TIMEFRAME="${{ needs.setup.outputs.timeframe }}"
+          EPOCHS="${{ inputs.epochs || '8' }}"
+          SAMPLE_SIZE="${{ inputs.sample_size || '10' }}"
           
           echo "🚀 Training Forex Model"
-          echo "  Timeframe: $TIMEFRAME"
           echo "  Epochs: $EPOCHS"
           
           if [ "$SAMPLE_SIZE" = "0" ]; then
             echo "  Mode: ALL PAIRS"
             python scripts/train_forex_model.py \
               --db-file training.db \
-              --output models/Forex_Pred.pt \
+              --output models/MeridianAlgo_Forex.pt \
               --epochs "$EPOCHS" \
               --use-all-data \
-              --timeframe "$TIMEFRAME" \
               --comet-api-key "$COMET_API_KEY" \
               --seed $RANDOM
           else
             echo "  Sample Size: $SAMPLE_SIZE"
             python scripts/train_forex_model.py \
               --db-file training.db \
-              --output models/Forex_Pred.pt \
+              --output models/MeridianAlgo_Forex.pt \
               --epochs "$EPOCHS" \
               --sample-size "$SAMPLE_SIZE" \
-              --timeframe "$TIMEFRAME" \
               --comet-api-key "$COMET_API_KEY" \
               --seed $RANDOM
           fi
@@ -161,7 +157,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: forex-model-${{ github.run_number }}
-          path: models/Forex_Pred.pt
+          path: models/MeridianAlgo_Forex.pt
           retention-days: 7
 
   deploy:
@@ -198,7 +194,7 @@ jobs:
         run: |
           echo "📤 Uploading Forex Model to Hugging Face..."
           python scripts/push_elite_models.py \
-            --model-path models/Forex_Pred.pt \
+            --model-path models/MeridianAlgo_Forex.pt \
             --model-type forex
 
   cleanup:

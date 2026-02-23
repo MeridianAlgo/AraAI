@@ -193,8 +193,8 @@ def train_forex_model(
     }
 
     experiment = init_comet(
-        project_name="ara-ai-forex",
-        experiment_name=f"forex-unified-{int(time.time())}",
+        project_name="meridian-algo-forex",
+        experiment_name=f"MeridianAlgo_Forex_{config['timeframe']}_{int(time.time())}",
         config=config,
         api_key=comet_api_key,
     )
@@ -250,8 +250,8 @@ def train_forex_model(
 def main():
     parser = argparse.ArgumentParser(description="Train unified forex prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
-    parser.add_argument("--output", default="models/Forex_Pred.pt", help="Output model path")
-    parser.add_argument("--epochs", type=int, default=60, help="Training epochs")
+    parser.add_argument("--output", default="models/MeridianAlgo_Forex.pt", help="Output model path")
+    parser.add_argument("--epochs", type=int, default=10, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument("--sample-size", type=int, help="Number of pairs to sample (default: all)")
@@ -266,10 +266,15 @@ def main():
     parser.add_argument(
         "--timeframe",
         choices=["15m", "1h", "4h", "1d"],
-        help="Timeframe for data filtering",
+        help="Timeframe for data filtering (will be randomized if not specified)",
     )
 
     args = parser.parse_args()
+
+    # Randomize timeframe if not specified
+    if not args.timeframe:
+        args.timeframe = random.choice(["15m", "1h", "4h", "1d"])
+        print(f"Randomly selected timeframe: {args.timeframe}")
 
     # Get Comet API key from args or environment
     comet_api_key = args.comet_api_key or os.environ.get("COMET_API_KEY")

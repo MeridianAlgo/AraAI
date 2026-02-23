@@ -10,7 +10,7 @@ def check_comet_detailed():
     api_key = os.getenv("COMET_API_KEY")
     api = API(api_key=api_key)
     workspace = "meridianalgo"
-    projects = ["ara-ai-stock", "ara-ai-forex"]
+    projects = ["meridian-algo-stocks", "meridian-algo-forex", "ara-ai-stock", "ara-ai-forex"]
 
     for project in projects:
         print(f"\n{'='*20} Project: {project} {'='*20}")

@@ -26,7 +26,7 @@ class ForexML:
     def __init__(self, model_path="models/forex_model.pt"):
         self.model_path = Path(model_path)
         # Use UnifiedStockML as the base - it handles both stocks and forex
-        self._unified_ml = UnifiedStockML(model_path)
+        self._unified_ml = UnifiedStockML(model_path, model_type="forex")
         self.ml_system = self._unified_ml.ml_system  # Share the same ml_system
         self.feature_count = 44
 
