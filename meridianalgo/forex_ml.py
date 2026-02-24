@@ -12,9 +12,9 @@ import yfinance as yf
 
 warnings.filterwarnings("ignore")
 
-from pathlib import Path
+from pathlib import Path  # noqa: E402
 
-from .unified_ml import UnifiedStockML
+from .unified_ml import UnifiedStockML  # noqa: E402
 
 
 class ForexML:

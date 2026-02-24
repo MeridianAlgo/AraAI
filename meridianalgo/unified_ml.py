@@ -13,7 +13,7 @@ import yfinance as yf
 
 warnings.filterwarnings("ignore")
 
-from .large_torch_model import AdvancedMLSystem
+from .large_torch_model import AdvancedMLSystem  # noqa: E402
 
 
 class UnifiedStockML:
