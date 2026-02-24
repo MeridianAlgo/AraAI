@@ -1,149 +1,41 @@
-name: Lint & Format
+name: Ara.AI Lint
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-permissions:
-  contents: write
-  issues: write
+    branches: [main]
 
 jobs:
   lint:
-    name: Lint & Format Code
+    name: "Lint & Format"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      
-      - name: Setup Python
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
-      
-      - name: Install Linting Tools
+
+      - name: Install linters
+        run: pip install ruff black mypy
+
+      - name: Auto-format codes (Black)
+        run: black .
+
+      - name: Auto-lint codes (Ruff)
+        run: ruff check . --fix
+
+      - name: Commit and Push Changes
         run: |
-          python -m pip install --upgrade pip
-          pip install ruff black isort
-      
-      - name: Run Ruff Check
-        id: ruff-check
-        run: |
-          echo "🔍 Running Ruff linter..."
-          ruff check . --output-format=github || echo "ruff_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
-      
-      - name: Run Ruff Format Check
-        id: ruff-format
-        run: |
-          echo "🎨 Checking Ruff formatting..."
-          ruff format --check . || echo "format_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
-      
-      - name: Run Black Check
-        id: black-check
-        run: |
-          echo "🖤 Checking Black formatting..."
-          black --check . || echo "black_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
-      
-      - name: Run isort Check
-        id: isort-check
-        run: |
-          echo "📦 Checking import sorting..."
-          isort --check-only . || echo "isort_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
-      
-      - name: Auto-fix Issues (on push to main)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          echo "🔧 Auto-fixing linting issues..."
-          ruff check . --fix || true
-          ruff format . || true
-          black . || true
-          isort . || true
-      
-      - name: Commit Fixes (on push to main)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "style: auto-fix linting issues [skip ci]"
-          file_pattern: "*.py"
-        continue-on-error: true
-      
-      - name: Create Issue on Failure
-        if: |
-          steps.ruff-check.outputs.ruff_failed == 'true' ||
-          steps.ruff-format.outputs.format_failed == 'true' ||
-          steps.black-check.outputs.black_failed == 'true' ||
-          steps.isort-check.outputs.isort_failed == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const failures = [];
-            if ('${{ steps.ruff-check.outputs.ruff_failed }}' === 'true') failures.push('Ruff linting');
-            if ('${{ steps.ruff-format.outputs.format_failed }}' === 'true') failures.push('Ruff formatting');
-            if ('${{ steps.black-check.outputs.black_failed }}' === 'true') failures.push('Black formatting');
-            if ('${{ steps.isort-check.outputs.isort_failed }}' === 'true') failures.push('Import sorting');
-            
-            const title = `Linting Issues - ${failures.join(', ')} - Run ${context.runNumber}`;
-            const body = `## Code Quality Issues Detected
-            
-            **Failed Checks:** ${failures.join(', ')}
-            **Workflow:** [Run ${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
-            **Branch:** ${context.ref}
-            **Commit:** ${context.sha.substring(0, 7)}
-            
-            ### How to Fix
-            
-            Run these commands locally:
-            \`\`\`bash
-            # Install tools
-            pip install ruff black isort
-            
-            # Fix all issues
-            ruff check . --fix
-            ruff format .
-            black .
-            isort .
-            
-            # Commit changes
-            git add .
-            git commit -m "style: fix linting issues"
-            git push
-            \`\`\`
-            
-            ### Check Results
-            - Ruff Linting: ${{ steps.ruff-check.outputs.ruff_failed == 'true' && '❌ Failed' || '✅ Passed' }}
-            - Ruff Formatting: ${{ steps.ruff-format.outputs.format_failed == 'true' && '❌ Failed' || '✅ Passed' }}
-            - Black Formatting: ${{ steps.black-check.outputs.black_failed == 'true' && '❌ Failed' || '✅ Passed' }}
-            - Import Sorting: ${{ steps.isort-check.outputs.isort_failed == 'true' && '❌ Failed' || '✅ Passed' }}
-            
-            [View Logs](${context.payload.repository.html_url}/actions/runs/${context.runId})
-            `;
-            
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: title,
-              body: body,
-              labels: ['code-quality', 'linting', 'automated']
-            });
-      
-      - name: Summary
-        if: always()
-        run: |
-          echo "## Linting Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Ruff Check: ${{ steps.ruff-check.outputs.ruff_failed == 'true' && '❌' || '✅' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Ruff Format: ${{ steps.ruff-format.outputs.format_failed == 'true' && '❌' || '✅' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Black: ${{ steps.black-check.outputs.black_failed == 'true' && '❌' || '✅' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- isort: ${{ steps.isort-check.outputs.isort_failed == 'true' && '❌' || '✅' }}" >> $GITHUB_STEP_SUMMARY
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff --staged --quiet || git commit -m "style: auto-format and lint [skip ci]"
+          git push origin HEAD
