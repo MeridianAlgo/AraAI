@@ -127,7 +127,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
-          pip install comet-ml
+          pip install comet-ml huggingface_hub
+
+      - name: Download Existing Model
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p models
+          python -c "
+          import os
+          from huggingface_hub import hf_hub_download
+          try:
+              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/MeridianAlgo_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              print('Successfully downloaded existing stock model.')
+          except Exception as e:
+              print(f'Warning: Could not download existing model (might not exist yet): {e}')
+          "
       
       - name: Train Model
         env:
