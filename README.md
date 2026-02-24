@@ -235,4 +235,4 @@ ruff check . --fix
 **By using this software, you irrevocably agree that any financial decisions you make are yours alone and that you will not hold MeridianAlgo or any contributors liable for your outcomes.**
 
 ---
-Made with love by MeridianAlgo
+Made with love by MeridianAlgo, for the world :)
