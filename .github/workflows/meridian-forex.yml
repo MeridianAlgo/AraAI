@@ -9,7 +9,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '6'
+        default: '3'
       sample_size:
         description: 'Number of forex pairs to sample (0 = all)'
         required: false
@@ -164,7 +164,7 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          EPOCHS="${{ inputs.epochs || '8' }}"
+          EPOCHS="${{ inputs.epochs || '4' }}"
           SAMPLE_SIZE="${{ inputs.sample_size || '15' }}"
           
           echo "Training Forex Model"

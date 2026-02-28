@@ -14,7 +14,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '6'
+        default: '3'
       sample_size:
         description: 'Number of stocks to sample (0 = all)'
         required: false
@@ -171,7 +171,7 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         continue-on-error: false
         run: |
-          EPOCHS="${{ inputs.epochs || '8' }}"
+          EPOCHS="${{ inputs.epochs || '4' }}"
           SAMPLE_SIZE="${{ inputs.sample_size || '100' }}"
           ALL_STOCKS="${{ inputs.train_all_stocks }}"
           
