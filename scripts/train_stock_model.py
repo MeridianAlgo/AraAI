@@ -257,7 +257,7 @@ def main():
     parser.add_argument(
         "--output", default="models/Meridian.AI_Stocks.pt", help="Output model path"
     )
-    parser.add_argument("--epochs", type=int, default=10, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=5, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument(
