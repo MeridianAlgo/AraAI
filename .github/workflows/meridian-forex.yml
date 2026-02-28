@@ -9,7 +9,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '8'
+        default: '6'
       sample_size:
         description: 'Number of forex pairs to sample (0 = all)'
         required: false
