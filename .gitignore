@@ -36,14 +36,12 @@ env/
 .DS_Store
 
 # Models and Cache
-.ara_cache/
+.meridian_cache/
 .ruff_cache/
 .cache/
 *.pkl
 *.joblib
 *.h5
-
-# Keep models in models/ directory only
 /models/*.pt
 !/models/README.md
 
@@ -51,17 +49,10 @@ env/
 datasets/*.csv
 datasets/temp_*.csv
 !datasets/README.md
-!datasets/test_data/
-!datasets/training_data/
-
-# Database
-*.db
-*.db-journal
-*.sqlite
-*.sqlite3
-
-# Keep training.db out of root (should be in data/ or ignored)
-/training.db
+data/*.db
+data/*.db-journal
+data/*.sqlite
+data/*.sqlite3
 
 # Logs
 *.log
@@ -74,17 +65,9 @@ htmlcov/
 .tox/
 .hypothesis/
 
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
 # Environment
 .env
 .env.local
-
-# OS
-Thumbs.db
-.DS_Store
 
 # Temporary
 *.tmp
@@ -93,12 +76,12 @@ Thumbs.db
 temp/
 tmp/
 
-# Analysis and test files
-training_analysis.md
-test_*.py
-!tests/test_*.py
-
-# Downloaded models (too large for git)
+# Downloaded models
 models/models/*.pt
-models/*.pt
 download_models.py
+bulk_rename.py
+process_github.py
+update_fetcher.py
+check_*.py
+inspect_*.py
+evaluate_models.py

@@ -56,9 +56,9 @@ def check_gpu_support():
 
 def quick_predict(*args, **kwargs):
     try:
-        from .core import AraAI
+        from .core import MeridianAI
 
-        ara = AraAI()
+        ara = MeridianAI()
         return ara.predict(*args, **kwargs)
     except Exception:
         return {"error": "core predictor unavailable"}

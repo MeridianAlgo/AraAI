@@ -21,7 +21,7 @@ os.environ["HUGGINGFACE_HUB_READ_TIMEOUT"] = "10800"
 os.environ["HUGGINGFACE_HUB_WRITE_TIMEOUT"] = "10800"
 
 
-def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.AI"):
+def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/Meridian.AI"):
     """Push model to Hugging Face Hub"""
 
     # Get HF token from environment
@@ -46,9 +46,9 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.A
 
         # Determine filename based on model type
         if model_type == "stock":
-            filename = "models/MeridianAlgo_Stocks.pt"
+            filename = "models/Meridian.AI_Stocks.pt"
         elif model_type == "forex":
-            filename = "models/MeridianAlgo_Forex.pt"
+            filename = "models/Meridian.AI_Forex.pt"
         else:
             filename = f"models/{model_path.name}"
 
@@ -97,11 +97,11 @@ tags:
 - {model_type}
 ---
 
-# ARA.AI - Advanced Financial Prediction Models
+# Meridian.AI - Advanced Financial Prediction Models
 
 Professional financial AI models for stock and forex prediction.
 
-See full documentation at: https://github.com/MeridianAlgo/AraAI
+See full documentation at: https://github.com/MeridianAlgo/Meridian.AI
 
 **Last Updated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
@@ -127,7 +127,7 @@ def main():
     parser.add_argument(
         "--model-type", default="stock", choices=["stock", "forex"], help="Model type"
     )
-    parser.add_argument("--repo-id", default="MeridianAlgo/ARA.AI", help="Hugging Face repo ID")
+    parser.add_argument("--repo-id", default="MeridianAlgo/Meridian.AI", help="Hugging Face repo ID")
 
     args = parser.parse_args()
 

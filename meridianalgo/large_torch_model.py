@@ -367,7 +367,7 @@ class AdvancedMLSystem:
                     num_heads = int(checkpoint.get("num_heads", 8))
                     num_kv_heads = int(checkpoint.get("num_kv_heads", 2))
                     num_experts = int(checkpoint.get("num_experts", 4))
-                    
+
                     # Workaround for hardcoded old metadata in some checkpoints
                     if dim == 768 and num_heads == 8:
                         print("  Detected 2026 architecture with legacy metadata, using corrected parameters (12h, 4kv, 12e)")

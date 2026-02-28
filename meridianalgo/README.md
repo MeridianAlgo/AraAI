@@ -1,6 +1,6 @@
 # meridianalgo
 
-Core Python package for ARA AI stock prediction system.
+Core Python package for Meridian.AI stock prediction system.
 
 ## Active Modules
 

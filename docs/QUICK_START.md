@@ -1,8 +1,8 @@
-# ARA AI - Quick Start Guide (v8.0.0)
+# Meridian.AI - Quick Start Guide (v8.0.0)
 
 **Revolutionary 2026 Architecture with Advanced Financial AI**
 
-Get started with ARA AI in under 5 minutes.
+Get started with Meridian.AI in under 5 minutes.
 
 ---
 
@@ -22,8 +22,8 @@ Get started with ARA AI in under 5 minutes.
 
 ```bash
 # Clone repository
-git clone https://github.com/MeridianAlgo/AraAI.git
-cd AraAI
+git clone https://github.com/MeridianAlgo/Meridian.AI.git
+cd Meridian.AI
 
 # Create virtual environment
 python -m venv venv
@@ -228,7 +228,7 @@ python scripts/push_elite_models.py \
 ### Import Errors
 ```bash
 # Ensure you're in the project root
-cd AraAI
+cd Meridian.AI
 
 # Reinstall dependencies
 pip install -r requirements.txt --force-reinstall
@@ -260,9 +260,9 @@ python scripts/fetch_and_store_data.py --db-file training.db --asset-type stock 
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/AraAI/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/AraAI/discussions)
-- **Models**: [Hugging Face Hub](https://huggingface.co/MeridianAlgo/ARA.AI)
+- **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/Meridian.AI/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/Meridian.AI/discussions)
+- **Models**: [Hugging Face Hub](https://huggingface.co/MeridianAlgo/Meridian.AI)
 
 ---
 

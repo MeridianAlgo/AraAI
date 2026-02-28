@@ -1,4 +1,4 @@
-name: Train Forex Model
+name: Meridian.AI for Forex
 
 on:
   schedule:
@@ -13,7 +13,7 @@ on:
       sample_size:
         description: 'Number of forex pairs to sample (0 = all)'
         required: false
-        default: '3'
+        default: '15'
 
 permissions:
   contents: write
@@ -64,7 +64,7 @@ jobs:
           TIMEFRAMES=("15m" "1h" "4h" "1d")
           SELECTED=${TIMEFRAMES[$RANDOM % ${#TIMEFRAMES[@]}]}
           echo "timeframe=$SELECTED" >> $GITHUB_OUTPUT
-          echo "💱 Selected timeframe: $SELECTED"
+          echo " Selected timeframe: $SELECTED"
       
       - name: Free Disk Space
         run: |
@@ -79,7 +79,7 @@ jobs:
           python scripts/fetch_and_store_data.py \
             --db-file training.db \
             --asset-type forex \
-            --limit 20
+            --limit 30
       
       - name: Upload Database
         uses: actions/upload-artifact@v4
@@ -89,7 +89,7 @@ jobs:
           retention-days: 1
 
   train:
-    name: Train Forex Model
+    name: Meridian.AI for Forex
     needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 180
@@ -133,7 +133,7 @@ jobs:
           import os
           from huggingface_hub import hf_hub_download
           try:
-              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/MeridianAlgo_Forex.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              hf_hub_download(repo_id='MeridianAlgo/Meridian.AI', filename='models/Meridian.AI_Forex.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
               print('Successfully downloaded existing forex model.')
           except Exception as e:
               print(f'Warning: Could not download existing model (might not exist yet): {e}')
@@ -144,7 +144,7 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
           EPOCHS="${{ inputs.epochs || '8' }}"
-          SAMPLE_SIZE="${{ inputs.sample_size || '10' }}"
+          SAMPLE_SIZE="${{ inputs.sample_size || '15' }}"
           
           echo "Training Forex Model"
           echo "  Epochs: $EPOCHS"
@@ -153,7 +153,7 @@ jobs:
             echo "  Mode: ALL PAIRS"
             python scripts/train_forex_model.py \
               --db-file training.db \
-              --output models/MeridianAlgo_Forex.pt \
+              --output models/Meridian.AI_Forex.pt \
               --epochs "$EPOCHS" \
               --use-all-data \
               --comet-api-key "$COMET_API_KEY" \
@@ -162,7 +162,7 @@ jobs:
             echo "  Sample Size: $SAMPLE_SIZE"
             python scripts/train_forex_model.py \
               --db-file training.db \
-              --output models/MeridianAlgo_Forex.pt \
+              --output models/Meridian.AI_Forex.pt \
               --epochs "$EPOCHS" \
               --sample-size "$SAMPLE_SIZE" \
               --comet-api-key "$COMET_API_KEY" \
@@ -173,7 +173,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: forex-model-${{ github.run_number }}
-          path: models/MeridianAlgo_Forex.pt
+          path: models/Meridian.AI_Forex.pt
           retention-days: 7
 
   deploy:
@@ -183,7 +183,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: huggingface-forex
-      url: https://huggingface.co/MeridianAlgo/ARA.AI
+      url: https://huggingface.co/MeridianAlgo/Meridian.AI
     
     steps:
       - name: Checkout
@@ -210,7 +210,7 @@ jobs:
         run: |
           echo "Uploading Forex Model to Hugging Face..."
           python scripts/push_elite_models.py \
-            --model-path models/MeridianAlgo_Forex.pt \
+            --model-path models/Meridian.AI_Forex.pt \
             --model-type forex
 
   cleanup:
@@ -249,7 +249,7 @@ jobs:
             
             ### Configuration
             - Epochs: ${{ inputs.epochs || '60' }}
-            - Sample Size: ${{ inputs.sample_size || '3' }}
+            - Sample Size: ${{ inputs.sample_size || '15' }}
             
             ### Action Items
             - [ ] Review training logs

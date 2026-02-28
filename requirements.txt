@@ -1,4 +1,4 @@
-# AraAI: Advanced Financial Prediction Platform
+# Meridian.AI: Advanced Financial Prediction Platform
 # Core Dependencies for Revolutionary 2026 Model Architecture
 
 # Machine Learning & Core

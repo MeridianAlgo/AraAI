@@ -1,10 +1,10 @@
 # Changelog
 
-All notable changes to ARA AI will be documented in this file.
+All notable changes to Meridian.AI will be documented in this file.
 
 ## [7.0.0] - 2026-01-20 - Revolutionary Training Edition
 
-### 🚀 Major Changes
+###  Major Changes
 
 #### Revolutionary Training Workflows
 - **Separate Workflows**: Independent training for stocks and forex
@@ -91,7 +91,7 @@ All notable changes to ARA AI will be documented in this file.
 2. Format code: `black . && isort . && ruff check --fix .`
 3. Run tests before committing
 
-### 📊 Performance
+###  Performance
 
 - Training time: ~2-3 minutes per model
 - Accuracy: >99.9% (stock), >99.5% (forex)

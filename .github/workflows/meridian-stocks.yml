@@ -1,4 +1,4 @@
-name: Train Stock Model
+name: Meridian.AI for Stocks
 
 on:
   schedule:
@@ -18,7 +18,7 @@ on:
       sample_size:
         description: 'Number of stocks to sample (0 = all)'
         required: false
-        default: '5'
+        default: '100'
 
 permissions:
   contents: write
@@ -69,7 +69,7 @@ jobs:
           TIMEFRAMES=("1h" "4h" "1d" "1w")
           SELECTED=${TIMEFRAMES[$RANDOM % ${#TIMEFRAMES[@]}]}
           echo "timeframe=$SELECTED" >> $GITHUB_OUTPUT
-          echo "📊 Selected timeframe: $SELECTED"
+          echo " Selected timeframe: $SELECTED"
       
       - name: Free Disk Space
         run: |
@@ -84,7 +84,7 @@ jobs:
           python scripts/fetch_and_store_data.py \
             --db-file training.db \
             --asset-type stock \
-            --limit 100
+            --limit 150
       
       - name: Upload Database
         uses: actions/upload-artifact@v4
@@ -94,7 +94,7 @@ jobs:
           retention-days: 1
 
   train:
-    name: Train Stock Model
+    name: Meridian.AI for Stocks
     needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 180
@@ -138,7 +138,7 @@ jobs:
           import os
           from huggingface_hub import hf_hub_download
           try:
-              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/MeridianAlgo_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              hf_hub_download(repo_id='MeridianAlgo/Meridian.AI', filename='models/Meridian.AI_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
               print('Successfully downloaded existing stock model.')
           except Exception as e:
               print(f'Warning: Could not download existing model (might not exist yet): {e}')
@@ -149,7 +149,7 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
           EPOCHS="${{ inputs.epochs || '8' }}"
-          SAMPLE_SIZE="${{ inputs.sample_size || '10' }}"
+          SAMPLE_SIZE="${{ inputs.sample_size || '100' }}"
           ALL_STOCKS="${{ inputs.train_all_stocks }}"
           
           echo "Training Stock Model"
@@ -159,7 +159,7 @@ jobs:
             echo "  Mode: ALL STOCKS"
             python scripts/train_stock_model.py \
               --db-file training.db \
-              --output models/MeridianAlgo_Stocks.pt \
+              --output models/Meridian.AI_Stocks.pt \
               --epochs "$EPOCHS" \
               --use-all-data \
               --comet-api-key "$COMET_API_KEY" \
@@ -168,7 +168,7 @@ jobs:
             echo "  Sample Size: $SAMPLE_SIZE"
             python scripts/train_stock_model.py \
               --db-file training.db \
-              --output models/MeridianAlgo_Stocks.pt \
+              --output models/Meridian.AI_Stocks.pt \
               --epochs "$EPOCHS" \
               --sample-size "$SAMPLE_SIZE" \
               --comet-api-key "$COMET_API_KEY" \
@@ -179,7 +179,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stock-model-${{ github.run_number }}
-          path: models/MeridianAlgo_Stocks.pt
+          path: models/Meridian.AI_Stocks.pt
           retention-days: 7
 
   deploy:
@@ -189,7 +189,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: huggingface-stock
-      url: https://huggingface.co/MeridianAlgo/ARA.AI
+      url: https://huggingface.co/MeridianAlgo/Meridian.AI
     
     steps:
       - name: Checkout
@@ -216,7 +216,7 @@ jobs:
         run: |
           echo "Uploading Stock Model to Hugging Face..."
           python scripts/push_elite_models.py \
-            --model-path models/MeridianAlgo_Stocks.pt \
+            --model-path models/Meridian.AI_Stocks.pt \
             --model-type stock
 
   cleanup:
@@ -255,7 +255,7 @@ jobs:
             
             ### Configuration
             - Epochs: ${{ inputs.epochs || '60' }}
-            - Sample Size: ${{ inputs.sample_size || '5' }}
+            - Sample Size: ${{ inputs.sample_size || '100' }}
             - All Stocks: ${{ inputs.train_all_stocks || 'false' }}
             
             ### Action Items

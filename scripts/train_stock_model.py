@@ -197,7 +197,7 @@ def train_stock_model(
     }
 
     experiment = init_comet(
-        project_name="meridian-algo-stocks",
+        project_name="meridian-ai-stocks-v4",
         experiment_name=f"MeridianAlgo_Stocks_{config['timeframe']}_{int(time.time())}",
         config=config,
         api_key=comet_api_key,
@@ -255,7 +255,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train unified stock prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument(
-        "--output", default="models/MeridianAlgo_Stocks.pt", help="Output model path"
+        "--output", default="models/Meridian.AI_Stocks.pt", help="Output model path"
     )
     parser.add_argument("--epochs", type=int, default=10, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
