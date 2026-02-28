@@ -56,14 +56,14 @@ Prediction Heads: 8 ensemble heads
 ## Available Models
 
 ### 1. Meridian.AI Stocks Model
-- Repo ID: MeridianAlgo/Meridian.AI
+- Repo ID: MeridianAlgo/ARA.AI
 - File: models/Meridian.AI_Stocks.pt
 - Purpose: Comprehensive stock market forecasting.
 - Coverage: Broad equity market compatibility.
 - Accuracy: Optimized for directional consistency.
 
 ### 2. Meridian.AI Forex Model
-- Repo ID: MeridianAlgo/Meridian.AI
+- Repo ID: MeridianAlgo/ARA.AI
 - File: models/Meridian.AI_Forex.pt
 - Purpose: High-precision currency pair forecasting.
 - Coverage: Major, Minor, and Exotic pairs.
@@ -94,7 +94,7 @@ from meridianalgo.unified_ml import UnifiedStockML
 
 # Download the unified stocks model
 model_path = hf_hub_download(
-    repo_id="MeridianAlgo/Meridian.AI",
+    repo_id="MeridianAlgo/ARA.AI",
     filename="models/Meridian.AI_Stocks.pt"
 )
 

@@ -35,6 +35,7 @@ jobs:
     timeout-minutes: 30
     outputs:
       timeframe: ${{ steps.randomize.outputs.timeframe }}
+      has_data: ${{ steps.check_data.outputs.has_data }}
       
     steps:
       - name: Checkout
@@ -86,7 +87,23 @@ jobs:
             --asset-type stock \
             --limit 150
       
+      - name: Check if Data was Fetched
+        id: check_data
+        run: |
+          if [ -f training.db ]; then
+            COUNT=$(sqlite3 training.db "SELECT COUNT(*) FROM market_data;")
+            echo "Total rows: $COUNT"
+            if [ "$COUNT" -gt "0" ]; then
+              echo "has_data=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_data=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "has_data=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload Database
+        if: steps.check_data.outputs.has_data == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: stock-training-db-${{ github.run_number }}
@@ -96,6 +113,7 @@ jobs:
   train:
     name: Meridian.AI for Stocks
     needs: setup
+    if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     environment:
@@ -112,6 +130,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       
       - name: Download Database
+        if: needs.setup.outputs.has_data == 'true'
         uses: actions/download-artifact@v4
         with:
           name: stock-training-db-${{ github.run_number }}
@@ -130,6 +149,7 @@ jobs:
           pip install comet-ml huggingface_hub
 
       - name: Download Existing Model
+        if: needs.setup.outputs.has_data == 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -138,13 +158,14 @@ jobs:
           import os
           from huggingface_hub import hf_hub_download
           try:
-              hf_hub_download(repo_id='MeridianAlgo/Meridian.AI', filename='models/Meridian.AI_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/Meridian.AI_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
               print('Successfully downloaded existing stock model.')
           except Exception as e:
               print(f'Warning: Could not download existing model (might not exist yet): {e}')
           "
       
       - name: Train Model
+        if: needs.setup.outputs.has_data == 'true'
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
@@ -184,12 +205,13 @@ jobs:
 
   deploy:
     name: Deploy to Hugging Face
-    needs: train
+    needs: [train, setup]
+    if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
       name: huggingface-stock
-      url: https://huggingface.co/MeridianAlgo/Meridian.AI
+      url: https://huggingface.co/MeridianAlgo/ARA.AI
     
     steps:
       - name: Checkout

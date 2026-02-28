@@ -75,6 +75,7 @@ def fetch_and_store_stock(symbol, db_file, period="2y", interval="1d"):
             return 0
 
         df = df.reset_index()
+        date_col = "Date" if "Date" in df.columns else "Datetime"
 
         conn = sqlite3.connect(db_file)
         cursor = conn.cursor()
@@ -91,9 +92,9 @@ def fetch_and_store_stock(symbol, db_file, period="2y", interval="1d"):
                     (
                         symbol,
                         (
-                            row["Date"].strftime("%Y-%m-%d %H:%M:%S")
-                            if hasattr(row["Date"], "strftime")
-                            else str(row["Date"])
+                            row[date_col].strftime("%Y-%m-%d %H:%M:%S")
+                            if hasattr(row[date_col], "strftime")
+                            else str(row[date_col])
                         ),
                         float(row["Open"]),
                         float(row["High"]),
@@ -133,6 +134,7 @@ def fetch_and_store_forex(pair, db_file, period="2y", interval="1d"):
             return 0
 
         df = df.reset_index()
+        date_col = "Date" if "Date" in df.columns else "Datetime"
 
         conn = sqlite3.connect(db_file)
         cursor = conn.cursor()
@@ -149,9 +151,9 @@ def fetch_and_store_forex(pair, db_file, period="2y", interval="1d"):
                     (
                         symbol,
                         (
-                            row["Date"].strftime("%Y-%m-%d %H:%M:%S")
-                            if hasattr(row["Date"], "strftime")
-                            else str(row["Date"])
+                            row[date_col].strftime("%Y-%m-%d %H:%M:%S")
+                            if hasattr(row[date_col], "strftime")
+                            else str(row[date_col])
                         ),
                         float(row["Open"]),
                         float(row["High"]),
@@ -360,7 +362,8 @@ def main():
 
     if total_rows == 0:
         print("[WARNING] No data was stored")
-        sys.exit(1)
+        # Exit with 0 but let the workflow know
+        sys.exit(0)
 
 
 if __name__ == "__main__":

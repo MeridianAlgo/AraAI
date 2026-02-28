@@ -21,7 +21,7 @@ os.environ["HUGGINGFACE_HUB_READ_TIMEOUT"] = "10800"
 os.environ["HUGGINGFACE_HUB_WRITE_TIMEOUT"] = "10800"
 
 
-def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/Meridian.AI"):
+def push_model_to_hf(model_path, model_type="stock", repo_id="MeridianAlgo/ARA.AI"):
     """Push model to Hugging Face Hub"""
 
     # Get HF token from environment
@@ -128,7 +128,7 @@ def main():
         "--model-type", default="stock", choices=["stock", "forex"], help="Model type"
     )
     parser.add_argument(
-        "--repo-id", default="MeridianAlgo/Meridian.AI", help="Hugging Face repo ID"
+        "--repo-id", default="MeridianAlgo/ARA.AI", help="Hugging Face repo ID"
     )
 
     args = parser.parse_args()

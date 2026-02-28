@@ -22,7 +22,7 @@ Get started with Meridian.AI in under 5 minutes.
 
 ```bash
 # Clone repository
-git clone https://github.com/MeridianAlgo/Meridian.AI.git
+git clone https://github.com/MeridianAlgo/AraAI.git
 cd Meridian.AI
 
 # Create virtual environment
@@ -262,7 +262,7 @@ python scripts/fetch_and_store_data.py --db-file training.db --asset-type stock 
 
 - **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/Meridian.AI/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/Meridian.AI/discussions)
-- **Models**: [Hugging Face Hub](https://huggingface.co/MeridianAlgo/Meridian.AI)
+- **Models**: [Hugging Face Hub](https://huggingface.co/MeridianAlgo/ARA.AI)
 
 ---
 

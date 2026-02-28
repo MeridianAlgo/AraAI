@@ -52,8 +52,8 @@ jobs:
           import os
           from huggingface_hub import hf_hub_download
           try:
-              hf_hub_download(repo_id='MeridianAlgo/Meridian.AI', filename='models/Meridian.AI_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
-              hf_hub_download(repo_id='MeridianAlgo/Meridian.AI', filename='models/Meridian.AI_Forex.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/Meridian.AI_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/Meridian.AI_Forex.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
               print('Successfully downloaded existing models for testing.')
           except Exception as e:
               print(f'Error downloading existing models: {e}')

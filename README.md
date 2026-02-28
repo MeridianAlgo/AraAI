@@ -152,7 +152,7 @@ Automated GitHub Workflows maintain a continuous model evolution cycle.
 
 ```bash
 # Clone the repository
-git clone https://github.com/MeridianAlgo/Meridian.AI.git
+git clone https://huggingface.co/MeridianAlgo/ARA.AI.git
 cd Meridian.AI
 
 # Set up virtual environment
@@ -178,7 +178,7 @@ from huggingface_hub import hf_hub_download
 
 # Retrieve pre-trained model
 model_path = hf_hub_download(
-    repo_id="MeridianAlgo/MeridianAlgo_Stocks",
+    repo_id="MeridianAlgo/ARA.AI",
     filename="models/Meridian.AI_Stocks.pt"
 )
 
