@@ -6,19 +6,10 @@ on:
     - cron: '30 1,4,7,10,13,16,19,22 * * *'
   workflow_dispatch:
     inputs:
-      train_all_stocks:
-        description: 'Train with all stocks (no sampling)'
-        type: boolean
-        required: false
-        default: false
       epochs:
         description: 'Training epochs'
         required: false
         default: '3'
-      sample_size:
-        description: 'Number of stocks to sample (0 = all)'
-        required: false
-        default: '100'
 
 permissions:
   contents: write
@@ -172,31 +163,18 @@ jobs:
         continue-on-error: false
         run: |
           EPOCHS="${{ inputs.epochs || '4' }}"
-          SAMPLE_SIZE="${{ inputs.sample_size || '100' }}"
-          ALL_STOCKS="${{ inputs.train_all_stocks }}"
           
-          echo "Training Stock Model"
+          echo "Training Stock Model with Random Configuration"
           echo "  Epochs: $EPOCHS"
           
-          if [ "$ALL_STOCKS" = "true" ] || [ "$SAMPLE_SIZE" = "0" ]; then
-            echo "  Mode: ALL STOCKS"
-            python scripts/train_stock_model.py \
-              --db-file training.db \
-              --output models/Meridian.AI_Stocks.pt \
-              --epochs "$EPOCHS" \
-              --use-all-data \
-              --comet-api-key "$COMET_API_KEY" \
-              --seed $RANDOM || echo "Training completed with warnings"
-          else
-            echo "  Sample Size: $SAMPLE_SIZE"
-            python scripts/train_stock_model.py \
-              --db-file training.db \
-              --output models/Meridian.AI_Stocks.pt \
-              --epochs "$EPOCHS" \
-              --sample-size "$SAMPLE_SIZE" \
-              --comet-api-key "$COMET_API_KEY" \
-              --seed $RANDOM || echo "Training completed with warnings"
-          fi
+          # Train on 25 random stocks with random timeframes
+          python scripts/train_stock_model.py \
+            --db-file training.db \
+            --output models/Meridian.AI_Stocks.pt \
+            --epochs "$EPOCHS" \
+            --sample-size 25 \
+            --comet-api-key "$COMET_API_KEY" \
+            --seed $RANDOM || echo "Training completed with warnings"
       
       - name: Upload Model
         uses: actions/upload-artifact@v4
@@ -279,9 +257,9 @@ jobs:
             - Deployment: ${{ needs.deploy.result }}
             
             ### Configuration
-            - Epochs: ${{ inputs.epochs || '60' }}
-            - Sample Size: ${{ inputs.sample_size || '100' }}
-            - All Stocks: ${{ inputs.train_all_stocks || 'false' }}
+            - Epochs: ${{ inputs.epochs || '3' }}
+            - Sample Size: 25 (fixed)
+            - Mode: Random stocks with random timeframes
             
             ### Action Items
             - [ ] Review training logs
