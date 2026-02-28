@@ -21,7 +21,8 @@ def init_database(db_file):
     cursor = conn.cursor()
 
     # Create market_data table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS market_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             symbol TEXT NOT NULL,
@@ -37,10 +38,12 @@ def init_database(db_file):
             fetch_date TEXT,
             UNIQUE(symbol, date, interval)
         )
-    """)
+    """
+    )
 
     # Create model_metadata table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS model_metadata (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             symbol TEXT,
@@ -54,7 +57,8 @@ def init_database(db_file):
             training_mode TEXT,
             hour INTEGER
         )
-    """)
+    """
+    )
 
     conn.commit()
     conn.close()
@@ -190,32 +194,144 @@ def main():
     # Default symbols
     if args.asset_type == "stock":
         symbols = [
-            "AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "META", "NVDA", "JPM", "V", "WMT",
-            "JNJ", "PG", "MA", "UNH", "HD", "DIS", "BAC", "VZ", "ADBE", "CMCSA",
-            "NFLX", "PFE", "INTC", "KO", "PEP", "CSCO", "ABT", "CRM", "T", "ABBV",
-            "CVX", "NKE", "MRK", "MCD", "MDT", "TXN", "HON", "BA", "UNP", "AMGN",
-            "IBM", "QCOM", "ORCL", "SBUX", "GS", "MMM", "CAT", "GE", "F", "GM",
-            "C", "TGT", "LMT", "DE", "LOW", "UPS", "USB", "AXP", "MS", "WFC",
-            "COP", "SLB", "EOG", "OXY", "PXD", "VLO", "MPC", "PSX", "KMI", "WMB",
-            "NEE", "DUK", "SO", "D", "AEP", "EXC", "SRE", "XEL", "PEG", "WEC",
-            "AMT", "PLD", "CCI", "EQIX", "PSA", "DLR", "O", "WELL", "SPG", "AVB",
-            "VRTX", "REGN", "ISRG", "SYK", "ZTS", "BSX", "EW", "GILD", "BIIB", "ILMN"
+            "AAPL",
+            "GOOGL",
+            "MSFT",
+            "AMZN",
+            "TSLA",
+            "META",
+            "NVDA",
+            "JPM",
+            "V",
+            "WMT",
+            "JNJ",
+            "PG",
+            "MA",
+            "UNH",
+            "HD",
+            "DIS",
+            "BAC",
+            "VZ",
+            "ADBE",
+            "CMCSA",
+            "NFLX",
+            "PFE",
+            "INTC",
+            "KO",
+            "PEP",
+            "CSCO",
+            "ABT",
+            "CRM",
+            "T",
+            "ABBV",
+            "CVX",
+            "NKE",
+            "MRK",
+            "MCD",
+            "MDT",
+            "TXN",
+            "HON",
+            "BA",
+            "UNP",
+            "AMGN",
+            "IBM",
+            "QCOM",
+            "ORCL",
+            "SBUX",
+            "GS",
+            "MMM",
+            "CAT",
+            "GE",
+            "F",
+            "GM",
+            "C",
+            "TGT",
+            "LMT",
+            "DE",
+            "LOW",
+            "UPS",
+            "USB",
+            "AXP",
+            "MS",
+            "WFC",
+            "COP",
+            "SLB",
+            "EOG",
+            "OXY",
+            "PXD",
+            "VLO",
+            "MPC",
+            "PSX",
+            "KMI",
+            "WMB",
+            "NEE",
+            "DUK",
+            "SO",
+            "D",
+            "AEP",
+            "EXC",
+            "SRE",
+            "XEL",
+            "PEG",
+            "WEC",
+            "AMT",
+            "PLD",
+            "CCI",
+            "EQIX",
+            "PSA",
+            "DLR",
+            "O",
+            "WELL",
+            "SPG",
+            "AVB",
+            "VRTX",
+            "REGN",
+            "ISRG",
+            "SYK",
+            "ZTS",
+            "BSX",
+            "EW",
+            "GILD",
+            "BIIB",
+            "ILMN",
         ]
         import random
+
         random.shuffle(symbols)
-        symbols = symbols[:args.limit]
+        symbols = symbols[: args.limit]
     else:
         symbols = [
-            "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "NZDUSD", "EURGBP", "EURJPY",
-            "GBPJPY", "CHFJPY", "EURCHF", "AUDJPY", "NZDJPY", "CADJPY", "EURAUD", "EURCAD",
-            "GBPAUD", "GBPCAD", "AUDCAD", "AUDNZD", "EURNZD", "GBPNZD"
+            "EURUSD",
+            "GBPUSD",
+            "USDJPY",
+            "AUDUSD",
+            "USDCAD",
+            "NZDUSD",
+            "EURGBP",
+            "EURJPY",
+            "GBPJPY",
+            "CHFJPY",
+            "EURCHF",
+            "AUDJPY",
+            "NZDJPY",
+            "CADJPY",
+            "EURAUD",
+            "EURCAD",
+            "GBPAUD",
+            "GBPCAD",
+            "AUDCAD",
+            "AUDNZD",
+            "EURNZD",
+            "GBPNZD",
         ]
         import random
+
         random.shuffle(symbols)
-        symbols = symbols[:args.limit]
+        symbols = symbols[: args.limit]
 
     # Randomize interval on average
     import random
+
     if args.interval == "1d":
         combos = [("1h", "730d"), ("1d", "5y"), ("1wk", "10y")]
         args.interval, args.period = random.choice(combos)

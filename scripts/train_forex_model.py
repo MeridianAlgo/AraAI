@@ -251,9 +251,7 @@ def train_forex_model(
 def main():
     parser = argparse.ArgumentParser(description="Train unified forex prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
-    parser.add_argument(
-        "--output", default="models/Meridian.AI_Forex.pt", help="Output model path"
-    )
+    parser.add_argument("--output", default="models/Meridian.AI_Forex.pt", help="Output model path")
     parser.add_argument("--epochs", type=int, default=10, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")

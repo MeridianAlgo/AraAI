@@ -1,4 +1,3 @@
-
 import re
 import sys
 from pathlib import Path
@@ -48,11 +47,12 @@ def main():
         new_content = re.sub(
             r"\| Validation Accuracy\s*\|[^|]*\|[^|]*\|",
             f"| Validation Accuracy | >{stock_acc_str} | >{forex_acc_str} |",
-            content
+            content,
         )
 
         readme_path.write_text(new_content)
         print("Updated README.md with the latest testing accuracy.")
+
 
 if __name__ == "__main__":
     main()

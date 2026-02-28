@@ -370,7 +370,9 @@ class AdvancedMLSystem:
 
                     # Workaround for hardcoded old metadata in some checkpoints
                     if dim == 768 and num_heads == 8:
-                        print("  Detected 2026 architecture with legacy metadata, using corrected parameters (12h, 4kv, 12e)")
+                        print(
+                            "  Detected 2026 architecture with legacy metadata, using corrected parameters (12h, 4kv, 12e)"
+                        )
                         num_heads = 12
                         num_kv_heads = 4
                         num_experts = 12
