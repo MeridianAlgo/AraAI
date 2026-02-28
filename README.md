@@ -4,9 +4,9 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-[![Meridian.AI for Forex](https://github.com/MeridianAlgo/Meridian.AI/actions/workflows/meridian-forex.yml/badge.svg)](https://github.com/MeridianAlgo/Meridian.AI/actions/workflows/meridian-forex.yml)
-[![Meridian.AI for Stocks](https://github.com/MeridianAlgo/Meridian.AI/actions/workflows/meridian-stocks.yml/badge.svg)](https://github.com/MeridianAlgo/Meridian.AI/actions/workflows/meridian-stocks.yml)
-[![Lint & Format](https://github.com/MeridianAlgo/Meridian.AI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/Meridian.AI/actions/workflows/lint.yml)
+[![Meridian.AI for Forex](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml)
+[![Meridian.AI for Stocks](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml)
+[![Meridian.AI Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
 ---
 
 ## Table of Contents
