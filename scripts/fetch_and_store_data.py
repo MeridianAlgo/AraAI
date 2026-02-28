@@ -21,8 +21,7 @@ def init_database(db_file):
     cursor = conn.cursor()
 
     # Create market_data table
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS market_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             symbol TEXT NOT NULL,
@@ -38,12 +37,10 @@ def init_database(db_file):
             fetch_date TEXT,
             UNIQUE(symbol, date, interval)
         )
-    """
-    )
+    """)
 
     # Create model_metadata table
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS model_metadata (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             symbol TEXT,
@@ -57,8 +54,7 @@ def init_database(db_file):
             training_mode TEXT,
             hour INTEGER
         )
-    """
-    )
+    """)
 
     conn.commit()
     conn.close()

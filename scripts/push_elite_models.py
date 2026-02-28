@@ -127,9 +127,7 @@ def main():
     parser.add_argument(
         "--model-type", default="stock", choices=["stock", "forex"], help="Model type"
     )
-    parser.add_argument(
-        "--repo-id", default="MeridianAlgo/ARA.AI", help="Hugging Face repo ID"
-    )
+    parser.add_argument("--repo-id", default="MeridianAlgo/ARA.AI", help="Hugging Face repo ID")
 
     args = parser.parse_args()
 
