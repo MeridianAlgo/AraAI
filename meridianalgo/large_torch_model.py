@@ -362,16 +362,28 @@ class AdvancedMLSystem:
                 is_revolutionary = architecture == "RevolutionaryFinancialModel-2026"
 
                 if is_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    # Load revolutionary model
+                    # Load revolutionary model - Force correct parameters for 2026 architecture if detected
+                    dim = int(checkpoint.get("dim", 768))
+                    num_heads = int(checkpoint.get("num_heads", 8))
+                    num_kv_heads = int(checkpoint.get("num_kv_heads", 2))
+                    num_experts = int(checkpoint.get("num_experts", 4))
+                    
+                    # Workaround for hardcoded old metadata in some checkpoints
+                    if dim == 768 and num_heads == 8:
+                        print("  Detected 2026 architecture with legacy metadata, using corrected parameters (12h, 4kv, 12e)")
+                        num_heads = 12
+                        num_kv_heads = 4
+                        num_experts = 12
+
                     self.model = RevolutionaryFinancialModel(
                         input_size=int(checkpoint.get("input_size", 44)),
                         seq_len=int(checkpoint.get("seq_len", 30)),
-                        dim=int(checkpoint.get("dim", 512)),
+                        dim=dim,
                         num_layers=int(checkpoint.get("num_layers", 6)),
-                        num_heads=int(checkpoint.get("num_heads", 8)),
-                        num_kv_heads=int(checkpoint.get("num_kv_heads", 2)),
-                        num_experts=int(checkpoint.get("num_experts", 4)),
-                        num_prediction_heads=int(checkpoint.get("num_prediction_heads", 4)),
+                        num_heads=num_heads,
+                        num_kv_heads=num_kv_heads,
+                        num_experts=num_experts,
+                        num_prediction_heads=int(checkpoint.get("num_prediction_heads", 8)),
                         dropout=float(checkpoint.get("dropout", 0.1)),
                         use_mamba=bool(checkpoint.get("use_mamba", True)),
                     )
@@ -418,11 +430,8 @@ class AdvancedMLSystem:
 
                 try:
                     self.model.load_state_dict(model_state_dict, strict=True)
-                except RuntimeError:
-                    print(
-                        "Could not load model: checkpoint weights are incompatible with current "
-                        f"EliteEnsembleModel config in {self.model_path}. Please retrain."
-                    )
+                except RuntimeError as e:
+                    print(f"Could not load model state dict: {e}")
                     self.model = None
                     return
                 self.model.to(self.device)
@@ -466,11 +475,11 @@ class AdvancedMLSystem:
                         "version": "4.0",
                         "input_size": int(getattr(unwrapped_model, "input_size", 44)),
                         "seq_len": int(getattr(unwrapped_model, "seq_len", 30)),
-                        "dim": int(getattr(unwrapped_model, "dim", 512)),
+                        "dim": int(getattr(unwrapped_model, "dim", 768)),
                         "num_layers": int(len(unwrapped_model.layers)),
-                        "num_heads": 8,
-                        "num_kv_heads": 2,
-                        "num_experts": 4,
+                        "num_heads": int(getattr(unwrapped_model, "num_heads", 12)),
+                        "num_kv_heads": int(getattr(unwrapped_model, "num_kv_heads", 4)),
+                        "num_experts": int(getattr(unwrapped_model, "num_experts", 12)),
                         "num_prediction_heads": len(unwrapped_model.prediction_heads),
                         "dropout": 0.1,
                         "use_mamba": True,
@@ -603,8 +612,8 @@ class AdvancedMLSystem:
             # Training setup with elite learning rate for 2025 architecture
             optimizer = torch.optim.AdamW(
                 self.model.parameters(),
-                lr=lr * 0.02,
-                weight_decay=0.001,
+                lr=lr,
+                weight_decay=0.01,
                 betas=(0.9, 0.95),
             )
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
@@ -614,7 +623,7 @@ class AdvancedMLSystem:
             # Use direction-aware loss for better trading performance
             from .direction_loss import BalancedDirectionLoss, calculate_direction_metrics
 
-            criterion = BalancedDirectionLoss(alpha=0.5, beta=0.5)
+            criterion = BalancedDirectionLoss(alpha=0.1, beta=0.9)
 
             train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
             train_loader = torch.utils.data.DataLoader(

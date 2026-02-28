@@ -1,0 +1,84 @@
+name: Test Accuracy and Update README
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Every Sunday at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  PYTHON_VERSION: '3.11'
+  CACHE_VERSION: v1
+
+jobs:
+  test-accuracy:
+    name: Evaluate Models and Update README
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+          pip install huggingface_hub comet-ml
+
+      - name: Download Existing Models
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p models
+          python -c "
+          import os
+          from huggingface_hub import hf_hub_download
+          try:
+              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/MeridianAlgo_Stocks.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/MeridianAlgo_Forex.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
+              print('Successfully downloaded existing models for testing.')
+          except Exception as e:
+              print(f'Error downloading existing models: {e}')
+          "
+
+      - name: Fetch Test Data
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p data
+          python scripts/fetch_and_store_data.py --db-file data/training.db --asset-type stock --limit 20
+          python scripts/fetch_and_store_data.py --db-file data/training.db --asset-type forex --limit 10
+
+      - name: Evaluate Accuracy and Update README
+        run: |
+          python scripts/update_readme_accuracy.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          if git diff --staged --quiet; then
+            echo "No changes to README.md"
+          else
+            git commit -m "docs: auto-update validation accuracy [skip ci]"
+            git push
+          fi
