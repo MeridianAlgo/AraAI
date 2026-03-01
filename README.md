@@ -134,7 +134,7 @@ Automated GitHub Workflows maintain a continuous model evolution cycle.
 | Attribute | Stock Model | Forex Model |
 |-----------|-------------|-------------|
 | Parameters | 388 Million | 388 Million |
-| Validation Accuracy | >99.9% | >99.5% |
+| Validation Accuracy | >53.8% | >48.7% |
 | Average Training Time | 300 - 450 Seconds | 300 - 450 Seconds |
 | Typical Loss (MSE) | <0.0004 | <0.0006 |
 | Update Frequency | 16 Sessions / Day | 16 Sessions / Day |
