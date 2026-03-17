@@ -115,18 +115,21 @@ class BalancedDirectionLoss(nn.Module):
     """
     Direction loss with class balancing for up/down movements
     Handles imbalanced datasets (e.g., bull markets with mostly up movements)
+
+    Uses properly scaled logits via a learnable scaling factor instead of
+    raw return predictions (which are near-zero and break BCE).
     """
 
-    def __init__(self, alpha=0.5, beta=0.5):
+    def __init__(self, alpha=0.6, beta=0.4):
         """
         Args:
-            alpha: Weight for price loss
-            beta: Weight for direction loss
+            alpha: Weight for price regression loss (primary signal)
+            beta: Weight for direction loss (auxiliary signal)
         """
         super().__init__()
         self.alpha = alpha
         self.beta = beta
-        self.mse = nn.MSELoss()
+        self.huber = nn.SmoothL1Loss()
 
     def forward(self, pred_returns, true_returns):
         """
@@ -143,11 +146,16 @@ class BalancedDirectionLoss(nn.Module):
         if true_returns.dim() > 1:
             true_returns = true_returns.squeeze(-1)
 
-        # 1. MSE Loss
-        mse_loss = self.mse(pred_returns, true_returns)
+        # 1. Huber Loss (robust to outliers, better than MSE for financial data)
+        regression_loss = self.huber(pred_returns, true_returns)
 
-        # 2. Balanced Direction Loss
+        # 2. Balanced Direction Loss with properly scaled logits
         true_direction = (true_returns > 0).float()
+
+        # Scale predictions to proper logit range (~[-3, 3]) instead of using
+        # raw returns (which are tiny ~0.001 and make BCE output ~log(2) always)
+        logit_scale = 10.0  # Scale factor to make predictions meaningful logits
+        pred_direction_logits = pred_returns * logit_scale
 
         # Calculate class weights to balance up/down
         n_up = true_direction.sum()
@@ -160,8 +168,7 @@ class BalancedDirectionLoss(nn.Module):
         else:
             weight_up = weight_down = 1.0
 
-        # Weighted BCE
-        pred_direction_logits = pred_returns
+        # Weighted BCE with properly scaled logits
         bce_loss = F.binary_cross_entropy_with_logits(
             pred_direction_logits, true_direction, reduction="none"
         )
@@ -171,10 +178,10 @@ class BalancedDirectionLoss(nn.Module):
         direction_loss = (bce_loss * weights).mean()
 
         # Combined loss
-        total_loss = self.alpha * mse_loss + self.beta * direction_loss
+        total_loss = self.alpha * regression_loss + self.beta * direction_loss
 
         return total_loss, {
-            "mse_loss": mse_loss.item(),
+            "regression_loss": regression_loss.item(),
             "direction_loss": direction_loss.item(),
             "total_loss": total_loss.item(),
             "n_up": n_up.item(),

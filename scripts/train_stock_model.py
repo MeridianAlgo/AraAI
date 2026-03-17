@@ -120,7 +120,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         raise ValueError("No stock data found in database")
 
     # Check if we have sufficient data
-    min_rows_per_symbol = 30  # Minimum rows needed per symbol
+    min_rows_per_symbol = 100  # Minimum rows needed per symbol
     rows_per_symbol = len(df) / len(symbols)
 
     if rows_per_symbol < min_rows_per_symbol:
@@ -257,7 +257,7 @@ def main():
     parser.add_argument(
         "--output", default="models/Meridian.AI_Stocks.pt", help="Output model path"
     )
-    parser.add_argument("--epochs", type=int, default=5, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=20, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument(
@@ -279,10 +279,9 @@ def main():
 
     args = parser.parse_args()
 
-    # Randomize timeframe if not specified
+    # Use all data if no timeframe specified
     if not args.timeframe:
-        args.timeframe = random.choice(["1h", "4h", "1d", "1w"])
-        print(f"Randomly selected timeframe: {args.timeframe}")
+        print("Using all available data (no timeframe filter)")
 
     # Get Comet API key from args or environment
     comet_api_key = args.comet_api_key or os.environ.get("COMET_API_KEY")

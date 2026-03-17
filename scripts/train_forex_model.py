@@ -120,7 +120,7 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
         raise ValueError("No forex data found in database")
 
     # Check if we have sufficient data
-    min_rows_per_pair = 30  # Minimum rows needed per pair
+    min_rows_per_pair = 100  # Minimum rows needed per pair
     rows_per_pair = len(df) / len(pairs)
 
     if rows_per_pair < min_rows_per_pair:
@@ -252,7 +252,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train unified forex prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument("--output", default="models/Meridian.AI_Forex.pt", help="Output model path")
-    parser.add_argument("--epochs", type=int, default=5, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=20, help="Training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument("--sample-size", type=int, help="Number of pairs to sample (default: all)")
@@ -272,10 +272,9 @@ def main():
 
     args = parser.parse_args()
 
-    # Randomize timeframe if not specified
+    # Use all data if no timeframe specified
     if not args.timeframe:
-        args.timeframe = random.choice(["15m", "1h", "4h", "1d"])
-        print(f"Randomly selected timeframe: {args.timeframe}")
+        print("Using all available data (no timeframe filter)")
 
     # Get Comet API key from args or environment
     comet_api_key = args.comet_api_key or os.environ.get("COMET_API_KEY")

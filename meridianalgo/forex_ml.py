@@ -89,48 +89,6 @@ class ForexML:
         """Train from online data (Quick Mode)"""
         return self._unified_ml.train_ultimate_models(target_symbol, period, **kwargs)
 
-        # Major forex pairs (Yahoo Finance format)
-        self.forex_pairs = {
-            # Major pairs
-            "EURUSD": "EURUSD=X",
-            "GBPUSD": "GBPUSD=X",
-            "USDJPY": "USDJPY=X",
-            "USDCHF": "USDCHF=X",
-            "AUDUSD": "AUDUSD=X",
-            "USDCAD": "USDCAD=X",
-            "NZDUSD": "NZDUSD=X",
-            # Cross pairs
-            "EURJPY": "EURJPY=X",
-            "GBPJPY": "GBPJPY=X",
-            "EURGBP": "EURGBP=X",
-            "EURAUD": "EURAUD=X",
-            "EURCHF": "EURCHF=X",
-            "AUDJPY": "AUDJPY=X",
-            "GBPAUD": "GBPAUD=X",
-            "GBPCAD": "GBPCAD=X",
-            # Exotic pairs
-            "USDMXN": "USDMXN=X",
-            "USDZAR": "USDZAR=X",
-            "USDTRY": "USDTRY=X",
-            "USDBRL": "USDBRL=X",
-        }
-
-        # Currency info
-        self.currency_info = {
-            "EUR": {"name": "Euro", "region": "Europe"},
-            "USD": {"name": "US Dollar", "region": "North America"},
-            "GBP": {"name": "British Pound", "region": "Europe"},
-            "JPY": {"name": "Japanese Yen", "region": "Asia"},
-            "CHF": {"name": "Swiss Franc", "region": "Europe"},
-            "AUD": {"name": "Australian Dollar", "region": "Oceania"},
-            "CAD": {"name": "Canadian Dollar", "region": "North America"},
-            "NZD": {"name": "New Zealand Dollar", "region": "Oceania"},
-            "MXN": {"name": "Mexican Peso", "region": "North America"},
-            "ZAR": {"name": "South African Rand", "region": "Africa"},
-            "TRY": {"name": "Turkish Lira", "region": "Asia"},
-            "BRL": {"name": "Brazilian Real", "region": "South America"},
-        }
-
     def get_forex_symbol(self, pair):
         """Convert forex pair to Yahoo Finance symbol"""
         pair = pair.upper().replace("/", "").replace("-", "")
@@ -348,7 +306,7 @@ class ForexML:
                 "pair_info": pair_info,
                 "current_price": float(data["Close"].iloc[-1]),
                 "predictions": forecast_predictions,
-                "model_accuracy": 95.0,
+                "model_accuracy": self.ml_system.get_metadata().get("direction_accuracy", "N/A"),
                 "volatility": volatility,
                 "trend": trend,
                 "timestamp": datetime.now().isoformat(),

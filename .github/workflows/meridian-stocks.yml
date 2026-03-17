@@ -2,14 +2,13 @@ name: Meridian.AI for Stocks
 
 on:
   schedule:
-    - cron: '0 0,3,6,9,12,15,18,21 * * *'
-    - cron: '30 1,4,7,10,13,16,19,22 * * *'
+    - cron: '0 */2 * * *'
   workflow_dispatch:
     inputs:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '3'
+        default: '20'
 
 permissions:
   contents: write
@@ -56,13 +55,11 @@ jobs:
           pip install -r requirements.txt
           pip install comet-ml
       
-      - name: Randomize Timeframe
+      - name: Set Timeframe
         id: randomize
         run: |
-          TIMEFRAMES=("1h" "4h" "1d" "1w")
-          SELECTED=${TIMEFRAMES[$RANDOM % ${#TIMEFRAMES[@]}]}
-          echo "timeframe=$SELECTED" >> $GITHUB_OUTPUT
-          echo " Selected timeframe: $SELECTED"
+          echo "timeframe=all" >> $GITHUB_OUTPUT
+          echo "Using all available data"
       
       - name: Free Disk Space
         run: |
@@ -162,19 +159,18 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         continue-on-error: false
         run: |
-          EPOCHS="${{ inputs.epochs || '4' }}"
-          
-          echo "Training Stock Model with Random Configuration"
+          EPOCHS="${{ inputs.epochs || '20' }}"
+
+          echo "Training Stock Model on ALL symbols"
           echo "  Epochs: $EPOCHS"
-          
-          # Train on 25 random stocks with random timeframes
+
+          # Train on ALL stocks with all available data
           python scripts/train_stock_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Stocks.pt \
             --epochs "$EPOCHS" \
-            --sample-size 25 \
-            --comet-api-key "$COMET_API_KEY" \
-            --seed $RANDOM || echo "Training completed with warnings"
+            --use-all-data \
+            --comet-api-key "$COMET_API_KEY" || echo "Training completed with warnings"
       
       - name: Upload Model
         uses: actions/upload-artifact@v4

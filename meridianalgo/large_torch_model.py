@@ -625,7 +625,7 @@ class AdvancedMLSystem:
             # Use direction-aware loss for better trading performance
             from .direction_loss import BalancedDirectionLoss, calculate_direction_metrics
 
-            criterion = BalancedDirectionLoss(alpha=0.1, beta=0.9)
+            criterion = BalancedDirectionLoss(alpha=0.6, beta=0.4)
 
             train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
             train_loader = torch.utils.data.DataLoader(
@@ -639,7 +639,7 @@ class AdvancedMLSystem:
 
             # Training loop with early stopping
             best_val_loss = float("inf")
-            patience = 80
+            patience = 15
             patience_counter = 0
 
             for epoch in range(epochs):
@@ -663,8 +663,6 @@ class AdvancedMLSystem:
 
                     if (step + 1) % 10 == 0:
                         print(f"  Step {step+1}/{len(train_loader)} - loss: {loss.item():.6f}")
-
-                scheduler.step()
 
                 # Validation
                 self.model.eval()
@@ -721,6 +719,7 @@ class AdvancedMLSystem:
             self.metadata["last_symbol"] = symbol
             self.metadata["data_points"] = len(X)
             self.metadata["best_val_loss"] = best_val_loss
+            self.metadata["direction_accuracy"] = direction_metrics.get("direction_accuracy", 0)
             # Store target normalization parameters
             self.metadata["target_min"] = float(y_min)
             self.metadata["target_max"] = float(y_max)
@@ -740,12 +739,21 @@ class AdvancedMLSystem:
             print(f"Best validation loss: {best_val_loss:.6f}")
             print(f"Total symbols trained: {len(self.metadata['trained_symbols'])}")
 
+            # Calculate real direction accuracy on validation set
+            self.model.eval()
+            with torch.no_grad():
+                X_val_device = X_val.to(self.device)
+                y_val_device = y_val.to(self.device)
+                final_pred, _ = self.model(X_val_device)
+                final_metrics = calculate_direction_metrics(final_pred, y_val_device)
+                real_accuracy = final_metrics["direction_accuracy"]
+
             return {
                 "success": True,
                 "final_loss": best_val_loss,
-                "accuracy": (
-                    100 * (1 - best_val_loss) if best_val_loss < 1 else 0
-                ),  # Simple heuristic
+                "accuracy": real_accuracy,
+                "direction_accuracy": real_accuracy,
+                "f1_score": final_metrics.get("f1_score", 0),
                 "epochs": epoch + 1,
             }
 

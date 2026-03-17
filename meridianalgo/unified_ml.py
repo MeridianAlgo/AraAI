@@ -355,7 +355,7 @@ class UnifiedStockML:
                 "symbol": symbol,
                 "current_price": float(current_price),
                 "predictions": predictions,
-                "model_accuracy": 98.5,
+                "model_accuracy": self.ml_system.get_metadata().get("direction_accuracy", "N/A"),
                 "timestamp": datetime.now().isoformat(),
                 "trained_on": self.ml_system.get_metadata().get("symbol", "Unknown"),
             }

@@ -20,11 +20,13 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.pyc
 
 # Virtual Environment
 venv/
 ENV/
 env/
+.venv/
 .venv
 
 # IDE
@@ -34,6 +36,9 @@ env/
 *.swo
 *~
 .DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
 
 # Models and Cache
 .meridian_cache/
@@ -42,6 +47,7 @@ env/
 *.pkl
 *.joblib
 *.h5
+*.onnx
 /models/*.pt
 !/models/README.md
 
@@ -53,6 +59,9 @@ data/*.db
 data/*.db-journal
 data/*.sqlite
 data/*.sqlite3
+*.db
+*.db-journal
+training.db
 
 # Logs
 *.log
@@ -64,24 +73,35 @@ logs/
 htmlcov/
 .tox/
 .hypothesis/
+.mypy_cache/
+.dmypy.json
 
 # Environment
 .env
 .env.local
+.env.production
+.env.*.local
 
 # Temporary
 *.tmp
 *.bak
-*.swp
 temp/
 tmp/
 
-# Downloaded models
-models/models/*.pt
-download_models.py
-bulk_rename.py
-process_github.py
-update_fetcher.py
-check_*.py
-inspect_*.py
-evaluate_models.py
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# Claude
+.claude/
+
+# Comet ML
+.cometml-runs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node (if any)
+node_modules/
