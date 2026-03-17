@@ -8,7 +8,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '20'
+        default: '10'
 
 permissions:
   contents: write
@@ -97,7 +97,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -146,7 +146,7 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         continue-on-error: false
         run: |
-          EPOCHS="${{ inputs.epochs || '20' }}"
+          EPOCHS="${{ inputs.epochs || '10' }}"
 
           echo "Training Stock Model on ALL symbols"
           echo "  Epochs: $EPOCHS"

@@ -8,7 +8,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '20'
+        default: '10'
 
 permissions:
   contents: write
@@ -96,7 +96,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -144,7 +144,7 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          EPOCHS="${{ inputs.epochs || '20' }}"
+          EPOCHS="${{ inputs.epochs || '10' }}"
 
           echo "Training Forex Model on ALL pairs"
           echo "  Epochs: $EPOCHS"

@@ -11,7 +11,7 @@
 
 ---
 
-Meridian.AI is a 280M-parameter deep learning system that predicts price movements for **any stock or forex pair** in real time. It combines state-of-the-art sequence modeling (Mamba-2 SSM), sparse expert routing (MoE with SwiGLU), and efficient attention (GQA + Flash Attention 2) into a single unified model — continuously trained and deployed via GitHub Actions every 2 hours.
+Meridian.AI is a 45M-parameter deep learning system that predicts price movements for **any stock or forex pair** in real time. It combines state-of-the-art sequence modeling (Mamba-2 SSM), sparse expert routing (MoE with SwiGLU), and efficient attention (GQA + Flash Attention 2) into a single unified model — continuously trained and deployed via GitHub Actions every 2 hours.
 
 **Models are hosted on Hugging Face:** [MeridianAlgo/ARA.AI](https://huggingface.co/MeridianAlgo/ARA.AI)
 
@@ -26,7 +26,7 @@ Meridian.AI v4.1 is built on a hybrid transformer-SSM backbone designed for fina
 | Sequence Modeling | Mamba-2 SSM with selective scan | Linear-time long-range dependencies |
 | Attention | Grouped Query Attention (GQA) + QK-Norm | Efficient multi-head attention with reduced KV cache |
 | Position Encoding | Rotary Position Embeddings (RoPE) | Relative temporal awareness without absolute bias |
-| Expert Routing | Mixture of Experts (8 experts, top-2) | Regime-specific specialization |
+| Expert Routing | Mixture of Experts (4 experts, top-2) | Regime-specific specialization |
 | Activations | SwiGLU (gated linear units) | Improved gradient flow over GELU/ReLU |
 | Normalization | RMSNorm + Layer Scale | Training stability at scale |
 | Regularization | Stochastic Depth (drop path) | Better generalization, prevents overfitting |
@@ -37,12 +37,12 @@ Meridian.AI v4.1 is built on a hybrid transformer-SSM backbone designed for fina
 
 | Spec | Value |
 |------|-------|
-| Parameters | ~280 Million |
-| Hidden Dimension | 768 |
-| Layers | 8 |
-| Attention Heads | 12 (3 KV heads) |
-| Experts | 8 (top-2 routing) |
-| Prediction Heads | 8 |
+| Parameters | ~45 Million |
+| Hidden Dimension | 384 |
+| Layers | 6 |
+| Attention Heads | 6 (2 KV heads) |
+| Experts | 4 (top-2 routing) |
+| Prediction Heads | 4 |
 | Input Features | 44 technical indicators |
 | Sequence Length | 30 timesteps |
 
@@ -64,16 +64,16 @@ Market Data (any ticker/pair)
   GQA + Flash Attention 2 (cross-timestep relationships)
         |
         v
-  MoE Layer (8 SwiGLU experts, top-2 routing)
+  MoE Layer (4 SwiGLU experts, top-2 routing)
         |
         v
-  Multi-Head Prediction (8 heads, aggregated)
+  Multi-Head Prediction (4 heads, aggregated)
         |
         v
   Price Forecast + Direction Signal
 ```
 
-The model processes 30 timesteps of 44 features each, routing through Mamba SSM blocks for sequential pattern recognition, then through attention and expert layers for regime-specific predictions. The output is an aggregated forecast from 8 prediction heads.
+The model processes 30 timesteps of 44 features each, routing through Mamba SSM blocks for sequential pattern recognition, then through attention and expert layers for regime-specific predictions. The output is an aggregated forecast from 4 prediction heads.
 
 ---
 
