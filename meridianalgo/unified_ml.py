@@ -36,59 +36,118 @@ class UnifiedStockML:
         }
 
     def _add_indicators(self, df):
-        """Add 44 technical indicators"""
-        # Price-based features
-        df["returns"] = df["Close"].pct_change()
-        df["log_returns"] = np.log(df["Close"] / df["Close"].shift(1))
+        """Add 44 real technical indicators — no zero padding"""
+        close = df["Close"]
+        high = df["High"]
+        low = df["Low"]
+        volume = df["Volume"].replace(0, 1)  # Avoid div-by-zero for forex
 
-        # Moving averages
+        # === 1-4: Price-based features ===
+        df["returns"] = close.pct_change()
+        df["log_returns"] = np.log(close / close.shift(1))
+        df["volatility"] = df["returns"].rolling(20).std()
+
+        # True Range and ATR
+        tr = pd.concat([
+            high - low,
+            (high - close.shift(1)).abs(),
+            (low - close.shift(1)).abs(),
+        ], axis=1).max(axis=1)
+        df["atr"] = tr.rolling(14).mean()
+
+        # === 5-14: Moving averages (SMA + EMA for 5 periods) ===
         for period in [5, 10, 20, 50, 200]:
-            df[f"sma_{period}"] = df["Close"].rolling(period).mean()
-            df[f"ema_{period}"] = df["Close"].ewm(span=period).mean()
+            df[f"sma_{period}"] = close.rolling(period).mean()
+            df[f"ema_{period}"] = close.ewm(span=period).mean()
 
-        # RSI
-        delta = df["Close"].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
-        rs = gain / loss
+        # === 15-17: RSI variants ===
+        delta = close.diff()
+        gain = delta.where(delta > 0, 0).rolling(14).mean()
+        loss_val = (-delta.where(delta < 0, 0)).rolling(14).mean()
+        rs = gain / loss_val
         df["rsi"] = 100 - (100 / (1 + rs))
+        # Fast RSI (7-period)
+        gain_fast = delta.where(delta > 0, 0).rolling(7).mean()
+        loss_fast = (-delta.where(delta < 0, 0)).rolling(7).mean()
+        rs_fast = gain_fast / loss_fast
+        df["rsi_fast"] = 100 - (100 / (1 + rs_fast))
+        # Stochastic RSI
+        rsi_series = df["rsi"]
+        rsi_min = rsi_series.rolling(14).min()
+        rsi_max = rsi_series.rolling(14).max()
+        df["stoch_rsi"] = (rsi_series - rsi_min) / (rsi_max - rsi_min + 1e-8)
 
-        # MACD
-        ema_12 = df["Close"].ewm(span=12).mean()
-        ema_26 = df["Close"].ewm(span=26).mean()
+        # === 18-20: MACD ===
+        ema_12 = close.ewm(span=12).mean()
+        ema_26 = close.ewm(span=26).mean()
         df["macd"] = ema_12 - ema_26
         df["macd_signal"] = df["macd"].ewm(span=9).mean()
+        df["macd_hist"] = df["macd"] - df["macd_signal"]
 
-        # Bollinger Bands
-        sma_20 = df["Close"].rolling(20).mean()
-        std_20 = df["Close"].rolling(20).std()
+        # === 21-24: Bollinger Bands ===
+        sma_20 = close.rolling(20).mean()
+        std_20 = close.rolling(20).std()
         df["bb_upper"] = sma_20 + (std_20 * 2)
         df["bb_lower"] = sma_20 - (std_20 * 2)
-        df["bb_width"] = (df["bb_upper"] - df["bb_lower"]) / sma_20
+        df["bb_width"] = (df["bb_upper"] - df["bb_lower"]) / (sma_20 + 1e-8)
+        df["bb_pct"] = (close - df["bb_lower"]) / (df["bb_upper"] - df["bb_lower"] + 1e-8)
 
-        # Volatility
-        df["volatility"] = df["returns"].rolling(20).std()
-        df["atr"] = (
-            df[["High", "Low", "Close"]]
-            .apply(
-                lambda x: max(
-                    x["High"] - x["Low"],
-                    abs(x["High"] - x["Close"]),
-                    abs(x["Low"] - x["Close"]),
-                ),
-                axis=1,
-            )
-            .rolling(14)
-            .mean()
-        )
+        # === 25-27: Volume indicators ===
+        df["volume_sma"] = volume.rolling(20).mean()
+        df["volume_ratio"] = volume / (df["volume_sma"] + 1e-8)
+        # OBV (On-Balance Volume)
+        obv = (np.sign(close.diff()) * volume).fillna(0).cumsum()
+        df["obv_norm"] = (obv - obv.rolling(20).mean()) / (obv.rolling(20).std() + 1e-8)
 
-        # Volume indicators
-        df["volume_sma"] = df["Volume"].rolling(20).mean()
-        df["volume_ratio"] = df["Volume"] / df["volume_sma"]
+        # === 28-30: Momentum ===
+        df["momentum"] = close - close.shift(10)
+        df["roc"] = ((close - close.shift(10)) / (close.shift(10) + 1e-8)) * 100
+        # Williams %R
+        highest_14 = high.rolling(14).max()
+        lowest_14 = low.rolling(14).min()
+        df["williams_r"] = ((highest_14 - close) / (highest_14 - lowest_14 + 1e-8)) * -100
 
-        # Momentum
-        df["momentum"] = df["Close"] - df["Close"].shift(10)
-        df["roc"] = ((df["Close"] - df["Close"].shift(10)) / df["Close"].shift(10)) * 100
+        # === 31-33: Stochastic Oscillator ===
+        df["stoch_k"] = ((close - lowest_14) / (highest_14 - lowest_14 + 1e-8)) * 100
+        df["stoch_d"] = df["stoch_k"].rolling(3).mean()
+        # CCI (Commodity Channel Index)
+        typical_price = (high + low + close) / 3
+        tp_sma = typical_price.rolling(20).mean()
+        tp_mad = typical_price.rolling(20).apply(lambda x: np.abs(x - x.mean()).mean(), raw=True)
+        df["cci"] = (typical_price - tp_sma) / (0.015 * tp_mad + 1e-8)
+
+        # === 34-36: Keltner Channels ===
+        kc_mid = close.ewm(span=20).mean()
+        kc_atr = df["atr"]
+        df["kc_upper"] = kc_mid + (2 * kc_atr)
+        df["kc_lower"] = kc_mid - (2 * kc_atr)
+        df["kc_pct"] = (close - df["kc_lower"]) / (df["kc_upper"] - df["kc_lower"] + 1e-8)
+
+        # === 37-39: ADX (Average Directional Index) ===
+        plus_dm = high.diff()
+        minus_dm = -low.diff()
+        plus_dm = plus_dm.where((plus_dm > minus_dm) & (plus_dm > 0), 0)
+        minus_dm = minus_dm.where((minus_dm > plus_dm) & (minus_dm > 0), 0)
+        atr_14 = df["atr"]
+        plus_di = 100 * (plus_dm.rolling(14).mean() / (atr_14 + 1e-8))
+        minus_di = 100 * (minus_dm.rolling(14).mean() / (atr_14 + 1e-8))
+        dx = 100 * ((plus_di - minus_di).abs() / (plus_di + minus_di + 1e-8))
+        df["adx"] = dx.rolling(14).mean()
+        df["plus_di"] = plus_di
+        df["minus_di"] = minus_di
+
+        # === 40-42: Price position and trend strength ===
+        df["price_vs_sma50"] = (close - df["sma_50"]) / (df["sma_50"] + 1e-8)
+        df["price_vs_sma200"] = (close - df["sma_200"]) / (df["sma_200"] + 1e-8)
+        # Avg True Range as % of price (normalized volatility)
+        df["atr_pct"] = df["atr"] / (close + 1e-8)
+
+        # === 43-44: Mean reversion signals ===
+        df["zscore_20"] = (close - sma_20) / (std_20 + 1e-8)
+        # Distance from 52-week high/low (normalized)
+        high_252 = close.rolling(252, min_periods=20).max()
+        low_252 = close.rolling(252, min_periods=20).min()
+        df["dist_from_high"] = (close - high_252) / (high_252 + 1e-8)
 
         # Fill NaN and Inf values
         df = df.replace([np.inf, -np.inf], np.nan)
@@ -96,46 +155,40 @@ class UnifiedStockML:
 
         return df
 
+    # Ordered list of all 44 feature columns (must match _add_indicators output)
+    FEATURE_COLS = [
+        # 1-4: Price-based
+        "returns", "log_returns", "volatility", "atr",
+        # 5-14: Moving averages
+        "sma_5", "ema_5", "sma_10", "ema_10", "sma_20", "ema_20",
+        "sma_50", "ema_50", "sma_200", "ema_200",
+        # 15-17: RSI variants
+        "rsi", "rsi_fast", "stoch_rsi",
+        # 18-20: MACD
+        "macd", "macd_signal", "macd_hist",
+        # 21-24: Bollinger Bands
+        "bb_upper", "bb_lower", "bb_width", "bb_pct",
+        # 25-27: Volume
+        "volume_sma", "volume_ratio", "obv_norm",
+        # 28-30: Momentum
+        "momentum", "roc", "williams_r",
+        # 31-33: Stochastic + CCI
+        "stoch_k", "stoch_d", "cci",
+        # 34-36: Keltner Channels
+        "kc_upper", "kc_lower", "kc_pct",
+        # 37-39: ADX
+        "adx", "plus_di", "minus_di",
+        # 40-42: Trend position
+        "price_vs_sma50", "price_vs_sma200", "atr_pct",
+        # 43-44: Mean reversion
+        "zscore_20", "dist_from_high",
+    ]
+
     def _extract_features(self, df):
-        """Extract 44 features"""
+        """Extract all 44 features from indicator columns"""
         try:
             latest = df.iloc[-1]
-            features = []
-
-            # Price features
-            features.extend(
-                [
-                    latest.get("returns", 0),
-                    latest.get("log_returns", 0),
-                    latest.get("volatility", 0),
-                    latest.get("atr", 0),
-                ]
-            )
-
-            # Moving averages
-            for period in [5, 10, 20, 50, 200]:
-                features.append(latest.get(f"sma_{period}", latest["Close"]))
-                features.append(latest.get(f"ema_{period}", latest["Close"]))
-
-            # Technical indicators
-            features.extend(
-                [
-                    latest.get("rsi", 50),
-                    latest.get("macd", 0),
-                    latest.get("macd_signal", 0),
-                    latest.get("bb_upper", latest["Close"]),
-                    latest.get("bb_lower", latest["Close"]),
-                    latest.get("bb_width", 0),
-                    latest.get("volume_ratio", 1),
-                    latest.get("momentum", 0),
-                    latest.get("roc", 0),
-                ]
-            )
-
-            # Pad to 44 features
-            while len(features) < 44:
-                features.append(0)
-
+            features = [float(latest.get(col, 0)) for col in self.FEATURE_COLS]
             return np.array(features[:44])
         except Exception as e:
             print(f"Feature extraction error: {e}")

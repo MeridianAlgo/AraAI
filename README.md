@@ -131,34 +131,40 @@ print(result)
 
 Models are trained automatically via GitHub Actions on a 2-hour cycle:
 
-1. **Fetch** — Pull latest market data into SQLite (150 stocks, 30 forex pairs)
-2. **Train** — 20 epochs with cosine LR decay + linear warmup, mixed precision
-3. **Track** — Metrics logged to Comet ML (loss curves, direction accuracy)
+1. **Fetch** — Pull market data across **3 timeframes** (max daily, 2yr hourly, 5yr weekly) per symbol into SQLite — 96 stocks, 22 forex pairs
+2. **Train** — 10 epochs with cosine warm restarts, gradient accumulation (effective batch 256), data augmentation, EMA weight averaging
+3. **Track** — Metrics logged to Comet ML (loss curves, direction accuracy, EMA val loss)
 4. **Deploy** — Push updated `.pt` checkpoint to Hugging Face Hub
 
 Version gating ensures the pipeline never loads stale pre-v4.1 checkpoints — every run either resumes from a valid v4.1 model or trains fresh.
 
-### Training Features
+### Training Techniques
 
-- **BalancedDirectionLoss**: 60% Huber regression + 40% BCE direction classification with scaled logits
-- **LR Schedule**: Linear warmup (10% of epochs) + cosine annealing to zero
-- **Early Stopping**: Patience of 15 epochs on validation loss
-- **Experiment Tracking**: Full Comet ML integration for loss, accuracy, and hyperparameters
+- **Multi-Timeframe Data**: Fetches daily + hourly + weekly per symbol (3x more training data)
+- **Data Augmentation**: Gaussian noise injection (0.5%) + random timestep masking (5%)
+- **Gradient Accumulation**: Simulates batch size 256 from smaller micro-batches
+- **EMA Model Averaging**: Exponential moving average of weights (decay 0.999) — smoother, better-generalizing model
+- **Cosine Warm Restarts**: LR schedule with periodic restarts to escape local minima
+- **BalancedDirectionLoss**: 60% Huber regression + 40% balanced BCE with class-weighted direction classification
+- **Early Stopping**: Patience of 15 epochs on EMA validation loss
+- **All 44 Real Features**: No zero-padding — RSI, Stochastic RSI, MACD histogram, Bollinger %B, OBV, Williams %R, CCI, ADX, Keltner Channels, Z-score, and more
 
 ---
 
 ## Technical Indicators
 
-44 features extracted from raw OHLCV data:
+44 real features extracted from raw OHLCV data (no zero-padding):
 
 | Category | Indicators |
 |----------|-----------|
-| Trend | SMA, EMA, HMA, KAMA, ZLEMA, T3 |
-| Momentum | RSI, Stochastic, Williams %R, CCI, ROC, MFI |
-| Volatility | Bollinger Bands, Keltner Channels, ATR, StdDev |
-| Volume | OBV, VWAP, Chaikin Money Flow, Volume Profile |
-| Oscillators | MACD, Awesome Oscillator, PPO, Ultimate Oscillator |
-| Patterns | Head & Shoulders, Triangles, Wedges, Flags |
+| Price | Returns, Log Returns, Volatility, ATR |
+| Trend | SMA (5/10/20/50/200), EMA (5/10/20/50/200) |
+| Momentum | RSI, Fast RSI, Stochastic RSI, Momentum, ROC, Williams %R |
+| Oscillators | MACD, MACD Signal, MACD Histogram, Stochastic K/D, CCI |
+| Volatility | Bollinger Bands (Upper/Lower/Width/%B), Keltner Channels (Upper/Lower/%K) |
+| Volume | Volume SMA, Volume Ratio, OBV (normalized) |
+| Trend Strength | ADX, +DI, -DI, Price vs SMA50/SMA200, ATR% |
+| Mean Reversion | Z-Score (20d), Distance from 52-week High |
 
 ---
 

@@ -479,6 +479,24 @@ class AdvancedMLSystem:
         except Exception as e:
             print(f"Error saving model: {e}")
 
+    @staticmethod
+    def _augment_batch(X, y, noise_std=0.01, time_mask_prob=0.1):
+        """
+        Lightweight data augmentation for financial time series:
+        1. Gaussian noise injection on features
+        2. Random timestep masking (dropout entire timesteps)
+        """
+        # Gaussian noise on features
+        noise = torch.randn_like(X) * noise_std
+        X_aug = X + noise
+
+        # Random timestep masking: zero out ~10% of timesteps per sample
+        if X_aug.dim() == 3 and time_mask_prob > 0:
+            mask = torch.rand(X_aug.shape[0], X_aug.shape[1], 1, device=X.device) > time_mask_prob
+            X_aug = X_aug * mask
+
+        return X_aug, y
+
     def train(
         self,
         X,
@@ -492,13 +510,20 @@ class AdvancedMLSystem:
         comet_experiment=None,
     ):
         """
-        Train the model with validation, early stopping, and CPU limiting
+        Train with data augmentation, gradient accumulation, cosine warm restarts,
+        and EMA model averaging for maximum accuracy from a small model.
         """
         try:
             print(f"\nTraining {self.model_type} model on {symbol}...")
             print(f"Training samples: {len(X)}")
 
-            # Convert to tensors and normalize targets to reduce loss scale
+            # === Gradient accumulation config ===
+            # Simulate effective batch of 256 on small GPU/CPU memory
+            grad_accum_steps = max(1, 256 // batch_size)
+            effective_batch = batch_size * grad_accum_steps
+            print(f"Effective batch size: {effective_batch} (accum {grad_accum_steps} steps)")
+
+            # Convert to tensors
             X_tensor = torch.FloatTensor(X)
             y_tensor = torch.FloatTensor(y)
 
@@ -509,7 +534,7 @@ class AdvancedMLSystem:
                 seq_len = 1
                 input_size = int(X_tensor.shape[1])
 
-            # Normalize targets to reasonable range (0-1) to prevent explosion
+            # Normalize targets to (0, 1) to prevent explosion
             y_min = y_tensor.min()
             y_max = y_tensor.max()
             if y_max > y_min:
@@ -517,14 +542,9 @@ class AdvancedMLSystem:
             else:
                 y_tensor = torch.zeros_like(y_tensor)
 
-            # Calculate scaler parameters for features
-            # Shape:
-            # - 2D X: [features]
-            # - 3D X: [seq_len, features]
+            # Scaler for features
             self.scaler_mean = X_tensor.mean(dim=0)
             self.scaler_std = X_tensor.std(dim=0) + 1e-8
-
-            # Normalize features
             X_normalized = (X_tensor - self.scaler_mean) / self.scaler_std
 
             # Train/validation split
@@ -538,11 +558,12 @@ class AdvancedMLSystem:
 
             print(f"Training set: {len(X_train)}, Validation set: {len(X_val)}")
 
-            # Create model if not already loaded/trained
+            # Create model if not already loaded
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print("  Creating new Revolutionary v4.1 architecture (~45M Parameters)...")
-                    # Sized to train on GitHub Actions CPU runners within 20 minutes
+                    print(
+                        "  Creating new Revolutionary v4.1 architecture (~45M Parameters)..."
+                    )
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
                         seq_len=seq_len,
@@ -572,89 +593,120 @@ class AdvancedMLSystem:
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
 
-            # Training setup with warmup + cosine decay
+            # === EMA (Exponential Moving Average) of model weights ===
+            # Keeps a smoothed copy — often generalizes better than final weights
+            import copy
+            ema_model = copy.deepcopy(self.model)
+            ema_model.eval()
+            ema_decay = 0.999
+
+            def update_ema(ema_m, model_m, decay):
+                with torch.no_grad():
+                    for ema_p, model_p in zip(ema_m.parameters(), model_m.parameters()):
+                        ema_p.data.mul_(decay).add_(model_p.data, alpha=1.0 - decay)
+
+            # === Optimizer: AdamW with higher weight decay ===
             optimizer = torch.optim.AdamW(
                 self.model.parameters(),
                 lr=lr,
-                weight_decay=0.01,
+                weight_decay=0.02,
                 betas=(0.9, 0.95),
             )
 
-            # Warmup for first 10% of training, then cosine decay
-            warmup_epochs = max(2, epochs // 10)
-            warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
-                optimizer, start_factor=0.01, end_factor=1.0, total_iters=warmup_epochs
-            )
-            cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, T_max=epochs - warmup_epochs, eta_min=lr * 0.01
-            )
-            scheduler = torch.optim.lr_scheduler.SequentialLR(
+            # === LR schedule: Cosine Annealing with Warm Restarts ===
+            # Restarts every T_0 epochs — escapes local minima better than single cosine
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
                 optimizer,
-                schedulers=[warmup_scheduler, cosine_scheduler],
-                milestones=[warmup_epochs],
+                T_0=max(3, epochs // 3),  # Restart every ~1/3 of training
+                T_mult=1,
+                eta_min=lr * 0.01,
             )
 
-            # Use direction-aware loss for better trading performance
+            # === Loss with label smoothing on direction component ===
             from .direction_loss import BalancedDirectionLoss, calculate_direction_metrics
 
             criterion = BalancedDirectionLoss(alpha=0.6, beta=0.4)
 
             train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
             train_loader = torch.utils.data.DataLoader(
-                train_dataset, batch_size=batch_size, shuffle=True
+                train_dataset, batch_size=batch_size, shuffle=True, drop_last=False,
             )
 
             # Prepare with Accelerate
             self.model, optimizer, train_loader = self.accelerator.prepare(
                 self.model, optimizer, train_loader
             )
+            ema_model = ema_model.to(self.device)
 
-            # Training loop with early stopping
+            # === Training loop ===
             best_val_loss = float("inf")
+            best_ema_state = None
             patience = 15
             patience_counter = 0
 
             for epoch in range(epochs):
                 self.model.train()
                 train_loss = 0
+                optimizer.zero_grad()
 
                 for step, (batch_X, batch_y) in enumerate(train_loader):
-                    # CPU Limiter - Check every batch for smoother control
-                    if psutil.cpu_percent(interval=None) > cpu_limit:
-                        time.sleep(0.05)  # Short sleep to let CPU cool down
+                    # CPU limiter
+                    if step % 5 == 0 and psutil.cpu_percent(interval=None) > cpu_limit:
+                        time.sleep(0.05)
 
-                    optimizer.zero_grad()
-                    predictions, _ = self.model(batch_X)
-                    loss, loss_dict = criterion(predictions, batch_y)
+                    # === Data augmentation ===
+                    batch_X_aug, batch_y_aug = self._augment_batch(
+                        batch_X, batch_y,
+                        noise_std=0.005,      # Small gaussian noise
+                        time_mask_prob=0.05,   # 5% timestep dropout
+                    )
 
-                    self.accelerator.backward(loss)
-                    self.accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
-                    optimizer.step()
+                    predictions, _ = self.model(batch_X_aug)
+                    loss, loss_dict = criterion(predictions, batch_y_aug)
+
+                    # Scale loss for gradient accumulation
+                    scaled_loss = loss / grad_accum_steps
+                    self.accelerator.backward(scaled_loss)
+
+                    # Step optimizer every grad_accum_steps
+                    if (step + 1) % grad_accum_steps == 0 or (step + 1) == len(train_loader):
+                        self.accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
+                        optimizer.step()
+                        optimizer.zero_grad()
+
+                        # Update EMA model
+                        unwrapped = self.accelerator.unwrap_model(self.model)
+                        update_ema(ema_model, unwrapped, ema_decay)
 
                     train_loss += loss.item()
 
-                    if (step + 1) % 10 == 0:
-                        print(f"  Step {step+1}/{len(train_loader)} - loss: {loss.item():.6f}")
-
-                # Validation
+                # === Validation using EMA model (better generalization) ===
+                ema_model.eval()
                 self.model.eval()
                 with torch.no_grad():
                     X_val_device = X_val.to(self.device)
                     y_val_device = y_val.to(self.device)
+
+                    # Validate with EMA weights
+                    ema_pred, _ = ema_model(X_val_device)
+                    ema_val_loss, _ = criterion(ema_pred, y_val_device)
+                    ema_val_loss_val = ema_val_loss.item()
+
+                    # Also get regular model val loss for logging
                     val_pred, _ = self.model(X_val_device)
-                    val_loss, val_loss_components = criterion(val_pred, y_val_device)
+                    val_loss, _ = criterion(val_pred, y_val_device)
                     val_loss = val_loss.item()
 
-                    # Calculate direction metrics
-                    direction_metrics = calculate_direction_metrics(val_pred, y_val_device)
+                    direction_metrics = calculate_direction_metrics(ema_pred, y_val_device)
 
                 scheduler.step()
 
-                # Print progress for all epochs
                 current_lr = optimizer.param_groups[0]["lr"]
                 print(
-                    f"Epoch {epoch + 1}/{epochs} - Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}, "
-                    f"Dir Acc: {direction_metrics['direction_accuracy']:.1f}%, LR: {current_lr:.2e}"
+                    f"Epoch {epoch + 1}/{epochs} - Train: {train_loss:.4f}, "
+                    f"Val: {val_loss:.4f}, EMA Val: {ema_val_loss_val:.4f}, "
+                    f"Dir Acc: {direction_metrics['direction_accuracy']:.1f}%, "
+                    f"LR: {current_lr:.2e}"
                 )
 
                 # Log to Comet ML
@@ -663,6 +715,7 @@ class AdvancedMLSystem:
                         {
                             "train_loss": train_loss,
                             "val_loss": val_loss,
+                            "ema_val_loss": ema_val_loss_val,
                             "learning_rate": current_lr,
                             "direction_accuracy": direction_metrics["direction_accuracy"],
                             "precision": direction_metrics["precision"],
@@ -673,15 +726,23 @@ class AdvancedMLSystem:
                         epoch=epoch + 1,
                     )
 
-                # Early stopping
-                if val_loss < best_val_loss:
-                    best_val_loss = val_loss
+                # Early stopping based on EMA val loss
+                if ema_val_loss_val < best_val_loss:
+                    best_val_loss = ema_val_loss_val
                     patience_counter = 0
+                    # Save best EMA state
+                    best_ema_state = copy.deepcopy(ema_model.state_dict())
                 else:
                     patience_counter += 1
                     if patience_counter >= patience:
                         print(f"Early stopping at epoch {epoch + 1}")
                         break
+
+            # === Load best EMA weights into the main model for saving ===
+            if best_ema_state is not None:
+                unwrapped = self.accelerator.unwrap_model(self.model)
+                unwrapped.load_state_dict(best_ema_state)
+                print("Loaded best EMA weights into model")
 
             # Update metadata
             if symbol not in self.metadata["trained_symbols"]:
@@ -692,7 +753,6 @@ class AdvancedMLSystem:
             self.metadata["data_points"] = len(X)
             self.metadata["best_val_loss"] = best_val_loss
             self.metadata["direction_accuracy"] = direction_metrics.get("direction_accuracy", 0)
-            # Store target normalization parameters
             self.metadata["target_min"] = float(y_min)
             self.metadata["target_max"] = float(y_max)
             self.metadata["training_history"].append(
@@ -708,10 +768,10 @@ class AdvancedMLSystem:
             self._save_model()
 
             print("\nTraining complete!")
-            print(f"Best validation loss: {best_val_loss:.6f}")
+            print(f"Best validation loss (EMA): {best_val_loss:.6f}")
             print(f"Total symbols trained: {len(self.metadata['trained_symbols'])}")
 
-            # Calculate real direction accuracy on validation set
+            # Final direction accuracy
             self.model.eval()
             with torch.no_grad():
                 X_val_device = X_val.to(self.device)

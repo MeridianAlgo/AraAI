@@ -23,7 +23,7 @@ jobs:
   setup:
     name: Setup & Fetch Stock Data
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     outputs:
       has_data: ${{ steps.check_data.outputs.has_data }}
 
