@@ -16,7 +16,7 @@ permissions:
 
 env:
   PYTHON_VERSION: '3.11'
-  CACHE_VERSION: v1
+  CACHE_VERSION: v2
 
 jobs:
   setup:
@@ -24,20 +24,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
-      timeframe: ${{ steps.randomize.outputs.timeframe }}
       has_data: ${{ steps.check_data.outputs.has_data }}
-      
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Cache Dependencies
         id: cache-deps
         uses: actions/cache@v4
@@ -46,35 +45,29 @@ jobs:
           key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
-      
+
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
           pip install comet-ml
-      
-      - name: Set Timeframe
-        id: randomize
-        run: |
-          echo "timeframe=all" >> $GITHUB_OUTPUT
-          echo "Using all available data"
-      
+
       - name: Free Disk Space
         run: |
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
           df -h
-      
+
       - name: Fetch Forex Data
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "📥 Fetching forex data..."
+          echo "Fetching forex data..."
           python scripts/fetch_and_store_data.py \
             --db-file training.db \
             --asset-type forex \
             --limit 30
-      
+
       - name: Check if Data was Fetched
         id: check_data
         run: |
@@ -99,36 +92,32 @@ jobs:
           retention-days: 1
 
   train:
-    name: Meridian.AI for Forex
+    name: Train Forex Model
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
-    environment:
-      name: forex-training
-      url: https://www.comet.com/meridianalgo/ara-ai-forex
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Download Database
-        if: needs.setup.outputs.has_data == 'true'
         uses: actions/download-artifact@v4
         with:
           name: forex-training-db-${{ github.run_number }}
-      
+
       - name: Cache Dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
-      
+
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
@@ -137,12 +126,10 @@ jobs:
           pip install comet-ml huggingface_hub
 
       - name: Download Existing Model
-        if: needs.setup.outputs.has_data == 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p models
-          echo "Downloading existing model from HF (will be skipped if old version)..."
           python -c "
           import os
           from huggingface_hub import hf_hub_download
@@ -154,7 +141,6 @@ jobs:
           "
 
       - name: Train Model
-        if: needs.setup.outputs.has_data == 'true'
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
@@ -163,14 +149,13 @@ jobs:
           echo "Training Forex Model on ALL pairs"
           echo "  Epochs: $EPOCHS"
 
-          # Train on ALL forex pairs with all available data
           python scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --epochs "$EPOCHS" \
             --use-all-data \
             --comet-api-key "$COMET_API_KEY"
-      
+
       - name: Upload Model
         uses: actions/upload-artifact@v4
         with:
@@ -179,34 +164,31 @@ jobs:
           retention-days: 7
 
   deploy:
-    name: Deploy to Hugging Face
+    name: Push to Hugging Face
     needs: [train, setup]
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: huggingface-forex
-      url: https://huggingface.co/MeridianAlgo/ARA.AI
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: Install Dependencies
         run: |
           pip install huggingface_hub python-dotenv
-      
+
       - name: Download Model
         uses: actions/download-artifact@v4
         with:
           name: forex-model-${{ github.run_number }}
           path: models/
-      
+
       - name: Upload to HF Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -222,47 +204,34 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     steps:
       - name: Delete Artifacts
         uses: geekyeggo/delete-artifact@v5
         with:
           name: forex-training-db-${{ github.run_number }}
         continue-on-error: true
-      
+
       - name: Create Failure Issue
-        if: |
-          needs.train.result == 'failure' ||
-          needs.deploy.result == 'failure'
+        if: needs.train.result == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
             const title = `Forex Training Failed - Run ${context.runNumber}`;
             const body = `## Forex Model Training Failure
-            
+
             **Workflow:** [Run ${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
-            **Timeframe:** ${{ needs.setup.outputs.timeframe }}
             **Triggered:** ${context.eventName}
             **Commit:** ${context.sha.substring(0, 7)}
-            
+
             ### Job Results
             - Setup: ${{ needs.setup.result }}
             - Training: ${{ needs.train.result }}
-            - Deployment: ${{ needs.deploy.result }}
-            
-            ### Configuration
-            - Epochs: ${{ inputs.epochs || '60' }}
-            - Sample Size: ${{ inputs.sample_size || '15' }}
-            
-            ### Action Items
-            - [ ] Review training logs
-            - [ ] Check data quality
-            - [ ] Verify Comet ML integration
-            - [ ] Test locally with same parameters
-            
+            - Deploy: ${{ needs.deploy.result }}
+
             [View Logs](${context.payload.repository.html_url}/actions/runs/${context.runId})
             `;
-            
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,

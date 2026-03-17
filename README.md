@@ -1,238 +1,206 @@
-# Meridian.AI: Advanced Financial Prediction Platform
+# Meridian.AI
 
-## High-Performance Machine Learning for Financial Time Series Analysis
+### Real-Time Financial Prediction Engine
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Version](https://img.shields.io/badge/version-4.1.0-green.svg)
 [![Meridian.AI for Forex](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml)
 [![Meridian.AI for Stocks](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml)
 [![Meridian.AI Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [System Architecture](#system-architecture)
-- [Core Features](#core-features)
-- [Technical Analysis Engine](#technical-analysis-engine)
-- [Training Infrastructure](#training-infrastructure)
-- [Performance Metrics](#performance-metrics)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Usage Examples](#usage-examples)
-- [Development and Contributing](#development-and-contributing)
-- [Disclaimer](#disclaimer)
-- [License](#license)
 
 ---
 
-## Overview
+Meridian.AI is a 280M-parameter deep learning system that predicts price movements for **any stock or forex pair** in real time. It combines state-of-the-art sequence modeling (Mamba-2 SSM), sparse expert routing (MoE with SwiGLU), and efficient attention (GQA + Flash Attention 2) into a single unified model — continuously trained and deployed via GitHub Actions every 2 hours.
 
-Meridian.AI is a high-performance financial prediction platform engineered to analyze and forecast market dynamics using modern machine learning architectures. The system is designed for quantitative research, featuring a 388-million parameter model that integrates State Space Models (SSM), Mixture of Experts (MoE), and advanced attention mechanisms.
-
-The platform provides a unified framework for both stock and forex markets, supported by automated training pipelines, comprehensive experiment tracking via Comet ML, and a robust API for real-time inference.
-
-### Development Standards
-
-The codebase adheres to rigorous engineering standards:
-- Consistent Formatting: Enforced via Black and isort.
-- Static Analysis: Continuous linting with Ruff for performance and security.
-- CI/CD Integration: Automated testing and validation pipelines.
+**Models are hosted on Hugging Face:** [MeridianAlgo/ARA.AI](https://huggingface.co/MeridianAlgo/ARA.AI)
 
 ---
 
-## System Architecture
+## Architecture
 
-### Model Design: Revolutionary 2026
+Meridian.AI v4.1 is built on a hybrid transformer-SSM backbone designed for financial time series:
 
-The platform utilizes a sophisticated deep learning architecture specifically optimized for sequential financial data.
+| Component | Implementation | Purpose |
+|-----------|---------------|---------|
+| Sequence Modeling | Mamba-2 SSM with selective scan | Linear-time long-range dependencies |
+| Attention | Grouped Query Attention (GQA) + QK-Norm | Efficient multi-head attention with reduced KV cache |
+| Position Encoding | Rotary Position Embeddings (RoPE) | Relative temporal awareness without absolute bias |
+| Expert Routing | Mixture of Experts (8 experts, top-2) | Regime-specific specialization |
+| Activations | SwiGLU (gated linear units) | Improved gradient flow over GELU/ReLU |
+| Normalization | RMSNorm + Layer Scale | Training stability at scale |
+| Regularization | Stochastic Depth (drop path) | Better generalization, prevents overfitting |
+| Training | Mixed precision (FP16/BF16) via Accelerate | 2x throughput on compatible hardware |
+| Loss | BalancedDirectionLoss (Huber + BCE) | Jointly optimizes price regression and direction accuracy |
 
-- Sequence Modeling: Leverages Mamba State Space Models (SSM) for linear-time complexity and efficient long-range dependency tracking.
-- Attention Mechanisms: Features Flash Attention 2 for optimized memory usage and Grouped Query Attention (GQA) for reduced computational overhead.
-- Positional Awareness: Implements Rotary Position Embeddings (RoPE) to capture temporal relationships without absolute position bias.
-- Expert Specialization: Utilizes a Mixture of Experts (MoE) layer with top-k routing, activating specialized subnetworks based on market regimes.
-- Numerical Stability: Employs RMSNorm and SwiGLU activation functions to ensure stable gradient flow.
+### Model Specifications
 
-### Pipeline Structure
+| Spec | Value |
+|------|-------|
+| Parameters | ~280 Million |
+| Hidden Dimension | 768 |
+| Layers | 8 |
+| Attention Heads | 12 (3 KV heads) |
+| Experts | 8 (top-2 routing) |
+| Prediction Heads | 8 |
+| Input Features | 44 technical indicators |
+| Sequence Length | 30 timesteps |
 
-```mermaid
-graph LR
-    A[Market Data] --> B[Feature Engineering]
-    B --> C[Unified ML Engine]
-    C --> D[Model Training]
-    D --> E[Inference API]
-    E --> F[Trading Strategy]
-    
-    subgraph Data Sources
-    A1[Yahoo Finance] --> A
-    A2[SQLite DB] --> A
-    end
-    
-    subgraph Processing
-    B1[44+ Indicators] --> B
-    B2[Stationarity] --> B
-    end
-    
-    subgraph Architecture
-    C1[Mamba SSM] --> C
-    C2[Mixture of Experts] --> C
-    C3[Flash Attention 2] --> C
-    end
+---
+
+## How It Works
+
+```
+Market Data (any ticker/pair)
+        |
+        v
+  44 Technical Indicators
+  (RSI, MACD, Bollinger, ATR, OBV, VWAP, etc.)
+        |
+        v
+  Mamba-2 SSM Blocks (temporal patterns)
+        |
+        v
+  GQA + Flash Attention 2 (cross-timestep relationships)
+        |
+        v
+  MoE Layer (8 SwiGLU experts, top-2 routing)
+        |
+        v
+  Multi-Head Prediction (8 heads, aggregated)
+        |
+        v
+  Price Forecast + Direction Signal
 ```
 
----
-
-## Core Features
-
-### Advanced Machine Learning
-- Unified Training Logic: Specialized models for Stocks and Forex, optimized for respective volatility patterns.
-- Directional Accuracy Optimization: Custom loss functions (Balanced Direction Loss) prioritize movement forecasting.
-- Incremental Learning: Continuous model updates as new market data becomes available.
-- Robustness at Scale: Optimized for thousands of tickers and high-frequency currency pairs.
-
-### Infrastructure and Security
-- FastAPI Integration: High-throughput REST endpoints with JWT authentication.
-- WebSocket Streaming: Real-time prediction delivery for low-latency needs.
-- Automated Workflows: GitHub Actions managing the end-to-end model lifecycle.
-- Monitoring: Integrated Prometheus metrics and operational visibility.
-
----
-
-## Technical Analysis Engine
-
-The platform includes a comprehensive feature extraction suite calculating over 44 technical indicators:
-
-| Category | Primary Indicators |
-|----------|-------------------|
-| Trend | SMA, EMA, HMA, KAMA, ZLEMA, T3 |
-| Momentum | RSI, Stochastic, Williams %R, CCI, ROC, MFI |
-| Volatility | Bollinger Bands, Keltner Channels, ATR, StdDev |
-| Volume | OBV, VWAP, Chaikin Money Flow, Volume Profile |
-| Oscillators | MACD, Awesome Oscillator, PPO, Ultimate Oscillator |
-| Patterns | Automated Head & Shoulders, Triangles, Wedges, Flags |
-
----
-
-## Training Infrastructure
-
-Automated GitHub Workflows maintain a continuous model evolution cycle.
-
-### Automated Pipelines
-- Frequency: Models updated every 1 hour 30 minutes.
-- Generalization: Randomized timeframes (1h, 4h, 1d, 1w for stocks; 15m, 1h, 4h, 1d for forex).
-- Lifecycle:
-  1. Fetch: Incremental ingestion into SQLite training databases.
-  2. Train: Optimized training using standard CPU/GPU resources.
-  3. Track: Real-time metric logging via Comet ML.
-  4. Deploy: Automatic push to Hugging Face Hub.
-
----
-
-## Performance Metrics
-
-### Model Performance Benchmarks
-| Attribute | Stock Model | Forex Model |
-|-----------|-------------|-------------|
-| Parameters | 388 Million | 388 Million |
-| Validation Accuracy | >52.4% | >49.6% |
-| Average Training Time | 300 - 450 Seconds | 300 - 450 Seconds |
-| Typical Loss (MSE) | <0.0004 | <0.0006 |
-| Update Frequency | 16 Sessions / Day | 16 Sessions / Day |
+The model processes 30 timesteps of 44 features each, routing through Mamba SSM blocks for sequential pattern recognition, then through attention and expert layers for regime-specific predictions. The output is an aggregated forecast from 8 prediction heads.
 
 ---
 
 ## Quick Start
 
-### Prerequisites
-- Python 3.11+
-- Git
-- 8GB RAM (Minimum)
-
-### Installation
-
 ```bash
-# Clone the repository
-git clone https://huggingface.co/MeridianAlgo/ARA.AI.git
-cd Meridian.AI
+# Clone
+git clone https://github.com/MeridianAlgo/AraAI.git
+cd AraAI
 
-# Set up virtual environment
+# Install
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install essential dependencies
-pip install -r requirements.txt
-
-# Install PyTorch (CPU optimized)
 pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
 ```
 
----
-
-## Usage Examples
-
-### Running Predictions
+### Run a Prediction
 
 ```python
 from meridianalgo.unified_ml import UnifiedStockML
 from huggingface_hub import hf_hub_download
 
-# Retrieve pre-trained model
+# Download latest model
 model_path = hf_hub_download(
     repo_id="MeridianAlgo/ARA.AI",
     filename="models/Meridian.AI_Stocks.pt"
 )
 
-# Initialize system and predict
+# Predict any stock
 ml = UnifiedStockML(model_path=model_path)
-prediction = ml.predict_ultimate('AAPL', days=5)
+result = ml.predict_ultimate("AAPL", days=5)
+print(result)
+```
 
-print(f"Current Price: {prediction['current_price']}")
-print(f"Prediction Confidence: {prediction['model_accuracy']}%")
+```python
+from meridianalgo.forex_ml import ForexML
+from huggingface_hub import hf_hub_download
+
+# Download latest forex model
+model_path = hf_hub_download(
+    repo_id="MeridianAlgo/ARA.AI",
+    filename="models/Meridian.AI_Forex.pt"
+)
+
+# Predict any forex pair
+ml = ForexML(model_path=model_path)
+result = ml.predict("EURUSD=X", days=5)
+print(result)
 ```
 
 ---
 
-## Development and Contributing
+## Training Pipeline
 
-### Quality Control Standards
-```bash
-# Format and Sort
-black .
-isort .
+Models are trained automatically via GitHub Actions on a 2-hour cycle:
 
-# Static Analysis
-ruff check . --fix
+1. **Fetch** — Pull latest market data into SQLite (150 stocks, 30 forex pairs)
+2. **Train** — 20 epochs with cosine LR decay + linear warmup, mixed precision
+3. **Track** — Metrics logged to Comet ML (loss curves, direction accuracy)
+4. **Deploy** — Push updated `.pt` checkpoint to Hugging Face Hub
+
+Version gating ensures the pipeline never loads stale pre-v4.1 checkpoints — every run either resumes from a valid v4.1 model or trains fresh.
+
+### Training Features
+
+- **BalancedDirectionLoss**: 60% Huber regression + 40% BCE direction classification with scaled logits
+- **LR Schedule**: Linear warmup (10% of epochs) + cosine annealing to zero
+- **Early Stopping**: Patience of 15 epochs on validation loss
+- **Experiment Tracking**: Full Comet ML integration for loss, accuracy, and hyperparameters
+
+---
+
+## Technical Indicators
+
+44 features extracted from raw OHLCV data:
+
+| Category | Indicators |
+|----------|-----------|
+| Trend | SMA, EMA, HMA, KAMA, ZLEMA, T3 |
+| Momentum | RSI, Stochastic, Williams %R, CCI, ROC, MFI |
+| Volatility | Bollinger Bands, Keltner Channels, ATR, StdDev |
+| Volume | OBV, VWAP, Chaikin Money Flow, Volume Profile |
+| Oscillators | MACD, Awesome Oscillator, PPO, Ultimate Oscillator |
+| Patterns | Head & Shoulders, Triangles, Wedges, Flags |
+
+---
+
+## Project Structure
+
+```
+meridianalgo/
+  revolutionary_model.py   # v4.1 model architecture (Mamba-2, GQA, MoE)
+  large_torch_model.py     # Training loop, data loading, inference
+  direction_loss.py        # BalancedDirectionLoss (Huber + BCE)
+  unified_ml.py            # Stock prediction API
+  forex_ml.py              # Forex prediction API
+  indicators.py            # 44 technical indicators
+scripts/
+  train_stock_model.py     # Stock training entrypoint
+  train_forex_model.py     # Forex training entrypoint
+  fetch_and_store_data.py  # Market data ingestion
+  push_elite_models.py     # HF Hub deployment
+.github/workflows/
+  meridian-stocks.yml      # Automated stock training (every 2h)
+  meridian-forex.yml       # Automated forex training (every 2h)
+  lint.yml                 # Code quality checks
 ```
 
 ---
 
 ## Disclaimer
 
-### CRITICAL FINANCIAL RISK WARNING
+**This software is for research and educational purposes only. It is not financial advice.**
 
-**READ THIS CAREFULLY BEFORE USING THE SOFTWARE.**
+Trading financial instruments carries significant risk. All predictions are probabilistic forecasts based on historical data — past performance does not guarantee future results. Markets can behave unpredictably during black swan events, liquidity crises, or structural shifts.
 
-1. **Not Financial Advice**: Meridian.AI and its associated models are provided strictly for research, educational, and demonstration purposes. No content generated by this system constitutes financial, investment, legal, or tax advice. MeridianAlgo is not a registered investment advisor or broker-dealer.
+You should never trade with money you cannot afford to lose. Any trading decisions you make are yours alone. MeridianAlgo and its contributors are not liable for any financial losses.
 
-2. **Probabilistic Nature**: All outputs are probabilistic forecasts based on historical patterns. Markets are inherently chaotic; historical performance is not an indicator of future results. The probability of error is significant. Accuracy metrics are based on backtested data and do not guarantee future execution.
-
-3. **Assumption of Risk**: Trading financial instruments (stocks, forex, derivatives) carries a high level of risk and may result in the loss of your entire investment. Quantitative models can exacerbate losses through rapid execution if not properly supervised. You should never trade with money you cannot afford to lose.
-
-4. **No Warranty**: This software is provided "as is" without any express or implied warranties of any kind, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. Use of the software is at your own discretion and risk. MeridianAlgo and its contributors are not liable for any financial losses, data loss, system downtime, or any other damages resulting from the use or misuse of this software.
-
-5. **Algorithmic Limitations**: Quantitative models can fail catastrophically during "Black Swan" events, structural market shifts, liquidity crises, or technical flash crashes. The model's reliance on historical data makes it blind to unprecedented geopolitical or macroeconomic events.
-
-6. **Technological Risks**: Users acknowledge risks associated with algorithmic trading, including but not limited to latency, API failures, connectivity issues, and software bugs.
-
-7. **Independent Verification**: Any signal generated by the system should be independently verified by a human expert before any action is taken.
-
-8. **Indemnification**: By using this software, you agree to indemnify and hold harmless MeridianAlgo and all project contributors from and against any claims, losses, or expenses arising from your use of the platform.
-
-9. **Regulatory Compliance**: Users are responsible for ensuring their use of the software complies with all local and international financial regulations.
-
-10. **Finality of Decision**: Any financial decisions you make are yours alone. MeridianAlgo and its contributors hold zero liability for your portfolio outcomes.
-
-**By using this software, you irrevocably agree that any financial decisions you make are yours alone and that you will not hold MeridianAlgo or any contributors liable for your outcomes.**
+This software is provided "as is" without warranties of any kind. By using it, you agree to hold MeridianAlgo and all contributors harmless from any claims arising from your use of the platform. Users are responsible for compliance with all applicable financial regulations.
 
 ---
-Made with love by MeridianAlgo, for the world :)
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+Made with love by [MeridianAlgo](https://github.com/MeridianAlgo)

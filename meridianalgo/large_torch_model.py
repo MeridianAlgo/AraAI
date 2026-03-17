@@ -541,18 +541,19 @@ class AdvancedMLSystem:
             # Create model if not already loaded/trained
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print("  Creating new Revolutionary v4.1 architecture (~150M Parameters)...")
-                    # Reduced from 388M to ~150M - better fit for available data
+                    print(
+                        "  Creating new Revolutionary v4.1 architecture (~280M Parameters)..."
+                    )
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
                         seq_len=seq_len,
-                        dim=512,
-                        num_layers=6,
-                        num_heads=8,
-                        num_kv_heads=2,
-                        num_experts=6,
-                        num_prediction_heads=6,
-                        dropout=0.15,
+                        dim=768,
+                        num_layers=8,
+                        num_heads=12,
+                        num_kv_heads=3,
+                        num_experts=8,
+                        num_prediction_heads=8,
+                        dropout=0.12,
                         use_mamba=True,
                         drop_path_rate=0.1,
                     )
