@@ -357,7 +357,10 @@ class AdvancedMLSystem:
                 architecture = checkpoint.get("architecture")
 
                 # Check if this is a v4.1 revolutionary model
-                if architecture == "RevolutionaryFinancialModel-2026" and REVOLUTIONARY_MODEL_AVAILABLE:
+                if (
+                    architecture == "RevolutionaryFinancialModel-2026"
+                    and REVOLUTIONARY_MODEL_AVAILABLE
+                ):
                     self.model = RevolutionaryFinancialModel(
                         input_size=int(checkpoint.get("input_size", 44)),
                         seq_len=int(checkpoint.get("seq_len", 30)),
@@ -538,9 +541,7 @@ class AdvancedMLSystem:
             # Create model if not already loaded/trained
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print(
-                        "  Creating new Revolutionary v4.1 architecture (~150M Parameters)..."
-                    )
+                    print("  Creating new Revolutionary v4.1 architecture (~150M Parameters)...")
                     # Reduced from 388M to ~150M - better fit for available data
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,

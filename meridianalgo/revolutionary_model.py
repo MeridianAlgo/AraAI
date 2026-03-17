@@ -12,7 +12,6 @@ State-of-the-art architecture:
 - Scaled residual initialization
 """
 
-import math
 
 import torch
 import torch.nn as nn
