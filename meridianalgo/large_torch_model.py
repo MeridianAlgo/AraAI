@@ -312,7 +312,7 @@ class AdvancedMLSystem:
                 if self.use_revolutionary
                 else "EliteEnsembleModel-2025-Compact"
             ),
-            "version": "4.0" if self.use_revolutionary else "3.1",
+            "version": "4.1" if self.use_revolutionary else "3.1",
         }
 
         # Initialize Accelerate
@@ -326,7 +326,7 @@ class AdvancedMLSystem:
         self._load_model()
 
     def _load_model(self):
-        """Load model from .pt file"""
+        """Load model from .pt file - only loads v4.1+ models, skips old ones"""
         if self.model_path.exists():
             try:
                 checkpoint = torch.load(self.model_path, map_location=self.device)
@@ -334,108 +334,67 @@ class AdvancedMLSystem:
                 # Verify model type matches
                 if checkpoint.get("model_type") != self.model_type:
                     print(
-                        f"Warning: Model type mismatch. Expected {self.model_type}, got {checkpoint.get('model_type')}"
+                        f"Warning: Model type mismatch. Expected {self.model_type}, "
+                        f"got {checkpoint.get('model_type')}. Training fresh."
                     )
+                    return
+
+                # Skip old model versions - train fresh with new architecture
+                version = checkpoint.get("version", "0")
+                if str(version) < "4.1":
+                    print(
+                        f"  Skipping old model (v{version}) - training fresh with v4.1 architecture"
+                    )
+                    self.model = None
                     return
 
                 model_state_dict = checkpoint.get("model_state_dict")
                 if not isinstance(model_state_dict, dict) or not model_state_dict:
-                    print(
-                        f"Could not load model: missing or invalid model_state_dict in {self.model_path}"
-                    )
+                    print(f"Could not load model: missing model_state_dict in {self.model_path}")
                     self.model = None
                     return
 
                 architecture = checkpoint.get("architecture")
-                if architecture is not None and architecture not in [
-                    "EliteEnsembleModel-2025-Compact",
-                    "RevolutionaryFinancialModel-2026",
-                ]:
-                    print(
-                        "Could not load model: incompatible architecture "
-                        f"({architecture}) in {self.model_path}"
-                    )
-                    self.model = None
-                    return
 
-                # Check if this is a revolutionary model
-                is_revolutionary = architecture == "RevolutionaryFinancialModel-2026"
-
-                if is_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    # Load revolutionary model - Force correct parameters for 2026 architecture if detected
-                    dim = int(checkpoint.get("dim", 768))
-                    num_heads = int(checkpoint.get("num_heads", 8))
-                    num_kv_heads = int(checkpoint.get("num_kv_heads", 2))
-                    num_experts = int(checkpoint.get("num_experts", 4))
-
-                    # Workaround for hardcoded old metadata in some checkpoints
-                    if dim == 768 and num_heads == 8:
-                        print(
-                            "  Detected 2026 architecture with legacy metadata, using corrected parameters (12h, 4kv, 12e)"
-                        )
-                        num_heads = 12
-                        num_kv_heads = 4
-                        num_experts = 12
-
+                # Check if this is a v4.1 revolutionary model
+                if architecture == "RevolutionaryFinancialModel-2026" and REVOLUTIONARY_MODEL_AVAILABLE:
                     self.model = RevolutionaryFinancialModel(
                         input_size=int(checkpoint.get("input_size", 44)),
                         seq_len=int(checkpoint.get("seq_len", 30)),
-                        dim=dim,
+                        dim=int(checkpoint.get("dim", 512)),
                         num_layers=int(checkpoint.get("num_layers", 6)),
-                        num_heads=num_heads,
-                        num_kv_heads=num_kv_heads,
-                        num_experts=num_experts,
-                        num_prediction_heads=int(checkpoint.get("num_prediction_heads", 8)),
+                        num_heads=int(checkpoint.get("num_heads", 8)),
+                        num_kv_heads=int(checkpoint.get("num_kv_heads", 2)),
+                        num_experts=int(checkpoint.get("num_experts", 6)),
+                        num_prediction_heads=int(checkpoint.get("num_prediction_heads", 6)),
                         dropout=float(checkpoint.get("dropout", 0.1)),
                         use_mamba=bool(checkpoint.get("use_mamba", True)),
                     )
                     self.use_revolutionary = True
-                else:
-                    # Load elite model (fallback)
-
-                    # Load elite model (fallback)
-                    if any(k.startswith("residual_blocks.") for k in model_state_dict.keys()):
-                        print(
-                            "Could not load model: legacy checkpoint format detected "
-                            f"in {self.model_path} (residual_blocks.*). Please retrain."
-                        )
-                        self.model = None
-                        return
-
-                    inferred_hidden0 = None
-                    if "input_proj.weight" in model_state_dict:
-                        inferred_hidden0 = int(model_state_dict["input_proj.weight"].shape[0])
-
-                    inferred_seq_len = None
-                    if "pos_encoding" in model_state_dict:
-                        inferred_seq_len = int(model_state_dict["pos_encoding"].shape[0])
-
-                    hidden_dims = checkpoint.get("hidden_dims")
-                    if not isinstance(hidden_dims, (list, tuple)) or len(hidden_dims) < 2:
-                        hidden_dims = [256, 192, 128, 64]
-                    if inferred_hidden0 is not None:
-                        hidden_dims = [inferred_hidden0] + list(hidden_dims[1:])
-
+                elif architecture == "EliteEnsembleModel-2025-Compact":
+                    hidden_dims = checkpoint.get("hidden_dims", [256, 192, 128, 64])
                     self.model = EliteEnsembleModel(
                         input_size=int(checkpoint.get("input_size", 44)),
-                        seq_len=int(
-                            inferred_seq_len
-                            if inferred_seq_len is not None
-                            else checkpoint.get("seq_len", 1)
-                        ),
+                        seq_len=int(checkpoint.get("seq_len", 1)),
                         hidden_dims=list(hidden_dims),
                         num_heads=int(checkpoint.get("num_heads", 4)),
                         num_layers=int(checkpoint.get("num_layers", 3)),
                         dropout=float(checkpoint.get("dropout", 0.1)),
                     )
                     self.use_revolutionary = False
+                else:
+                    print(f"  Unknown architecture: {architecture}. Training fresh.")
+                    self.model = None
+                    return
 
                 try:
                     self.model.load_state_dict(model_state_dict, strict=True)
                 except RuntimeError as e:
-                    print(f"Could not load model state dict: {e}")
+                    print(f"Could not load model state dict (architecture changed): {e}")
+                    print("  Training fresh with new architecture.")
                     self.model = None
                     return
+
                 self.model.to(self.device)
                 self.model.eval()
 
@@ -474,16 +433,16 @@ class AdvancedMLSystem:
                 checkpoint.update(
                     {
                         "architecture": "RevolutionaryFinancialModel-2026",
-                        "version": "4.0",
+                        "version": "4.1",
                         "input_size": int(getattr(unwrapped_model, "input_size", 44)),
                         "seq_len": int(getattr(unwrapped_model, "seq_len", 30)),
-                        "dim": int(getattr(unwrapped_model, "dim", 768)),
+                        "dim": int(getattr(unwrapped_model, "dim", 512)),
                         "num_layers": int(len(unwrapped_model.layers)),
-                        "num_heads": int(getattr(unwrapped_model, "num_heads", 12)),
-                        "num_kv_heads": int(getattr(unwrapped_model, "num_kv_heads", 4)),
-                        "num_experts": int(getattr(unwrapped_model, "num_experts", 12)),
+                        "num_heads": int(getattr(unwrapped_model, "num_heads", 8)),
+                        "num_kv_heads": int(getattr(unwrapped_model, "num_kv_heads", 2)),
+                        "num_experts": int(getattr(unwrapped_model, "num_experts", 6)),
                         "num_prediction_heads": len(unwrapped_model.prediction_heads),
-                        "dropout": 0.1,
+                        "dropout": 0.15,
                         "use_mamba": True,
                     }
                 )
@@ -580,20 +539,21 @@ class AdvancedMLSystem:
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
                     print(
-                        "  Creating new Revolutionary 2026 architecture (300M-500M Parameters)..."
+                        "  Creating new Revolutionary v4.1 architecture (~150M Parameters)..."
                     )
-                    # Optimized for ~300M-400M parameters and CPU efficiency
+                    # Reduced from 388M to ~150M - better fit for available data
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
                         seq_len=seq_len,
-                        dim=768,
+                        dim=512,
                         num_layers=6,
-                        num_heads=12,
-                        num_kv_heads=4,
-                        num_experts=12,
-                        num_prediction_heads=8,
-                        dropout=0.1,
+                        num_heads=8,
+                        num_kv_heads=2,
+                        num_experts=6,
+                        num_prediction_heads=6,
+                        dropout=0.15,
                         use_mamba=True,
+                        drop_path_rate=0.1,
                     )
                 else:
                     print("  Creating new EliteEnsembleModel architecture...")
@@ -611,15 +571,26 @@ class AdvancedMLSystem:
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
 
-            # Training setup with elite learning rate for 2025 architecture
+            # Training setup with warmup + cosine decay
             optimizer = torch.optim.AdamW(
                 self.model.parameters(),
                 lr=lr,
                 weight_decay=0.01,
                 betas=(0.9, 0.95),
             )
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                optimizer, T_0=200, T_mult=2, eta_min=lr * 0.0001
+
+            # Warmup for first 10% of training, then cosine decay
+            warmup_epochs = max(2, epochs // 10)
+            warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
+                optimizer, start_factor=0.01, end_factor=1.0, total_iters=warmup_epochs
+            )
+            cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=epochs - warmup_epochs, eta_min=lr * 0.01
+            )
+            scheduler = torch.optim.lr_scheduler.SequentialLR(
+                optimizer,
+                schedulers=[warmup_scheduler, cosine_scheduler],
+                milestones=[warmup_epochs],
             )
 
             # Use direction-aware loss for better trading performance

@@ -142,14 +142,15 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p models
+          echo "Downloading existing model from HF (will be skipped if old version)..."
           python -c "
           import os
           from huggingface_hub import hf_hub_download
           try:
               hf_hub_download(repo_id='MeridianAlgo/ARA.AI', filename='models/Meridian.AI_Forex.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
-              print('Successfully downloaded existing forex model.')
+              print('Downloaded existing forex model (loader will skip if old version).')
           except Exception as e:
-              print(f'Warning: Could not download existing model (might not exist yet): {e}')
+              print(f'No existing model found, will train fresh: {e}')
           "
 
       - name: Train Model
