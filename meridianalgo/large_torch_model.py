@@ -541,9 +541,7 @@ class AdvancedMLSystem:
             # Create model if not already loaded/trained
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print(
-                        "  Creating new Revolutionary v4.1 architecture (~45M Parameters)..."
-                    )
+                    print("  Creating new Revolutionary v4.1 architecture (~45M Parameters)...")
                     # Sized to train on GitHub Actions CPU runners within 20 minutes
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
