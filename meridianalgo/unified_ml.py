@@ -294,6 +294,7 @@ class UnifiedStockML:
                 validation_split=validation_split,
                 cpu_limit=kwargs.get("cpu_limit", 80),
                 comet_experiment=kwargs.get("comet_experiment"),
+                max_time_seconds=kwargs.get("max_time_seconds"),
             )
 
             return result

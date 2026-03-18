@@ -144,16 +144,13 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          EPOCHS="${{ inputs.epochs || '10' }}"
-
-          echo "Training Forex Model on ALL pairs"
-          echo "  Epochs: $EPOCHS"
+          echo "Training Forex Model on ALL pairs (time-limited: 35min)"
 
           python scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
-            --epochs "$EPOCHS" \
             --use-all-data \
+            --max-time 35 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model

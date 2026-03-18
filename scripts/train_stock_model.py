@@ -148,7 +148,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
 def train_stock_model(
     db_file,
     output_path,
-    epochs=500,
+    epochs=999,
     batch_size=64,
     lr=0.0005,
     sample_size=None,
@@ -156,6 +156,7 @@ def train_stock_model(
     comet_api_key=None,
     seed=None,
     timeframe=None,
+    max_time_minutes=35,
 ):
     """Train unified stock model with Comet ML tracking"""
     print(f"\n{'=' * 60}")
@@ -186,6 +187,7 @@ def train_stock_model(
     config = {
         "model_type": "Stock_Pred",
         "epochs": epochs,
+        "max_time_minutes": max_time_minutes,
         "batch_size": batch_size,
         "learning_rate": lr,
         "symbols_count": len(selected_symbols),
@@ -211,8 +213,9 @@ def train_stock_model(
     ml = UnifiedStockML(model_path=output_path)
 
     # Train model with Revolutionary 2026 Architecture
+    max_time_seconds = int(max_time_minutes * 60) if max_time_minutes else None
     print(
-        f"\nTraining unified stock model ({epochs} epochs) with Revolutionary 2026 Architecture..."
+        f"\nTraining unified stock model (up to {max_time_minutes}min / {epochs} epochs)..."
     )
     result = ml.train_ultimate_models(
         target_symbol="UNIFIED_STOCKS",
@@ -222,7 +225,8 @@ def train_stock_model(
         batch_size=batch_size,
         lr=lr,
         quick_mode=False,
-        comet_experiment=experiment,  # Pass Comet experiment
+        comet_experiment=experiment,
+        max_time_seconds=max_time_seconds,
     )
 
     training_time = time.time() - start_time
@@ -257,7 +261,7 @@ def main():
     parser.add_argument(
         "--output", default="models/Meridian.AI_Stocks.pt", help="Output model path"
     )
-    parser.add_argument("--epochs", type=int, default=10, help="Training epochs")
+    parser.add_argument("--epochs", type=int, default=999, help="Max training epochs (stopped by --max-time first)")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument(
@@ -275,6 +279,12 @@ def main():
         "--timeframe",
         choices=["1h", "4h", "1d", "1w"],
         help="Timeframe for data filtering (will be randomized if not specified)",
+    )
+    parser.add_argument(
+        "--max-time",
+        type=int,
+        default=35,
+        help="Max training time in minutes (default: 35). Training stops gracefully before this limit.",
     )
 
     args = parser.parse_args()
@@ -303,6 +313,7 @@ def main():
         comet_api_key=comet_api_key,
         seed=args.seed,
         timeframe=args.timeframe,
+        max_time_minutes=args.max_time,
     )
 
     sys.exit(0 if success else 1)

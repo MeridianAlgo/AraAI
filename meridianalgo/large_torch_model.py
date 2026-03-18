@@ -508,14 +508,22 @@ class AdvancedMLSystem:
         validation_split=0.2,
         cpu_limit=80,
         comet_experiment=None,
+        max_time_seconds=None,
     ):
         """
         Train with data augmentation, gradient accumulation, cosine warm restarts,
         and EMA model averaging for maximum accuracy from a small model.
+
+        max_time_seconds: If set, stop training gracefully when elapsed time exceeds
+                          this limit (saves the best model seen so far). Useful for
+                          CI/CD environments with strict time limits.
         """
         try:
+            train_start = time.time()
             print(f"\nTraining {self.model_type} model on {symbol}...")
             print(f"Training samples: {len(X)}")
+            if max_time_seconds:
+                print(f"Time limit: {max_time_seconds/60:.0f} minutes")
 
             # === Gradient accumulation config ===
             # Simulate effective batch of 256 on small GPU/CPU memory
@@ -645,7 +653,22 @@ class AdvancedMLSystem:
             patience_counter = 0
 
             for epoch in range(epochs):
+                # === Time-based stop: halt before CI timeout kills the job ===
+                if max_time_seconds is not None:
+                    elapsed = time.time() - train_start
+                    remaining = max_time_seconds - elapsed
+                    if remaining < 60:  # Less than 1 minute left → stop now
+                        print(f"Time limit reached after {elapsed/60:.1f}min — stopping at epoch {epoch}")
+                        break
+                    # If one more epoch would likely exceed the limit, stop
+                    if epoch > 0:
+                        avg_epoch_time = elapsed / epoch
+                        if remaining < avg_epoch_time * 1.2:  # 20% buffer
+                            print(f"Estimated epoch time {avg_epoch_time:.0f}s > remaining {remaining:.0f}s — stopping")
+                            break
+
                 self.model.train()
+                epoch_start = time.time()
                 train_loss = 0
                 optimizer.zero_grad()
 
@@ -702,11 +725,12 @@ class AdvancedMLSystem:
                 scheduler.step()
 
                 current_lr = optimizer.param_groups[0]["lr"]
+                epoch_time = time.time() - epoch_start
+                elapsed_total = time.time() - train_start
                 print(
-                    f"Epoch {epoch + 1}/{epochs} - Train: {train_loss:.4f}, "
-                    f"Val: {val_loss:.4f}, EMA Val: {ema_val_loss_val:.4f}, "
-                    f"Dir Acc: {direction_metrics['direction_accuracy']:.1f}%, "
-                    f"LR: {current_lr:.2e}"
+                    f"Epoch {epoch + 1}/{epochs} [{epoch_time:.0f}s, total {elapsed_total/60:.1f}min] - "
+                    f"Train: {train_loss:.4f}, Val: {val_loss:.4f}, EMA Val: {ema_val_loss_val:.4f}, "
+                    f"Dir Acc: {direction_metrics['direction_accuracy']:.1f}%, LR: {current_lr:.2e}"
                 )
 
                 # Log to Comet ML

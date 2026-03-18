@@ -146,16 +146,13 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         continue-on-error: false
         run: |
-          EPOCHS="${{ inputs.epochs || '10' }}"
-
-          echo "Training Stock Model on ALL symbols"
-          echo "  Epochs: $EPOCHS"
+          echo "Training Stock Model on ALL symbols (time-limited: 35min)"
 
           python scripts/train_stock_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Stocks.pt \
-            --epochs "$EPOCHS" \
             --use-all-data \
+            --max-time 35 \
             --comet-api-key "$COMET_API_KEY" || echo "Training completed with warnings"
 
       - name: Upload Model
