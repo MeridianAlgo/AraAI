@@ -18,6 +18,7 @@ permissions:
 env:
   PYTHON_VERSION: '3.11'
   CACHE_VERSION: v2
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   setup:
@@ -97,7 +98,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
 
     steps:
       - name: Checkout
@@ -146,13 +147,13 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         continue-on-error: false
         run: |
-          echo "Training Stock Model on ALL symbols (time-limited: 35min)"
+          echo "Training Stock Model on ALL symbols (time-limited: 25min)"
 
           python scripts/train_stock_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Stocks.pt \
             --use-all-data \
-            --max-time 35 \
+            --max-time 25 \
             --comet-api-key "$COMET_API_KEY" || echo "Training completed with warnings"
 
       - name: Upload Model

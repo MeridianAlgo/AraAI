@@ -12,6 +12,7 @@ permissions:
 env:
   PYTHON_VERSION: '3.11'
   CACHE_VERSION: v1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test-accuracy:

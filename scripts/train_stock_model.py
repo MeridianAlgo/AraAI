@@ -156,7 +156,7 @@ def train_stock_model(
     comet_api_key=None,
     seed=None,
     timeframe=None,
-    max_time_minutes=35,
+    max_time_minutes=25,
 ):
     """Train unified stock model with Comet ML tracking"""
     print(f"\n{'=' * 60}")
@@ -283,8 +283,8 @@ def main():
     parser.add_argument(
         "--max-time",
         type=int,
-        default=35,
-        help="Max training time in minutes (default: 35). Training stops gracefully before this limit.",
+        default=25,
+        help="Max training time in minutes (default: 25). Training stops gracefully before this limit.",
     )
 
     args = parser.parse_args()
