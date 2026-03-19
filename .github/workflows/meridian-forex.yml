@@ -23,7 +23,6 @@ jobs:
   setup:
     name: Setup & Fetch Forex Data
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     outputs:
       has_data: ${{ steps.check_data.outputs.has_data }}
 
@@ -97,7 +96,6 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 50
 
     steps:
       - name: Checkout
@@ -167,7 +165,6 @@ jobs:
     needs: [train, setup]
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -202,7 +199,6 @@ jobs:
     needs: [setup, train, deploy]
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
       - name: Delete Artifacts
