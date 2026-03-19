@@ -18,7 +18,7 @@ permissions:
 env:
   PYTHON_VERSION: '3.11'
   CACHE_VERSION: v2
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   setup:
@@ -147,13 +147,14 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         continue-on-error: false
         run: |
-          echo "Training Stock Model on ALL symbols (time-limited: 25min)"
+          echo "Training Stock Model on ALL symbols (3 epochs, epoch-based)"
 
           python scripts/train_stock_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Stocks.pt \
             --use-all-data \
-            --max-time 25 \
+            --epochs 3 \
+            --max-time 0 \
             --comet-api-key "$COMET_API_KEY" || echo "Training completed with warnings"
 
       - name: Upload Model
