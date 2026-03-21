@@ -144,9 +144,8 @@ class UnifiedStockML:
 
         # === 43-44: Mean reversion signals ===
         df["zscore_20"] = (close - sma_20) / (std_20 + 1e-8)
-        # Distance from 52-week high/low (normalized)
+        # Distance from 52-week high (normalized)
         high_252 = close.rolling(252, min_periods=20).max()
-        low_252 = close.rolling(252, min_periods=20).min()
         df["dist_from_high"] = (close - high_252) / (high_252 + 1e-8)
 
         # Fill NaN and Inf values

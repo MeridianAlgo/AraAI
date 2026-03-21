@@ -8,7 +8,7 @@ on:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '10'
+        default: '1'
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ permissions:
 env:
   PYTHON_VERSION: '3.11'
   CACHE_VERSION: v2
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   setup:
@@ -96,6 +96,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 65
 
     steps:
       - name: Checkout
@@ -143,14 +144,14 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          echo "Training Forex Model on ALL pairs (3 epochs, epoch-based)"
+          echo "Training Forex Model on ALL pairs (1 epoch, epoch-based)"
 
           python scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
-            --epochs 3 \
-            --max-time 0 \
+            --epochs 1 \
+            --max-time 50 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
