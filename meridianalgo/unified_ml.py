@@ -48,11 +48,14 @@ class UnifiedStockML:
         df["volatility"] = df["returns"].rolling(20).std()
 
         # True Range and ATR
-        tr = pd.concat([
-            high - low,
-            (high - close.shift(1)).abs(),
-            (low - close.shift(1)).abs(),
-        ], axis=1).max(axis=1)
+        tr = pd.concat(
+            [
+                high - low,
+                (high - close.shift(1)).abs(),
+                (low - close.shift(1)).abs(),
+            ],
+            axis=1,
+        ).max(axis=1)
         df["atr"] = tr.rolling(14).mean()
 
         # === 5-14: Moving averages (SMA + EMA for 5 periods) ===
@@ -157,30 +160,61 @@ class UnifiedStockML:
     # Ordered list of all 44 feature columns (must match _add_indicators output)
     FEATURE_COLS = [
         # 1-4: Price-based
-        "returns", "log_returns", "volatility", "atr",
+        "returns",
+        "log_returns",
+        "volatility",
+        "atr",
         # 5-14: Moving averages
-        "sma_5", "ema_5", "sma_10", "ema_10", "sma_20", "ema_20",
-        "sma_50", "ema_50", "sma_200", "ema_200",
+        "sma_5",
+        "ema_5",
+        "sma_10",
+        "ema_10",
+        "sma_20",
+        "ema_20",
+        "sma_50",
+        "ema_50",
+        "sma_200",
+        "ema_200",
         # 15-17: RSI variants
-        "rsi", "rsi_fast", "stoch_rsi",
+        "rsi",
+        "rsi_fast",
+        "stoch_rsi",
         # 18-20: MACD
-        "macd", "macd_signal", "macd_hist",
+        "macd",
+        "macd_signal",
+        "macd_hist",
         # 21-24: Bollinger Bands
-        "bb_upper", "bb_lower", "bb_width", "bb_pct",
+        "bb_upper",
+        "bb_lower",
+        "bb_width",
+        "bb_pct",
         # 25-27: Volume
-        "volume_sma", "volume_ratio", "obv_norm",
+        "volume_sma",
+        "volume_ratio",
+        "obv_norm",
         # 28-30: Momentum
-        "momentum", "roc", "williams_r",
+        "momentum",
+        "roc",
+        "williams_r",
         # 31-33: Stochastic + CCI
-        "stoch_k", "stoch_d", "cci",
+        "stoch_k",
+        "stoch_d",
+        "cci",
         # 34-36: Keltner Channels
-        "kc_upper", "kc_lower", "kc_pct",
+        "kc_upper",
+        "kc_lower",
+        "kc_pct",
         # 37-39: ADX
-        "adx", "plus_di", "minus_di",
+        "adx",
+        "plus_di",
+        "minus_di",
         # 40-42: Trend position
-        "price_vs_sma50", "price_vs_sma200", "atr_pct",
+        "price_vs_sma50",
+        "price_vs_sma200",
+        "atr_pct",
         # 43-44: Mean reversion
-        "zscore_20", "dist_from_high",
+        "zscore_20",
+        "dist_from_high",
     ]
 
     def _extract_features(self, df):

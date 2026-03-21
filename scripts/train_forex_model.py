@@ -211,9 +211,7 @@ def train_forex_model(
 
     # Train model with Revolutionary 2026 Architecture
     max_time_seconds = int(max_time_minutes * 60) if max_time_minutes else None
-    print(
-        f"\nTraining unified forex model (up to {max_time_minutes}min / {epochs} epochs)..."
-    )
+    print(f"\nTraining unified forex model (up to {max_time_minutes}min / {epochs} epochs)...")
     result = ml.train_ultimate_models(
         target_symbol="UNIFIED_FOREX",
         period="custom",
@@ -256,7 +254,9 @@ def main():
     parser = argparse.ArgumentParser(description="Train unified forex prediction model")
     parser.add_argument("--db-file", required=True, help="SQLite database file")
     parser.add_argument("--output", default="models/Meridian.AI_Forex.pt", help="Output model path")
-    parser.add_argument("--epochs", type=int, default=999, help="Max training epochs (stopped by --max-time first)")
+    parser.add_argument(
+        "--epochs", type=int, default=999, help="Max training epochs (stopped by --max-time first)"
+    )
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--lr", type=float, default=0.0005, help="Learning rate")
     parser.add_argument("--sample-size", type=int, help="Number of pairs to sample (default: all)")

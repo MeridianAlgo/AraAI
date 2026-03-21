@@ -17,15 +17,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Multiple timeframe configs to maximize data per symbol
 STOCK_TIMEFRAMES = [
-    ("max", "1d"),   # Max daily history (~20+ years for major stocks)
-    ("2y", "1h"),    # 2 years of hourly data (yfinance limit)
-    ("5y", "1wk"),   # 5 years of weekly data
+    ("max", "1d"),  # Max daily history (~20+ years for major stocks)
+    ("2y", "1h"),  # 2 years of hourly data (yfinance limit)
+    ("5y", "1wk"),  # 5 years of weekly data
 ]
 
 FOREX_TIMEFRAMES = [
-    ("max", "1d"),   # Max daily history
-    ("2y", "1h"),    # 2 years hourly
-    ("5y", "1wk"),   # 5 years weekly
+    ("max", "1d"),  # Max daily history
+    ("2y", "1h"),  # 2 years hourly
+    ("5y", "1wk"),  # 5 years weekly
 ]
 
 
@@ -139,7 +139,9 @@ def main():
     parser.add_argument("--asset-type", choices=["stock", "forex"], required=True)
     parser.add_argument("--limit", type=int, default=10, help="Number of symbols to fetch")
     parser.add_argument("--period", default=None, help="Data period (overrides multi-timeframe)")
-    parser.add_argument("--interval", default=None, help="Data interval (overrides multi-timeframe)")
+    parser.add_argument(
+        "--interval", default=None, help="Data interval (overrides multi-timeframe)"
+    )
 
     args = parser.parse_args()
 
@@ -149,30 +151,137 @@ def main():
     # Default symbols
     if args.asset_type == "stock":
         symbols = [
-            "AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "META", "NVDA", "JPM",
-            "V", "WMT", "JNJ", "PG", "MA", "UNH", "HD", "DIS", "BAC", "VZ",
-            "ADBE", "CMCSA", "NFLX", "PFE", "INTC", "KO", "PEP", "CSCO",
-            "ABT", "CRM", "T", "ABBV", "CVX", "NKE", "MRK", "MCD", "MDT",
-            "TXN", "HON", "BA", "UNP", "AMGN", "IBM", "QCOM", "ORCL", "SBUX",
-            "GS", "MMM", "CAT", "GE", "F", "GM", "C", "TGT", "LMT", "DE",
-            "LOW", "UPS", "USB", "AXP", "MS", "WFC", "COP", "SLB", "EOG",
-            "OXY", "PXD", "VLO", "MPC", "PSX", "KMI", "WMB", "NEE", "DUK",
-            "SO", "D", "AEP", "EXC", "SRE", "XEL", "PEG", "WEC", "AMT",
-            "PLD", "CCI", "EQIX", "PSA", "DLR", "O", "WELL", "SPG", "AVB",
-            "VRTX", "REGN", "ISRG", "SYK", "ZTS", "BSX", "EW", "GILD",
-            "BIIB", "ILMN",
+            "AAPL",
+            "GOOGL",
+            "MSFT",
+            "AMZN",
+            "TSLA",
+            "META",
+            "NVDA",
+            "JPM",
+            "V",
+            "WMT",
+            "JNJ",
+            "PG",
+            "MA",
+            "UNH",
+            "HD",
+            "DIS",
+            "BAC",
+            "VZ",
+            "ADBE",
+            "CMCSA",
+            "NFLX",
+            "PFE",
+            "INTC",
+            "KO",
+            "PEP",
+            "CSCO",
+            "ABT",
+            "CRM",
+            "T",
+            "ABBV",
+            "CVX",
+            "NKE",
+            "MRK",
+            "MCD",
+            "MDT",
+            "TXN",
+            "HON",
+            "BA",
+            "UNP",
+            "AMGN",
+            "IBM",
+            "QCOM",
+            "ORCL",
+            "SBUX",
+            "GS",
+            "MMM",
+            "CAT",
+            "GE",
+            "F",
+            "GM",
+            "C",
+            "TGT",
+            "LMT",
+            "DE",
+            "LOW",
+            "UPS",
+            "USB",
+            "AXP",
+            "MS",
+            "WFC",
+            "COP",
+            "SLB",
+            "EOG",
+            "OXY",
+            "PXD",
+            "VLO",
+            "MPC",
+            "PSX",
+            "KMI",
+            "WMB",
+            "NEE",
+            "DUK",
+            "SO",
+            "D",
+            "AEP",
+            "EXC",
+            "SRE",
+            "XEL",
+            "PEG",
+            "WEC",
+            "AMT",
+            "PLD",
+            "CCI",
+            "EQIX",
+            "PSA",
+            "DLR",
+            "O",
+            "WELL",
+            "SPG",
+            "AVB",
+            "VRTX",
+            "REGN",
+            "ISRG",
+            "SYK",
+            "ZTS",
+            "BSX",
+            "EW",
+            "GILD",
+            "BIIB",
+            "ILMN",
         ]
         timeframes = STOCK_TIMEFRAMES
     else:
         symbols = [
-            "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "NZDUSD",
-            "EURGBP", "EURJPY", "GBPJPY", "CHFJPY", "EURCHF", "AUDJPY",
-            "NZDJPY", "CADJPY", "EURAUD", "EURCAD", "GBPAUD", "GBPCAD",
-            "AUDCAD", "AUDNZD", "EURNZD", "GBPNZD",
+            "EURUSD",
+            "GBPUSD",
+            "USDJPY",
+            "AUDUSD",
+            "USDCAD",
+            "NZDUSD",
+            "EURGBP",
+            "EURJPY",
+            "GBPJPY",
+            "CHFJPY",
+            "EURCHF",
+            "AUDJPY",
+            "NZDJPY",
+            "CADJPY",
+            "EURAUD",
+            "EURCAD",
+            "GBPAUD",
+            "GBPCAD",
+            "AUDCAD",
+            "AUDNZD",
+            "EURNZD",
+            "GBPNZD",
         ]
         timeframes = FOREX_TIMEFRAMES
 
     import random
+
     random.shuffle(symbols)
     symbols = symbols[: args.limit]
 

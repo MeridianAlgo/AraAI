@@ -569,9 +569,7 @@ class AdvancedMLSystem:
             # Create model if not already loaded
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print(
-                        "  Creating new Revolutionary v4.1 architecture (~45M Parameters)..."
-                    )
+                    print("  Creating new Revolutionary v4.1 architecture (~45M Parameters)...")
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
                         seq_len=seq_len,
@@ -604,6 +602,7 @@ class AdvancedMLSystem:
             # === EMA (Exponential Moving Average) of model weights ===
             # Keeps a smoothed copy — often generalizes better than final weights
             import copy
+
             ema_model = copy.deepcopy(self.model)
             ema_model.eval()
             ema_decay = 0.999
@@ -637,7 +636,10 @@ class AdvancedMLSystem:
 
             train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
             train_loader = torch.utils.data.DataLoader(
-                train_dataset, batch_size=batch_size, shuffle=True, drop_last=False,
+                train_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                drop_last=False,
             )
 
             # Prepare with Accelerate
@@ -658,13 +660,17 @@ class AdvancedMLSystem:
                     elapsed = time.time() - train_start
                     remaining = max_time_seconds - elapsed
                     if remaining < 60:  # Less than 1 minute left → stop now
-                        print(f"Time limit reached after {elapsed/60:.1f}min — stopping at epoch {epoch}")
+                        print(
+                            f"Time limit reached after {elapsed/60:.1f}min — stopping at epoch {epoch}"
+                        )
                         break
                     # If one more epoch would likely exceed the limit, stop
                     if epoch > 0:
                         avg_epoch_time = elapsed / epoch
                         if remaining < avg_epoch_time * 1.2:  # 20% buffer
-                            print(f"Estimated epoch time {avg_epoch_time:.0f}s > remaining {remaining:.0f}s — stopping")
+                            print(
+                                f"Estimated epoch time {avg_epoch_time:.0f}s > remaining {remaining:.0f}s — stopping"
+                            )
                             break
 
                 self.model.train()
@@ -679,9 +685,10 @@ class AdvancedMLSystem:
 
                     # === Data augmentation ===
                     batch_X_aug, batch_y_aug = self._augment_batch(
-                        batch_X, batch_y,
-                        noise_std=0.005,      # Small gaussian noise
-                        time_mask_prob=0.05,   # 5% timestep dropout
+                        batch_X,
+                        batch_y,
+                        noise_std=0.005,  # Small gaussian noise
+                        time_mask_prob=0.05,  # 5% timestep dropout
                     )
 
                     predictions, _ = self.model(batch_X_aug)
