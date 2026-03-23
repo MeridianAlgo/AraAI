@@ -13,7 +13,6 @@ on:
 permissions:
   contents: write
   issues: write
-  actions: read
 
 env:
   PYTHON_VERSION: '3.11'
@@ -24,7 +23,6 @@ jobs:
   setup:
     name: Setup & Fetch Stock Data
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     outputs:
       has_data: ${{ steps.check_data.outputs.has_data }}
 
@@ -68,7 +66,7 @@ jobs:
           python scripts/fetch_and_store_data.py \
             --db-file training.db \
             --asset-type stock \
-            --limit 150 || echo "Data fetch completed with warnings"
+            --limit 50
 
       - name: Check if Data was Fetched
         id: check_data
@@ -145,7 +143,6 @@ jobs:
       - name: Train Model
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
-        continue-on-error: false
         run: |
           echo "Training Stock Model on ALL symbols (1 epoch, epoch-based)"
 
@@ -156,7 +153,7 @@ jobs:
             --epochs 999 \
             --max-steps 75 \
             --max-time 42 \
-            --comet-api-key "$COMET_API_KEY" || echo "Training completed with warnings"
+            --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
         uses: actions/upload-artifact@v4
@@ -170,7 +167,6 @@ jobs:
     needs: [train, setup]
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -194,19 +190,17 @@ jobs:
       - name: Upload to HF Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        continue-on-error: true
         run: |
           echo "Uploading Stock Model to Hugging Face..."
           python scripts/push_elite_models.py \
             --model-path models/Meridian.AI_Stocks.pt \
-            --model-type stock || echo "Upload completed with warnings"
+            --model-type stock
 
   cleanup:
     name: Cleanup
     needs: [setup, train, deploy]
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
       - name: Delete Artifacts

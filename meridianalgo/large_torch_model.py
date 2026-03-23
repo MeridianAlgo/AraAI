@@ -659,6 +659,7 @@ class AdvancedMLSystem:
             patience_counter = 0
             global_step = 0
             step_limit_reached = False
+            direction_metrics = {"direction_accuracy": 0, "precision": 0, "recall": 0, "f1_score": 0}
 
             for epoch in range(epochs):
                 # === Time-based stop: halt before CI timeout kills the job ===
