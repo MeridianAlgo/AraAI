@@ -98,7 +98,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 65
+    timeout-minutes: 58
 
     steps:
       - name: Checkout
@@ -154,7 +154,7 @@ jobs:
             --output models/Meridian.AI_Stocks.pt \
             --use-all-data \
             --epochs 1 \
-            --max-time 50 \
+            --max-time 42 \
             --comet-api-key "$COMET_API_KEY" || echo "Training completed with warnings"
 
       - name: Upload Model
