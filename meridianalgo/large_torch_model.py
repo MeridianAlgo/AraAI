@@ -509,6 +509,7 @@ class AdvancedMLSystem:
         cpu_limit=80,
         comet_experiment=None,
         max_time_seconds=None,
+        max_steps=None,
     ):
         """
         Train with data augmentation, gradient accumulation, cosine warm restarts,
@@ -517,6 +518,7 @@ class AdvancedMLSystem:
         max_time_seconds: If set, stop training gracefully when elapsed time exceeds
                           this limit (saves the best model seen so far). Useful for
                           CI/CD environments with strict time limits.
+        max_steps: If set, stop after exactly this many optimizer steps (for benchmarking).
         """
         try:
             train_start = time.time()
@@ -524,6 +526,8 @@ class AdvancedMLSystem:
             print(f"Training samples: {len(X)}")
             if max_time_seconds:
                 print(f"Time limit: {max_time_seconds/60:.0f} minutes")
+            if max_steps:
+                print(f"Step limit: {max_steps} steps")
 
             # === Gradient accumulation config ===
             # Simulate effective batch of 256 on small GPU/CPU memory
@@ -653,6 +657,8 @@ class AdvancedMLSystem:
             best_ema_state = None
             patience = 15
             patience_counter = 0
+            global_step = 0
+            step_limit_reached = False
 
             for epoch in range(epochs):
                 # === Time-based stop: halt before CI timeout kills the job ===
@@ -679,6 +685,11 @@ class AdvancedMLSystem:
                 optimizer.zero_grad()
 
                 for step, (batch_X, batch_y) in enumerate(train_loader):
+                    # === Step limit (for benchmarking) ===
+                    if max_steps is not None and global_step >= max_steps:
+                        step_limit_reached = True
+                        break
+
                     # CPU limiter
                     if step % 5 == 0 and psutil.cpu_percent(interval=None) > cpu_limit:
                         time.sleep(0.05)
@@ -703,12 +714,21 @@ class AdvancedMLSystem:
                         self.accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
                         optimizer.step()
                         optimizer.zero_grad()
+                        global_step += 1
 
                         # Update EMA model
                         unwrapped = self.accelerator.unwrap_model(self.model)
                         update_ema(ema_model, unwrapped, ema_decay)
 
                     train_loss += loss.item()
+
+                if step_limit_reached:
+                    elapsed = time.time() - train_start
+                    print(
+                        f"Step limit ({max_steps} steps) reached in {elapsed:.2f}s "
+                        f"({elapsed/max_steps:.3f}s/step)"
+                    )
+                    break
 
                 # === Validation using EMA model (better generalization) ===
                 ema_model.eval()

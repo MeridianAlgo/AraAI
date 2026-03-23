@@ -157,6 +157,7 @@ def train_stock_model(
     seed=None,
     timeframe=None,
     max_time_minutes=25,
+    max_steps=None,
 ):
     """Train unified stock model with Comet ML tracking"""
     print(f"\n{'=' * 60}")
@@ -225,6 +226,7 @@ def train_stock_model(
         quick_mode=False,
         comet_experiment=experiment,
         max_time_seconds=max_time_seconds,
+        max_steps=max_steps,
     )
 
     training_time = time.time() - start_time
@@ -286,6 +288,12 @@ def main():
         default=25,
         help="Max training time in minutes (default: 25). Training stops gracefully before this limit.",
     )
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=None,
+        help="Max optimizer steps (overrides --max-time when set; used for benchmarking).",
+    )
 
     args = parser.parse_args()
 
@@ -314,6 +322,7 @@ def main():
         seed=args.seed,
         timeframe=args.timeframe,
         max_time_minutes=args.max_time,
+        max_steps=args.max_steps,
     )
 
     sys.exit(0 if success else 1)

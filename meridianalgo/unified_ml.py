@@ -328,6 +328,7 @@ class UnifiedStockML:
                 cpu_limit=kwargs.get("cpu_limit", 80),
                 comet_experiment=kwargs.get("comet_experiment"),
                 max_time_seconds=kwargs.get("max_time_seconds"),
+                max_steps=kwargs.get("max_steps"),
             )
 
             return result

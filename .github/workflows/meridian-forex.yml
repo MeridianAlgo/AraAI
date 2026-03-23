@@ -150,7 +150,8 @@ jobs:
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
-            --epochs 1 \
+            --epochs 999 \
+            --max-steps 75 \
             --max-time 42 \
             --comet-api-key "$COMET_API_KEY"
 
