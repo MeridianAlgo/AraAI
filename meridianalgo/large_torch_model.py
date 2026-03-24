@@ -691,6 +691,17 @@ class AdvancedMLSystem:
                         step_limit_reached = True
                         break
 
+                    # === Time-based stop within step loop ===
+                    if max_time_seconds is not None and step % 5 == 0:
+                        elapsed = time.time() - train_start
+                        if elapsed >= max_time_seconds - 60:
+                            print(
+                                f"Time limit reached at step {global_step} "
+                                f"({elapsed/60:.1f}min) — stopping mid-epoch"
+                            )
+                            step_limit_reached = True
+                            break
+
                     # CPU limiter
                     if step % 5 == 0 and psutil.cpu_percent(interval=None) > cpu_limit:
                         time.sleep(0.05)

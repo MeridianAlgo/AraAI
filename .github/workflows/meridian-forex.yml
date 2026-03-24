@@ -16,7 +16,7 @@ permissions:
 
 env:
   PYTHON_VERSION: '3.11'
-  CACHE_VERSION: v2
+  CACHE_VERSION: v3
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -96,7 +96,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 58
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -144,15 +144,14 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          echo "Training Forex Model on ALL pairs (1 epoch, epoch-based)"
+          echo "Training Forex Model (50 min time limit, no step cap)"
 
           python scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
             --epochs 999 \
-            --max-steps 75 \
-            --max-time 42 \
+            --max-time 50 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
