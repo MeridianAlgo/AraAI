@@ -758,10 +758,13 @@ class AdvancedMLSystem:
 
                 if step_limit_reached:
                     elapsed = time.time() - train_start
-                    print(
-                        f"Step limit ({max_steps} steps) reached in {elapsed:.2f}s "
-                        f"({elapsed/max_steps:.3f}s/step)"
-                    )
+                    if max_steps is not None:
+                        print(
+                            f"Step limit ({max_steps} steps) reached in {elapsed:.2f}s "
+                            f"({elapsed/max_steps:.3f}s/step)"
+                        )
+                    else:
+                        print(f"Time limit reached — stopping after {elapsed/60:.1f}min of training")
                     break
 
                 # === Validation using EMA model (better generalization) ===
