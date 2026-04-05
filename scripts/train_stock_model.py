@@ -227,6 +227,7 @@ def train_stock_model(
         comet_experiment=experiment,
         max_time_seconds=max_time_seconds,
         max_steps=max_steps,
+        global_start_time=start_time,
     )
 
     training_time = time.time() - start_time

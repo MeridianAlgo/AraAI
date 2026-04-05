@@ -510,6 +510,7 @@ class AdvancedMLSystem:
         comet_experiment=None,
         max_time_seconds=None,
         max_steps=None,
+        global_start_time=None,
     ):
         """
         Train with data augmentation, gradient accumulation, cosine warm restarts,
@@ -519,13 +520,26 @@ class AdvancedMLSystem:
                           this limit (saves the best model seen so far). Useful for
                           CI/CD environments with strict time limits.
         max_steps: If set, stop after exactly this many optimizer steps (for benchmarking).
+        global_start_time: Wall-clock time when the overall pipeline started (before data
+                           prep). When provided, max_time_seconds is measured from this
+                           point so data-prep overhead is accounted for and CI timeouts
+                           are not exceeded.
         """
         try:
             train_start = time.time()
+
+            # Use global start time for the deadline so data-prep overhead counts
+            # toward the time budget and we never overshoot CI timeout.
+            deadline_start = global_start_time if global_start_time is not None else train_start
+            if global_start_time is not None and max_time_seconds is not None:
+                prep_elapsed = train_start - global_start_time
+                effective_remaining = max_time_seconds - prep_elapsed
+                print(f"Data prep took {prep_elapsed:.0f}s — {effective_remaining/60:.1f}min left for training")
+
             print(f"\nTraining {self.model_type} model on {symbol}...")
             print(f"Training samples: {len(X)}")
             if max_time_seconds:
-                print(f"Time limit: {max_time_seconds/60:.0f} minutes")
+                print(f"Time budget: {max_time_seconds/60:.0f} minutes (from pipeline start)")
             if max_steps:
                 print(f"Step limit: {max_steps} steps")
 
@@ -669,17 +683,18 @@ class AdvancedMLSystem:
             for epoch in range(epochs):
                 # === Time-based stop: halt before CI timeout kills the job ===
                 if max_time_seconds is not None:
-                    elapsed = time.time() - train_start
+                    elapsed = time.time() - deadline_start
                     remaining = max_time_seconds - elapsed
-                    if remaining < 60:  # Less than 1 minute left → stop now
+                    if remaining < 90:  # Less than 1.5 min left → stop now (save buffer)
                         print(
                             f"Time limit reached after {elapsed/60:.1f}min — stopping at epoch {epoch}"
                         )
                         break
                     # If one more epoch would likely exceed the limit, stop
+                    train_elapsed = time.time() - train_start
                     if epoch > 0:
-                        avg_epoch_time = elapsed / epoch
-                        if remaining < avg_epoch_time * 1.2:  # 20% buffer
+                        avg_epoch_time = train_elapsed / epoch
+                        if remaining < avg_epoch_time * 1.5:  # 50% buffer
                             print(
                                 f"Estimated epoch time {avg_epoch_time:.0f}s > remaining {remaining:.0f}s — stopping"
                             )
@@ -698,8 +713,8 @@ class AdvancedMLSystem:
 
                     # === Time-based stop within step loop ===
                     if max_time_seconds is not None and step % 5 == 0:
-                        elapsed = time.time() - train_start
-                        if elapsed >= max_time_seconds - 60:
+                        elapsed = time.time() - deadline_start
+                        if elapsed >= max_time_seconds - 90:
                             print(
                                 f"Time limit reached at step {global_step} "
                                 f"({elapsed/60:.1f}min) — stopping mid-epoch"

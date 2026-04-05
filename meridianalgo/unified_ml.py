@@ -281,22 +281,23 @@ class UnifiedStockML:
 
             lookback = int(kwargs.get("lookback", 30))
 
-            # Prepare training data
-            X = []
-            y = []
+            # Prepare training data — vectorized (no per-row DataFrame slicing)
+            # Pre-extract all feature columns into a single NumPy matrix
+            feature_matrix = df[self.FEATURE_COLS].values.astype(np.float64)
+            close_vals = df["Close"].values
 
-            for i in range(lookback, len(df) - 1):
-                window_features = []
-                for j in range(i - lookback + 1, i + 1):
-                    window_features.append(self._extract_features(df.iloc[: j + 1]))
+            n_samples = len(df) - lookback - 1
+            if n_samples <= 0:
+                print("Error: Not enough data for lookback window")
+                return {"success": False, "error": "Not enough data for lookback window"}
 
-                target = (df["Close"].iloc[i + 1] - df["Close"].iloc[i]) / df["Close"].iloc[i]
-
-                X.append(np.array(window_features))
-                y.append(target)
-
-            X = np.array(X)
-            y = np.array(y)
+            # Build X windows and y targets using NumPy slicing (orders of magnitude faster)
+            X = np.array(
+                [feature_matrix[i - lookback + 1 : i + 1] for i in range(lookback, len(df) - 1)]
+            )
+            y = (close_vals[lookback + 1 : len(df)] - close_vals[lookback : len(df) - 1]) / (
+                close_vals[lookback : len(df) - 1] + 1e-10
+            )
 
             # Remove NaN and Inf to prevent training explosion
             mask = np.isfinite(X).all(axis=(1, 2)) & np.isfinite(y)
@@ -329,6 +330,7 @@ class UnifiedStockML:
                 comet_experiment=kwargs.get("comet_experiment"),
                 max_time_seconds=kwargs.get("max_time_seconds"),
                 max_steps=kwargs.get("max_steps"),
+                global_start_time=kwargs.get("global_start_time"),
             )
 
             return result
