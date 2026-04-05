@@ -764,7 +764,9 @@ class AdvancedMLSystem:
                             f"({elapsed/max_steps:.3f}s/step)"
                         )
                     else:
-                        print(f"Time limit reached — stopping after {elapsed/60:.1f}min of training")
+                        print(
+                            f"Time limit reached — stopping after {elapsed/60:.1f}min of training"
+                        )
                     break
 
                 # === Validation using EMA model (better generalization) ===
