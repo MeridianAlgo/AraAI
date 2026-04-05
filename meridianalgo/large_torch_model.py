@@ -534,7 +534,9 @@ class AdvancedMLSystem:
             if global_start_time is not None and max_time_seconds is not None:
                 prep_elapsed = train_start - global_start_time
                 effective_remaining = max_time_seconds - prep_elapsed
-                print(f"Data prep took {prep_elapsed:.0f}s — {effective_remaining/60:.1f}min left for training")
+                print(
+                    f"Data prep took {prep_elapsed:.0f}s — {effective_remaining/60:.1f}min left for training"
+                )
 
             print(f"\nTraining {self.model_type} model on {symbol}...")
             print(f"Training samples: {len(X)}")
