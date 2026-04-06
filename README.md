@@ -13,7 +13,7 @@
 
 Meridian.AI is a 45M-parameter deep learning system that predicts price movements for **any stock or forex pair** in real time. It combines state-of-the-art sequence modeling (Mamba-2 SSM), sparse expert routing (MoE with SwiGLU), and efficient attention (GQA + Flash Attention 2) into a single unified model — continuously trained and deployed via GitHub Actions every 2 hours.
 
-**Models are hosted on Hugging Face:** [MeridianAlgo/ARA.AI](https://huggingface.co/MeridianAlgo/ARA.AI)
+**Models are hosted on Hugging Face:** [meridianal/ARA.AI](https://huggingface.co/meridianal/ARA.AI)
 
 ---
 
@@ -99,7 +99,7 @@ from huggingface_hub import hf_hub_download
 
 # Download latest model
 model_path = hf_hub_download(
-    repo_id="MeridianAlgo/ARA.AI",
+    repo_id="meridianal/ARA.AI",
     filename="models/Meridian.AI_Stocks.pt"
 )
 
@@ -115,7 +115,7 @@ from huggingface_hub import hf_hub_download
 
 # Download latest forex model
 model_path = hf_hub_download(
-    repo_id="MeridianAlgo/ARA.AI",
+    repo_id="meridianal/ARA.AI",
     filename="models/Meridian.AI_Forex.pt"
 )
 

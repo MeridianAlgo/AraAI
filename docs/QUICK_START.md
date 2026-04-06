@@ -262,7 +262,7 @@ python scripts/fetch_and_store_data.py --db-file training.db --asset-type stock 
 
 - **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/Meridian.AI/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/Meridian.AI/discussions)
-- **Models**: [Hugging Face Hub](https://huggingface.co/MeridianAlgo/ARA.AI)
+- **Models**: [Hugging Face Hub](https://huggingface.co/meridianal/ARA.AI)
 
 ---
 
