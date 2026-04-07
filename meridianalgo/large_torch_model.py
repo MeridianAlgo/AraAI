@@ -586,7 +586,6 @@ class AdvancedMLSystem:
             X_val = X_tensor[n_train:]
             y_val = y_tensor[n_train:]
 
-            mem_model_mb = sum(p.nelement() * p.element_size() for p in self.parameters()) / 1e6 if self.model else 0
             mem_data_mb = X_tensor.nelement() * X_tensor.element_size() / 1e6
             print(f"Memory: data={mem_data_mb:.0f}MB")
 
