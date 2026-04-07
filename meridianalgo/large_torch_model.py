@@ -861,21 +861,29 @@ class AdvancedMLSystem:
             print(f"Best validation loss (EMA): {best_val_loss:.6f}")
             print(f"Total symbols trained: {len(self.metadata['trained_symbols'])}")
 
-            # Final direction accuracy
-            self.model.eval()
-            with torch.no_grad():
-                X_val_device = X_val.to(self.device)
-                y_val_device = y_val.to(self.device)
-                final_pred, _ = self.model(X_val_device)
-                final_metrics = calculate_direction_metrics(final_pred, y_val_device)
-                real_accuracy = final_metrics["direction_accuracy"]
+            # Final direction accuracy — use a small batch to avoid slow CPU inference
+            real_accuracy = direction_metrics.get("direction_accuracy", 0)
+            f1 = direction_metrics.get("f1_score", 0)
+            val_subset = min(2048, len(X_val))
+            elapsed_total = time.time() - deadline_start
+            if max_time_seconds is None or elapsed_total < max_time_seconds - 120:
+                self.model.eval()
+                with torch.no_grad():
+                    X_val_device = X_val[:val_subset].to(self.device)
+                    y_val_device = y_val[:val_subset].to(self.device)
+                    final_pred, _ = self.model(X_val_device)
+                    final_metrics = calculate_direction_metrics(final_pred, y_val_device)
+                    real_accuracy = final_metrics["direction_accuracy"]
+                    f1 = final_metrics.get("f1_score", 0)
+            else:
+                print("Skipping final validation — time budget tight")
 
             return {
                 "success": True,
                 "final_loss": best_val_loss,
                 "accuracy": real_accuracy,
                 "direction_accuracy": real_accuracy,
-                "f1_score": final_metrics.get("f1_score", 0),
+                "f1_score": f1,
                 "epochs": epoch + 1,
             }
 

@@ -2,7 +2,7 @@ name: Meridian.AI for Forex
 
 on:
   schedule:
-    - cron: '30 */2 * * *'
+    - cron: '30 */6 * * *'
   workflow_dispatch:
     inputs:
       epochs:
@@ -96,7 +96,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 340
 
     steps:
       - name: Checkout
@@ -144,14 +144,14 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          echo "Training Forex Model (45 min time limit, no step cap)"
+          echo "Training Forex Model (5h time limit, no step cap)"
 
           python scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
             --epochs 999 \
-            --max-time 45 \
+            --max-time 320 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
