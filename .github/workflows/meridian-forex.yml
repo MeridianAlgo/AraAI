@@ -2,13 +2,22 @@ name: Meridian.AI for Forex
 
 on:
   schedule:
-    - cron: '30 */6 * * *'
+    - cron: '0 3,9,15,21 * * *'
   workflow_dispatch:
     inputs:
       epochs:
         description: 'Training epochs'
         required: false
-        default: '1'
+        default: '999'
+      max_time:
+        description: 'Max training time in minutes'
+        required: false
+        default: '320'
+
+# Only one forex training run at a time — new scheduled runs cancel stale ones
+concurrency:
+  group: forex-training
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -96,7 +105,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 340
+    timeout-minutes: 350
 
     steps:
       - name: Checkout
@@ -144,14 +153,16 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          echo "Training Forex Model (5h time limit, no step cap)"
+          MAX_TIME=${{ inputs.max_time || '320' }}
+          EPOCHS=${{ inputs.epochs || '999' }}
+          echo "Training Forex Model (${MAX_TIME}min time limit, ${EPOCHS} epochs)"
 
           python scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
-            --epochs 999 \
-            --max-time 320 \
+            --epochs "$EPOCHS" \
+            --max-time "$MAX_TIME" \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
@@ -196,34 +207,89 @@ jobs:
             --model-type forex
 
   cleanup:
-    name: Cleanup
+    name: Cleanup & Report
     needs: [setup, train, deploy]
     if: always()
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Delete Artifacts
         uses: geekyeggo/delete-artifact@v5
         with:
           name: forex-training-db-${{ github.run_number }}
         continue-on-error: true
 
+      - name: Close Previous Failure Issues on Success
+        if: needs.train.result == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find open automated forex-training issues and close them
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'forex-training,automated',
+              state: 'open',
+              per_page: 10,
+            });
+            for (const issue of issues.data) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Resolved by successful training run [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId}).`,
+              });
+            }
+
       - name: Create Failure Issue
         if: needs.train.result == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
-            const title = `Forex Training Failed - Run ${context.runNumber}`;
+            // Check if an open issue already exists to avoid duplicates
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'forex-training,automated',
+              state: 'open',
+              per_page: 5,
+            });
+            if (existing.data.length > 0) {
+              // Comment on existing issue instead of creating a new one
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body: `Still failing — run [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})\n- Setup: ${{ needs.setup.result }}\n- Training: ${{ needs.train.result }}\n- Deploy: ${{ needs.deploy.result }}`,
+              });
+              return;
+            }
+
+            const title = `Forex Training Failed — Run ${context.runNumber}`;
             const body = `## Forex Model Training Failure
 
-            **Workflow:** [Run ${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
-            **Triggered:** ${context.eventName}
+            **Workflow:** [Run #${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            **Triggered by:** ${context.eventName}
             **Commit:** ${context.sha.substring(0, 7)}
 
             ### Job Results
-            - Setup: ${{ needs.setup.result }}
-            - Training: ${{ needs.train.result }}
-            - Deploy: ${{ needs.deploy.result }}
+            | Job | Result |
+            |-----|--------|
+            | Setup | ${{ needs.setup.result }} |
+            | Training | ${{ needs.train.result }} |
+            | Deploy | ${{ needs.deploy.result }} |
+
+            > This issue will auto-close when the next training run succeeds.
 
             [View Logs](${context.payload.repository.html_url}/actions/runs/${context.runId})
             `;

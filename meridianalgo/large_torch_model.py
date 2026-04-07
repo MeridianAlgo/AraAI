@@ -671,10 +671,13 @@ class AdvancedMLSystem:
             # === Training loop ===
             best_val_loss = float("inf")
             best_ema_state = None
-            patience = 15
+            patience = 20
             patience_counter = 0
             global_step = 0
             step_limit_reached = False
+            checkpoint_interval = 10  # Save checkpoint every N epochs
+            last_checkpoint_epoch = -1
+            epochs_completed = 0
             direction_metrics = {
                 "direction_accuracy": 0,
                 "precision": 0,
@@ -682,29 +685,43 @@ class AdvancedMLSystem:
                 "f1_score": 0,
             }
 
+            def _time_remaining():
+                """Seconds remaining in the time budget, or None if unlimited."""
+                if max_time_seconds is None:
+                    return None
+                return max_time_seconds - (time.time() - deadline_start)
+
+            def _should_stop(buffer_seconds=120):
+                """Check if we should stop to stay within time budget."""
+                remaining = _time_remaining()
+                return remaining is not None and remaining < buffer_seconds
+
             for epoch in range(epochs):
                 # === Time-based stop: halt before CI timeout kills the job ===
-                if max_time_seconds is not None:
+                if _should_stop(buffer_seconds=180):
                     elapsed = time.time() - deadline_start
-                    remaining = max_time_seconds - elapsed
-                    if remaining < 90:  # Less than 1.5 min left → stop now (save buffer)
+                    print(
+                        f"Time limit reached after {elapsed/60:.1f}min "
+                        f"— stopping at epoch {epoch}"
+                    )
+                    break
+
+                # If one more epoch would likely exceed the limit, stop
+                train_elapsed = time.time() - train_start
+                if epoch > 0 and max_time_seconds is not None:
+                    avg_epoch_time = train_elapsed / epoch
+                    remaining = _time_remaining()
+                    if remaining < avg_epoch_time * 1.5:
                         print(
-                            f"Time limit reached after {elapsed/60:.1f}min — stopping at epoch {epoch}"
+                            f"Next epoch ~{avg_epoch_time:.0f}s but only "
+                            f"{remaining:.0f}s left — stopping gracefully"
                         )
                         break
-                    # If one more epoch would likely exceed the limit, stop
-                    train_elapsed = time.time() - train_start
-                    if epoch > 0:
-                        avg_epoch_time = train_elapsed / epoch
-                        if remaining < avg_epoch_time * 1.5:  # 50% buffer
-                            print(
-                                f"Estimated epoch time {avg_epoch_time:.0f}s > remaining {remaining:.0f}s — stopping"
-                            )
-                            break
 
                 self.model.train()
                 epoch_start = time.time()
                 train_loss = 0
+                n_batches = 0
                 optimizer.zero_grad()
 
                 for step, (batch_X, batch_y) in enumerate(train_loader):
@@ -713,27 +730,26 @@ class AdvancedMLSystem:
                         step_limit_reached = True
                         break
 
-                    # === Time-based stop within step loop ===
-                    if max_time_seconds is not None and step % 5 == 0:
+                    # === Time-based stop within step loop (check every 10 steps) ===
+                    if step % 10 == 0 and _should_stop(buffer_seconds=120):
                         elapsed = time.time() - deadline_start
-                        if elapsed >= max_time_seconds - 90:
-                            print(
-                                f"Time limit reached at step {global_step} "
-                                f"({elapsed/60:.1f}min) — stopping mid-epoch"
-                            )
-                            step_limit_reached = True
-                            break
+                        print(
+                            f"Time limit at step {global_step} "
+                            f"({elapsed/60:.1f}min) — stopping mid-epoch"
+                        )
+                        step_limit_reached = True
+                        break
 
                     # CPU limiter
-                    if step % 5 == 0 and psutil.cpu_percent(interval=None) > cpu_limit:
+                    if step % 10 == 0 and psutil.cpu_percent(interval=None) > cpu_limit:
                         time.sleep(0.05)
 
                     # === Data augmentation ===
                     batch_X_aug, batch_y_aug = self._augment_batch(
                         batch_X,
                         batch_y,
-                        noise_std=0.005,  # Small gaussian noise
-                        time_mask_prob=0.05,  # 5% timestep dropout
+                        noise_std=0.005,
+                        time_mask_prob=0.05,
                     )
 
                     predictions, _ = self.model(batch_X_aug)
@@ -755,55 +771,64 @@ class AdvancedMLSystem:
                         update_ema(ema_model, unwrapped, ema_decay)
 
                     train_loss += loss.item()
+                    n_batches += 1
 
                 if step_limit_reached:
                     elapsed = time.time() - train_start
                     if max_steps is not None:
                         print(
-                            f"Step limit ({max_steps} steps) reached in {elapsed:.2f}s "
+                            f"Step limit ({max_steps}) reached in {elapsed:.2f}s "
                             f"({elapsed/max_steps:.3f}s/step)"
                         )
                     else:
                         print(
-                            f"Time limit reached — stopping after {elapsed/60:.1f}min of training"
+                            f"Time limit reached — trained for {elapsed/60:.1f}min, "
+                            f"{epochs_completed} full epochs, {global_step} steps"
                         )
                     break
 
-                # === Validation using EMA model (better generalization) ===
+                epochs_completed = epoch + 1
+                avg_train_loss = train_loss / max(n_batches, 1)
+
+                # === Validation using EMA model (capped at 4096 samples for speed) ===
                 ema_model.eval()
                 self.model.eval()
+                val_subset = min(4096, len(X_val))
                 with torch.no_grad():
-                    X_val_device = X_val.to(self.device)
-                    y_val_device = y_val.to(self.device)
+                    X_val_batch = X_val[:val_subset].to(self.device)
+                    y_val_batch = y_val[:val_subset].to(self.device)
 
-                    # Validate with EMA weights
-                    ema_pred, _ = ema_model(X_val_device)
-                    ema_val_loss, _ = criterion(ema_pred, y_val_device)
+                    ema_pred, _ = ema_model(X_val_batch)
+                    ema_val_loss, _ = criterion(ema_pred, y_val_batch)
                     ema_val_loss_val = ema_val_loss.item()
 
-                    # Also get regular model val loss for logging
-                    val_pred, _ = self.model(X_val_device)
-                    val_loss, _ = criterion(val_pred, y_val_device)
+                    val_pred, _ = self.model(X_val_batch)
+                    val_loss, _ = criterion(val_pred, y_val_batch)
                     val_loss = val_loss.item()
 
-                    direction_metrics = calculate_direction_metrics(ema_pred, y_val_device)
+                    direction_metrics = calculate_direction_metrics(ema_pred, y_val_batch)
 
                 scheduler.step()
 
                 current_lr = optimizer.param_groups[0]["lr"]
                 epoch_time = time.time() - epoch_start
                 elapsed_total = time.time() - train_start
+                remaining = _time_remaining()
+                remaining_str = f", {remaining/60:.0f}min left" if remaining else ""
                 print(
-                    f"Epoch {epoch + 1}/{epochs} [{epoch_time:.0f}s, total {elapsed_total/60:.1f}min] - "
-                    f"Train: {train_loss:.4f}, Val: {val_loss:.4f}, EMA Val: {ema_val_loss_val:.4f}, "
-                    f"Dir Acc: {direction_metrics['direction_accuracy']:.1f}%, LR: {current_lr:.2e}"
+                    f"Epoch {epoch + 1}/{epochs} "
+                    f"[{epoch_time:.0f}s, total {elapsed_total/60:.1f}min{remaining_str}] — "
+                    f"Train: {avg_train_loss:.4f}, Val: {val_loss:.4f}, "
+                    f"EMA: {ema_val_loss_val:.4f}, "
+                    f"Dir: {direction_metrics['direction_accuracy']:.1f}%, "
+                    f"LR: {current_lr:.2e}"
                 )
 
                 # Log to Comet ML
                 if comet_experiment:
                     comet_experiment.log_metrics(
                         {
-                            "train_loss": train_loss,
+                            "train_loss": avg_train_loss,
                             "val_loss": val_loss,
                             "ema_val_loss": ema_val_loss_val,
                             "learning_rate": current_lr,
@@ -820,13 +845,27 @@ class AdvancedMLSystem:
                 if ema_val_loss_val < best_val_loss:
                     best_val_loss = ema_val_loss_val
                     patience_counter = 0
-                    # Save best EMA state
                     best_ema_state = copy.deepcopy(ema_model.state_dict())
                 else:
                     patience_counter += 1
                     if patience_counter >= patience:
-                        print(f"Early stopping at epoch {epoch + 1}")
+                        print(
+                            f"Early stopping at epoch {epoch + 1} — "
+                            f"no improvement for {patience} epochs"
+                        )
                         break
+
+                # === Periodic checkpoint: save model every N epochs ===
+                if (epoch + 1) % checkpoint_interval == 0 and epoch > last_checkpoint_epoch:
+                    last_checkpoint_epoch = epoch
+                    if best_ema_state is not None:
+                        unwrapped = self.accelerator.unwrap_model(self.model)
+                        unwrapped.load_state_dict(best_ema_state)
+                    self._update_metadata(
+                        symbol, X, y_min, y_max, best_val_loss, direction_metrics
+                    )
+                    self._save_model()
+                    print(f"  Checkpoint saved at epoch {epoch + 1}")
 
             # === Load best EMA weights into the main model for saving ===
             if best_ema_state is not None:
@@ -834,49 +873,37 @@ class AdvancedMLSystem:
                 unwrapped.load_state_dict(best_ema_state)
                 print("Loaded best EMA weights into model")
 
-            # Update metadata
-            if symbol not in self.metadata["trained_symbols"]:
-                self.metadata["trained_symbols"].append(symbol)
-
-            self.metadata["training_date"] = datetime.now().isoformat()
-            self.metadata["last_symbol"] = symbol
-            self.metadata["data_points"] = len(X)
-            self.metadata["best_val_loss"] = best_val_loss
-            self.metadata["direction_accuracy"] = direction_metrics.get("direction_accuracy", 0)
-            self.metadata["target_min"] = float(y_min)
-            self.metadata["target_max"] = float(y_max)
-            self.metadata["training_history"].append(
-                {
-                    "symbol": symbol,
-                    "date": datetime.now().isoformat(),
-                    "samples": len(X),
-                    "val_loss": best_val_loss,
-                }
-            )
-
-            # Save model
+            # Update metadata and save
+            self._update_metadata(symbol, X, y_min, y_max, best_val_loss, direction_metrics)
             self._save_model()
 
-            print("\nTraining complete!")
-            print(f"Best validation loss (EMA): {best_val_loss:.6f}")
-            print(f"Total symbols trained: {len(self.metadata['trained_symbols'])}")
+            total_time = time.time() - train_start
+            print(f"\nTraining complete!")
+            print(
+                f"  {epochs_completed} epochs, {global_step} steps, "
+                f"{total_time/60:.1f}min"
+            )
+            print(f"  Best validation loss (EMA): {best_val_loss:.6f}")
+            print(
+                f"  Direction accuracy: "
+                f"{direction_metrics.get('direction_accuracy', 0):.1f}%"
+            )
 
-            # Final direction accuracy — use a small batch to avoid slow CPU inference
+            # Final direction accuracy — small batch, skip if time is tight
             real_accuracy = direction_metrics.get("direction_accuracy", 0)
             f1 = direction_metrics.get("f1_score", 0)
-            val_subset = min(2048, len(X_val))
-            elapsed_total = time.time() - deadline_start
-            if max_time_seconds is None or elapsed_total < max_time_seconds - 120:
+            if not _should_stop(buffer_seconds=60):
+                val_subset = min(2048, len(X_val))
                 self.model.eval()
                 with torch.no_grad():
                     X_val_device = X_val[:val_subset].to(self.device)
                     y_val_device = y_val[:val_subset].to(self.device)
                     final_pred, _ = self.model(X_val_device)
-                    final_metrics = calculate_direction_metrics(final_pred, y_val_device)
+                    final_metrics = calculate_direction_metrics(
+                        final_pred, y_val_device
+                    )
                     real_accuracy = final_metrics["direction_accuracy"]
                     f1 = final_metrics.get("f1_score", 0)
-            else:
-                print("Skipping final validation — time budget tight")
 
             return {
                 "success": True,
@@ -884,7 +911,9 @@ class AdvancedMLSystem:
                 "accuracy": real_accuracy,
                 "direction_accuracy": real_accuracy,
                 "f1_score": f1,
-                "epochs": epoch + 1,
+                "epochs": epochs_completed,
+                "global_steps": global_step,
+                "training_time_min": total_time / 60,
             }
 
         except Exception as e:
@@ -893,6 +922,28 @@ class AdvancedMLSystem:
 
             traceback.print_exc()
             return {"success": False, "error": str(e)}
+
+    def _update_metadata(self, symbol, X, y_min, y_max, best_val_loss, direction_metrics):
+        """Update training metadata (used by checkpoints and final save)."""
+        if symbol not in self.metadata["trained_symbols"]:
+            self.metadata["trained_symbols"].append(symbol)
+        self.metadata["training_date"] = datetime.now().isoformat()
+        self.metadata["last_symbol"] = symbol
+        self.metadata["data_points"] = len(X)
+        self.metadata["best_val_loss"] = best_val_loss
+        self.metadata["direction_accuracy"] = direction_metrics.get("direction_accuracy", 0)
+        self.metadata["target_min"] = float(y_min)
+        self.metadata["target_max"] = float(y_max)
+        # Keep last 50 entries to avoid unbounded growth
+        self.metadata["training_history"] = self.metadata.get("training_history", [])[-49:]
+        self.metadata["training_history"].append(
+            {
+                "symbol": symbol,
+                "date": datetime.now().isoformat(),
+                "samples": len(X),
+                "val_loss": best_val_loss,
+            }
+        )
 
     def predict(self, X):
         """Make predictions"""
