@@ -2,22 +2,13 @@ name: Meridian.AI for Forex
 
 on:
   schedule:
-    - cron: '0 3,9,15,21 * * *'
+    - cron: '30 */6 * * *'
   workflow_dispatch:
-    inputs:
-      epochs:
-        description: 'Training epochs'
-        required: false
-        default: '999'
-      max_time:
-        description: 'Max training time in minutes'
-        required: false
-        default: '320'
 
-# Only one forex training run at a time — new scheduled runs cancel stale ones
+# Only one forex training run at a time — queued runs wait, never cancel in-progress
 concurrency:
   group: forex-training
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -105,7 +96,7 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -153,16 +144,13 @@ jobs:
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
         run: |
-          MAX_TIME=${{ inputs.max_time || '320' }}
-          EPOCHS=${{ inputs.epochs || '999' }}
-          echo "Training Forex Model (${MAX_TIME}min time limit, ${EPOCHS} epochs)"
-
+          echo "Training Forex Model (45min budget)"
           python scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
-            --epochs "$EPOCHS" \
-            --max-time "$MAX_TIME" \
+            --epochs 999 \
+            --max-time 45 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
