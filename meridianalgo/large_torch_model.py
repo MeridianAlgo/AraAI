@@ -861,9 +861,7 @@ class AdvancedMLSystem:
                     if best_ema_state is not None:
                         unwrapped = self.accelerator.unwrap_model(self.model)
                         unwrapped.load_state_dict(best_ema_state)
-                    self._update_metadata(
-                        symbol, X, y_min, y_max, best_val_loss, direction_metrics
-                    )
+                    self._update_metadata(symbol, X, y_min, y_max, best_val_loss, direction_metrics)
                     self._save_model()
                     print(f"  Checkpoint saved at epoch {epoch + 1}")
 
@@ -878,15 +876,11 @@ class AdvancedMLSystem:
             self._save_model()
 
             total_time = time.time() - train_start
-            print(f"\nTraining complete!")
-            print(
-                f"  {epochs_completed} epochs, {global_step} steps, "
-                f"{total_time/60:.1f}min"
-            )
+            print("\nTraining complete!")
+            print(f"  {epochs_completed} epochs, {global_step} steps, " f"{total_time/60:.1f}min")
             print(f"  Best validation loss (EMA): {best_val_loss:.6f}")
             print(
-                f"  Direction accuracy: "
-                f"{direction_metrics.get('direction_accuracy', 0):.1f}%"
+                f"  Direction accuracy: " f"{direction_metrics.get('direction_accuracy', 0):.1f}%"
             )
 
             # Final direction accuracy — small batch, skip if time is tight
@@ -899,9 +893,7 @@ class AdvancedMLSystem:
                     X_val_device = X_val[:val_subset].to(self.device)
                     y_val_device = y_val[:val_subset].to(self.device)
                     final_pred, _ = self.model(X_val_device)
-                    final_metrics = calculate_direction_metrics(
-                        final_pred, y_val_device
-                    )
+                    final_metrics = calculate_direction_metrics(final_pred, y_val_device)
                     real_accuracy = final_metrics["direction_accuracy"]
                     f1 = final_metrics.get("f1_score", 0)
 
