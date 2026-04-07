@@ -8,137 +8,137 @@ tags:
 - transformer
 - mamba
 - state-space-models
-- financial-ai
 - stock-prediction
 - forex-prediction
 ---
 
-# MeridianAlgo Financial Prediction Models
+# Meridian.AI - Financial Prediction Models
 
-## Model Overview
+## Overview
 
-This repository contains financial prediction models built on the latest state-of-the-art 2026 architecture. These models leverage machine learning techniques, including Mamba State Space Models, Mixture of Experts, and Flash Attention 2, for accurate market forecasting.
+Meridian.AI is a 45M-parameter deep learning system for predicting price movements across stocks and forex pairs. It combines Mamba-2 state space models, sparse mixture-of-experts routing, and grouped query attention into a single unified architecture, trained continuously via GitHub Actions.
 
-### Architecture Highlights
+## Architecture
 
-- Latest 2026 Architecture: Implementing the latest advances in deep learning for time series.
-- 388M Parameters: Large-scale model for comprehensive pattern recognition.
-- Unified Design: A single high-capacity model architectures for all assets within its class.
-- Specialized Logic: Distinct optimization paths for Stocks and Forex markets.
+| Component | Implementation | Purpose |
+|-----------|---------------|---------|
+| Sequence Modeling | Mamba-2 SSM with selective scan | Linear-time long-range dependencies |
+| Attention | Grouped Query Attention (GQA) + QK-Norm | Efficient multi-head attention with reduced KV cache |
+| Position Encoding | Rotary Position Embeddings (RoPE) | Relative temporal awareness |
+| Expert Routing | Mixture of Experts (4 experts, top-2) | Regime-specific specialization |
+| Activations | SwiGLU (gated linear units) | Improved gradient flow |
+| Normalization | RMSNorm + Layer Scale | Training stability at scale |
+| Regularization | Stochastic Depth (drop path) | Better generalization |
+| Training | Mixed precision (FP16/BF16) via Accelerate | 2x throughput on compatible hardware |
+| Loss | BalancedDirectionLoss (Huber + BCE) | Joint price regression and direction accuracy |
 
-## Technical Specifications
-
-### Core Technologies
-
-| Component | Description |
-|-----------|-------------|
-| Mamba SSM | State Space Models for efficient long-range sequence modeling with linear complexity. |
-| RoPE | Rotary Position Embeddings for enhanced temporal relationship encoding. |
-| GQA | Grouped Query Attention for optimized computational throughput. |
-| MoE | Mixture of Experts with top-k routing for specialized regime recognition. |
-| SwiGLU | Swish-Gated Linear Unit activation for improved transformer performance. |
-| RMSNorm | Root Mean Square Normalization for enhanced gradient stability. |
-| Flash Attention 2 | High-performance, memory-efficient attention implementation. |
-
-### Model Specifications
+## Model Specifications
 
 ```
-Architecture: Revolutionary 2026
-Parameters: 388,000,000
+Architecture: Revolutionary v4.1
+Parameters: ~45 Million (33,071,045)
 Input Features: 44 technical indicators
-Sequence Length: 30 time steps
-Hidden Dimensions: 768
+Sequence Length: 30 timesteps
+Hidden Dimension: 384
 Transformer Layers: 6
-Attention Heads: 12 (Query), 4 (Key/Value)
-Experts: 12 specialized models
-Prediction Heads: 8 ensemble heads
+Attention Heads: 6 (2 KV heads)
+Experts: 4 (top-2 routing)
+Prediction Heads: 4
 ```
+
 ## Available Models
 
-### 1. Meridian.AI Stocks Model
-- Repo ID: meridianal/ARA.AI
-- File: models/Meridian.AI_Stocks.pt
-- Purpose: Comprehensive stock market forecasting.
-- Coverage: Broad equity market compatibility.
-- Accuracy: Optimized for directional consistency.
+### Meridian.AI Stocks
 
-### 2. Meridian.AI Forex Model
-- Repo ID: meridianal/ARA.AI
-- File: models/Meridian.AI_Forex.pt
-- Purpose: High-precision currency pair forecasting.
-- Coverage: Major, Minor, and Exotic pairs.
-- Accuracy: Optimized for pip-based movement prediction.
+- **File:** `models/Meridian.AI_Stocks.pt`
+- **Coverage:** 49 equities across sectors (AAPL, MSFT, GOOGL, AMZN, TSLA, etc.)
+- **Data:** Daily + hourly + weekly OHLCV with 44 technical indicators
 
-## Performance Metrics
+### Meridian.AI Forex
 
-| Attribute | Stocks Model | Forex Model |
-|-----------|--------------|-------------|
-| Parameters | 388 Million | 388 Million |
-| Inference Latency | <100ms | <100ms |
-| Model Size | ~1.5 GB | ~1.5 GB |
-| Accuracy | Optimized | Optimized |
+- **File:** `models/Meridian.AI_Forex.pt`
+- **Coverage:** 22 currency pairs (EUR/USD, GBP/USD, USD/JPY, etc.)
+- **Data:** Multi-timeframe OHLCV with 44 technical indicators
 
-## Usage and Implementation
-
-### Installation
-
-```bash
-pip install torch transformers huggingface_hub
-```
-
-### Loading and Inference
+## Usage
 
 ```python
 from huggingface_hub import hf_hub_download
 from meridianalgo.unified_ml import UnifiedStockML
 
-# Download the unified stocks model
+# Download the stocks model
 model_path = hf_hub_download(
     repo_id="meridianal/ARA.AI",
     filename="models/Meridian.AI_Stocks.pt"
 )
 
-# Initialize the system
 ml = UnifiedStockML(model_path=model_path)
-
-# Execute prediction
-prediction = ml.predict_ultimate('AAPL', days=5)
-
-print(f"Current Price: {prediction['current_price']}")
+prediction = ml.predict_ultimate("AAPL", days=5)
+print(prediction)
 ```
 
-## Training Methodology
+```python
+from meridianalgo.forex_ml import ForexML
 
-### Configuration
-- Optimizer: AdamW with Weight Decay
-- Scheduler: Cosine Annealing with Warm Restarts
-- Loss Function: Balanced Directional Loss
-- Batch Size: 64
-- Learning Rate: 0.0005
+# Download the forex model
+model_path = hf_hub_download(
+    repo_id="meridianal/ARA.AI",
+    filename="models/Meridian.AI_Forex.pt"
+)
 
-### Infrastructure
-Models are trained using a distributed pipeline with Accelerate, tracking all metrics via Comet ML for rigorous validation.
+ml = ForexML(model_path=model_path)
+prediction = ml.predict("EURUSD=X", days=5)
+print(prediction)
+```
 
-## Limitations and Ethical Use
+## Training
 
-1. Market Volatility: Performance may degrade during black swan events or extreme volatility.
-2. Horizon Decay: Predictive accuracy naturally decreases as the forecast horizon extends.
-3. Historical Bias: Models reflect patterns in historical data which may not repeat.
-4. Professional Use Only: Intended for research; users bear all financial risk.
+- **Optimizer:** AdamW (weight decay 0.02, betas 0.9/0.95)
+- **Scheduler:** Cosine annealing with warm restarts
+- **Loss:** BalancedDirectionLoss (60% Huber + 40% balanced BCE)
+- **Batch Size:** Effective 256 via gradient accumulation
+- **EMA:** Exponential moving average of weights (decay 0.999)
+- **Data Augmentation:** Gaussian noise (0.5%) + random timestep masking (5%)
+- **Early Stopping:** Patience of 20 epochs on EMA validation loss
+- **Pipeline:** Automated via GitHub Actions every 6 hours
+
+Metrics are tracked with Comet ML. Version gating ensures stale pre-v4.1 checkpoints are never loaded.
+
+## Technical Indicators (44 features)
+
+| Category | Indicators |
+|----------|-----------|
+| Price | Returns, Log Returns, Volatility, ATR |
+| Trend | SMA (5/10/20/50/200), EMA (5/10/20/50/200) |
+| Momentum | RSI, Fast RSI, Stochastic RSI, Momentum, ROC, Williams %R |
+| Oscillators | MACD, MACD Signal, MACD Histogram, Stochastic K/D, CCI |
+| Volatility | Bollinger Bands (Upper/Lower/Width/%B), Keltner Channels (Upper/Lower/%K) |
+| Volume | Volume SMA, Volume Ratio, OBV (normalized) |
+| Trend Strength | ADX, +DI, -DI, Price vs SMA50/SMA200, ATR% |
+| Mean Reversion | Z-Score (20d), Distance from 52-week High |
+
+## Limitations
+
+1. Performance may degrade during black swan events or extreme volatility.
+2. Predictive accuracy decreases as forecast horizon extends.
+3. Models reflect patterns in historical data which may not repeat.
+4. For research and educational use only -- not financial advice.
 
 ## Citation
 
-If utilizing these models in professional research or applications, please cite:
-
 ```bibtex
 @software{meridianalgo_2026,
-  title = {MeridianAlgo: Revolutionary Financial Prediction Platform},
+  title = {Meridian.AI: Financial Prediction Engine},
   author = {MeridianAlgo},
   year = {2026},
-  version = {4.0.0}
+  version = {4.1.0}
 }
 ```
 
 ## Disclaimer
 
-IMPORTANT: These models are for research and educational purposes only. They do not constitute financial advice. All trading involves risk of capital loss. The developers and contributors are not registered financial advisors.
+These models are for research and educational purposes only. They do not constitute financial advice. Trading financial instruments carries significant risk. The developers and contributors are not liable for any financial losses. All trading decisions are yours alone.
+
+## License
+
+MIT License. See the [GitHub repository](https://github.com/MeridianAlgo/AraAI) for details.

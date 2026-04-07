@@ -554,6 +554,7 @@ class AdvancedMLSystem:
             # Convert to tensors (zero-copy from float32 numpy, then detach)
             X_tensor = torch.from_numpy(X).float()
             y_tensor = torch.from_numpy(y).float() if isinstance(y, np.ndarray) else torch.FloatTensor(y)
+            n_samples = len(X)
             del X, y  # Free numpy arrays — tensor holds the data now
 
             if X_tensor.dim() == 3:
@@ -866,7 +867,7 @@ class AdvancedMLSystem:
                     if best_ema_state is not None:
                         unwrapped = self.accelerator.unwrap_model(self.model)
                         unwrapped.load_state_dict(best_ema_state)
-                    self._update_metadata(symbol, X, y_min, y_max, best_val_loss, direction_metrics)
+                    self._update_metadata(symbol, n_samples, y_min, y_max, best_val_loss, direction_metrics)
                     self._save_model()
                     print(f"  Checkpoint saved at epoch {epoch + 1}")
 
@@ -877,7 +878,7 @@ class AdvancedMLSystem:
                 print("Loaded best EMA weights into model")
 
             # Update metadata and save
-            self._update_metadata(symbol, X, y_min, y_max, best_val_loss, direction_metrics)
+            self._update_metadata(symbol, n_samples, y_min, y_max, best_val_loss, direction_metrics)
             self._save_model()
 
             total_time = time.time() - train_start
@@ -920,13 +921,13 @@ class AdvancedMLSystem:
             traceback.print_exc()
             return {"success": False, "error": str(e)}
 
-    def _update_metadata(self, symbol, X, y_min, y_max, best_val_loss, direction_metrics):
+    def _update_metadata(self, symbol, n_samples, y_min, y_max, best_val_loss, direction_metrics):
         """Update training metadata (used by checkpoints and final save)."""
         if symbol not in self.metadata["trained_symbols"]:
             self.metadata["trained_symbols"].append(symbol)
         self.metadata["training_date"] = datetime.now().isoformat()
         self.metadata["last_symbol"] = symbol
-        self.metadata["data_points"] = len(X)
+        self.metadata["data_points"] = n_samples
         self.metadata["best_val_loss"] = best_val_loss
         self.metadata["direction_accuracy"] = direction_metrics.get("direction_accuracy", 0)
         self.metadata["target_min"] = float(y_min)
@@ -937,7 +938,7 @@ class AdvancedMLSystem:
             {
                 "symbol": symbol,
                 "date": datetime.now().isoformat(),
-                "samples": len(X),
+                "samples": n_samples,
                 "val_loss": best_val_loss,
             }
         )
