@@ -282,22 +282,26 @@ class UnifiedStockML:
             lookback = int(kwargs.get("lookback", 30))
 
             # Prepare training data — vectorized (no per-row DataFrame slicing)
-            # Pre-extract all feature columns into a single NumPy matrix
-            feature_matrix = df[self.FEATURE_COLS].values.astype(np.float64)
-            close_vals = df["Close"].values
+            # float32 to halve memory (GitHub Actions runners have 7GB RAM)
+            feature_matrix = df[self.FEATURE_COLS].values.astype(np.float32)
+            close_vals = df["Close"].values.astype(np.float64)
 
             n_samples = len(df) - lookback - 1
             if n_samples <= 0:
                 print("Error: Not enough data for lookback window")
                 return {"success": False, "error": "Not enough data for lookback window"}
 
-            # Build X windows and y targets using NumPy slicing (orders of magnitude faster)
+            # Build X windows and y targets using NumPy slicing
             X = np.array(
-                [feature_matrix[i - lookback + 1 : i + 1] for i in range(lookback, len(df) - 1)]
+                [feature_matrix[i - lookback + 1 : i + 1] for i in range(lookback, len(df) - 1)],
+                dtype=np.float32,
             )
+            del feature_matrix  # Free ~N*44*4 bytes
+
             y = (close_vals[lookback + 1 : len(df)] - close_vals[lookback : len(df) - 1]) / (
                 close_vals[lookback : len(df) - 1] + 1e-10
             )
+            y = y.astype(np.float32)
 
             # Remove NaN and Inf to prevent training explosion
             mask = np.isfinite(X).all(axis=(1, 2)) & np.isfinite(y)
@@ -308,7 +312,18 @@ class UnifiedStockML:
                 print("Error: No valid training samples")
                 return {"success": False, "error": "No valid training samples"}
 
-            print(f"Training samples: {len(X)}")
+            # Cap dataset to fit in 7GB GitHub Actions runners
+            # Each sample = lookback * 44 * 4 bytes = ~5.2KB
+            # 300K samples * 5.2KB = ~1.5GB for X (leaves room for model + optimizer)
+            max_samples = 300_000
+            if len(X) > max_samples:
+                print(f"  Capping dataset from {len(X)} to {max_samples} samples (RAM limit)")
+                # Keep the most recent samples (most relevant for prediction)
+                X = X[-max_samples:]
+                y = y[-max_samples:]
+
+            mem_mb = (X.nbytes + y.nbytes) / (1024 * 1024)
+            print(f"Training samples: {len(X)} ({mem_mb:.0f}MB)")
 
             # Add metadata to ML system
             if metadata:

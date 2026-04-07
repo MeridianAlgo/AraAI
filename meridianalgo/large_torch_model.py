@@ -551,9 +551,10 @@ class AdvancedMLSystem:
             effective_batch = batch_size * grad_accum_steps
             print(f"Effective batch size: {effective_batch} (accum {grad_accum_steps} steps)")
 
-            # Convert to tensors
-            X_tensor = torch.FloatTensor(X)
-            y_tensor = torch.FloatTensor(y)
+            # Convert to tensors (zero-copy from float32 numpy, then detach)
+            X_tensor = torch.from_numpy(X).float()
+            y_tensor = torch.from_numpy(y).float() if isinstance(y, np.ndarray) else torch.FloatTensor(y)
+            del X, y  # Free numpy arrays — tensor holds the data now
 
             if X_tensor.dim() == 3:
                 seq_len = int(X_tensor.shape[1])
@@ -570,19 +571,23 @@ class AdvancedMLSystem:
             else:
                 y_tensor = torch.zeros_like(y_tensor)
 
-            # Scaler for features
+            # Scaler for features — normalize in-place to avoid doubling memory
             self.scaler_mean = X_tensor.mean(dim=0)
             self.scaler_std = X_tensor.std(dim=0) + 1e-8
-            X_normalized = (X_tensor - self.scaler_mean) / self.scaler_std
+            X_tensor.sub_(self.scaler_mean).div_(self.scaler_std)
 
-            # Train/validation split
-            n_val = int(len(X) * validation_split)
-            n_train = len(X) - n_val
+            # Train/validation split (views, not copies)
+            n_val = int(len(X_tensor) * validation_split)
+            n_train = len(X_tensor) - n_val
 
-            X_train = X_normalized[:n_train]
+            X_train = X_tensor[:n_train]
             y_train = y_tensor[:n_train]
-            X_val = X_normalized[n_train:]
+            X_val = X_tensor[n_train:]
             y_val = y_tensor[n_train:]
+
+            mem_model_mb = sum(p.nelement() * p.element_size() for p in self.parameters()) / 1e6 if self.model else 0
+            mem_data_mb = X_tensor.nelement() * X_tensor.element_size() / 1e6
+            print(f"Memory: data={mem_data_mb:.0f}MB")
 
             print(f"Training set: {len(X_train)}, Validation set: {len(X_val)}")
 
