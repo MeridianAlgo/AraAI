@@ -553,7 +553,9 @@ class AdvancedMLSystem:
 
             # Convert to tensors (zero-copy from float32 numpy, then detach)
             X_tensor = torch.from_numpy(X).float()
-            y_tensor = torch.from_numpy(y).float() if isinstance(y, np.ndarray) else torch.FloatTensor(y)
+            y_tensor = (
+                torch.from_numpy(y).float() if isinstance(y, np.ndarray) else torch.FloatTensor(y)
+            )
             n_samples = len(X)
             del X, y  # Free numpy arrays — tensor holds the data now
 
@@ -866,7 +868,9 @@ class AdvancedMLSystem:
                     if best_ema_state is not None:
                         unwrapped = self.accelerator.unwrap_model(self.model)
                         unwrapped.load_state_dict(best_ema_state)
-                    self._update_metadata(symbol, n_samples, y_min, y_max, best_val_loss, direction_metrics)
+                    self._update_metadata(
+                        symbol, n_samples, y_min, y_max, best_val_loss, direction_metrics
+                    )
                     self._save_model()
                     print(f"  Checkpoint saved at epoch {epoch + 1}")
 
