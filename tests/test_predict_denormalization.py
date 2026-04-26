@@ -9,6 +9,7 @@ predict path must:
     obviously corrupted (e.g. |max| > 5.0 — 500% daily return)
   * still remap for legitimate legacy checkpoints in a reasonable range
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -60,9 +61,7 @@ def test_predict_skips_remap_for_corrupted_legacy_range() -> None:
     X = np.zeros((1, 30, 44), dtype=np.float32)
     pred, _ = sys_obj.predict(X)
     out = float(np.asarray(pred).flatten()[0])
-    assert abs(out) < 1.0, (
-        f"corrupted-range remap produced {out:.4f}; should have been clamped"
-    )
+    assert abs(out) < 1.0, f"corrupted-range remap produced {out:.4f}; should have been clamped"
 
 
 def test_predict_remaps_legitimate_legacy_range() -> None:
@@ -73,6 +72,4 @@ def test_predict_remaps_legitimate_legacy_range() -> None:
     X = np.zeros((1, 30, 44), dtype=np.float32)
     pred, _ = sys_obj.predict(X)
     out = float(np.asarray(pred).flatten()[0])
-    assert out == pytest.approx(0.0, abs=1e-6), (
-        f"legitimate legacy remap broken: got {out}"
-    )
+    assert out == pytest.approx(0.0, abs=1e-6), f"legitimate legacy remap broken: got {out}"

@@ -1,4 +1,5 @@
 """Forward-pass and numerical-stability tests on the loaded model."""
+
 from __future__ import annotations
 
 import time
@@ -25,9 +26,10 @@ def test_forward_shape(model_fix: str, ckpt_fix: str, request) -> None:
     with torch.no_grad():
         final, all_preds = model(x)
     assert final.shape == (4, 1), f"final pred shape {final.shape}"
-    assert all_preds.shape == (4, ckpt["num_prediction_heads"]), (
-        f"all_preds shape {all_preds.shape}"
-    )
+    assert all_preds.shape == (
+        4,
+        ckpt["num_prediction_heads"],
+    ), f"all_preds shape {all_preds.shape}"
 
 
 @pytest.mark.parametrize("model_fix,ckpt_fix", MODELS)
@@ -68,9 +70,7 @@ def test_predictions_not_collapsed(model_fix: str, ckpt_fix: str, request) -> No
     with torch.no_grad():
         final, _ = model(x)
     spread = final.std().item()
-    assert spread > 1e-5, (
-        f"prediction std across varied batch is {spread:.2e} — model is collapsed"
-    )
+    assert spread > 1e-5, f"prediction std across varied batch is {spread:.2e} — model is collapsed"
 
 
 @pytest.mark.parametrize("model_fix,ckpt_fix", MODELS)
@@ -83,9 +83,9 @@ def test_batch_invariance(model_fix: str, ckpt_fix: str, request) -> None:
     with torch.no_grad():
         batched, _ = model(x)
         single, _ = model(x[2:3])
-    assert torch.allclose(batched[2], single[0], atol=1e-4), (
-        "batched output differs from single-sample output (batch leakage?)"
-    )
+    assert torch.allclose(
+        batched[2], single[0], atol=1e-4
+    ), "batched output differs from single-sample output (batch leakage?)"
 
 
 @pytest.mark.parametrize("model_fix,ckpt_fix", MODELS)
@@ -104,12 +104,11 @@ def test_inference_latency(model_fix: str, ckpt_fix: str, request) -> None:
 
 
 @pytest.mark.parametrize("model_fix,ckpt_fix", MODELS)
-def test_state_dict_loads_strictly(
-    model_fix: str, ckpt_fix: str, request
-) -> None:
+def test_state_dict_loads_strictly(model_fix: str, ckpt_fix: str, request) -> None:
     """Re-build the model and load weights with strict=True to catch silent
     architecture drift between training and inference."""
     from meridianalgo.revolutionary_model import RevolutionaryFinancialModel
+
     ckpt = request.getfixturevalue(ckpt_fix)
     fresh = RevolutionaryFinancialModel(
         input_size=ckpt["input_size"],

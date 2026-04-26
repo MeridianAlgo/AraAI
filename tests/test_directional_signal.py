@@ -3,6 +3,7 @@
 Pulls a few liquid tickers from yfinance, runs the full prediction pipeline,
 and measures whether the signed prediction beats a coin-flip baseline.
 """
+
 from __future__ import annotations
 
 import os
@@ -45,8 +46,7 @@ def _predict_returns(ckpt_path, model_cls_args, df, n_steps: int = 30):
     seq_len = ckpt["seq_len"]
     if len(df) < seq_len + n_steps + 1:
         pytest.skip(
-            f"not enough data after burn-in: have {len(df)}, "
-            f"need {seq_len + n_steps + 1}"
+            f"not enough data after burn-in: have {len(df)}, " f"need {seq_len + n_steps + 1}"
         )
 
     mean = ckpt["scaler_mean"].numpy()
@@ -106,16 +106,14 @@ def test_stocks_directional_accuracy(symbol: str, stocks_ckpt_path, stocks_ckpt)
         pytest.skip("too few paired samples")
     acc = float(np.mean(np.sign(preds) == np.sign(actuals)))
     print(f"\n{symbol} directional acc: {acc:.3f} (n={len(preds)})")
-    assert acc >= 0.50, (
-        f"{symbol}: directional accuracy {acc:.3f} <= 50% - model not better than coin flip"
-    )
+    assert (
+        acc >= 0.50
+    ), f"{symbol}: directional accuracy {acc:.3f} <= 50% - model not better than coin flip"
 
 
 @REQUIRES_NET
 @pytest.mark.parametrize("symbol", STOCK_SYMBOLS)
-def test_stocks_predictions_have_variance(
-    symbol: str, stocks_ckpt_path, stocks_ckpt
-) -> None:
+def test_stocks_predictions_have_variance(symbol: str, stocks_ckpt_path, stocks_ckpt) -> None:
     yf = pytest.importorskip("yfinance")
     df = yf.Ticker(symbol).history(period="2y")
     if df.empty:
@@ -163,6 +161,4 @@ def test_forex_directional_accuracy(symbol: str, forex_ckpt_path, forex_ckpt) ->
         pytest.skip("too few paired samples")
     acc = float(np.mean(np.sign(preds) == np.sign(actuals)))
     print(f"\n{symbol} directional acc: {acc:.3f} (n={len(preds)})")
-    assert acc >= 0.50, (
-        f"{symbol}: directional accuracy {acc:.3f} <= 50%"
-    )
+    assert acc >= 0.50, f"{symbol}: directional accuracy {acc:.3f} <= 50%"

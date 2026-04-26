@@ -1021,9 +1021,7 @@ class AdvancedMLSystem:
                     and abs(target_max) < 5.0
                 ):
                     pred = pred * (target_max - target_min) + target_min
-                    individual_preds = (
-                        individual_preds * (target_max - target_min) + target_min
-                    )
+                    individual_preds = individual_preds * (target_max - target_min) + target_min
 
             # Return as numpy arrays
             pred_np = pred.cpu().numpy()
