@@ -96,6 +96,10 @@ ehthumbs.db
 
 # Claude
 .claude/
+.claude-memory/
+
+# Local HF model downloads (reproducible via huggingface_hub)
+models_hf/
 
 # Comet ML
 .cometml-runs/
