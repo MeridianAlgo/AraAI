@@ -4,6 +4,7 @@ Latest technologies: Mamba SSM, RoPE, GQA, MoE, SwiGLU, RMSNorm, Flash Attention
 Optimized for financial time series prediction with revolutionary performance
 """
 
+import math
 import time
 from datetime import datetime
 from pathlib import Path
@@ -566,13 +567,29 @@ class AdvancedMLSystem:
                 seq_len = 1
                 input_size = int(X_tensor.shape[1])
 
-            # Normalize targets to (0, 1) to prevent explosion
+            # === Robust target preprocessing ===
+            # Returns are in raw scale (e.g. 0.012 = +1.2% daily). A single bad
+            # row (split, delisting, bad tick) can produce returns of 100x+
+            # which previously poisoned both:
+            #   (a) the min-max normalization (compressed real signal to ~0)
+            #   (b) the direction loss (every sample classed as "up" once
+            #       remapped to [0,1])
+            # Fix: scrub NaN/Inf, winsorize at 0.5/99.5 percentiles, then hard-
+            # clip to ±target_clip. Keep raw return scale so direction loss
+            # operates on signed returns and predict() needs no denormalization.
+            target_clip = 1.0 if self.model_type == "stock" else 0.10
+            y_tensor = torch.nan_to_num(y_tensor, nan=0.0, posinf=0.0, neginf=0.0)
+            if y_tensor.numel() > 0:
+                lo_q = torch.quantile(y_tensor, 0.005).item()
+                hi_q = torch.quantile(y_tensor, 0.995).item()
+                lo = max(lo_q, -target_clip)
+                hi = min(hi_q, target_clip)
+                y_tensor = torch.clamp(y_tensor, min=lo, max=hi)
             y_min = y_tensor.min()
             y_max = y_tensor.max()
-            if y_max > y_min:
-                y_tensor = (y_tensor - y_min) / (y_max - y_min)
-            else:
-                y_tensor = torch.zeros_like(y_tensor)
+            # Targets are kept on the raw return scale; predict() must NOT
+            # apply min-max denormalization. We persist this contract via
+            # metadata["target_normalization"] = "raw".
 
             # Scaler for features — normalize in-place to avoid doubling memory
             self.scaler_mean = X_tensor.mean(dim=0)
@@ -848,8 +865,17 @@ class AdvancedMLSystem:
                         epoch=epoch + 1,
                     )
 
-                # Early stopping based on EMA val loss
-                if ema_val_loss_val < best_val_loss:
+                # Early stopping based on EMA val loss. Skip update on
+                # non-finite values — otherwise a single bad batch can latch
+                # best_val_loss to inf for the rest of training and produce a
+                # misleading "best loss = inf" in metadata.
+                if not math.isfinite(ema_val_loss_val):
+                    print(
+                        f"  WARN epoch {epoch + 1}: ema_val_loss is "
+                        f"{ema_val_loss_val} — skipping early-stop update"
+                    )
+                    patience_counter += 1
+                elif ema_val_loss_val < best_val_loss:
                     best_val_loss = ema_val_loss_val
                     patience_counter = 0
                     best_ema_state = copy.deepcopy(ema_model.state_dict())
@@ -931,10 +957,18 @@ class AdvancedMLSystem:
         self.metadata["training_date"] = datetime.now().isoformat()
         self.metadata["last_symbol"] = symbol
         self.metadata["data_points"] = n_samples
-        self.metadata["best_val_loss"] = best_val_loss
+        # Guard against persisting a non-finite "best" loss — it indicates the
+        # validation step never produced a real number (NaN/Inf in loss). Store
+        # None instead so downstream health checks can flag it explicitly.
+        self.metadata["best_val_loss"] = (
+            best_val_loss if math.isfinite(float(best_val_loss)) else None
+        )
         self.metadata["direction_accuracy"] = direction_metrics.get("direction_accuracy", 0)
         self.metadata["target_min"] = float(y_min)
         self.metadata["target_max"] = float(y_max)
+        # Tag normalization contract so predict() knows whether to denormalize.
+        # New checkpoints train on raw return scale (no min-max remap).
+        self.metadata["target_normalization"] = "raw"
         # Keep last 50 entries to avoid unbounded growth
         self.metadata["training_history"] = self.metadata.get("training_history", [])[-49:]
         self.metadata["training_history"].append(
@@ -967,12 +1001,27 @@ class AdvancedMLSystem:
 
             pred, individual_preds = self.model(X_normalized)
 
-            # Denormalize predictions if we have target normalization parameters
-            if "target_min" in self.metadata and "target_max" in self.metadata:
+            # Denormalize predictions only for legacy checkpoints that were
+            # trained with min-max scaled targets. Newer checkpoints set
+            # target_normalization="raw" and require no remapping.
+            target_norm = self.metadata.get("target_normalization", "minmax")
+            if (
+                target_norm == "minmax"
+                and "target_min" in self.metadata
+                and "target_max" in self.metadata
+            ):
                 target_min = self.metadata["target_min"]
                 target_max = self.metadata["target_max"]
-                pred = pred * (target_max - target_min) + target_min
-                individual_preds = individual_preds * (target_max - target_min) + target_min
+                # Skip remap if the saved range is degenerate (single bad outlier
+                # historically produced ranges like [-0.99, 375] which mapped a
+                # ~0 prediction to -99% return).
+                if (
+                    abs(target_max - target_min) < 5.0
+                    and abs(target_min) < 5.0
+                    and abs(target_max) < 5.0
+                ):
+                    pred = pred * (target_max - target_min) + target_min
+                    individual_preds = individual_preds * (target_max - target_min) + target_min
 
             # Return as numpy arrays
             pred_np = pred.cpu().numpy()
