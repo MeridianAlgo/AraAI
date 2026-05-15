@@ -33,7 +33,7 @@ def _predict_returns(ckpt_path, model_cls_args, df, n_steps: int = 30):
     computed on data ending at i. Stack `lookback` consecutive rows to form
     the (lookback, 44) input tensor.
     """
-    from meridianalgo.revolutionary_model import RevolutionaryFinancialModel
+    from meridianalgo.meridian_model import MeridianModel as RevolutionaryFinancialModel
     from meridianalgo.unified_ml import UnifiedStockML
 
     ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)

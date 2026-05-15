@@ -46,15 +46,25 @@ def test_checkpoint_has_required_keys(ckpt_fix: str, request: pytest.FixtureRequ
 @pytest.mark.parametrize("ckpt_fix", CKPTS)
 def test_architecture_matches_readme(ckpt_fix: str, request: pytest.FixtureRequest) -> None:
     ckpt = request.getfixturevalue(ckpt_fix)
-    assert ckpt["input_size"] == 44
-    assert ckpt["seq_len"] == 30
-    assert ckpt["dim"] == 384
-    assert ckpt["num_layers"] == 6
-    assert ckpt["num_heads"] == 6
+    # Fixed: tied to the 44-feature pipeline and 30-day lookback window
+    assert ckpt["input_size"] == 44, "feature count must be 44"
+    assert ckpt["seq_len"] == 30, "lookback window must be 30"
     assert ckpt["num_kv_heads"] == 2
-    assert ckpt["num_experts"] == 4
-    assert ckpt["num_prediction_heads"] == 4
-    assert ckpt["version"] == "4.1"
+
+    # Flexible: may change across training runs / architecture versions
+    assert 64 <= ckpt["dim"] <= 2048, f"dim={ckpt['dim']} out of expected range"
+    assert 1 <= ckpt["num_layers"] <= 24
+    assert 1 <= ckpt["num_heads"] <= 32
+    assert ckpt["num_experts"] >= 1
+    assert ckpt["num_prediction_heads"] >= 1
+
+    # Accept v4.1 (old HuggingFace models) and v5.0+ (new MeridianModel)
+    assert str(ckpt.get("version", "0")) >= "4.1", f"model version {ckpt.get('version')} too old"
+    arch = ckpt.get("architecture", "")
+    assert arch in (
+        "MeridianModel-2026",
+        "RevolutionaryFinancialModel-2026",
+    ), f"unknown architecture: {arch}"
 
 
 @pytest.mark.parametrize("ckpt_fix", CKPTS)

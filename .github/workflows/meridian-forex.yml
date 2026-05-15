@@ -2,7 +2,7 @@ name: Meridian.AI for Forex
 
 on:
   schedule:
-    - cron: '30 */6 * * *'
+    - cron: '30 * * * *'
   workflow_dispatch:
 
 # Only one forex training run at a time — queued runs wait, never cancel in-progress

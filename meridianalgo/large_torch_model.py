@@ -1,7 +1,6 @@
 """
-Revolutionary 2026 PyTorch Model Architecture
-Latest technologies: Mamba SSM, RoPE, GQA, MoE, SwiGLU, RMSNorm, Flash Attention 2
-Optimized for financial time series prediction with revolutionary performance
+Meridian.AI Training System v5.0
+Architecture: GQA + MoE + RoPE + optional Mamba SSM
 """
 
 import math
@@ -16,14 +15,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from accelerate import Accelerator
 
-# Import revolutionary model
 try:
-    from .revolutionary_model import RevolutionaryFinancialModel
+    from .meridian_model import MeridianModel
+    from .meridian_model import MeridianModel as RevolutionaryFinancialModel  # compat
 
     REVOLUTIONARY_MODEL_AVAILABLE = True
 except ImportError:
     REVOLUTIONARY_MODEL_AVAILABLE = False
-    print("Warning: Revolutionary model not available, using fallback")
+    print("Warning: MeridianModel not available, using fallback")
 
 
 class FlashMultiHeadAttention(nn.Module):
@@ -309,20 +308,17 @@ class AdvancedMLSystem:
             "trained_symbols": [],
             "training_history": [],
             "architecture": (
-                "RevolutionaryFinancialModel-2026"
+                "MeridianModel-2026"
                 if self.use_revolutionary
                 else "EliteEnsembleModel-2025-Compact"
             ),
-            "version": "4.1" if self.use_revolutionary else "3.1",
+            "version": "5.0" if self.use_revolutionary else "3.1",
         }
 
         # FP16 is harmful on CPU (no tensor cores → no speedup, and overflow risk).
-        # Use full precision; Accelerate still handles device placement.
         self.accelerator = Accelerator(mixed_precision="no", cpu=True)
         self.device = self.accelerator.device
-        print(
-            f"Using device: {self.device} with {'Revolutionary 2026' if self.use_revolutionary else 'Elite'} Architecture"
-        )
+        print(f"Using device: {self.device} | Meridian Architecture v5.0")
 
         # Try to load existing model
         self._load_model()
@@ -358,12 +354,13 @@ class AdvancedMLSystem:
 
                 architecture = checkpoint.get("architecture")
 
-                # Check if this is a v4.1 revolutionary model
-                if (
-                    architecture == "RevolutionaryFinancialModel-2026"
-                    and REVOLUTIONARY_MODEL_AVAILABLE
-                ):
-                    self.model = RevolutionaryFinancialModel(
+                # Accept both old ("RevolutionaryFinancialModel-2026") and new ("MeridianModel-2026")
+                _is_meridian = architecture in (
+                    "MeridianModel-2026",
+                    "RevolutionaryFinancialModel-2026",
+                )
+                if _is_meridian and REVOLUTIONARY_MODEL_AVAILABLE:
+                    self.model = MeridianModel(
                         input_size=int(checkpoint.get("input_size", 44)),
                         seq_len=int(checkpoint.get("seq_len", 30)),
                         dim=int(checkpoint.get("dim", 512)),
@@ -435,14 +432,14 @@ class AdvancedMLSystem:
             }
 
             # Add model-specific parameters
-            if self.use_revolutionary and isinstance(unwrapped_model, RevolutionaryFinancialModel):
+            if self.use_revolutionary and isinstance(unwrapped_model, MeridianModel):
                 _use_mamba = bool(
-                    unwrapped_model.layers[0].use_mamba if unwrapped_model.layers else True
+                    unwrapped_model.layers[0].use_mamba if unwrapped_model.layers else False
                 )
                 checkpoint.update(
                     {
-                        "architecture": "RevolutionaryFinancialModel-2026",
-                        "version": "4.1",
+                        "architecture": "MeridianModel-2026",
+                        "version": "5.0",
                         "input_size": int(getattr(unwrapped_model, "input_size", 44)),
                         "seq_len": int(getattr(unwrapped_model, "seq_len", 30)),
                         "dim": int(getattr(unwrapped_model, "dim", 512)),
@@ -622,11 +619,10 @@ class AdvancedMLSystem:
             # Create model if not already loaded
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    # CPU-optimised config: GQA + MoE + RoPE without the sequential
-                    # Mamba scan (which is 3× slower on CPU with no tensor-core benefit).
-                    # mamba_state_dim=4 is kept so re-enabling use_mamba later is fast.
-                    print("  Creating new Revolutionary v4.1 architecture (~11M Parameters)...")
-                    self.model = RevolutionaryFinancialModel(
+                    # CPU config: GQA + MoE + RoPE; Mamba scan disabled (3× slower on CPU).
+                    # mamba_state_dim=4 kept so use_mamba=True can be toggled on GPU.
+                    print("  Creating new MeridianModel v5.0 (~11M params)...")
+                    self.model = MeridianModel(
                         input_size=input_size,
                         seq_len=seq_len,
                         dim=256,
@@ -677,13 +673,20 @@ class AdvancedMLSystem:
                 betas=(0.9, 0.95),
             )
 
-            # === LR schedule: Cosine Annealing with Warm Restarts ===
-            # Restarts every T_0 epochs — escapes local minima better than single cosine
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            # === LR schedule: 2-epoch linear warmup → cosine annealing ===
+            # Warmup prevents large early gradients from corrupting freshly-init weights.
+            _warmup = 2
+            _warmup_sched = torch.optim.lr_scheduler.LinearLR(
+                optimizer, start_factor=0.1, end_factor=1.0, total_iters=_warmup
+            )
+            _cosine_sched = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
                 optimizer,
-                T_0=max(3, epochs // 3),  # Restart every ~1/3 of training
+                T_0=max(3, (epochs - _warmup) // 3),
                 T_mult=1,
                 eta_min=lr * 0.01,
+            )
+            scheduler = torch.optim.lr_scheduler.SequentialLR(
+                optimizer, schedulers=[_warmup_sched, _cosine_sched], milestones=[_warmup]
             )
 
             # === Loss with label smoothing on direction component ===

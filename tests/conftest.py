@@ -45,9 +45,9 @@ def device() -> torch.device:
 
 
 def _build_model(ckpt: dict) -> torch.nn.Module:
-    from meridianalgo.revolutionary_model import RevolutionaryFinancialModel
+    from meridianalgo.meridian_model import MeridianModel
 
-    model = RevolutionaryFinancialModel(
+    model = MeridianModel(
         input_size=ckpt["input_size"],
         seq_len=ckpt["seq_len"],
         dim=ckpt["dim"],

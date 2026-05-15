@@ -107,7 +107,7 @@ def test_inference_latency(model_fix: str, ckpt_fix: str, request) -> None:
 def test_state_dict_loads_strictly(model_fix: str, ckpt_fix: str, request) -> None:
     """Re-build the model and load weights with strict=True to catch silent
     architecture drift between training and inference."""
-    from meridianalgo.revolutionary_model import RevolutionaryFinancialModel
+    from meridianalgo.meridian_model import MeridianModel as RevolutionaryFinancialModel
 
     ckpt = request.getfixturevalue(ckpt_fix)
     fresh = RevolutionaryFinancialModel(

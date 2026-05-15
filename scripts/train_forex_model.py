@@ -207,10 +207,10 @@ def train_forex_model(
     data.columns = ["Symbol", "Date", "Open", "High", "Low", "Close", "Volume"]
     data["Date"] = pd.to_datetime(data["Date"])
 
-    # Initialize ML system with Revolutionary 2026 Architecture
+    # Initialize Meridian training system
     ml = ForexML(model_path=output_path)
 
-    # Train model with Revolutionary 2026 Architecture
+    # Train with Meridian v5.0 architecture
     max_time_seconds = int(max_time_minutes * 60) if max_time_minutes else None
     print(f"\nTraining unified forex model (up to {max_time_minutes}min / {epochs} epochs)...")
     result = ml.train_ultimate_models(
