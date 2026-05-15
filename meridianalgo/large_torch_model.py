@@ -453,9 +453,7 @@ class AdvancedMLSystem:
                         "num_prediction_heads": len(unwrapped_model.prediction_heads),
                         "dropout": 0.15,
                         "use_mamba": _use_mamba,
-                        "mamba_state_dim": int(
-                            getattr(unwrapped_model, "mamba_state_dim", 16)
-                        ),
+                        "mamba_state_dim": int(getattr(unwrapped_model, "mamba_state_dim", 16)),
                     }
                 )
             else:
