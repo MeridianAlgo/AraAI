@@ -93,7 +93,9 @@ class GroupedQueryAttention(nn.Module):
 
         if hasattr(F, "scaled_dot_product_attention"):
             attn_output = F.scaled_dot_product_attention(
-                q, k, v,
+                q,
+                k,
+                v,
                 dropout_p=self.dropout.p if self.training else 0.0,
                 is_causal=False,
             )
@@ -319,8 +321,14 @@ class MeridianModel(nn.Module):
         self.layers = nn.ModuleList(
             [
                 MeridianBlock(
-                    dim, num_heads, num_kv_heads, num_experts, dropout, use_mamba,
-                    drop_path=dpr[i], mamba_state_dim=mamba_state_dim,
+                    dim,
+                    num_heads,
+                    num_kv_heads,
+                    num_experts,
+                    dropout,
+                    use_mamba,
+                    drop_path=dpr[i],
+                    mamba_state_dim=mamba_state_dim,
                 )
                 for i in range(num_layers)
             ]
