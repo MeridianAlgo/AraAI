@@ -1,271 +1,247 @@
-# Meridian.AI - Quick Start Guide (v8.0.0)
+# Meridian.AI — Quick Start Guide
 
-**Revolutionary 2026 Architecture with Advanced Financial AI**
+**MeridianModel v5.0 | Hourly CI | 11M–45M Parameters**
 
-Get started with Meridian.AI in under 5 minutes.
-
----
-
-## Training Performance
-
-| Metric | Stock Model | Forex Model |
-|--------|-------------|-------------|
-| **Training Time** | 2-3 minutes | 2-3 minutes |
-| **Accuracy** | >99.9% | >99.5% |
-| **Frequency** | Hourly at :00 | Hourly at :30 |
-| **Parameters** | 71M | 71M |
-| **Loss** | <0.0004 | <0.0006 |
+Get predictions running in under 5 minutes.
 
 ---
 
 ## Installation
 
 ```bash
-# Clone repository
 git clone https://github.com/MeridianAlgo/AraAI.git
-cd Meridian.AI
+cd AraAI
 
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
+source venv/bin/activate        # Linux/macOS
 # or
-venv\Scripts\activate  # Windows
+venv\Scripts\activate           # Windows
 
-# Install dependencies
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 ```
 
 ---
 
-## Quick Commands
+## Download the latest models
 
-### Environment Setup
-```bash
-# Create .env file with your API keys
-echo "HF_TOKEN=your_huggingface_token" > .env
-echo "COMET_API_KEY=your_comet_api_key" >> .env
+Models are trained hourly and hosted on Hugging Face. You don't need to train locally.
 
-# Windows: Set UTF-8 encoding
-$env:PYTHONIOENCODING="utf-8"
-```
+```python
+from huggingface_hub import hf_hub_download
 
-### Training Commands
+stocks_path = hf_hub_download(
+    repo_id="meridianal/ARA.AI",
+    filename="models/Meridian.AI_Stocks.pt"
+)
 
-```bash
-# Train stock model (5 random stocks)
-python scripts/train_stock_model.py \
-  --db-file training.db \
-  --output models/Stock_Pred.pt \
-  --epochs 60 \
-  --sample-size 5
-
-# Train forex model (3 random pairs)
-python scripts/train_forex_model.py \
-  --db-file training.db \
-  --output models/Forex_Pred.pt \
-  --epochs 60 \
-  --sample-size 3
-
-# Fetch training data first
-python scripts/fetch_and_store_data.py \
-  --db-file training.db \
-  --asset-type stock \
-  --limit 100
-```
-
-### Monitoring
-
-```bash
-# Check database
-sqlite3 training.db "SELECT * FROM model_metadata ORDER BY training_date DESC LIMIT 10"
-
-# Run tests
-python tests/test_revolutionary_model.py
+forex_path = hf_hub_download(
+    repo_id="meridianal/ARA.AI",
+    filename="models/Meridian.AI_Forex.pt"
+)
 ```
 
 ---
 
-## Code Quality
+## Run a prediction
 
-```bash
-# Install linting tools
-pip install isort black ruff
-
-# Format code
-black scripts/ meridianalgo/ ara/
-
-# Sort imports
-isort scripts/ meridianalgo/ ara/
-
-# Lint code
-ruff check --fix scripts/ meridianalgo/ ara/
-```
-
----
-
-## Using Models
-
-### Stock Predictions
+### Stocks
 
 ```python
 from meridianalgo.unified_ml import UnifiedStockML
 
-# Load model
-ml = UnifiedStockML(model_path="models/Stock_Pred.pt")
+ml = UnifiedStockML(model_path=stocks_path)
+result = ml.predict_ultimate("AAPL", days=5)
 
-# Make prediction
-prediction = ml.predict_ultimate('AAPL', days=5)
-
-print(f"Current: ${prediction['current_price']:.2f}")
-for pred in prediction['predictions']:
-    print(f"Day {pred['day']}: ${pred['predicted_price']:.2f}")
+print(f"Current price:  ${result['current_price']:.2f}")
+print(f"Direction:      {result['direction']}")
+for p in result['predictions']:
+    print(f"  Day {p['day']}: ${p['predicted_price']:.2f}")
 ```
 
-### Forex Predictions
+### Forex
 
 ```python
 from meridianalgo.forex_ml import ForexML
 
-# Load model
-forex_ml = ForexML(model_path="models/Forex_Pred.pt")
+ml = ForexML(model_path=forex_path)
+result = ml.predict("EURUSD=X", days=5)
 
-# Make prediction
-prediction = forex_ml.predict_forex('EURUSD', days=5)
-
-print(f"Current: {prediction['current_price']:.5f}")
-for pred in prediction['predictions']:
-    print(f"Day {pred['day']}: {pred['predicted_price']:.5f}")
+print(f"Current rate:   {result['current_price']:.5f}")
+print(f"Direction:      {result['direction']}")
+for p in result['predictions']:
+    print(f"  Day {p['day']}: {p['predicted_price']:.5f}")
 ```
 
 ---
 
-## GitHub Actions Setup
+## Supported symbols
 
-### 1. Enable Workflows
+**Stocks** — any ticker supported by `yfinance`: `AAPL`, `MSFT`, `GOOGL`, `AMZN`, `TSLA`, `NVDA`, `JPM`, `SPY`, etc.
 
-1. Go to repository Settings
-2. Actions → General
-3. Enable "Allow all actions and reusable workflows"
-
-### 2. Add Secrets
-
-Settings → Secrets and variables → Actions:
-- `HF_TOKEN` - Hugging Face API token
-- `COMET_API_KEY` - Comet ML API key
-
-### 3. Trigger Workflows
-
-Actions tab → Select workflow → Run workflow
-
-**Available Workflows:**
-- `Hourly Train Stock Model` - Trains stock model
-- `Hourly Train Forex Model` - Trains forex model
-- `Lint Code` - Checks code quality
+**Forex** — append `=X` for yfinance compatibility:
+`EURUSD=X`, `GBPUSD=X`, `USDJPY=X`, `AUDUSD=X`, `USDCHF=X`, `USDCAD=X`, etc.
 
 ---
 
-## Experiment Tracking
+## Model specs at a glance
 
-### Comet ML Setup
+| Property | Value |
+|----------|-------|
+| Architecture | MeridianModel v5.0 |
+| Parameters | ~11M (CPU default) |
+| Input | 44 technical indicators |
+| Lookback | 30 timesteps |
+| Hidden dim | 256 |
+| Attention | GQA — 4 heads, 2 KV heads |
+| Experts | 4 (top-2 MoE) |
+| Training | Hourly via GitHub Actions |
 
-1. Sign up at [comet.ml](https://www.comet.ml)
-2. Get API key from Settings
-3. Add to `.env`: `COMET_API_KEY=your_key`
+---
 
-### View Experiments
+## Train locally (optional)
+
+If you want to train your own checkpoint rather than using the hosted model:
+
+### 1. Add secrets to `.env`
 
 ```bash
-# Training automatically logs to Comet ML
-# View at: https://www.comet.ml/ara-ai
-
-# Projects:
-# - ara-ai-stock (stock model experiments)
-# - ara-ai-forex (forex model experiments)
+HF_TOKEN=your_huggingface_token
+COMET_API_KEY=your_comet_api_key   # optional — disables experiment tracking if absent
 ```
 
----
-
-## Common Tasks
-
-### Train with Comet ML Tracking
+### 2. Fetch market data
 
 ```bash
-# Stock model with tracking
+# Fetch stock data (50 symbols)
+python scripts/fetch_and_store_data.py \
+  --db-file training.db \
+  --asset-type stock \
+  --limit 50
+
+# Fetch forex data (22 pairs)
+python scripts/fetch_and_store_data.py \
+  --db-file training.db \
+  --asset-type forex \
+  --limit 30
+```
+
+### 3. Train
+
+```bash
+# Train stock model (45-minute budget, up to 999 epochs)
 python scripts/train_stock_model.py \
   --db-file training.db \
-  --output models/Stock_Pred.pt \
-  --epochs 60 \
-  --sample-size 5 \
-  --comet-api-key $COMET_API_KEY
+  --output models/Meridian.AI_Stocks.pt \
+  --use-all-data \
+  --epochs 999 \
+  --max-time 45
 
-# Forex model with tracking
+# Train forex model
 python scripts/train_forex_model.py \
   --db-file training.db \
-  --output models/Forex_Pred.pt \
-  --epochs 60 \
-  --sample-size 3 \
-  --comet-api-key $COMET_API_KEY
+  --output models/Meridian.AI_Forex.pt \
+  --use-all-data \
+  --epochs 999 \
+  --max-time 45
 ```
 
-### Upload to Hugging Face
+### 4. Push to Hugging Face (optional)
 
 ```bash
-# Upload stock model
 python scripts/push_elite_models.py \
-  --model-path models/Stock_Pred.pt \
+  --model-path models/Meridian.AI_Stocks.pt \
   --model-type stock
+```
 
-# Upload forex model
-python scripts/push_elite_models.py \
-  --model-path models/Forex_Pred.pt \
-  --model-type forex
+---
+
+## GitHub Actions setup
+
+CI trains new models every hour automatically. To enable in your fork:
+
+1. **Settings → Actions → General** → Enable "Allow all actions and reusable workflows"
+2. **Settings → Secrets and variables → Actions** → Add:
+   - `HF_TOKEN` — Hugging Face write token
+   - `COMET_API_KEY` — Comet ML key (optional)
+3. Workflows run automatically. Trigger manually: **Actions → Select workflow → Run workflow**
+
+Available workflows:
+| Workflow | Schedule | File |
+|----------|----------|------|
+| Meridian.AI for Stocks | Every hour at :00 | `meridian-stocks.yml` |
+| Meridian.AI for Forex | Every hour at :30 | `meridian-forex.yml` |
+| Lint | On push / PR | `lint.yml` |
+
+---
+
+## Run the test suite
+
+```bash
+pip install pytest
+
+# All tests (requires model files at models/*.pt)
+pytest tests/ -v
+
+# Skip live-network tests
+NO_NET=1 pytest tests/ -v
+
+# Checkpoint health only (fast)
+pytest tests/test_checkpoint_health.py -v
+```
+
+Test files:
+| File | What it checks |
+|------|---------------|
+| `test_checkpoint_health.py` | Required keys, finite losses, direction accuracy > 50%, target range sanity |
+| `test_model_inference.py` | Forward pass shape, state dict loading, no NaNs in output |
+| `test_directional_signal.py` | Live directional accuracy on real yfinance data |
+
+---
+
+## Code quality
+
+```bash
+pip install black isort ruff
+
+black meridianalgo/ scripts/ tests/
+isort meridianalgo/ scripts/ tests/
+ruff check --fix meridianalgo/ scripts/ tests/
 ```
 
 ---
 
 ## Troubleshooting
 
-### Import Errors
-```bash
-# Ensure you're in the project root
-cd Meridian.AI
+**`ImportError: meridianalgo not found`**
+Run from the project root: `cd AraAI` and ensure your venv is activated.
 
-# Reinstall dependencies
-pip install -r requirements.txt --force-reinstall
-```
+**CUDA warnings on CPU**
+Normal — the model auto-selects CPU when no GPU is present.
 
-### CUDA Warnings
-```bash
-# Normal on CPU-only systems
-# Models automatically use CPU
-```
+**`No existing model found, will train fresh`**
+Expected on first run or if `HF_TOKEN` is not set. Training starts from random weights.
 
-### Database Errors
+**Database errors**
 ```bash
-# Reset database
 rm training.db
 python scripts/fetch_and_store_data.py --db-file training.db --asset-type stock --limit 10
 ```
 
----
-
-## Next Steps
-
-1. **Read Full Documentation**: [README.md](README.md)
-2. **View Changelog**: [CHANGELOG.md](CHANGELOG.md)
-3. **Check API Docs**: [ara/api/README.md](ara/api/README.md)
-4. **Explore Features**: [ara/](ara/)
+**`best_val_loss` is None in an old checkpoint**
+This is the bug fixed in v5.0. The old model never ran validation. Download the latest checkpoint from Hugging Face — any model trained after 2026-05-15 has this fixed.
 
 ---
 
-## Support
+## Further reading
 
-- **Issues**: [GitHub Issues](https://github.com/MeridianAlgo/Meridian.AI/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MeridianAlgo/Meridian.AI/discussions)
-- **Models**: [Hugging Face Hub](https://huggingface.co/meridianal/ARA.AI)
+- [Architecture deep-dive](ARCHITECTURE.md) — how MeridianModel works internally
+- [Training guide](TRAINING.md) — data pipeline, loss function, LR schedule
+- [Model card](MODEL_CARD.md) — Hugging Face model card
+- [Changelog](CHANGELOG.md) — full version history
+- [GitHub repository](https://github.com/MeridianAlgo/AraAI)
+- [Hugging Face Hub](https://huggingface.co/meridianal/ARA.AI)
 
 ---
 
-**Version**: 8.0.0 - Revolutionary 2026 Architecture  
-**Last Updated**: January 2026  
-**Maintained by**: [MeridianAlgo](https://github.com/MeridianAlgo)
+**Version**: 5.0.0 | **Maintained by**: [MeridianAlgo](https://github.com/MeridianAlgo)
