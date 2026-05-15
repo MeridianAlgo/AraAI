@@ -4,47 +4,65 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-4.1.0-green.svg)
+![Version](https://img.shields.io/badge/version-5.0.0-green.svg)
 [![Meridian.AI for Forex](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml)
 [![Meridian.AI for Stocks](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml)
 [![Meridian.AI Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
 
 ---
 
-Meridian.AI is a 45M-parameter deep learning system that predicts price movements for **any stock or forex pair** in real time. It combines state-of-the-art sequence modeling (Mamba-2 SSM), sparse expert routing (MoE with SwiGLU), and efficient attention (GQA + Flash Attention 2) into a single unified model — continuously trained and deployed via GitHub Actions every 2 hours.
+Meridian.AI is a deep learning system that predicts price movements for **any stock or forex pair** in real time. It combines sequence modeling (optional Mamba SSM), sparse expert routing (MoE with SwiGLU), and efficient attention (GQA + RoPE) into a single unified model — continuously trained and deployed via GitHub Actions **every hour**.
 
 **Models are hosted on Hugging Face:** [meridianal/ARA.AI](https://huggingface.co/meridianal/ARA.AI)
 
 ---
 
+## What Changed in v5.0
+
+v5.0 fixed seven bugs that were silently corrupting training in all prior versions. Models trained before v5.0 never actually validated against held-out data, never properly recorded direction accuracy, and may have diverged due to numerical issues. Every checkpoint produced by v5.0 is verifiably correct.
+
+| # | Bug | Impact | Fix |
+|---|-----|--------|-----|
+| 1 | **Validation ran after `break`** | Validation was unreachable — `best_val_loss` was always `None` | Moved validation block before the break condition |
+| 2 | **Double normalisation** | Features normalised twice (once in loader, once in training loop) | Removed redundant second normalisation pass |
+| 3 | **FP16 on CPU** | `autocast(dtype=float16)` raises on CPU, crashing training | Switched to `bfloat16` on CPU, `float16` only on CUDA |
+| 4 | **NaN patience loop** | Early stopping fired on `NaN` loss before model could recover | Added `math.isfinite` guard; `NaN` epochs no longer count toward patience |
+| 5 | **Feature saturation** | Raw indicator values hit `±1e6`, driving gradients to zero | Added `torch.clamp(..., -10, 10)` after feature extraction |
+| 6 | **Slow Mamba scan** | Python loop over sequence length (~18min/epoch); hidden state leaked across samples | Replaced with batched matrix ops; `h` reset per batch |
+| 7 | **Hardcoded `use_mamba=True`** | Checkpoint always saved `use_mamba=True` regardless of actual config | Reads `use_mamba` from the live model layer before saving |
+
+Additionally, v5.0 renames the architecture from the internal working name to **MeridianModel** and switches CI from every 6 hours to **every hour**.
+
+---
+
 ## Architecture
 
-Meridian.AI v4.1 is built on a hybrid transformer-SSM backbone designed for financial time series:
+MeridianModel v5.0 is a hybrid transformer backbone designed for financial time series. The CPU default config (~11M params) is tuned to complete training within the 45-minute GitHub Actions window. A larger GPU config is available for offline training.
 
 | Component | Implementation | Purpose |
 |-----------|---------------|---------|
-| Sequence Modeling | Mamba-2 SSM with selective scan | Linear-time long-range dependencies |
 | Attention | Grouped Query Attention (GQA) + QK-Norm | Efficient multi-head attention with reduced KV cache |
 | Position Encoding | Rotary Position Embeddings (RoPE) | Relative temporal awareness without absolute bias |
-| Expert Routing | Mixture of Experts (4 experts, top-2) | Regime-specific specialization |
+| Expert Routing | Mixture of Experts (SwiGLU, top-2) | Regime-specific specialization |
 | Activations | SwiGLU (gated linear units) | Improved gradient flow over GELU/ReLU |
-| Normalization | RMSNorm + Layer Scale | Training stability at scale |
-| Regularization | Stochastic Depth (drop path) | Better generalization, prevents overfitting |
-| Training | Mixed precision (FP16/BF16) via Accelerate | 2x throughput on compatible hardware |
+| Normalization | RMSNorm + Layer Scale | Training stability |
+| Regularization | Stochastic Depth (drop path) | Better generalization |
+| Optional SSM | Mamba block (vectorised scan) | Long-range sequential dependencies |
 | Loss | BalancedDirectionLoss (Huber + BCE) | Jointly optimizes price regression and direction accuracy |
 
 ### Model Specifications
 
-| Spec | Value |
-|------|-------|
-| Parameters | ~45 Million |
-| Hidden Dimension | 384 |
-| Layers | 6 |
-| Attention Heads | 6 (2 KV heads) |
-| Experts | 4 (top-2 routing) |
-| Prediction Heads | 4 |
-| Input Features | 44 technical indicators |
-| Sequence Length | 30 timesteps |
+| Spec | CPU Default (v5.0) | GPU / Large |
+|------|--------------------|-------------|
+| Parameters | ~11M | ~45M |
+| Hidden Dimension | 256 | 384 |
+| Layers | 6 | 6 |
+| Attention Heads | 4 (2 KV heads) | 6 (2 KV heads) |
+| Experts | 4 (top-2 routing) | 4 (top-2 routing) |
+| Prediction Heads | 4 | 4 |
+| Mamba SSM | Disabled (CPU) | Optional |
+| Input Features | 44 technical indicators | 44 technical indicators |
+| Sequence Length | 30 timesteps | 30 timesteps |
 
 ---
 
@@ -58,13 +76,10 @@ Market Data (any ticker/pair)
   (RSI, MACD, Bollinger, ATR, OBV, VWAP, etc.)
         |
         v
-  Mamba-2 SSM Blocks (temporal patterns)
+  GQA + RoPE Attention (cross-timestep relationships)
         |
         v
-  GQA + Flash Attention 2 (cross-timestep relationships)
-        |
-        v
-  MoE Layer (4 SwiGLU experts, top-2 routing)
+  MoE Layer (SwiGLU experts, top-2 routing)
         |
         v
   Multi-Head Prediction (4 heads, aggregated)
@@ -73,7 +88,7 @@ Market Data (any ticker/pair)
   Price Forecast + Direction Signal
 ```
 
-The model processes 30 timesteps of 44 features each, routing through Mamba SSM blocks for sequential pattern recognition, then through attention and expert layers for regime-specific predictions. The output is an aggregated forecast from 4 prediction heads.
+The model processes 30 timesteps of 44 features each. Features are clamped to `[-10, 10]` after normalisation to prevent gradient saturation. The output is an aggregated forecast from 4 prediction heads with a joint Huber + BCE direction loss.
 
 ---
 
@@ -129,25 +144,29 @@ print(result)
 
 ## Training Pipeline
 
-Models are trained automatically via GitHub Actions on a 2-hour cycle:
+Models train automatically via GitHub Actions on an **hourly cycle** (stocks at :00, forex at :30). Concurrent runs queue rather than cancel — a run in progress is never interrupted.
 
-1. **Fetch** — Pull market data across **3 timeframes** (max daily, 2yr hourly, 5yr weekly) per symbol into SQLite — 96 stocks, 22 forex pairs
-2. **Train** — 10 epochs with cosine warm restarts, gradient accumulation (effective batch 256), data augmentation, EMA weight averaging
+1. **Fetch** — Pull market data across 3 timeframes (daily, 2yr hourly, 5yr weekly) per symbol into SQLite — 96 stocks, 22 forex pairs
+2. **Train** — Up to 999 epochs within a 45-minute budget; cosine warm restarts with 2-epoch linear warmup, gradient accumulation (effective batch 256), data augmentation, EMA weight averaging
 3. **Track** — Metrics logged to Comet ML (loss curves, direction accuracy, EMA val loss)
 4. **Deploy** — Push updated `.pt` checkpoint to Hugging Face Hub
 
-Version gating ensures the pipeline never loads stale pre-v4.1 checkpoints — every run either resumes from a valid v4.1 model or trains fresh.
+Checkpoints are version-gated: the pipeline loads an existing v4.1+ model to continue training, or trains fresh if no valid checkpoint exists.
 
 ### Training Techniques
 
-- **Multi-Timeframe Data**: Fetches daily + hourly + weekly per symbol (3x more training data)
-- **Data Augmentation**: Gaussian noise injection (0.5%) + random timestep masking (5%)
-- **Gradient Accumulation**: Simulates batch size 256 from smaller micro-batches
-- **EMA Model Averaging**: Exponential moving average of weights (decay 0.999) — smoother, better-generalizing model
-- **Cosine Warm Restarts**: LR schedule with periodic restarts to escape local minima
-- **BalancedDirectionLoss**: 60% Huber regression + 40% balanced BCE with class-weighted direction classification
-- **Early Stopping**: Patience of 15 epochs on EMA validation loss
-- **All 44 Real Features**: No zero-padding — RSI, Stochastic RSI, MACD histogram, Bollinger %B, OBV, Williams %R, CCI, ADX, Keltner Channels, Z-score, and more
+| Technique | Detail |
+|-----------|--------|
+| LR Warmup | 2-epoch linear ramp (0.1× → 1×) before cosine annealing |
+| Cosine Warm Restarts | Periodic LR restarts to escape local minima |
+| EMA Weight Averaging | Decay 0.999 — smoother, better-generalizing weights |
+| Gradient Clipping | Max norm 1.0 — prevents exploding gradients |
+| Gradient Accumulation | Simulates batch size 256 from smaller micro-batches |
+| Data Augmentation | Gaussian noise (0.5%) + random timestep masking (5%) |
+| BalancedDirectionLoss | 60% Huber regression + 40% weighted BCE direction |
+| Early Stopping | Patience 15 epochs on EMA validation loss |
+| Feature Clamping | `[-10, 10]` clamp after normalisation — prevents saturation |
+| Mixed Precision | bfloat16 on CPU, float16 on CUDA |
 
 ---
 
@@ -168,11 +187,41 @@ Version gating ensures the pipeline never loads stale pre-v4.1 checkpoints — e
 
 ---
 
+## Checkpoint Format
+
+Every `.pt` file saved by v5.0 contains the following keys:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `model_state_dict` | `dict` | PyTorch model weights |
+| `model_type` | `str` | `"stock"` or `"forex"` |
+| `architecture` | `str` | `"MeridianModel-2026"` |
+| `version` | `str` | `"5.0"` |
+| `input_size` | `int` | `44` (feature count) |
+| `seq_len` | `int` | `30` (lookback window) |
+| `dim` | `int` | Hidden dimension |
+| `num_layers` | `int` | Transformer depth |
+| `num_heads` | `int` | Attention heads |
+| `num_kv_heads` | `int` | KV heads (GQA) |
+| `num_experts` | `int` | MoE expert count |
+| `num_prediction_heads` | `int` | Output prediction heads |
+| `dropout` | `float` | Dropout rate |
+| `use_mamba` | `bool` | Whether Mamba SSM is active |
+| `mamba_state_dim` | `int` | Mamba hidden state size |
+| `scaler_mean` | `Tensor` | Feature normalisation mean |
+| `scaler_std` | `Tensor` | Feature normalisation std |
+| `metadata` | `dict` | `best_val_loss`, `direction_accuracy`, `target_min/max`, `training_history` |
+
+Old `"RevolutionaryFinancialModel-2026"` checkpoints (pre-v5.0) are still loadable — the loader accepts both architecture strings.
+
+---
+
 ## Project Structure
 
 ```
 meridianalgo/
-  revolutionary_model.py   # v4.1 model architecture (Mamba-2, GQA, MoE)
+  meridian_model.py        # MeridianModel v5.0 architecture (GQA, MoE, optional Mamba)
+  revolutionary_model.py   # Backward-compat shim — re-exports from meridian_model.py
   large_torch_model.py     # Training loop, data loading, inference
   direction_loss.py        # BalancedDirectionLoss (Huber + BCE)
   unified_ml.py            # Stock prediction API
@@ -184,9 +233,14 @@ scripts/
   fetch_and_store_data.py  # Market data ingestion
   push_elite_models.py     # HF Hub deployment
 .github/workflows/
-  meridian-stocks.yml      # Automated stock training (every 2h)
-  meridian-forex.yml       # Automated forex training (every 2h)
+  meridian-stocks.yml      # Automated stock training (every hour, :00)
+  meridian-forex.yml       # Automated forex training (every hour, :30)
   lint.yml                 # Code quality checks
+tests/
+  conftest.py              # Shared fixtures (model checkpoints)
+  test_checkpoint_health.py      # Checkpoint metadata health checks
+  test_model_inference.py        # Forward pass and state dict tests
+  test_directional_signal.py     # Live directional accuracy on real market data
 ```
 
 ---
