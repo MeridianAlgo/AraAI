@@ -100,6 +100,7 @@ def test_stocks_directional_accuracy(symbol: str, stocks_ckpt_path, stocks_ckpt)
         "num_prediction_heads": stocks_ckpt["num_prediction_heads"],
         "dropout": stocks_ckpt["dropout"],
         "use_mamba": stocks_ckpt["use_mamba"],
+        "mamba_state_dim": stocks_ckpt.get("mamba_state_dim", 16),
     }
     preds, actuals = _predict_returns(stocks_ckpt_path, args, df, n_steps=40)
     if len(preds) < 10:
@@ -129,6 +130,7 @@ def test_stocks_predictions_have_variance(symbol: str, stocks_ckpt_path, stocks_
         "num_prediction_heads": stocks_ckpt["num_prediction_heads"],
         "dropout": stocks_ckpt["dropout"],
         "use_mamba": stocks_ckpt["use_mamba"],
+        "mamba_state_dim": stocks_ckpt.get("mamba_state_dim", 16),
     }
     preds, _ = _predict_returns(stocks_ckpt_path, args, df, n_steps=30)
     if len(preds) < 10:
@@ -155,6 +157,7 @@ def test_forex_directional_accuracy(symbol: str, forex_ckpt_path, forex_ckpt) ->
         "num_prediction_heads": forex_ckpt["num_prediction_heads"],
         "dropout": forex_ckpt["dropout"],
         "use_mamba": forex_ckpt["use_mamba"],
+        "mamba_state_dim": forex_ckpt.get("mamba_state_dim", 16),
     }
     preds, actuals = _predict_returns(forex_ckpt_path, args, df, n_steps=40)
     if len(preds) < 10:
