@@ -58,6 +58,7 @@ def _build_model(ckpt: dict) -> torch.nn.Module:
         num_prediction_heads=ckpt["num_prediction_heads"],
         dropout=ckpt["dropout"],
         use_mamba=ckpt["use_mamba"],
+        mamba_state_dim=ckpt.get("mamba_state_dim", 16),
     )
     model.load_state_dict(ckpt["model_state_dict"], strict=False)
     model.eval()

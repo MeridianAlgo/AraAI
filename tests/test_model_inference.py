@@ -121,6 +121,7 @@ def test_state_dict_loads_strictly(model_fix: str, ckpt_fix: str, request) -> No
         num_prediction_heads=ckpt["num_prediction_heads"],
         dropout=ckpt["dropout"],
         use_mamba=ckpt["use_mamba"],
+        mamba_state_dim=ckpt.get("mamba_state_dim", 16),
     )
     missing, unexpected = fresh.load_state_dict(ckpt["model_state_dict"], strict=False)
     assert not missing, f"missing keys: {missing[:5]}"

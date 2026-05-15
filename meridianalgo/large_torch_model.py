@@ -316,8 +316,9 @@ class AdvancedMLSystem:
             "version": "4.1" if self.use_revolutionary else "3.1",
         }
 
-        # Initialize Accelerate
-        self.accelerator = Accelerator(mixed_precision="fp16", cpu=True)
+        # FP16 is harmful on CPU (no tensor cores → no speedup, and overflow risk).
+        # Use full precision; Accelerate still handles device placement.
+        self.accelerator = Accelerator(mixed_precision="no", cpu=True)
         self.device = self.accelerator.device
         print(
             f"Using device: {self.device} with {'Revolutionary 2026' if self.use_revolutionary else 'Elite'} Architecture"
@@ -373,6 +374,7 @@ class AdvancedMLSystem:
                         num_prediction_heads=int(checkpoint.get("num_prediction_heads", 6)),
                         dropout=float(checkpoint.get("dropout", 0.1)),
                         use_mamba=bool(checkpoint.get("use_mamba", True)),
+                        mamba_state_dim=int(checkpoint.get("mamba_state_dim", 16)),
                     )
                     self.use_revolutionary = True
                 elif architecture == "EliteEnsembleModel-2025-Compact":
@@ -434,6 +436,9 @@ class AdvancedMLSystem:
 
             # Add model-specific parameters
             if self.use_revolutionary and isinstance(unwrapped_model, RevolutionaryFinancialModel):
+                _use_mamba = bool(
+                    unwrapped_model.layers[0].use_mamba if unwrapped_model.layers else True
+                )
                 checkpoint.update(
                     {
                         "architecture": "RevolutionaryFinancialModel-2026",
@@ -447,7 +452,10 @@ class AdvancedMLSystem:
                         "num_experts": int(getattr(unwrapped_model, "num_experts", 6)),
                         "num_prediction_heads": len(unwrapped_model.prediction_heads),
                         "dropout": 0.15,
-                        "use_mamba": True,
+                        "use_mamba": _use_mamba,
+                        "mamba_state_dim": int(
+                            getattr(unwrapped_model, "mamba_state_dim", 16)
+                        ),
                     }
                 )
             else:
@@ -595,6 +603,9 @@ class AdvancedMLSystem:
             self.scaler_mean = X_tensor.mean(dim=0)
             self.scaler_std = X_tensor.std(dim=0) + 1e-8
             X_tensor.sub_(self.scaler_mean).div_(self.scaler_std)
+            # Clip extreme normalised values — a feature with near-zero std can produce
+            # values of ±100σ after normalisation, saturating activations and blowing gradients.
+            X_tensor.clamp_(-5.0, 5.0)
 
             # Train/validation split (views, not copies)
             n_val = int(len(X_tensor) * validation_split)
@@ -613,19 +624,23 @@ class AdvancedMLSystem:
             # Create model if not already loaded
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    print("  Creating new Revolutionary v4.1 architecture (~45M Parameters)...")
+                    # CPU-optimised config: GQA + MoE + RoPE without the sequential
+                    # Mamba scan (which is 3× slower on CPU with no tensor-core benefit).
+                    # mamba_state_dim=4 is kept so re-enabling use_mamba later is fast.
+                    print("  Creating new Revolutionary v4.1 architecture (~11M Parameters)...")
                     self.model = RevolutionaryFinancialModel(
                         input_size=input_size,
                         seq_len=seq_len,
-                        dim=384,
+                        dim=256,
                         num_layers=6,
-                        num_heads=6,
+                        num_heads=4,
                         num_kv_heads=2,
                         num_experts=4,
                         num_prediction_heads=4,
                         dropout=0.15,
-                        use_mamba=True,
+                        use_mamba=False,
                         drop_path_rate=0.1,
+                        mamba_state_dim=4,
                     )
                 else:
                     print("  Creating new EliteEnsembleModel architecture...")
@@ -755,7 +770,9 @@ class AdvancedMLSystem:
                         break
 
                     # === Time-based stop within step loop (check every 10 steps) ===
-                    if step % 10 == 0 and _should_stop(buffer_seconds=120):
+                    # Use a larger buffer (180 s) so that the validation block
+                    # that runs unconditionally after this loop always has time.
+                    if step % 10 == 0 and _should_stop(buffer_seconds=180):
                         elapsed = time.time() - deadline_start
                         print(
                             f"Time limit at step {global_step} "
@@ -806,15 +823,16 @@ class AdvancedMLSystem:
                         )
                     else:
                         print(
-                            f"Time limit reached — trained for {elapsed/60:.1f}min, "
-                            f"{epochs_completed} full epochs, {global_step} steps"
+                            f"Time limit reached after {elapsed/60:.1f}min, "
+                            f"{epochs_completed} full epochs, {global_step} steps "
+                            f"— running validation before exit"
                         )
-                    break
 
                 epochs_completed = epoch + 1
                 avg_train_loss = train_loss / max(n_batches, 1)
 
-                # === Validation using EMA model (capped at 4096 samples for speed) ===
+                # === Validation using EMA model (always runs — even on time-limit exit,
+                # so that direction_accuracy and EMA val loss are saved to metadata).
                 ema_model.eval()
                 self.model.eval()
                 val_subset = min(4096, len(X_val))
@@ -865,16 +883,15 @@ class AdvancedMLSystem:
                         epoch=epoch + 1,
                     )
 
-                # Early stopping based on EMA val loss. Skip update on
-                # non-finite values — otherwise a single bad batch can latch
-                # best_val_loss to inf for the rest of training and produce a
-                # misleading "best loss = inf" in metadata.
+                # Early stopping on EMA val loss.  NaN/Inf epochs are skipped
+                # entirely — counting them toward patience was wrong: it could
+                # push patience_counter to 20 before any real loss appears and
+                # then trigger early stopping on the first finite epoch.
                 if not math.isfinite(ema_val_loss_val):
                     print(
                         f"  WARN epoch {epoch + 1}: ema_val_loss is "
-                        f"{ema_val_loss_val} — skipping early-stop update"
+                        f"{ema_val_loss_val} — not counting toward patience"
                     )
-                    patience_counter += 1
                 elif ema_val_loss_val < best_val_loss:
                     best_val_loss = ema_val_loss_val
                     patience_counter = 0
@@ -899,6 +916,10 @@ class AdvancedMLSystem:
                     )
                     self._save_model()
                     print(f"  Checkpoint saved at epoch {epoch + 1}")
+
+                # Break AFTER validation and early-stop check so metrics are always saved.
+                if step_limit_reached:
+                    break
 
             # === Load best EMA weights into the main model for saving ===
             if best_ema_state is not None:

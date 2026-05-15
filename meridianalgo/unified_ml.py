@@ -312,13 +312,12 @@ class UnifiedStockML:
                 print("Error: No valid training samples")
                 return {"success": False, "error": "No valid training samples"}
 
-            # Cap dataset to fit in 7GB GitHub Actions runners
-            # Each sample = lookback * 44 * 4 bytes = ~5.2KB
-            # 300K samples * 5.2KB = ~1.5GB for X (leaves room for model + optimizer)
-            max_samples = 300_000
+            # 60K samples × (30 timesteps × 44 features × 4 bytes) ≈ 316MB for X.
+            # At dim=256, no-Mamba: ~27 min for training steps, leaving ~18 min
+            # buffer in the 45-min CI window for validation, EMA, and saving.
+            max_samples = 60_000
             if len(X) > max_samples:
-                print(f"  Capping dataset from {len(X)} to {max_samples} samples (RAM limit)")
-                # Keep the most recent samples (most relevant for prediction)
+                print(f"  Capping dataset from {len(X)} to {max_samples} samples (CPU budget)")
                 X = X[-max_samples:]
                 y = y[-max_samples:]
 

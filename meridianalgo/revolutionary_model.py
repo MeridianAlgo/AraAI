@@ -213,25 +213,20 @@ class MambaBlock(nn.Module):
         dt = F.softplus(self.dt_proj(x_conv))  # [batch, seq, inner_dim]
         B = self.B_proj(x_conv)  # [batch, seq, state_dim]
         C = self.C_proj(x_conv)  # [batch, seq, state_dim]
+        A = -torch.exp(self.A_log)  # [inner_dim, state_dim], always negative
 
-        # Discretize A
-        A = -torch.exp(self.A_log)  # [inner_dim, state_dim]
+        # Vectorized selective scan: precompute all per-timestep dA and dB tensors
+        # before the loop so each iteration needs only 2 tensor ops instead of ~10.
+        # dA[b,t,i,s] = exp(A[i,s]*dt[b,t,i]) ∈ (0,1) — numerically stable (A<0, dt>0)
+        # dB[b,t,i,s] = dt[b,t,i] * x_conv[b,t,i] * B[b,t,s]
+        dA = torch.exp(A[None, None] * dt.unsqueeze(-1))  # [B, T, inner_dim, state_dim]
+        dB = (dt * x_conv).unsqueeze(-1) * B.unsqueeze(2)  # [B, T, inner_dim, state_dim]
 
-        # Selective scan (sequential for correctness)
-        y = torch.zeros_like(x_conv)
-        h = torch.zeros(batch, self.inner_dim, self.state_dim, device=x.device)
-
+        h = x.new_zeros(batch, self.inner_dim, self.state_dim)
+        y = x.new_empty(batch, seq_len, self.inner_dim)
         for t in range(seq_len):
-            # dt_t: [batch, inner_dim]
-            dt_t = dt[:, t]
-            # dA = exp(A * dt): [batch, inner_dim, state_dim]
-            dA = torch.exp(A.unsqueeze(0) * dt_t.unsqueeze(-1))
-            # dB = dt * B_t: [batch, inner_dim, state_dim]
-            dB = dt_t.unsqueeze(-1) * B[:, t].unsqueeze(1)
-            # State update: h = dA * h + dB * x
-            h = dA * h + dB * x_conv[:, t].unsqueeze(-1)
-            # Output: y = C_t . h + D * x
-            y[:, t] = (h * C[:, t].unsqueeze(1)).sum(-1) + self.D * x_conv[:, t]
+            h = dA[:, t] * h + dB[:, t]
+            y[:, t] = (h * C[:, t, None, :]).sum(-1) + self.D * x_conv[:, t]
 
         # Gating and output
         y = y * F.silu(res)
@@ -337,6 +332,7 @@ class RevolutionaryTransformerBlock(nn.Module):
         use_mamba=True,
         drop_path=0.0,
         layer_scale_init=1e-2,
+        mamba_state_dim=16,
     ):
         super().__init__()
         self.use_mamba = use_mamba
@@ -351,7 +347,7 @@ class RevolutionaryTransformerBlock(nn.Module):
 
         # Mamba SSM (optional)
         if use_mamba:
-            self.mamba = MambaBlock(dim)
+            self.mamba = MambaBlock(dim, state_dim=mamba_state_dim)
 
         # Mixture of Experts
         self.moe = MixtureOfExperts(dim, num_experts)
@@ -371,9 +367,10 @@ class RevolutionaryTransformerBlock(nn.Module):
         # Attention with scaled residual
         x = x + self.drop_path(self.attn_scale * self.dropout(self.attn(self.norm1(x))))
 
-        # Mamba SSM with scaled residual (if enabled)
+        # Mamba SSM: pass x directly — MambaBlock applies its own pre-norm internally,
+        # so we must NOT pre-normalize here (that would double-normalize the input).
         if self.use_mamba:
-            x = x + self.drop_path(self.mamba_scale * self.dropout(self.mamba(self.norm2(x))))
+            x = x + self.drop_path(self.mamba_scale * self.dropout(self.mamba(x)))
 
         # MoE with scaled residual
         x = x + self.drop_path(
@@ -408,6 +405,7 @@ class RevolutionaryFinancialModel(nn.Module):
         dropout=0.1,
         use_mamba=True,
         drop_path_rate=0.1,
+        mamba_state_dim=16,
     ):
         super().__init__()
 
@@ -417,6 +415,7 @@ class RevolutionaryFinancialModel(nn.Module):
         self.num_heads = num_heads
         self.num_kv_heads = num_kv_heads
         self.num_experts = num_experts
+        self.mamba_state_dim = mamba_state_dim
 
         # Input embedding with better initialization
         self.input_proj = nn.Linear(input_size, dim, bias=False)
@@ -437,6 +436,7 @@ class RevolutionaryFinancialModel(nn.Module):
                     dropout,
                     use_mamba,
                     drop_path=dpr[i],
+                    mamba_state_dim=mamba_state_dim,
                 )
                 for i in range(num_layers)
             ]
