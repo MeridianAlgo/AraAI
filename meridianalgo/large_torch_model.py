@@ -17,7 +17,6 @@ from accelerate import Accelerator
 
 try:
     from .meridian_model import MeridianModel
-    from .meridian_model import MeridianModel as RevolutionaryFinancialModel  # compat
 
     REVOLUTIONARY_MODEL_AVAILABLE = True
 except ImportError:
