@@ -96,7 +96,8 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # 50-min hard cap: 35min training + ~10min setup + 5min buffer.
+    timeout-minutes: 50
 
     steps:
       - name: Checkout
@@ -109,6 +110,7 @@ jobs:
 
       - name: Download Database
         uses: actions/download-artifact@v4
+        timeout-minutes: 5
         with:
           name: stock-training-db-${{ github.run_number }}
 
@@ -119,6 +121,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
 
       - name: Install Dependencies
+        timeout-minutes: 8
         run: |
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -126,6 +129,7 @@ jobs:
           pip install comet-ml huggingface_hub
 
       - name: Download Existing Model
+        timeout-minutes: 5
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -141,19 +145,23 @@ jobs:
           "
 
       - name: Train Model
+        # 38min step cap — script self-stops at 35min, extra 3min for save/log flush.
+        timeout-minutes: 38
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
+          PYTHONUNBUFFERED: "1"
         run: |
-          echo "Training Stock Model (45min budget)"
-          python scripts/train_stock_model.py \
+          echo "Training Stock Model (35min budget, 38min hard cap)"
+          python -u scripts/train_stock_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Stocks.pt \
             --use-all-data \
             --epochs 999 \
-            --max-time 45 \
+            --max-time 35 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
+        if: always() && hashFiles('models/Meridian.AI_Stocks.pt') != ''
         uses: actions/upload-artifact@v4
         with:
           name: stock-model-${{ github.run_number }}

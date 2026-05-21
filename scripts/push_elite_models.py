@@ -22,14 +22,18 @@ os.environ["HUGGINGFACE_HUB_WRITE_TIMEOUT"] = "10800"
 
 
 def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"):
-    """Push model to Hugging Face Hub"""
+    """Push model to Hugging Face Hub."""
 
-    # Get HF token from environment
-    hf_token = os.getenv("HF_TOKEN")
+    # Accept CI uppercase secret OR .env lowercase key
+    hf_token = (
+        os.getenv("HF_TOKEN")
+        or os.getenv("huggingface_token")
+        or os.getenv("HUGGINGFACE_TOKEN")
+    )
     if hf_token:
         hf_token = hf_token.strip()
     if not hf_token:
-        print("ERROR: HF_TOKEN not found in environment variables")
+        print("ERROR: HF token not found (HF_TOKEN / huggingface_token)")
         return False
 
     model_path = Path(model_path)

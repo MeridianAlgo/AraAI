@@ -96,7 +96,9 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # 50-min hard cap: 35min training + ~10min setup + 5min buffer.
+    # Was 120 — overlong timeout masked the real reason runs ended.
+    timeout-minutes: 50
 
     steps:
       - name: Checkout
@@ -109,6 +111,7 @@ jobs:
 
       - name: Download Database
         uses: actions/download-artifact@v4
+        timeout-minutes: 5
         with:
           name: forex-training-db-${{ github.run_number }}
 
@@ -119,6 +122,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
 
       - name: Install Dependencies
+        timeout-minutes: 8
         run: |
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -126,6 +130,7 @@ jobs:
           pip install comet-ml huggingface_hub
 
       - name: Download Existing Model
+        timeout-minutes: 5
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -141,19 +146,25 @@ jobs:
           "
 
       - name: Train Model
+        # 38min step cap — script self-stops at 35min, extra 3min for save/log flush.
+        # Combined with SIGTERM handler in training script (saves EMA on shutdown).
+        timeout-minutes: 38
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
+          # Unbuffered prints so Comet/CI logs flush immediately
+          PYTHONUNBUFFERED: "1"
         run: |
-          echo "Training Forex Model (45min budget)"
-          python scripts/train_forex_model.py \
+          echo "Training Forex Model (35min budget, 38min hard cap)"
+          python -u scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
             --epochs 999 \
-            --max-time 45 \
+            --max-time 35 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
+        if: always() && hashFiles('models/Meridian.AI_Forex.pt') != ''
         uses: actions/upload-artifact@v4
         with:
           name: forex-model-${{ github.run_number }}

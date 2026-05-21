@@ -4,6 +4,7 @@ Architecture: GQA + MoE + RoPE + optional Mamba SSM
 """
 
 import math
+import signal
 import time
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +15,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from accelerate import Accelerator
+
+# ---------------------------------------------------------------------------
+# v5.1.0 — exposed for downstream callers and Comet tagging.
+MODEL_VERSION = "5.1.0"
+ARCHITECTURE_NAME = "MeridianModel-2026"
+# ---------------------------------------------------------------------------
 
 try:
     from .meridian_model import MeridianModel
@@ -307,11 +314,11 @@ class AdvancedMLSystem:
             "trained_symbols": [],
             "training_history": [],
             "architecture": (
-                "MeridianModel-2026"
+                ARCHITECTURE_NAME
                 if self.use_revolutionary
                 else "EliteEnsembleModel-2025-Compact"
             ),
-            "version": "5.0" if self.use_revolutionary else "3.1",
+            "version": MODEL_VERSION if self.use_revolutionary else "3.2",
         }
 
         # FP16 is harmful on CPU (no tensor cores → no speedup, and overflow risk).
@@ -336,11 +343,20 @@ class AdvancedMLSystem:
                     )
                     return
 
-                # Skip old model versions - train fresh with new architecture
+                # Skip old model versions - train fresh with current architecture.
+                # Compare as tuples so "5.1.0" > "5.0" and "10.0" > "4.1" work right.
+                def _parse_ver(v):
+                    try:
+                        return tuple(int(p) for p in str(v).split("."))
+                    except Exception:
+                        return (0,)
+
                 version = checkpoint.get("version", "0")
-                if str(version) < "4.1":
+                _MIN_LOADABLE = (4, 1)
+                if _parse_ver(version) < _MIN_LOADABLE:
                     print(
-                        f"  Skipping old model (v{version}) - training fresh with v4.1 architecture"
+                        f"  Skipping old model (v{version}) — training fresh with "
+                        f"v{MODEL_VERSION} architecture"
                     )
                     self.model = None
                     return
@@ -415,9 +431,10 @@ class AdvancedMLSystem:
                 self.model = None
 
     def _save_model(self):
-        """Save model to .pt file"""
+        """Save model to .pt file (atomic: write to .tmp then rename)."""
         try:
             self.model_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = self.model_path.with_suffix(self.model_path.suffix + ".tmp")
 
             # Unwrap model for saving
             unwrapped_model = self.accelerator.unwrap_model(self.model)
@@ -437,8 +454,8 @@ class AdvancedMLSystem:
                 )
                 checkpoint.update(
                     {
-                        "architecture": "MeridianModel-2026",
-                        "version": "5.0",
+                        "architecture": ARCHITECTURE_NAME,
+                        "version": MODEL_VERSION,
                         "input_size": int(getattr(unwrapped_model, "input_size", 44)),
                         "seq_len": int(getattr(unwrapped_model, "seq_len", 30)),
                         "dim": int(getattr(unwrapped_model, "dim", 512)),
@@ -474,7 +491,18 @@ class AdvancedMLSystem:
                     }
                 )
 
-            torch.save(checkpoint, self.model_path)
+            # Atomic write: serialize to .tmp, fsync, then replace target.
+            # Prevents truncated checkpoints if the runner is killed mid-save.
+            import os as _os
+
+            torch.save(checkpoint, tmp_path)
+            try:
+                with open(tmp_path, "rb") as _f:
+                    _os.fsync(_f.fileno())
+            except OSError:
+                pass
+            _os.replace(tmp_path, self.model_path)
+
             param_count = self.model.count_parameters()
             print(f"Saved {self.model_type} model to {self.model_path}")
             print(f"Parameters: {param_count:,}")
@@ -528,6 +556,34 @@ class AdvancedMLSystem:
                            point so data-prep overhead is accounted for and CI timeouts
                            are not exceeded.
         """
+        # ─── Signal-safe shutdown ──────────────────────────────────────────
+        # GitHub Actions sends SIGTERM ~7.5 s before SIGKILL when it cancels a
+        # job (timeout, runner death, manual cancel). Without a handler the
+        # script dies mid-epoch and the EMA checkpoint is lost. We catch the
+        # signal, set a flag the training loop polls, save the best EMA weights
+        # we have, then exit cleanly.
+        shutdown_requested = {"flag": False, "signum": None}
+
+        def _signal_handler(signum, _frame):
+            if shutdown_requested["flag"]:
+                # Second signal — let it through so the runner can actually die.
+                return
+            shutdown_requested["flag"] = True
+            shutdown_requested["signum"] = signum
+            print(
+                f"\n  [signal] Received signal {signum} — will save best EMA "
+                f"checkpoint and exit gracefully at next safe point.",
+                flush=True,
+            )
+
+        # Only install in the main thread (signal module restriction).
+        try:
+            signal.signal(signal.SIGTERM, _signal_handler)
+            signal.signal(signal.SIGINT, _signal_handler)
+        except (ValueError, OSError):
+            # Non-main thread or platform without these signals (Windows SIGTERM).
+            pass
+
         try:
             train_start = time.time()
 
@@ -651,6 +707,99 @@ class AdvancedMLSystem:
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
 
+            # === Comprehensive Comet ML logging (one-shot, before training) ===
+            if comet_experiment:
+                try:
+                    import platform
+                    import sys as _sys
+
+                    _unwrapped = self.accelerator.unwrap_model(self.model)
+                    arch_summary = {
+                        "model.version": MODEL_VERSION,
+                        "model.architecture": ARCHITECTURE_NAME,
+                        "model.type": self.model_type,
+                        "model.param_count": int(param_count),
+                        "model.input_size": int(input_size),
+                        "model.seq_len": int(seq_len),
+                        "model.dim": int(getattr(_unwrapped, "dim", 0) or 0),
+                        "model.num_layers": int(len(getattr(_unwrapped, "layers", []) or [])),
+                        "model.num_heads": int(getattr(_unwrapped, "num_heads", 0) or 0),
+                        "model.num_kv_heads": int(getattr(_unwrapped, "num_kv_heads", 0) or 0),
+                        "model.num_experts": int(getattr(_unwrapped, "num_experts", 0) or 0),
+                        "model.use_revolutionary": bool(self.use_revolutionary),
+                    }
+                    train_summary = {
+                        "train.symbol": str(symbol),
+                        "train.n_samples_total": int(n_samples),
+                        "train.n_train": int(len(X_train)),
+                        "train.n_val": int(len(X_val)),
+                        "train.epochs_planned": int(epochs),
+                        "train.batch_size": int(batch_size),
+                        "train.effective_batch": int(effective_batch),
+                        "train.grad_accum_steps": int(grad_accum_steps),
+                        "train.lr": float(lr),
+                        "train.weight_decay": 0.02,
+                        "train.optimizer": "AdamW",
+                        "train.lr_warmup_epochs": 2,
+                        "train.scheduler": "CosineAnnealingWarmRestarts",
+                        "train.loss": "BalancedDirectionLoss(alpha=0.6,beta=0.4)",
+                        "train.ema_decay": float(ema_decay),
+                        "train.validation_split": float(validation_split),
+                        "train.target_clip": float(target_clip),
+                        "train.max_time_sec": (
+                            int(max_time_seconds) if max_time_seconds else 0
+                        ),
+                        "train.max_steps": int(max_steps) if max_steps else 0,
+                    }
+                    target_summary = {
+                        "target.min": float(y_min),
+                        "target.max": float(y_max),
+                        "target.mean": float(y_tensor.mean().item()),
+                        "target.std": float(y_tensor.std().item()),
+                        "target.median": float(y_tensor.median().item()),
+                        "target.pct_positive": float(
+                            (y_tensor > 0).float().mean().item() * 100
+                        ),
+                        "target.normalization": "raw",
+                    }
+                    feature_summary = {
+                        "features.mean_l1_norm": float(
+                            self.scaler_mean.abs().mean().item()
+                        ),
+                        "features.std_mean": float(self.scaler_std.mean().item()),
+                        "features.data_mb": float(mem_data_mb),
+                    }
+                    system_summary = {
+                        "system.python": _sys.version.split()[0],
+                        "system.torch": torch.__version__,
+                        "system.platform": platform.platform(),
+                        "system.cpu_count": psutil.cpu_count(logical=True),
+                        "system.total_mem_gb": round(
+                            psutil.virtual_memory().total / (1024**3), 2
+                        ),
+                        "system.process_rss_mb": round(
+                            psutil.Process().memory_info().rss / (1024**2), 1
+                        ),
+                    }
+
+                    comet_experiment.log_parameters(arch_summary)
+                    comet_experiment.log_parameters(train_summary)
+                    comet_experiment.log_parameters(target_summary)
+                    comet_experiment.log_parameters(feature_summary)
+                    comet_experiment.log_parameters(system_summary)
+                    for _tag in (
+                        f"v{MODEL_VERSION}",
+                        ARCHITECTURE_NAME,
+                        f"type:{self.model_type}",
+                        f"params:{param_count // 1_000_000}M",
+                    ):
+                        try:
+                            comet_experiment.add_tag(_tag)
+                        except Exception:
+                            pass
+                except Exception as _meta_e:
+                    print(f"  [comet] one-shot parameter log failed (non-fatal): {_meta_e}")
+
             # === EMA (Exponential Moving Average) of model weights ===
             # Keeps a smoothed copy — often generalizes better than final weights
             import copy
@@ -736,6 +885,13 @@ class AdvancedMLSystem:
                 return remaining is not None and remaining < buffer_seconds
 
             for epoch in range(epochs):
+                # === Signal-based stop: SIGTERM/SIGINT received from CI ===
+                if shutdown_requested["flag"]:
+                    print(
+                        f"  Shutdown requested — exiting at epoch {epoch} to save checkpoint."
+                    )
+                    break
+
                 # === Time-based stop: halt before CI timeout kills the job ===
                 if _should_stop(buffer_seconds=180):
                     elapsed = time.time() - deadline_start
@@ -766,6 +922,14 @@ class AdvancedMLSystem:
                 for step, (batch_X, batch_y) in enumerate(train_loader):
                     # === Step limit (for benchmarking) ===
                     if max_steps is not None and global_step >= max_steps:
+                        step_limit_reached = True
+                        break
+
+                    # === Signal-based stop within step loop ===
+                    if shutdown_requested["flag"]:
+                        print(
+                            f"  Shutdown signal at step {global_step} — saving and exiting."
+                        )
                         step_limit_reached = True
                         break
 
@@ -866,22 +1030,47 @@ class AdvancedMLSystem:
                     f"LR: {current_lr:.2e}"
                 )
 
-                # Log to Comet ML
+                # Log to Comet ML (defensive — never let tracking failures
+                # kill the training loop or block it on a network hang)
                 if comet_experiment:
-                    comet_experiment.log_metrics(
-                        {
-                            "train_loss": avg_train_loss,
-                            "val_loss": val_loss,
-                            "ema_val_loss": ema_val_loss_val,
-                            "learning_rate": current_lr,
-                            "direction_accuracy": direction_metrics["direction_accuracy"],
-                            "precision": direction_metrics["precision"],
-                            "recall": direction_metrics["recall"],
-                            "f1_score": direction_metrics["f1_score"],
-                        },
-                        step=epoch + 1,
-                        epoch=epoch + 1,
-                    )
+                    try:
+                        # Additional diagnostics: gradient and weight norms.
+                        with torch.no_grad():
+                            _unwrapped = self.accelerator.unwrap_model(self.model)
+                            _grad_norm = sum(
+                                p.grad.norm().item() ** 2
+                                for p in _unwrapped.parameters()
+                                if p.grad is not None
+                            ) ** 0.5
+                            _weight_norm = sum(
+                                p.norm().item() ** 2 for p in _unwrapped.parameters()
+                            ) ** 0.5
+                        _proc_mem_mb = psutil.Process().memory_info().rss / (1024 * 1024)
+                        comet_experiment.log_metrics(
+                            {
+                                "train_loss": avg_train_loss,
+                                "val_loss": val_loss,
+                                "ema_val_loss": ema_val_loss_val,
+                                "learning_rate": current_lr,
+                                "direction_accuracy": direction_metrics["direction_accuracy"],
+                                "precision": direction_metrics["precision"],
+                                "recall": direction_metrics["recall"],
+                                "f1_score": direction_metrics["f1_score"],
+                                "epoch_time_sec": epoch_time,
+                                "elapsed_total_min": elapsed_total / 60,
+                                "grad_norm": _grad_norm,
+                                "weight_norm": _weight_norm,
+                                "process_rss_mb": _proc_mem_mb,
+                                "patience_counter": patience_counter,
+                                "best_val_loss": (
+                                    best_val_loss if math.isfinite(best_val_loss) else 0.0
+                                ),
+                            },
+                            step=epoch + 1,
+                            epoch=epoch + 1,
+                        )
+                    except Exception as _comet_e:
+                        print(f"  [comet] metric log failed (non-fatal): {_comet_e}")
 
                 # Early stopping on EMA val loss.  NaN/Inf epochs are skipped
                 # entirely — counting them toward patience was wrong: it could
@@ -939,10 +1128,11 @@ class AdvancedMLSystem:
                 f"  Direction accuracy: " f"{direction_metrics.get('direction_accuracy', 0):.1f}%"
             )
 
-            # Final direction accuracy — small batch, skip if time is tight
+            # Final direction accuracy — small batch, skip if time is tight or
+            # if a shutdown signal was received (we need to exit fast).
             real_accuracy = direction_metrics.get("direction_accuracy", 0)
             f1 = direction_metrics.get("f1_score", 0)
-            if not _should_stop(buffer_seconds=60):
+            if not _should_stop(buffer_seconds=60) and not shutdown_requested["flag"]:
                 val_subset = min(2048, len(X_val))
                 self.model.eval()
                 with torch.no_grad():
@@ -953,6 +1143,33 @@ class AdvancedMLSystem:
                     real_accuracy = final_metrics["direction_accuracy"]
                     f1 = final_metrics.get("f1_score", 0)
 
+            # Final Comet summary — guarantees these key metrics are persisted
+            # even when training was cut short by a signal or time limit.
+            if comet_experiment:
+                try:
+                    comet_experiment.log_metrics(
+                        {
+                            "summary.final_best_val_loss": (
+                                float(best_val_loss)
+                                if math.isfinite(float(best_val_loss))
+                                else -1.0
+                            ),
+                            "summary.final_direction_accuracy": float(real_accuracy),
+                            "summary.final_f1_score": float(f1),
+                            "summary.epochs_completed": int(epochs_completed),
+                            "summary.global_steps": int(global_step),
+                            "summary.training_time_min": float(total_time / 60),
+                            "summary.shutdown_signal": (
+                                int(shutdown_requested["signum"] or 0)
+                            ),
+                            "summary.exited_on_signal": int(
+                                bool(shutdown_requested["flag"])
+                            ),
+                        }
+                    )
+                except Exception as _sum_e:
+                    print(f"  [comet] summary log failed (non-fatal): {_sum_e}")
+
             return {
                 "success": True,
                 "final_loss": best_val_loss,
@@ -962,6 +1179,7 @@ class AdvancedMLSystem:
                 "epochs": epochs_completed,
                 "global_steps": global_step,
                 "training_time_min": total_time / 60,
+                "shutdown_signal": shutdown_requested["signum"],
             }
 
         except Exception as e:

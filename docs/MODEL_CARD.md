@@ -16,18 +16,37 @@ tags:
 
 ## Overview
 
-Meridian.AI is a deep learning system for predicting price movements across stocks and forex pairs. Version 5.0 introduces **MeridianModel** — a clean, verifiably-trained architecture combining grouped query attention, mixture-of-experts routing, and optional Mamba SSM — trained continuously via GitHub Actions every hour.
+Meridian.AI is a deep-learning system for predicting price movements across
+stocks and forex pairs. Version 5.1 keeps the **MeridianModel** architecture
+introduced in v5.0 (Grouped Query Attention + Mixture-of-Experts + optional
+Mamba SSM) and adds a hardened training pipeline: signal-safe shutdown,
+atomic checkpoint writes, comprehensive Comet ML telemetry on every run,
+and an audit trail of which symbols / date ranges fed each training job.
 
-Every checkpoint produced by v5.0+ is verifiably correct: validation runs on every epoch, direction accuracy is measured against held-out data, and all loss values are guaranteed finite.
+## Repository layout
+
+```
+meridianal/ARA.AI/
+├── models/
+│   ├── Meridian.AI_Stocks.pt    ← current v5 stock checkpoint
+│   └── Meridian.AI_Forex.pt     ← current v5 forex checkpoint
+└── legacy/
+    └── <archived pre-v5 checkpoints>
+```
+
+Anything older than v5 has been moved into `legacy/`. Loaders accept both
+old (`RevolutionaryFinancialModel-2026`) and new (`MeridianModel-2026`)
+architecture strings, but newly trained checkpoints always advertise
+`MeridianModel-2026` and `version=5.1.0`.
 
 ## Model versions
 
-| Version | Architecture string | Params | Notes |
-|---------|-------------------|--------|-------|
-| v5.0 | `MeridianModel-2026` | ~11M (CPU) | Current; 7 training bugs fixed |
-| v4.1 | `RevolutionaryFinancialModel-2026` | ~45M | Old checkpoints; still loadable |
-
-Both architecture strings are accepted by the loader — no migration required.
+| Version | Architecture string | Params | Status |
+|---------|--------------------|--------|--------|
+| v5.1 | `MeridianModel-2026` | ~11M (CPU) | **Current** — hardened CI, full Comet telemetry, atomic saves |
+| v5.0 | `MeridianModel-2026` | ~11M (CPU) | Loadable |
+| v4.1 | `RevolutionaryFinancialModel-2026` | ~45M | Loadable; archived in `legacy/` on HF |
+| ≤ v4.0 | various | various | Archived; loader refuses |
 
 ## Architecture
 
@@ -78,14 +97,16 @@ Each layer of MeridianModel is a `MeridianBlock` containing:
 - **File**: `models/Meridian.AI_Stocks.pt`
 - **Coverage**: 49+ equities — AAPL, MSFT, GOOGL, AMZN, TSLA, NVDA, JPM, SPY, and more
 - **Data**: Daily + 2yr hourly + 5yr weekly OHLCV with 44 technical indicators
-- **Training**: Automatically retrained every hour (GitHub Actions, `:00`)
+- **Training**: Automatic CI retrain (GitHub Actions)
+- **Tracking**: Comet project `meridianalgo/meridian-ai-stock-v5`
 
 ### Meridian.AI Forex
 
 - **File**: `models/Meridian.AI_Forex.pt`
 - **Coverage**: 22 currency pairs — EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CHF, USD/CAD, etc.
 - **Data**: Multi-timeframe OHLCV with 44 technical indicators
-- **Training**: Automatically retrained every hour (GitHub Actions, `:30`)
+- **Training**: Automatic CI retrain (GitHub Actions)
+- **Tracking**: Comet project `meridianalgo/meridian-ai-forex-v5`
 
 ## Usage
 
@@ -133,7 +154,10 @@ print(prediction)
 | Mixed precision | bfloat16 on CPU, float16 on CUDA |
 | Feature clamping | `[-10, 10]` after z-score normalisation |
 | Sample cap | 60K most-recent rows per run |
-| CI budget | 45 minutes, up to 999 epochs |
+| CI budget | 35 minutes, up to 999 epochs (was 45 — tightened in v5.1) |
+| Signal handling | SIGTERM/SIGINT → save best EMA, then exit (v5.1) |
+| Checkpoint write | Atomic (`.tmp` → `os.replace`) — never partial (v5.1) |
+| Comet logging | Every loss, every metric, per-symbol dataset audit (v5.1) |
 
 ## Checkpoint format
 
@@ -144,7 +168,7 @@ Every v5.0 `.pt` file contains:
     "model_state_dict": ...,       # PyTorch weights
     "model_type": "stock",         # or "forex"
     "architecture": "MeridianModel-2026",
-    "version": "5.0",
+    "version": "5.1.0",
     "input_size": 44,
     "seq_len": 30,
     "dim": 256,
@@ -196,7 +220,7 @@ Every v5.0 `.pt` file contains:
   title  = {Meridian.AI: Financial Prediction Engine},
   author = {MeridianAlgo},
   year   = {2026},
-  version = {5.0.0},
+  version = {5.1.0},
   url    = {https://github.com/MeridianAlgo/AraAI}
 }
 ```

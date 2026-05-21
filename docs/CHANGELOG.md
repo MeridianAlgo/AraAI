@@ -4,6 +4,56 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v5.1.0] — 2026-05-21 — Hardened CI + full Comet telemetry + HF legacy migration
+
+**The reliability release.** Diagnoses and fixes the recurring "The operation was canceled" CI failure, makes every training run fully auditable in Comet, and reorganises the Hugging Face repository so v5 checkpoints live next to a `legacy/` archive of pre-v5 artifacts.
+
+### CI cancellation root-cause fix
+
+The forex/stocks workflows were ending with `Error: The operation was canceled.` at ~44m every run. The training script self-stops at the `--max-time` boundary, but the post-loop **validation + Comet flush + `_save_model`** block was running over the boundary and hanging on either a network call (Comet/HF) or a non-atomic `torch.save`, after which the runner was SIGTERM'd and the EMA checkpoint was lost.
+
+Four-part fix:
+
+1. **SIGTERM/SIGINT handler** in `AdvancedMLSystem.train` — sets a `shutdown_requested` flag the inner step-loop polls. On signal we always break out, run the final save, and exit cleanly. The handler is no-op'd on non-main-thread imports so it doesn't break callers.
+2. **Atomic checkpoint write** in `_save_model` — serialises to `<path>.tmp`, `fsync`s, then `os.replace`s into place. A killed runner can no longer leave a half-written `.pt` file.
+3. **Comet calls wrapped in `try/except`** — every per-epoch metric log, the one-shot parameter log, and the final summary `experiment.end()` are isolated; a hung HTTP request degrades to a warning instead of stalling the loop.
+4. **Tightened time budget** — `--max-time` cut from 45 → 35 minutes; per-step `timeout-minutes: 38` so the runner's own kill arrives *after* the script has gracefully exited.
+
+### Comprehensive Comet ML telemetry
+
+`meridian-ai-stock-v5` and `meridian-ai-forex-v5` projects now receive, per experiment:
+
+- **Dataset audit**: total rows, unique symbols, date range, average rows/symbol, plus a per-symbol `dataset.symbol.<SYM>` other-field with row count and date range, plus a `training_symbols.txt` asset with the symbol list.
+- **Architecture summary**: model version, arch name, param count, input size, seq len, dim, layers, heads, KV heads, experts.
+- **Training config**: every hyperparameter the run was started with — batch size, effective batch, gradient accumulation steps, LR, weight decay, optimizer, scheduler, loss, EMA decay, validation split, target clip, time/step budgets.
+- **Target distribution**: min, max, mean, std, median, percent positive, normalisation mode.
+- **Feature stats**: scaler L1 norm, mean of std, data memory footprint.
+- **System info**: Python version, torch version, platform, CPU count, total RAM, process RSS.
+- **Per-epoch**: train loss, val loss, EMA val loss, LR, direction accuracy, precision, recall, F1, epoch time, total elapsed, gradient norm, weight norm, process RSS, patience counter, best val loss.
+- **Final summary**: best val loss, direction accuracy, F1, epochs completed, global steps, training time, whether shutdown was triggered by signal and which one.
+- **Tags**: `v5.1.0`, `MeridianModel-2026`, `type:stock|forex`, `params:11M`.
+
+### Hugging Face reorganisation
+
+- Anything below v5 on `meridianal/ARA.AI` moves to `legacy/<filename>`.
+- New helper `scripts/migrate_hf_legacy.py` does the inspection/move (idempotent, supports `--dry-run`).
+- `scripts/push_elite_models.py` continues to write current models to `models/`.
+- Model card refreshed to document the new layout, point at the Comet projects, and list every v5.1 hardening.
+
+### Env handling
+
+- `scripts/train_*.py` and `scripts/push_elite_models.py` accept both CI uppercase secrets (`HF_TOKEN`, `COMET_API_KEY`) **and** the lowercase keys in `.env` (`huggingface_token`, `comet_ai_token`).
+- `load_dotenv()` called at script start so local runs work without exporting variables.
+
+### Versions
+
+- `pyproject.toml` and `meridianalgo/__init__.py` bumped to `5.1.0`.
+- New constants `MODEL_VERSION = "5.1.0"` and `ARCHITECTURE_NAME = "MeridianModel-2026"` in `large_torch_model.py`; checkpoints saved with these values.
+- Loader version check rewritten to compare version tuples (so `"5.1.0"` and `"10.0"` sort correctly).
+- `revolutionary_model.py` shim now emits a `DeprecationWarning`; will be removed in v6.
+
+---
+
 ## [v5.0.0] — 2026-05-15 — MeridianModel + Hourly CI
 
 **The correctness release.** Seven silent training bugs fixed, architecture renamed, CI moved to hourly.

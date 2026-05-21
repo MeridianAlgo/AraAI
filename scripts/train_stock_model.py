@@ -37,13 +37,23 @@ from meridianalgo.unified_ml import UnifiedStockML  # noqa: E402
 
 
 def init_comet(project_name, experiment_name, config, api_key=None):
-    """Initialize Comet ML experiment tracking"""
+    """Initialize Comet ML experiment tracking (fail-safe)."""
     if not COMET_AVAILABLE or not api_key:
         return None
 
     try:
         experiment = comet_ml.Experiment(
-            api_key=api_key, project_name=project_name, workspace="meridianalgo"
+            api_key=api_key,
+            project_name=project_name,
+            workspace="meridianalgo",
+            auto_metric_logging=False,
+            auto_param_logging=False,
+            log_code=False,
+            log_graph=False,
+            log_env_details=True,
+            log_env_gpu=True,
+            log_env_cpu=True,
+            log_env_host=True,
         )
         experiment.set_name(experiment_name)
         experiment.log_parameters(config)
@@ -52,6 +62,50 @@ def init_comet(project_name, experiment_name, config, api_key=None):
     except Exception as e:
         print(f"  Warning: Failed to initialize Comet ML: {e}")
         return None
+
+
+def log_dataset_to_comet(experiment, df, asset_type):
+    """Log per-symbol dataset stats so every training slice is auditable."""
+    if experiment is None:
+        return
+    try:
+        per_symbol_counts = df.groupby("symbol").size().to_dict()
+        per_symbol_date_min = df.groupby("symbol")["date"].min().to_dict()
+        per_symbol_date_max = df.groupby("symbol")["date"].max().to_dict()
+
+        experiment.log_parameters(
+            {
+                "dataset.asset_type": asset_type,
+                "dataset.total_rows": int(len(df)),
+                "dataset.unique_symbols": int(df["symbol"].nunique()),
+                "dataset.date_min": str(df["date"].min()),
+                "dataset.date_max": str(df["date"].max()),
+                "dataset.avg_rows_per_symbol": float(
+                    len(df) / max(df["symbol"].nunique(), 1)
+                ),
+            }
+        )
+        for sym, count in per_symbol_counts.items():
+            try:
+                experiment.log_other(
+                    f"dataset.symbol.{sym}",
+                    {
+                        "rows": int(count),
+                        "date_min": str(per_symbol_date_min.get(sym, "")),
+                        "date_max": str(per_symbol_date_max.get(sym, "")),
+                    },
+                )
+            except Exception:
+                pass
+        try:
+            symbol_text = "\n".join(sorted(df["symbol"].unique().tolist()))
+            experiment.log_asset_data(
+                symbol_text, name="training_symbols.txt", overwrite=True
+            )
+        except Exception:
+            pass
+    except Exception as e:
+        print(f"  [comet] dataset log failed (non-fatal): {e}")
 
 
 def load_stock_symbols(db_file, limit=None):
@@ -200,11 +254,14 @@ def train_stock_model(
     }
 
     experiment = init_comet(
-        project_name="meridian-ai-stocks-v4",
+        project_name="meridian-ai-stock-v5",
         experiment_name=f"MeridianAlgo_Stocks_{config['timeframe']}_{int(time.time())}",
         config=config,
         api_key=comet_api_key,
     )
+
+    # Per-symbol dataset audit trail
+    log_dataset_to_comet(experiment, data, "stock")
 
     # Prepare data format
     data.columns = ["Symbol", "Date", "Open", "High", "Low", "Close", "Volume"]
@@ -232,17 +289,24 @@ def train_stock_model(
 
     training_time = time.time() - start_time
 
-    # Log results to Comet ML
+    # Log results to Comet ML — defensive: never let logging swallow a real result
     if experiment:
-        experiment.log_metrics(
-            {
-                "final_loss": result.get("final_loss", 0),
-                "accuracy": result.get("accuracy", 0),
-                "training_time": training_time,
-                "success": 1 if result.get("success") else 0,
-            }
-        )
-        experiment.end()
+        try:
+            experiment.log_metrics(
+                {
+                    "final_loss": float(result.get("final_loss", 0) or 0),
+                    "accuracy": float(result.get("accuracy", 0) or 0),
+                    "training_time": float(training_time),
+                    "success": 1 if result.get("success") else 0,
+                    "exited_on_signal": int(bool(result.get("shutdown_signal"))),
+                }
+            )
+        except Exception as _e:
+            print(f"  [comet] final log failed (non-fatal): {_e}")
+        try:
+            experiment.end()
+        except Exception as _e:
+            print(f"  [comet] end failed (non-fatal): {_e}")
 
     if result.get("success"):
         print("\nTraining completed successfully")
@@ -286,8 +350,8 @@ def main():
     parser.add_argument(
         "--max-time",
         type=int,
-        default=25,
-        help="Max training time in minutes (default: 25). Training stops gracefully before this limit.",
+        default=35,
+        help="Max training time in minutes (default: 35). Training stops gracefully before this limit.",
     )
     parser.add_argument(
         "--max-steps",
@@ -302,8 +366,20 @@ def main():
     if not args.timeframe:
         print("Using all available data (no timeframe filter)")
 
-    # Get Comet API key from args or environment
-    comet_api_key = args.comet_api_key or os.environ.get("COMET_API_KEY")
+    # Load .env if present so local runs work without exporting variables
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv()
+    except ImportError:
+        pass
+
+    # Get Comet API key — accept CI uppercase secret OR .env lowercase key
+    comet_api_key = (
+        args.comet_api_key
+        or os.environ.get("COMET_API_KEY")
+        or os.environ.get("comet_ai_token")
+    )
     if comet_api_key:
         comet_api_key = comet_api_key.strip()
 
