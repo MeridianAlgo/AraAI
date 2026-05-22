@@ -147,21 +147,24 @@ jobs:
           "
 
       - name: Train Model
-        # 38min step cap — script self-stops at 35min, extra 3min for save/log flush.
-        # Combined with SIGTERM handler in training script (saves EMA on shutdown).
-        timeout-minutes: 38
+        # 55min step cap — script self-stops at 32min, leaving 23min for the
+        # post-loop validation pass + EMA save + Comet flush + log_model.
+        # Was 38min, but final validation on CPU (forward + grad/weight norms
+        # over 33M params + comet.end network flush) consistently overran the
+        # 5min slack and the runner SIGTERMed → exit 143.
+        timeout-minutes: 55
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
           # Unbuffered prints so Comet/CI logs flush immediately
           PYTHONUNBUFFERED: "1"
         run: |
-          echo "Training Forex Model (35min budget, 38min hard cap)"
+          echo "Training Forex Model (32min budget, 55min hard cap)"
           python -u scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
             --epochs 999 \
-            --max-time 35 \
+            --max-time 32 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model
@@ -175,7 +178,14 @@ jobs:
   deploy:
     name: Push to Hugging Face
     needs: [train, setup]
-    if: needs.setup.outputs.has_data == 'true'
+    # Run as long as setup produced data and the train job actually started
+    # (even if it ended with cancelled/failure). The training script's signal
+    # handler + atomic _save_model writes a valid .pt before exit, so we still
+    # want to push the partial-but-improved checkpoint to HF.
+    if: |
+      always() &&
+      needs.setup.outputs.has_data == 'true' &&
+      needs.train.result != 'skipped'
     runs-on: ubuntu-latest
 
     steps:
@@ -192,12 +202,17 @@ jobs:
           pip install huggingface_hub python-dotenv
 
       - name: Download Model
+        id: download_model
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: forex-model-${{ github.run_number }}
           path: models/
 
       - name: Upload to HF Hub
+        # Only push if the artifact actually arrived. If training got SIGKILLed
+        # mid-save the artifact step may have nothing to upload — skip cleanly.
+        if: steps.download_model.outcome == 'success' && hashFiles('models/Meridian.AI_Forex.pt') != ''
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |

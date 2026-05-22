@@ -300,6 +300,20 @@ def train_forex_model(
             )
         except Exception as _e:
             print(f"  [comet] final log failed (non-fatal): {_e}")
+
+        # Register the saved .pt as a Comet model artifact so every run's
+        # checkpoint is downloadable from the Comet experiment page (paired
+        # with the same file we push to HF). Done before .end() so the upload
+        # is included in the flush.
+        try:
+            if Path(output_path).exists():
+                experiment.log_model("Meridian.AI_Forex", str(output_path))
+                print(f"  [comet] log_model registered: {output_path}")
+            else:
+                print(f"  [comet] log_model skipped — {output_path} not found")
+        except Exception as _e:
+            print(f"  [comet] log_model failed (non-fatal): {_e}")
+
         try:
             experiment.end()
         except Exception as _e:
