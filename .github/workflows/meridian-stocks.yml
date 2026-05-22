@@ -96,10 +96,9 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    # 75-min hard cap: ~17min setup/install/download + 35min training + ~10min
-    # validation/save + buffer. Previous 50min cap killed the runner mid-validation
-    # because setup time was underestimated (exit 143 at 50min).
-    timeout-minutes: 75
+    # 95-min hard cap: ~17min setup/install/download + ~47min for 70 steps + ~15min
+    # validation/save/Comet flush + buffer.
+    timeout-minutes: 95
 
     steps:
       - name: Checkout
@@ -147,23 +146,20 @@ jobs:
           "
 
       - name: Train Model
-        # 55min step cap — script self-stops at 32min, leaving 23min for the
-        # post-loop validation pass + EMA save + Comet flush + log_model.
-        # Was 38min, but final validation on CPU (forward + grad/weight norms
-        # over 33M params + comet.end network flush) consistently overran the
-        # 5min slack and the runner SIGTERMed → exit 143.
-        timeout-minutes: 55
+        # 75-min step cap: 70 steps × ~40s ≈ 47min training + ~15min
+        # validation/save/Comet flush + buffer. No time limit — step count governs.
+        timeout-minutes: 75
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
           PYTHONUNBUFFERED: "1"
         run: |
-          echo "Training Stock Model (32min budget, 55min hard cap)"
+          echo "Training Stock Model (70 steps, no time limit)"
           python -u scripts/train_stock_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Stocks.pt \
             --use-all-data \
             --epochs 999 \
-            --max-time 32 \
+            --max-steps 70 \
             --comet-api-key "$COMET_API_KEY"
 
       - name: Upload Model

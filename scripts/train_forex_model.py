@@ -210,7 +210,7 @@ def train_forex_model(
     comet_api_key=None,
     seed=None,
     timeframe=None,
-    max_time_minutes=25,
+    max_time_minutes=None,
     max_steps=None,
 ):
     """Train unified forex model with Comet ML tracking"""
@@ -269,7 +269,8 @@ def train_forex_model(
 
     # Train with Meridian v5.0 architecture
     max_time_seconds = int(max_time_minutes * 60) if max_time_minutes else None
-    print(f"\nTraining unified forex model (up to {max_time_minutes}min / {epochs} epochs)...")
+    limit_desc = f"{max_steps} steps" if max_steps else f"up to {max_time_minutes}min / {epochs} epochs"
+    print(f"\nTraining unified forex model ({limit_desc})...")
     result = ml.train_ultimate_models(
         target_symbol="UNIFIED_FOREX",
         period="custom",
@@ -357,14 +358,14 @@ def main():
     parser.add_argument(
         "--max-time",
         type=int,
-        default=35,
-        help="Max training time in minutes (default: 35). Training stops gracefully before this limit.",
+        default=None,
+        help="Max training time in minutes (default: unlimited). Training stops gracefully before this limit.",
     )
     parser.add_argument(
         "--max-steps",
         type=int,
         default=None,
-        help="Max optimizer steps (overrides --max-time when set; used for benchmarking).",
+        help="Max optimizer steps. When set, training stops exactly at this step count.",
     )
 
     args = parser.parse_args()
