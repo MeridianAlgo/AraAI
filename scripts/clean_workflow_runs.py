@@ -68,14 +68,10 @@ def paginate(s: requests.Session, url: str, key: str) -> list[dict[str, Any]]:
 
 
 def list_workflows(s: requests.Session) -> list[dict[str, Any]]:
-    return paginate(
-        s, f"{API}/repos/{OWNER}/{REPO}/actions/workflows", "workflows"
-    )
+    return paginate(s, f"{API}/repos/{OWNER}/{REPO}/actions/workflows", "workflows")
 
 
-def list_runs_for_workflow(
-    s: requests.Session, workflow_id: int
-) -> list[dict[str, Any]]:
+def list_runs_for_workflow(s: requests.Session, workflow_id: int) -> list[dict[str, Any]]:
     return paginate(
         s,
         f"{API}/repos/{OWNER}/{REPO}/actions/workflows/{workflow_id}/runs",
@@ -84,9 +80,7 @@ def list_runs_for_workflow(
 
 
 def cancel_run(s: requests.Session, run_id: int) -> bool:
-    r = s.post(
-        f"{API}/repos/{OWNER}/{REPO}/actions/runs/{run_id}/cancel", timeout=30
-    )
+    r = s.post(f"{API}/repos/{OWNER}/{REPO}/actions/runs/{run_id}/cancel", timeout=30)
     # 202 = accepted, 409 = already finished/cancelled — both fine.
     return r.status_code in (202, 409)
 
