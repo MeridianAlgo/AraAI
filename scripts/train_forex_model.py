@@ -82,9 +82,7 @@ def log_dataset_to_comet(experiment, df, asset_type):
                 "dataset.unique_symbols": int(df["symbol"].nunique()),
                 "dataset.date_min": str(date_min),
                 "dataset.date_max": str(date_max),
-                "dataset.avg_rows_per_symbol": float(
-                    len(df) / max(df["symbol"].nunique(), 1)
-                ),
+                "dataset.avg_rows_per_symbol": float(len(df) / max(df["symbol"].nunique(), 1)),
             }
         )
         # Log per-symbol metadata so every dataset slice is auditable
@@ -103,9 +101,7 @@ def log_dataset_to_comet(experiment, df, asset_type):
         # Persist the symbol list as an asset
         try:
             symbol_text = "\n".join(sorted(df["symbol"].unique().tolist()))
-            experiment.log_asset_data(
-                symbol_text, name="training_symbols.txt", overwrite=True
-            )
+            experiment.log_asset_data(symbol_text, name="training_symbols.txt", overwrite=True)
         except Exception:
             pass
     except Exception as e:
@@ -373,9 +369,7 @@ def main():
 
     # Get Comet API key — accept CI uppercase secret OR .env lowercase key
     comet_api_key = (
-        args.comet_api_key
-        or os.environ.get("COMET_API_KEY")
-        or os.environ.get("comet_ai_token")
+        args.comet_api_key or os.environ.get("COMET_API_KEY") or os.environ.get("comet_ai_token")
     )
     if comet_api_key:
         comet_api_key = comet_api_key.strip()

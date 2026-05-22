@@ -314,9 +314,7 @@ class AdvancedMLSystem:
             "trained_symbols": [],
             "training_history": [],
             "architecture": (
-                ARCHITECTURE_NAME
-                if self.use_revolutionary
-                else "EliteEnsembleModel-2025-Compact"
+                ARCHITECTURE_NAME if self.use_revolutionary else "EliteEnsembleModel-2025-Compact"
             ),
             "version": MODEL_VERSION if self.use_revolutionary else "3.2",
         }
@@ -749,9 +747,7 @@ class AdvancedMLSystem:
                         "train.ema_decay": float(ema_decay),
                         "train.validation_split": float(validation_split),
                         "train.target_clip": float(target_clip),
-                        "train.max_time_sec": (
-                            int(max_time_seconds) if max_time_seconds else 0
-                        ),
+                        "train.max_time_sec": (int(max_time_seconds) if max_time_seconds else 0),
                         "train.max_steps": int(max_steps) if max_steps else 0,
                     }
                     target_summary = {
@@ -760,15 +756,11 @@ class AdvancedMLSystem:
                         "target.mean": float(y_tensor.mean().item()),
                         "target.std": float(y_tensor.std().item()),
                         "target.median": float(y_tensor.median().item()),
-                        "target.pct_positive": float(
-                            (y_tensor > 0).float().mean().item() * 100
-                        ),
+                        "target.pct_positive": float((y_tensor > 0).float().mean().item() * 100),
                         "target.normalization": "raw",
                     }
                     feature_summary = {
-                        "features.mean_l1_norm": float(
-                            self.scaler_mean.abs().mean().item()
-                        ),
+                        "features.mean_l1_norm": float(self.scaler_mean.abs().mean().item()),
                         "features.std_mean": float(self.scaler_std.mean().item()),
                         "features.data_mb": float(mem_data_mb),
                     }
@@ -777,9 +769,7 @@ class AdvancedMLSystem:
                         "system.torch": torch.__version__,
                         "system.platform": platform.platform(),
                         "system.cpu_count": psutil.cpu_count(logical=True),
-                        "system.total_mem_gb": round(
-                            psutil.virtual_memory().total / (1024**3), 2
-                        ),
+                        "system.total_mem_gb": round(psutil.virtual_memory().total / (1024**3), 2),
                         "system.process_rss_mb": round(
                             psutil.Process().memory_info().rss / (1024**2), 1
                         ),
@@ -889,9 +879,7 @@ class AdvancedMLSystem:
             for epoch in range(epochs):
                 # === Signal-based stop: SIGTERM/SIGINT received from CI ===
                 if shutdown_requested["flag"]:
-                    print(
-                        f"  Shutdown requested — exiting at epoch {epoch} to save checkpoint."
-                    )
+                    print(f"  Shutdown requested — exiting at epoch {epoch} to save checkpoint.")
                     break
 
                 # === Time-based stop: halt before CI timeout kills the job ===
@@ -929,9 +917,7 @@ class AdvancedMLSystem:
 
                     # === Signal-based stop within step loop ===
                     if shutdown_requested["flag"]:
-                        print(
-                            f"  Shutdown signal at step {global_step} — saving and exiting."
-                        )
+                        print(f"  Shutdown signal at step {global_step} — saving and exiting.")
                         step_limit_reached = True
                         break
 
@@ -1039,14 +1025,17 @@ class AdvancedMLSystem:
                         # Additional diagnostics: gradient and weight norms.
                         with torch.no_grad():
                             _unwrapped = self.accelerator.unwrap_model(self.model)
-                            _grad_norm = sum(
-                                p.grad.norm().item() ** 2
-                                for p in _unwrapped.parameters()
-                                if p.grad is not None
-                            ) ** 0.5
-                            _weight_norm = sum(
-                                p.norm().item() ** 2 for p in _unwrapped.parameters()
-                            ) ** 0.5
+                            _grad_norm = (
+                                sum(
+                                    p.grad.norm().item() ** 2
+                                    for p in _unwrapped.parameters()
+                                    if p.grad is not None
+                                )
+                                ** 0.5
+                            )
+                            _weight_norm = (
+                                sum(p.norm().item() ** 2 for p in _unwrapped.parameters()) ** 0.5
+                            )
                         _proc_mem_mb = psutil.Process().memory_info().rss / (1024 * 1024)
                         comet_experiment.log_metrics(
                             {
@@ -1161,12 +1150,8 @@ class AdvancedMLSystem:
                             "summary.epochs_completed": int(epochs_completed),
                             "summary.global_steps": int(global_step),
                             "summary.training_time_min": float(total_time / 60),
-                            "summary.shutdown_signal": (
-                                int(shutdown_requested["signum"] or 0)
-                            ),
-                            "summary.exited_on_signal": int(
-                                bool(shutdown_requested["flag"])
-                            ),
+                            "summary.shutdown_signal": (int(shutdown_requested["signum"] or 0)),
+                            "summary.exited_on_signal": int(bool(shutdown_requested["flag"])),
                         }
                     )
                 except Exception as _sum_e:

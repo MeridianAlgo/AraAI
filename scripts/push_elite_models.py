@@ -26,9 +26,7 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
 
     # Accept CI uppercase secret OR .env lowercase key
     hf_token = (
-        os.getenv("HF_TOKEN")
-        or os.getenv("huggingface_token")
-        or os.getenv("HUGGINGFACE_TOKEN")
+        os.getenv("HF_TOKEN") or os.getenv("huggingface_token") or os.getenv("HUGGINGFACE_TOKEN")
     )
     if hf_token:
         hf_token = hf_token.strip()

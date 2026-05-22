@@ -29,9 +29,7 @@ os.environ.setdefault("HUGGINGFACE_HUB_WRITE_TIMEOUT", "10800")
 def get_hf_token():
     """Read token from CI secret or .env file."""
     token = (
-        os.getenv("HF_TOKEN")
-        or os.getenv("huggingface_token")
-        or os.getenv("HUGGINGFACE_TOKEN")
+        os.getenv("HF_TOKEN") or os.getenv("huggingface_token") or os.getenv("HUGGINGFACE_TOKEN")
     )
     return token.strip() if token else None
 
@@ -55,9 +53,7 @@ def classify_checkpoint(local_path):
 def migrate(repo_id, token, dry_run=False, min_version=(5, 0)):
     api = HfApi(token=token)
     files = api.list_repo_files(repo_id=repo_id)
-    model_files = [
-        f for f in files if f.startswith("models/") and f.endswith(".pt")
-    ]
+    model_files = [f for f in files if f.startswith("models/") and f.endswith(".pt")]
     print(f"Found {len(model_files)} .pt files under models/ in {repo_id}")
 
     moves = []
@@ -119,9 +115,7 @@ def migrate(repo_id, token, dry_run=False, min_version=(5, 0)):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Move pre-v5 HF checkpoints to legacy/ subfolder"
-    )
+    parser = argparse.ArgumentParser(description="Move pre-v5 HF checkpoints to legacy/ subfolder")
     parser.add_argument("--repo-id", default="meridianal/ARA.AI")
     parser.add_argument(
         "--dry-run", action="store_true", help="List planned moves; do not modify the repo"
