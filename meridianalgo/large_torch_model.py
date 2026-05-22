@@ -707,6 +707,9 @@ class AdvancedMLSystem:
             param_count = self.model.count_parameters()
             print(f"Model parameters: {param_count:,}")
 
+            # EMA decay used both in Comet param log below and EMA setup further down.
+            ema_decay = 0.999
+
             # === Comprehensive Comet ML logging (one-shot, before training) ===
             if comet_experiment:
                 try:
@@ -806,7 +809,6 @@ class AdvancedMLSystem:
 
             ema_model = copy.deepcopy(self.model)
             ema_model.eval()
-            ema_decay = 0.999
 
             def update_ema(ema_m, model_m, decay):
                 with torch.no_grad():

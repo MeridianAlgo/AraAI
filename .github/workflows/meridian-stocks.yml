@@ -96,8 +96,10 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    # 50-min hard cap: 35min training + ~10min setup + 5min buffer.
-    timeout-minutes: 50
+    # 75-min hard cap: ~17min setup/install/download + 35min training + ~10min
+    # validation/save + buffer. Previous 50min cap killed the runner mid-validation
+    # because setup time was underestimated (exit 143 at 50min).
+    timeout-minutes: 75
 
     steps:
       - name: Checkout

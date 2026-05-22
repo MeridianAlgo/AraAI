@@ -96,9 +96,10 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    # 50-min hard cap: 35min training + ~10min setup + 5min buffer.
-    # Was 120 — overlong timeout masked the real reason runs ended.
-    timeout-minutes: 50
+    # 75-min hard cap: ~17min setup/install/download + 35min training + ~10min
+    # validation/save + buffer. Previous 50min cap killed the runner mid-validation
+    # ("The operation was canceled" at ~50min).
+    timeout-minutes: 75
 
     steps:
       - name: Checkout
