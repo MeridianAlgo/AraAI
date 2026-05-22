@@ -269,7 +269,9 @@ def train_forex_model(
 
     # Train with Meridian v5.0 architecture
     max_time_seconds = int(max_time_minutes * 60) if max_time_minutes else None
-    limit_desc = f"{max_steps} steps" if max_steps else f"up to {max_time_minutes}min / {epochs} epochs"
+    limit_desc = (
+        f"{max_steps} steps" if max_steps else f"up to {max_time_minutes}min / {epochs} epochs"
+    )
     print(f"\nTraining unified forex model ({limit_desc})...")
     result = ml.train_ultimate_models(
         target_symbol="UNIFIED_FOREX",
