@@ -96,9 +96,10 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_data == 'true'
     runs-on: ubuntu-latest
-    # 95-min hard cap: ~17min setup/install/download + ~47min for 70 steps + ~15min
-    # validation/save/Comet flush + buffer.
-    timeout-minutes: 95
+    # 360-min cap (GitHub max for public repos). No per-step timeout on the
+    # Train step — only --max-steps 70 governs when training stops; post-training
+    # Comet flush + log_model upload + save are given unlimited time to finish.
+    timeout-minutes: 360
 
     steps:
       - name: Checkout
@@ -146,9 +147,9 @@ jobs:
           "
 
       - name: Train Model
-        # 75-min step cap: 70 steps × ~40s ≈ 47min training + ~15min
-        # validation/save/Comet flush + buffer. No time limit — step count governs.
-        timeout-minutes: 75
+        # No step timeout — only --max-steps 70 governs when training stops.
+        # Post-training validation, model save, and Comet log_model/flush run
+        # to completion without being killed.
         env:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
           PYTHONUNBUFFERED: "1"
