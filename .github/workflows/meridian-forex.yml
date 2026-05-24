@@ -32,6 +32,24 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Run Information
+        run: |
+          echo "=================================================="
+          echo "   MERIDIAN.AI  ★  FOREX TRAINING PIPELINE"
+          echo "=================================================="
+          echo "  Run       : #${{ github.run_number }} (attempt ${{ github.run_attempt }})"
+          echo "  Triggered : ${{ github.event_name }}"
+          echo "  Commit    : ${{ github.sha }}"
+          echo "  Branch    : ${{ github.ref_name }}"
+          echo "  Started   : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Runner    : ${{ runner.os }} / ${{ runner.arch }}"
+          echo "=================================================="
+          echo ""
+          echo "--- System Resources ---"
+          echo "  CPUs  : $(nproc)"
+          free -h | awk '/^Mem:/ {printf "  RAM   : %s total, %s available\n", $2, $7}'
+          df -h / | awk 'NR==2    {printf "  Disk  : %s free of %s\n", $4, $2}'
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -48,39 +66,71 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          echo "--- Installing dependencies ---"
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
           pip install comet-ml
+          echo ""
+          echo "--- Installed versions ---"
+          python --version
+          pip show torch pandas numpy comet-ml | grep -E "^(Name|Version):"
 
       - name: Free Disk Space
         run: |
+          echo "--- Disk before cleanup ---"
+          df -h /
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
-          df -h
+          echo "--- Disk after cleanup ---"
+          df -h /
 
       - name: Fetch Forex Data
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "Fetching forex data..."
+          echo "--- Fetching forex data (up to 30 pairs) ---"
+          START=$(date +%s)
           python scripts/fetch_and_store_data.py \
             --db-file training.db \
             --asset-type forex \
             --limit 30
+          ELAPSED=$(( $(date +%s) - START ))
+          echo "--- Fetch completed in ${ELAPSED}s ---"
 
       - name: Check if Data was Fetched
         id: check_data
         run: |
           if [ -f training.db ]; then
             COUNT=$(sqlite3 training.db "SELECT COUNT(*) FROM market_data;")
-            echo "Total rows: $COUNT"
+            echo "Total rows in DB: $COUNT"
+
             if [ "$COUNT" -gt "0" ]; then
               echo "has_data=true" >> $GITHUB_OUTPUT
+              echo ""
+              echo "=== Database Summary ==="
+              sqlite3 -column -header training.db \
+                "SELECT asset_type, COUNT(*) as rows, COUNT(DISTINCT symbol) as symbols \
+                 FROM market_data GROUP BY asset_type;"
+
+              echo ""
+              echo "=== Per-Pair Breakdown (forex) ==="
+              sqlite3 -column -header training.db \
+                "SELECT symbol,
+                        COUNT(*)   AS rows,
+                        MIN(date)  AS earliest,
+                        MAX(date)  AS latest,
+                        CAST(ROUND(JULIANDAY(MAX(date)) - JULIANDAY(MIN(date))) AS INT) AS days_span
+                 FROM market_data
+                 WHERE asset_type = 'forex'
+                 GROUP BY symbol
+                 ORDER BY symbol;"
             else
               echo "has_data=false" >> $GITHUB_OUTPUT
+              echo "WARNING: Database is empty — skipping training"
             fi
           else
             echo "has_data=false" >> $GITHUB_OUTPUT
+            echo "WARNING: training.db not found — skipping training"
           fi
 
       - name: Upload Database
@@ -105,6 +155,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: System Resources
+        run: |
+          echo "=================================================="
+          echo "   MERIDIAN.AI  ★  FOREX TRAIN JOB STARTING"
+          echo "=================================================="
+          echo "  Run     : #${{ github.run_number }}"
+          echo "  Started : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+          echo "--- CPU ---"
+          echo "  Cores : $(nproc)"
+          cat /proc/cpuinfo | grep "model name" | head -1 | sed 's/model name.*: /  Model : /'
+          echo ""
+          echo "--- Memory ---"
+          free -h
+          echo ""
+          echo "--- Disk ---"
+          df -h /
+          echo "=================================================="
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -116,6 +185,26 @@ jobs:
         with:
           name: forex-training-db-${{ github.run_number }}
 
+      - name: Database Stats
+        run: |
+          echo "=== Training Database Loaded ==="
+          TOTAL=$(sqlite3 training.db "SELECT COUNT(*) FROM market_data WHERE asset_type='forex';")
+          PAIRS=$(sqlite3 training.db "SELECT COUNT(DISTINCT symbol) FROM market_data WHERE asset_type='forex';")
+          echo "  Total rows   : $TOTAL"
+          echo "  Pairs        : $PAIRS"
+          echo "  Avg rows/pair: $(( TOTAL / PAIRS ))"
+          echo ""
+          echo "--- Per-Pair Detail ---"
+          sqlite3 -column -header training.db \
+            "SELECT symbol,
+                    COUNT(*)   AS rows,
+                    MIN(date)  AS earliest,
+                    MAX(date)  AS latest
+             FROM market_data
+             WHERE asset_type = 'forex'
+             GROUP BY symbol
+             ORDER BY symbol;"
+
       - name: Cache Dependencies
         uses: actions/cache@v4
         with:
@@ -125,10 +214,15 @@ jobs:
       - name: Install Dependencies
         timeout-minutes: 8
         run: |
+          echo "--- Installing dependencies ---"
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
           pip install comet-ml huggingface_hub
+          echo ""
+          echo "--- Key package versions ---"
+          python --version
+          pip show torch comet-ml huggingface-hub pandas numpy | grep -E "^(Name|Version):"
 
       - name: Download Existing Model
         timeout-minutes: 5
@@ -146,6 +240,30 @@ jobs:
               print(f'No existing model found, will train fresh: {e}')
           "
 
+      - name: Existing Model Info
+        run: |
+          if [ -f models/Meridian.AI_Forex.pt ]; then
+            SIZE=$(ls -lh models/Meridian.AI_Forex.pt | awk '{print $5}')
+            echo "✓ Existing model: models/Meridian.AI_Forex.pt  ($SIZE)"
+            python -c "
+          import torch
+          try:
+              m = torch.load('models/Meridian.AI_Forex.pt', map_location='cpu', weights_only=False)
+              print(f'  Architecture : {m.get(\"config\", {}).get(\"version\", \"N/A\")}')
+              print(f'  Training date: {m.get(\"training_date\", \"N/A\")}')
+              print(f'  Global step  : {m.get(\"global_step\", \"N/A\")}')
+              print(f'  Best loss    : {m.get(\"best_loss\", \"N/A\")}')
+              print(f'  Accuracy     : {m.get(\"accuracy\", \"N/A\")}')
+              sd = m.get('model_state_dict', m.get('state_dict', {}))
+              total = sum(v.numel() for v in sd.values()) if sd else 0
+              print(f'  Parameters   : {total:,}')
+          except Exception as e:
+              print(f'  Could not inspect model: {e}')
+          " || true
+          else
+            echo "  No existing model on HF — will train from scratch"
+          fi
+
       - name: Train Model
         # No step timeout — only --max-steps 70 governs when training stops.
         # Post-training validation, model save, and Comet log_model/flush run
@@ -154,7 +272,11 @@ jobs:
           COMET_API_KEY: ${{ secrets.COMET_API_KEY }}
           PYTHONUNBUFFERED: "1"
         run: |
-          echo "Training Forex Model (70 steps, no time limit)"
+          echo "=================================================="
+          echo "   STARTING FOREX MODEL TRAINING"
+          echo "   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "   Max steps: 70  |  No time limit"
+          echo "=================================================="
           python -u scripts/train_forex_model.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
@@ -162,6 +284,46 @@ jobs:
             --epochs 999 \
             --max-steps 70 \
             --comet-api-key "$COMET_API_KEY"
+          EXIT_CODE=$?
+          echo ""
+          echo "=================================================="
+          echo "   TRAINING SCRIPT EXITED — code=$EXIT_CODE"
+          echo "   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "=================================================="
+          exit $EXIT_CODE
+
+      - name: Post-Training Model Verification
+        if: always()
+        run: |
+          echo "=== Post-Training Model Check ==="
+          if [ -f models/Meridian.AI_Forex.pt ]; then
+            SIZE=$(ls -lh models/Meridian.AI_Forex.pt | awk '{print $5}')
+            MTIME=$(stat -c '%y' models/Meridian.AI_Forex.pt)
+            echo "✓ Model file PRESENT"
+            echo "  Path     : models/Meridian.AI_Forex.pt"
+            echo "  Size     : $SIZE"
+            echo "  Modified : $MTIME"
+            echo ""
+            python -c "
+          import torch
+          try:
+              m = torch.load('models/Meridian.AI_Forex.pt', map_location='cpu', weights_only=False)
+              print(f'  Training date: {m.get(\"training_date\", \"N/A\")}')
+              print(f'  Global step  : {m.get(\"global_step\", \"N/A\")}')
+              print(f'  Best loss    : {m.get(\"best_loss\", \"N/A\")}')
+              print(f'  Accuracy     : {m.get(\"accuracy\", \"N/A\")}')
+          except Exception as e:
+              print(f'  Could not inspect saved model: {e}')
+          " || true
+          else
+            echo "✗ CRITICAL: Model file NOT found at models/Meridian.AI_Forex.pt"
+            echo "  Artifact upload will be skipped — no HF push this run"
+          fi
+          echo ""
+          echo "--- Final disk state ---"
+          df -h /
+          echo "--- models/ directory ---"
+          ls -lh models/ 2>/dev/null || echo "(models/ directory empty or missing)"
 
       - name: Upload Model
         if: always() && hashFiles('models/Meridian.AI_Forex.pt') != ''
@@ -188,6 +350,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Deploy Info
+        run: |
+          echo "=================================================="
+          echo "   MERIDIAN.AI  ★  FOREX DEPLOY JOB"
+          echo "=================================================="
+          echo "  Run        : #${{ github.run_number }}"
+          echo "  Train result: ${{ needs.train.result }}"
+          echo "  Started    : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "=================================================="
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -205,6 +377,17 @@ jobs:
           name: forex-model-${{ github.run_number }}
           path: models/
 
+      - name: Model Download Status
+        run: |
+          echo "--- Artifact download outcome: ${{ steps.download_model.outcome }} ---"
+          if [ -f models/Meridian.AI_Forex.pt ]; then
+            SIZE=$(ls -lh models/Meridian.AI_Forex.pt | awk '{print $5}')
+            echo "✓ Model ready for upload: models/Meridian.AI_Forex.pt ($SIZE)"
+          else
+            echo "✗ Model file not found after download — HF upload will be skipped"
+            ls -la models/ 2>/dev/null || echo "(models/ directory missing)"
+          fi
+
       - name: Upload to HF Hub
         # Only push if the artifact actually arrived. If training got SIGKILLed
         # mid-save the artifact step may have nothing to upload — skip cleanly.
@@ -212,10 +395,17 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "Uploading Forex Model to Hugging Face..."
+          echo "--- Uploading Forex Model to Hugging Face ---"
+          SIZE=$(ls -lh models/Meridian.AI_Forex.pt | awk '{print $5}')
+          echo "  File  : models/Meridian.AI_Forex.pt ($SIZE)"
+          echo "  Repo  : meridianal/ARA.AI"
+          echo "  Time  : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          START=$(date +%s)
           python scripts/push_elite_models.py \
             --model-path models/Meridian.AI_Forex.pt \
             --model-type forex
+          ELAPSED=$(( $(date +%s) - START ))
+          echo "--- HF upload completed in ${ELAPSED}s ---"
 
   cleanup:
     name: Cleanup & Report
@@ -226,6 +416,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Pipeline Summary
+        run: |
+          echo "=================================================="
+          echo "   MERIDIAN.AI  ★  FOREX PIPELINE COMPLETE"
+          echo "=================================================="
+          echo "  Run    : #${{ github.run_number }}"
+          echo "  Setup  : ${{ needs.setup.result }}"
+          echo "  Train  : ${{ needs.train.result }}"
+          echo "  Deploy : ${{ needs.deploy.result }}"
+          echo "  Time   : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "=================================================="
 
       - name: Delete Artifacts
         uses: geekyeggo/delete-artifact@v5
