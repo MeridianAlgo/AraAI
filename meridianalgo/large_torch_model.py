@@ -971,14 +971,52 @@ class AdvancedMLSystem:
                     if max_steps is not None:
                         print(
                             f"Step limit ({max_steps}) reached in {elapsed:.2f}s "
-                            f"({elapsed/max_steps:.3f}s/step)"
+                            f"({elapsed/max_steps:.3f}s/step)",
+                            flush=True,
                         )
                     else:
                         print(
                             f"Time limit reached after {elapsed/60:.1f}min, "
                             f"{epochs_completed} full epochs, {global_step} steps "
-                            f"— running validation before exit"
+                            f"— running validation before exit",
+                            flush=True,
                         )
+
+                    # === SAFETY SAVE ============================================
+                    # CI runners SIGTERM the job shortly after the training loop
+                    # exits — killing the 4096-sample CPU validation + Comet
+                    # 132MB log_model upload before _save_model() runs ~140
+                    # lines below. Without this early write the artifact step
+                    # finds an empty models/ dir and the HF push is skipped.
+                    # Snapshot live weights here; metadata + best-EMA load +
+                    # atomic re-save still happen below if we survive
+                    # validation. Atomic _save_model writes to .tmp + fsync +
+                    # os.replace so this never produces a truncated checkpoint.
+                    try:
+                        print(
+                            "  [safety-save] Writing model to disk before "
+                            "validation/Comet (defends against post-train "
+                            "SIGTERM)...",
+                            flush=True,
+                        )
+                        self.metadata["training_date"] = datetime.now().isoformat()
+                        self.metadata["global_step"] = int(global_step)
+                        if symbol not in self.metadata.get("trained_symbols", []):
+                            self.metadata.setdefault("trained_symbols", []).append(
+                                symbol
+                            )
+                        self._save_model()
+                        print(
+                            f"  [safety-save] OK — {global_step} steps written "
+                            f"to {self.model_path}",
+                            flush=True,
+                        )
+                    except Exception as _ssave_e:
+                        print(
+                            f"  [safety-save] FAILED (non-fatal): {_ssave_e}",
+                            flush=True,
+                        )
+                    # ============================================================
 
                 epochs_completed = epoch + 1
                 avg_train_loss = train_loss / max(n_batches, 1)
