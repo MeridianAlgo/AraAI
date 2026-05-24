@@ -973,11 +973,7 @@ class AdvancedMLSystem:
                         # curves in Comet.
                         if comet_experiment:
                             try:
-                                _gn = (
-                                    float(grad_norm_val)
-                                    if grad_norm_val is not None
-                                    else 0.0
-                                )
+                                _gn = float(grad_norm_val) if grad_norm_val is not None else 0.0
                                 comet_experiment.log_metrics(
                                     {
                                         "step/train_loss": float(loss.item()),
@@ -985,9 +981,7 @@ class AdvancedMLSystem:
                                             optimizer.param_groups[0]["lr"]
                                         ),
                                         "step/grad_norm": _gn,
-                                        "step/elapsed_sec": float(
-                                            time.time() - train_start
-                                        ),
+                                        "step/elapsed_sec": float(time.time() - train_start),
                                     },
                                     step=int(global_step),
                                 )
@@ -998,13 +992,13 @@ class AdvancedMLSystem:
                         # Print every step on CI so the user sees live
                         # training progress instead of one "Step limit
                         # reached" line at the end.
-                        if global_step == 1 or global_step % 5 == 0 or (
-                            max_steps is not None and global_step == max_steps
+                        if (
+                            global_step == 1
+                            or global_step % 5 == 0
+                            or (max_steps is not None and global_step == max_steps)
                         ):
                             _step_total = (
-                                f"{global_step}/{max_steps}"
-                                if max_steps
-                                else f"{global_step}"
+                                f"{global_step}/{max_steps}" if max_steps else f"{global_step}"
                             )
                             _gn_str = (
                                 f"{float(grad_norm_val):.3f}"

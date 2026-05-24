@@ -32,11 +32,7 @@ SOURCES = [
 
 
 def get_token():
-    tok = (
-        os.getenv("HF_TOKEN")
-        or os.getenv("huggingface_token")
-        or os.getenv("HUGGINGFACE_TOKEN")
-    )
+    tok = os.getenv("HF_TOKEN") or os.getenv("huggingface_token") or os.getenv("HUGGINGFACE_TOKEN")
     return tok.strip() if tok else None
 
 
