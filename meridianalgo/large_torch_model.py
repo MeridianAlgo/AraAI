@@ -1002,9 +1002,7 @@ class AdvancedMLSystem:
                         self.metadata["training_date"] = datetime.now().isoformat()
                         self.metadata["global_step"] = int(global_step)
                         if symbol not in self.metadata.get("trained_symbols", []):
-                            self.metadata.setdefault("trained_symbols", []).append(
-                                symbol
-                            )
+                            self.metadata.setdefault("trained_symbols", []).append(symbol)
                         self._save_model()
                         print(
                             f"  [safety-save] OK — {global_step} steps written "
