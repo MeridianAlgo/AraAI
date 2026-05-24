@@ -954,7 +954,9 @@ class AdvancedMLSystem:
 
                     # Step optimizer every grad_accum_steps
                     if (step + 1) % grad_accum_steps == 0 or (step + 1) == len(train_loader):
-                        self.accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
+                        grad_norm_val = self.accelerator.clip_grad_norm_(
+                            self.model.parameters(), 1.0
+                        )
                         optimizer.step()
                         optimizer.zero_grad()
                         global_step += 1
@@ -962,6 +964,61 @@ class AdvancedMLSystem:
                         # Update EMA model
                         unwrapped = self.accelerator.unwrap_model(self.model)
                         update_ema(ema_model, unwrapped, ema_decay)
+
+                        # === Per-step Comet logging =========================
+                        # Per-epoch log_metrics never fires on 70-step CI runs
+                        # (one epoch = ~187 optimizer steps), so without this
+                        # the Comet dashboard shows zero curves. Log every
+                        # step here — cheap and gives real-time training
+                        # curves in Comet.
+                        if comet_experiment:
+                            try:
+                                _gn = (
+                                    float(grad_norm_val)
+                                    if grad_norm_val is not None
+                                    else 0.0
+                                )
+                                comet_experiment.log_metrics(
+                                    {
+                                        "step/train_loss": float(loss.item()),
+                                        "step/learning_rate": float(
+                                            optimizer.param_groups[0]["lr"]
+                                        ),
+                                        "step/grad_norm": _gn,
+                                        "step/elapsed_sec": float(
+                                            time.time() - train_start
+                                        ),
+                                    },
+                                    step=int(global_step),
+                                )
+                            except Exception:
+                                pass
+
+                        # === Per-step CI stdout =============================
+                        # Print every step on CI so the user sees live
+                        # training progress instead of one "Step limit
+                        # reached" line at the end.
+                        if global_step == 1 or global_step % 5 == 0 or (
+                            max_steps is not None and global_step == max_steps
+                        ):
+                            _step_total = (
+                                f"{global_step}/{max_steps}"
+                                if max_steps
+                                else f"{global_step}"
+                            )
+                            _gn_str = (
+                                f"{float(grad_norm_val):.3f}"
+                                if grad_norm_val is not None
+                                else "n/a"
+                            )
+                            print(
+                                f"  step {_step_total} | "
+                                f"loss={loss.item():.4f} | "
+                                f"lr={optimizer.param_groups[0]['lr']:.2e} | "
+                                f"grad={_gn_str} | "
+                                f"t={time.time() - train_start:.0f}s",
+                                flush=True,
+                            )
 
                     train_loss += loss.item()
                     n_batches += 1
