@@ -4,6 +4,64 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v5.2.0] — 2026-05-23 — Single-job CI pipeline + per-step Comet curves + safety-save
+
+**The HF-push-actually-works release.** v5.1.0 tightened the time budget but a different failure mode kept biting: the runner was SIGTERMed *after* the step-limit print but *before* the model hit disk, leaving the artifact step with nothing to upload. Hugging Face hadn't received a new checkpoint in 8 days even though every training run looked successful in the Actions UI. v5.2 traces the silent failure end-to-end and fixes the four pieces that allowed it to keep happening.
+
+### Single-job pipeline
+
+`meridian-forex.yml` + `meridian-stocks.yml` (four jobs each: setup → train → deploy → cleanup) collapse into one job per workflow (`forex.yml` + `stocks.yml`). The `.pt` never leaves the runner that produced it — no `actions/upload-artifact` + `actions/download-artifact` dance.
+
+Why this matters: in the old layout, when the train step exited 143, the conditional `if: always() && hashFiles(...)` on Upload Model evaluated against an empty `models/` (because the script was killed before save). The artifact never existed, deploy's `actions/download-artifact` raised "Artifact not found", and the HF push silently skipped. In the single-job layout, the Push step runs on the same filesystem the safety-save just wrote to — `hashFiles` succeeds, the upload happens, HF gets the checkpoint even if the train step exited non-zero.
+
+### Safety save before validation
+
+`AdvancedMLSystem.train` now calls `_save_model()` *immediately* when `step_limit_reached` fires, before the 4096-sample CPU validation, before Comet `log_metrics`, before the final `log_model` 132 MB upload. The existing atomic write (`.tmp` + `fsync` + `os.replace`) means this can never produce a truncated checkpoint.
+
+Result: even if the runner is killed during validation or the Comet upload, a valid `.pt` is already on disk and the next step pushes it to HF.
+
+### Per-step Comet metrics
+
+Per-epoch `log_metrics` never fired on 70-step CI runs (an epoch is ~187 optimizer steps, so step-limit always lands mid-first-epoch). The Comet dashboard showed parameters but zero curves. v5.2 logs per optimizer step:
+
+- `step/train_loss` — raw per-step loss
+- `step/learning_rate` — current LR from the scheduler
+- `step/grad_norm` — pre-clip gradient L2 norm
+- `step/elapsed_sec` — seconds since `train_start`
+
+70 data points per run, every run, every project — real training curves on the dashboard at last.
+
+### Per-step CI stdout
+
+Every 5 steps (plus step 1 and the final step) the training loop now prints:
+
+```
+  step 5/70 | loss=0.0412 | lr=4.8e-04 | grad=0.831 | t=125s
+```
+
+flushed immediately. Live progress in the Actions log instead of one "Step limit reached" line at the end.
+
+### Renames
+
+- Workflows: `meridian-forex.yml` → `forex.yml`, `meridian-stocks.yml` → `stocks.yml`
+- Scripts: `train_forex_model.py` → `train_forex.py`, `train_stock_model.py` → `train_stocks.py`, `push_elite_models.py` → `push_to_hf.py`
+
+`git mv` was used so history is preserved.
+
+### No step timeouts on the Train Model step
+
+Only `--max-steps 70` governs when training stops. Job-level cap stays at 360 min (GitHub Actions maximum for public repos). Post-training validation + Comet flush no longer race against a 38- or 55- or 75-minute step deadline.
+
+### Compatibility
+
+State-dict layout is unchanged from v5.1.0. Existing checkpoints load and continue training — no cold restart, no week-long climb back to the current accuracy. `_MIN_LOADABLE` stays at `(4, 1)`.
+
+### Tags
+
+`v5.2.0`, `MeridianModel-2026`, `type:stock|forex`.
+
+---
+
 ## [v5.1.0] — 2026-05-21 — Hardened CI + full Comet telemetry + HF legacy migration
 
 **The reliability release.** Diagnoses and fixes the recurring "The operation was canceled" CI failure, makes every training run fully auditable in Comet, and reorganises the Hugging Face repository so v5 checkpoints live next to a `legacy/` archive of pre-v5 artifacts.

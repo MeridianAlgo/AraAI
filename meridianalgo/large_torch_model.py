@@ -17,8 +17,10 @@ import torch.nn.functional as F
 from accelerate import Accelerator
 
 # ---------------------------------------------------------------------------
-# v5.1.0 — exposed for downstream callers and Comet tagging.
-MODEL_VERSION = "5.1.0"
+# v5.2.0 — single-job CI + per-step Comet curves + safety-save before
+# validation. State-dict layout is unchanged from v5.1.0 so existing
+# checkpoints load and continue training without a cold restart.
+MODEL_VERSION = "5.2.0"
 ARCHITECTURE_NAME = "MeridianModel-2026"
 # ---------------------------------------------------------------------------
 

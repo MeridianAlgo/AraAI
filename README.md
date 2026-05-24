@@ -4,16 +4,31 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-5.0.0-green.svg)
-[![Meridian.AI for Forex](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-forex.yml)
-[![Meridian.AI for Stocks](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/meridian-stocks.yml)
-[![Meridian.AI Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
+![Version](https://img.shields.io/badge/version-5.2.0-green.svg)
+[![Forex Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml)
+[![Stock Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml)
+[![Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
 
 ---
 
 Meridian.AI is a deep learning system that predicts price movements for **any stock or forex pair** in real time. It combines sequence modeling (optional Mamba SSM), sparse expert routing (MoE with SwiGLU), and efficient attention (GQA + RoPE) into a single unified model — continuously trained and deployed via GitHub Actions **every hour**.
 
 **Models are hosted on Hugging Face:** [meridianal/ARA.AI](https://huggingface.co/meridianal/ARA.AI)
+
+---
+
+## What Changed in v5.2
+
+v5.2 is a CI + observability release — the model architecture is unchanged from v5.1, so existing checkpoints continue training without a cold restart. The fix targets are the silent failures that left Hugging Face frozen for 8 days while training loops looked successful in the GitHub Actions UI.
+
+| # | Change | Why |
+|---|--------|-----|
+| 1 | **Single-job pipeline** | Old setup → train → deploy → cleanup chain transferred the `.pt` between runners as an artifact. When the train step was SIGTERMed before saving, the deploy job downloaded nothing and skipped silently. Now everything runs on one runner with `if: always() && hashFiles(.pt)` gating the push — even an exit-143 train step doesn't break deploy. |
+| 2 | **Safety save before validation** | Training writes the model to disk *immediately* when `step_limit_reached` fires, before the 4096-sample CPU validation + Comet 132 MB `log_model` upload. Atomic `.tmp + fsync + os.replace` so the checkpoint is never truncated. Defends against post-training SIGTERM. |
+| 3 | **Per-step Comet metrics** | `log_metrics` previously fired per-epoch, but `max_steps=70` stops mid-first-epoch (~187 steps/epoch). Comet never received curves. Now logs `step/train_loss`, `step/learning_rate`, `step/grad_norm`, `step/elapsed_sec` every optimizer step — real-time training curves on the Comet dashboard. |
+| 4 | **Per-step CI stdout** | Every 5 steps prints `step N/70 \| loss=… \| lr=… \| grad=… \| t=…s`. Live progress instead of one "Step limit reached" line at the end. |
+| 5 | **Workflows + scripts renamed** | `meridian-forex.yml` → `forex.yml`, `meridian-stocks.yml` → `stocks.yml`, `train_*_model.py` → `train_*.py`, `push_elite_models.py` → `push_to_hf.py`. |
+| 6 | **No step timeouts on training** | Only `--max-steps 70` governs when training stops. Post-training validation and Comet flush run to completion. |
 
 ---
 
