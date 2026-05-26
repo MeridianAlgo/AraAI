@@ -172,14 +172,14 @@ jobs:
           echo "=================================================="
           echo "   STARTING FOREX MODEL TRAINING"
           echo "   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          echo "   Max steps: 70 | No time limit"
+          echo "   Max steps: 300 | No time limit (~2.5h budget)"
           echo "=================================================="
           python -u scripts/train_forex.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
             --epochs 999 \
-            --max-steps 70 \
+            --max-steps 300 \
             --comet-api-key "$COMET_API_KEY"
           EXIT_CODE=$?
           echo ""

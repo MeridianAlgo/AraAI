@@ -4,6 +4,29 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v5.2.2] — 2026-05-26 — Step-based LR schedule and a real training budget
+
+**The model can finally learn again.** With v5.2.1 the pipeline was stable and pushing, but the loss curve was flat. The cause was the learning rate schedule, not the data.
+
+### Root cause
+
+The schedule was a two epoch linear warmup followed by cosine annealing, and `scheduler.step()` was called once per epoch. A capped run (`--max-steps 70`) stops well inside the first epoch, so the scheduler stepped at most once and the learning rate stayed pinned at the `0.1x` warmup floor (`5e-5`). The cosine phase never ran, so every run was a tiny constant rate nudge and the loss barely moved.
+
+### Fix
+
+When `--max-steps` is set, the schedule is now built in step units and advanced once per optimizer step:
+
+- Warmup over the first 10 percent of steps (`0.1x` to `1x` of base LR).
+- `CosineAnnealingLR` over the remaining steps, down to `eta_min = 0.05 * lr`.
+
+For a 300 step run the LR now ramps to its `5e-4` peak by step 30 (10x higher than the old stuck value) and anneals to `2.5e-5` by the end. Offline epoch based training (no `--max-steps`) keeps the original warm restart schedule.
+
+### Budget
+
+The step cap is raised from 70 to **300** in both workflows, roughly two and a half hours per run on the standard runner. The hourly cron is unchanged; the existing concurrency setting (`cancel-in-progress: false`) keeps at most one run in progress and one pending, so longer runs simply shift the effective cadence instead of piling up.
+
+---
+
 ## [v5.2.1] — 2026-05-26 — Batched validation forward pass (the real OOM fix)
 
 **The push-finally-lands release.** v5.2.0 added the safety-save so a valid `.pt` always hit disk at the step limit — but Hugging Face *still* hadn't updated since 2026-05-15. Tracing the actual runner log showed the cause was not a time-budget SIGTERM at all:

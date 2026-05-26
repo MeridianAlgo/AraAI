@@ -17,12 +17,14 @@ import torch.nn.functional as F
 from accelerate import Accelerator
 
 # ---------------------------------------------------------------------------
-# v5.2.1 — batch the post-training validation forward pass. A single
-# 4096-sample pass OOM-killed the CPU CI runner right after the step-limit
-# safety-save, reclaiming the runner before the HF push could run (HF had
-# been stale since 2026-05-15). State-dict layout unchanged since v5.1.0 so
-# existing checkpoints load and continue training without a cold restart.
-MODEL_VERSION = "5.2.1"
+# v5.2.2 — step-based LR schedule on capped runs. With --max-steps the old
+# epoch-based scheduler never finished its 2-epoch warmup (a run is under one
+# epoch), so LR stayed pinned at the 0.1x warmup floor and the model barely
+# moved. Now warmup + cosine are sized to max_steps and stepped per optimizer
+# step, and the step budget is raised to 300 (~2.5h) so training actually
+# progresses. v5.2.1 fixed the validation OOM that froze HF since 2026-05-15.
+# State-dict layout unchanged since v5.1.0 so existing checkpoints keep training.
+MODEL_VERSION = "5.2.2"
 ARCHITECTURE_NAME = "MeridianModel-2026"
 # ---------------------------------------------------------------------------
 
@@ -745,8 +747,16 @@ class AdvancedMLSystem:
                         "train.lr": float(lr),
                         "train.weight_decay": 0.02,
                         "train.optimizer": "AdamW",
-                        "train.lr_warmup_epochs": 2,
-                        "train.scheduler": "CosineAnnealingWarmRestarts",
+                        "train.warmup": (
+                            f"{max(10, int(round(max_steps * 0.1)))} steps"
+                            if max_steps
+                            else "2 epochs"
+                        ),
+                        "train.scheduler": (
+                            "LinearWarmup+CosineAnnealingLR (step-based)"
+                            if max_steps
+                            else "LinearWarmup+CosineAnnealingWarmRestarts (epoch-based)"
+                        ),
                         "train.loss": "BalancedDirectionLoss(alpha=0.6,beta=0.4)",
                         "train.ema_decay": float(ema_decay),
                         "train.validation_split": float(validation_split),
@@ -817,21 +827,49 @@ class AdvancedMLSystem:
                 betas=(0.9, 0.95),
             )
 
-            # === LR schedule: 2-epoch linear warmup → cosine annealing ===
-            # Warmup prevents large early gradients from corrupting freshly-init weights.
-            _warmup = 2
-            _warmup_sched = torch.optim.lr_scheduler.LinearLR(
-                optimizer, start_factor=0.1, end_factor=1.0, total_iters=_warmup
-            )
-            _cosine_sched = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-                optimizer,
-                T_0=max(3, (epochs - _warmup) // 3),
-                T_mult=1,
-                eta_min=lr * 0.01,
-            )
-            scheduler = torch.optim.lr_scheduler.SequentialLR(
-                optimizer, schedulers=[_warmup_sched, _cosine_sched], milestones=[_warmup]
-            )
+            # === LR schedule ===
+            # When a step budget is set (CI runs), build a STEP-based schedule and
+            # advance it once per optimizer step. The old schedule stepped only at
+            # epoch boundaries, so a run capped below one epoch never left the
+            # warmup floor (LR pinned at 0.1x base): the cosine phase never ran and
+            # the loss looked flat. Sizing warmup + cosine to max_steps lets warmup
+            # finish in the first 10% of steps and cosine anneal across the rest.
+            # When max_steps is None (offline epoch training), keep the original
+            # epoch-based warm-restart schedule untouched.
+            if max_steps is not None:
+                _step_based_sched = True
+                _warmup_steps = max(10, int(round(max_steps * 0.1)))
+                _warmup_sched = torch.optim.lr_scheduler.LinearLR(
+                    optimizer, start_factor=0.1, end_factor=1.0, total_iters=_warmup_steps
+                )
+                _cosine_sched = torch.optim.lr_scheduler.CosineAnnealingLR(
+                    optimizer, T_max=max(1, max_steps - _warmup_steps), eta_min=lr * 0.05
+                )
+                scheduler = torch.optim.lr_scheduler.SequentialLR(
+                    optimizer,
+                    schedulers=[_warmup_sched, _cosine_sched],
+                    milestones=[_warmup_steps],
+                )
+                print(
+                    f"  LR schedule: step-based, {_warmup_steps}-step warmup then "
+                    f"cosine {lr:.1e} -> {lr * 0.05:.1e} over {max_steps} steps",
+                    flush=True,
+                )
+            else:
+                _step_based_sched = False
+                _warmup = 2
+                _warmup_sched = torch.optim.lr_scheduler.LinearLR(
+                    optimizer, start_factor=0.1, end_factor=1.0, total_iters=_warmup
+                )
+                _cosine_sched = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                    optimizer,
+                    T_0=max(3, (epochs - _warmup) // 3),
+                    T_mult=1,
+                    eta_min=lr * 0.01,
+                )
+                scheduler = torch.optim.lr_scheduler.SequentialLR(
+                    optimizer, schedulers=[_warmup_sched, _cosine_sched], milestones=[_warmup]
+                )
 
             # === Loss with label smoothing on direction component ===
             from .direction_loss import BalancedDirectionLoss, calculate_direction_metrics
@@ -965,6 +1003,13 @@ class AdvancedMLSystem:
                         optimizer.zero_grad()
                         global_step += 1
 
+                        # Advance the LR schedule per optimizer step when a step
+                        # budget is set, so warmup completes and cosine annealing
+                        # actually runs within a single capped run. The epoch-based
+                        # branch steps below instead.
+                        if _step_based_sched:
+                            scheduler.step()
+
                         # Update EMA model
                         unwrapped = self.accelerator.unwrap_model(self.model)
                         update_ema(ema_model, unwrapped, ema_decay)
@@ -1094,7 +1139,10 @@ class AdvancedMLSystem:
 
                     direction_metrics = calculate_direction_metrics(ema_pred, y_val_batch)
 
-                scheduler.step()
+                # Step-based schedules already advanced once per optimizer step
+                # above; only the epoch-based schedule steps here.
+                if not _step_based_sched:
+                    scheduler.step()
 
                 current_lr = optimizer.param_groups[0]["lr"]
                 epoch_time = time.time() - epoch_start
