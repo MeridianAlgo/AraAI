@@ -4,6 +4,30 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v5.2.1] — 2026-05-26 — Batched validation forward pass (the real OOM fix)
+
+**The push-finally-lands release.** v5.2.0 added the safety-save so a valid `.pt` always hit disk at the step limit — but Hugging Face *still* hadn't updated since 2026-05-15. Tracing the actual runner log showed the cause was not a time-budget SIGTERM at all:
+
+```
+09:11:01  [safety-save] OK — 70 steps written
+09:11:29  ##[error]The runner has received a shutdown signal...
+09:11:30  ##[error]The operation was canceled.
+```
+
+The runner was **reclaimed ~28 s after the safety-save**, during the post-training validation. Because that is a *job-level* kill, every `if: always()` step — `Verify`, **`Push to Hugging Face`**, `Pipeline Summary` — was skipped, so the safety-saved checkpoint never left the runner.
+
+### Root cause
+
+`AdvancedMLSystem.train` ran the post-training validation as a **single forward pass over 4096 samples** (twice: EMA + main model). Training only forwards a ~64-sample micro-batch, so validation allocated roughly 64× the activation memory through the attention/Mamba/MoE stack and OOM-killed the CPU runner the instant validation started. Deterministic — every hourly run died at the same point.
+
+### Fix
+
+New `AdvancedMLSystem._predict_in_batches(model, X, batch_size=256)` runs validation forwards in fixed-size chunks and concatenates the predictions, holding peak memory at training levels. Both the per-epoch validation (4096) and the final-accuracy pass (2048) now go through it. The runner survives, the script exits cleanly, and the Verify + Push steps finally run.
+
+Side effect: the per-epoch `val_loss` / `direction_accuracy` and `summary.*` Comet metrics — which previously died with the runner — now log, and `experiment.end()` flushes cleanly.
+
+---
+
 ## [v5.2.0] — 2026-05-23 — Single-job CI pipeline + per-step Comet curves + safety-save
 
 **The HF-push-actually-works release.** v5.1.0 tightened the time budget but a different failure mode kept biting: the runner was SIGTERMed *after* the step-limit print but *before* the model hit disk, leaving the artifact step with nothing to upload. Hugging Face hadn't received a new checkpoint in 8 days even though every training run looked successful in the Actions UI. v5.2 traces the silent failure end-to-end and fixes the four pieces that allowed it to keep happening.

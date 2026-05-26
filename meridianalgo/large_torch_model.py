@@ -17,10 +17,12 @@ import torch.nn.functional as F
 from accelerate import Accelerator
 
 # ---------------------------------------------------------------------------
-# v5.2.0 — single-job CI + per-step Comet curves + safety-save before
-# validation. State-dict layout is unchanged from v5.1.0 so existing
-# checkpoints load and continue training without a cold restart.
-MODEL_VERSION = "5.2.0"
+# v5.2.1 — batch the post-training validation forward pass. A single
+# 4096-sample pass OOM-killed the CPU CI runner right after the step-limit
+# safety-save, reclaiming the runner before the HF push could run (HF had
+# been stale since 2026-05-15). State-dict layout unchanged since v5.1.0 so
+# existing checkpoints load and continue training without a cold restart.
+MODEL_VERSION = "5.2.1"
 ARCHITECTURE_NAME = "MeridianModel-2026"
 # ---------------------------------------------------------------------------
 
@@ -594,13 +596,13 @@ class AdvancedMLSystem:
                 prep_elapsed = train_start - global_start_time
                 effective_remaining = max_time_seconds - prep_elapsed
                 print(
-                    f"Data prep took {prep_elapsed:.0f}s — {effective_remaining/60:.1f}min left for training"
+                    f"Data prep took {prep_elapsed:.0f}s — {effective_remaining / 60:.1f}min left for training"
                 )
 
             print(f"\nTraining {self.model_type} model on {symbol}...")
             print(f"Training samples: {len(X)}")
             if max_time_seconds:
-                print(f"Time budget: {max_time_seconds/60:.0f} minutes (from pipeline start)")
+                print(f"Time budget: {max_time_seconds / 60:.0f} minutes (from pipeline start)")
             if max_steps:
                 print(f"Step limit: {max_steps} steps")
 
@@ -888,7 +890,7 @@ class AdvancedMLSystem:
                 if _should_stop(buffer_seconds=180):
                     elapsed = time.time() - deadline_start
                     print(
-                        f"Time limit reached after {elapsed/60:.1f}min "
+                        f"Time limit reached after {elapsed / 60:.1f}min "
                         f"— stopping at epoch {epoch}"
                     )
                     break
@@ -930,7 +932,7 @@ class AdvancedMLSystem:
                         elapsed = time.time() - deadline_start
                         print(
                             f"Time limit at step {global_step} "
-                            f"({elapsed/60:.1f}min) — stopping mid-epoch"
+                            f"({elapsed / 60:.1f}min) — stopping mid-epoch"
                         )
                         step_limit_reached = True
                         break
@@ -1024,12 +1026,12 @@ class AdvancedMLSystem:
                     if max_steps is not None:
                         print(
                             f"Step limit ({max_steps}) reached in {elapsed:.2f}s "
-                            f"({elapsed/max_steps:.3f}s/step)",
+                            f"({elapsed / max_steps:.3f}s/step)",
                             flush=True,
                         )
                     else:
                         print(
-                            f"Time limit reached after {elapsed/60:.1f}min, "
+                            f"Time limit reached after {elapsed / 60:.1f}min, "
                             f"{epochs_completed} full epochs, {global_step} steps "
                             f"— running validation before exit",
                             flush=True,
@@ -1078,14 +1080,15 @@ class AdvancedMLSystem:
                 self.model.eval()
                 val_subset = min(4096, len(X_val))
                 with torch.no_grad():
-                    X_val_batch = X_val[:val_subset].to(self.device)
                     y_val_batch = y_val[:val_subset].to(self.device)
 
-                    ema_pred, _ = ema_model(X_val_batch)
+                    # Batched forward — a single 4096-sample pass OOM-kills the
+                    # CI runner; see _predict_in_batches.
+                    ema_pred = self._predict_in_batches(ema_model, X_val[:val_subset])
                     ema_val_loss, _ = criterion(ema_pred, y_val_batch)
                     ema_val_loss_val = ema_val_loss.item()
 
-                    val_pred, _ = self.model(X_val_batch)
+                    val_pred = self._predict_in_batches(self.model, X_val[:val_subset])
                     val_loss, _ = criterion(val_pred, y_val_batch)
                     val_loss = val_loss.item()
 
@@ -1097,10 +1100,10 @@ class AdvancedMLSystem:
                 epoch_time = time.time() - epoch_start
                 elapsed_total = time.time() - train_start
                 remaining = _time_remaining()
-                remaining_str = f", {remaining/60:.0f}min left" if remaining else ""
+                remaining_str = f", {remaining / 60:.0f}min left" if remaining else ""
                 print(
                     f"Epoch {epoch + 1}/{epochs} "
-                    f"[{epoch_time:.0f}s, total {elapsed_total/60:.1f}min{remaining_str}] — "
+                    f"[{epoch_time:.0f}s, total {elapsed_total / 60:.1f}min{remaining_str}] — "
                     f"Train: {avg_train_loss:.4f}, Val: {val_loss:.4f}, "
                     f"EMA: {ema_val_loss_val:.4f}, "
                     f"Dir: {direction_metrics['direction_accuracy']:.1f}%, "
@@ -1202,11 +1205,9 @@ class AdvancedMLSystem:
 
             total_time = time.time() - train_start
             print("\nTraining complete!")
-            print(f"  {epochs_completed} epochs, {global_step} steps, " f"{total_time/60:.1f}min")
+            print(f"  {epochs_completed} epochs, {global_step} steps, {total_time / 60:.1f}min")
             print(f"  Best validation loss (EMA): {best_val_loss:.6f}")
-            print(
-                f"  Direction accuracy: " f"{direction_metrics.get('direction_accuracy', 0):.1f}%"
-            )
+            print(f"  Direction accuracy: {direction_metrics.get('direction_accuracy', 0):.1f}%")
 
             # Final direction accuracy — small batch, skip if time is tight or
             # if a shutdown signal was received (we need to exit fast).
@@ -1216,9 +1217,8 @@ class AdvancedMLSystem:
                 val_subset = min(2048, len(X_val))
                 self.model.eval()
                 with torch.no_grad():
-                    X_val_device = X_val[:val_subset].to(self.device)
                     y_val_device = y_val[:val_subset].to(self.device)
-                    final_pred, _ = self.model(X_val_device)
+                    final_pred = self._predict_in_batches(self.model, X_val[:val_subset])
                     final_metrics = calculate_direction_metrics(final_pred, y_val_device)
                     real_accuracy = final_metrics["direction_accuracy"]
                     f1 = final_metrics.get("f1_score", 0)
@@ -1264,6 +1264,26 @@ class AdvancedMLSystem:
 
             traceback.print_exc()
             return {"success": False, "error": str(e)}
+
+    def _predict_in_batches(self, model, X, batch_size=256):
+        """Run ``model`` forward over ``X`` in fixed-size chunks and return the
+        concatenated predictions.
+
+        A single forward over the full 4096-sample validation slice through the
+        attention/Mamba/MoE stack allocates ~60x the activation memory of the
+        64-sample training micro-batch. On CPU CI runners that spike OOM-kills
+        the process the instant validation starts (right after the step-limit
+        safety-save), the runner is reclaimed ("received a shutdown signal"),
+        and every later step — including the HF push — is skipped. Chunking
+        holds peak memory at training levels so the job survives to push.
+        """
+        preds = []
+        with torch.no_grad():
+            for i in range(0, len(X), batch_size):
+                chunk = X[i : i + batch_size].to(self.device)
+                out = model(chunk)
+                preds.append(out[0] if isinstance(out, tuple) else out)
+        return torch.cat(preds, dim=0)
 
     def _update_metadata(self, symbol, n_samples, y_min, y_max, best_val_loss, direction_metrics):
         """Update training metadata (used by checkpoints and final save)."""
