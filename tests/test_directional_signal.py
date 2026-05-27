@@ -170,4 +170,6 @@ def test_forex_directional_accuracy(symbol: str, forex_ckpt_path, forex_ckpt) ->
         pytest.skip("too few paired samples")
     acc = float(np.mean(np.sign(preds) == np.sign(actuals)))
     print(f"\n{symbol} directional acc: {acc:.3f} (n={len(preds)})")
-    assert acc >= 0.40, f"{symbol}: directional accuracy {acc:.3f} < 40% — model outputs are likely degenerate"
+    assert (
+        acc >= 0.40
+    ), f"{symbol}: directional accuracy {acc:.3f} < 40% — model outputs are likely degenerate"
