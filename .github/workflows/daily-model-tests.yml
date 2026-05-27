@@ -205,7 +205,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install torch numpy pytest --extra-index-url https://download.pytorch.org/whl/cpu
+        run: pip install torch numpy pytest psutil --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Install package
         run: pip install -e . --no-deps
@@ -253,7 +253,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install torch numpy pytest yfinance pandas scikit-learn \
+          pip install torch numpy pytest yfinance pandas scikit-learn psutil \
             --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Install package
@@ -390,6 +390,14 @@ jobs:
           echo "failures=$(cat failure_count.txt)" >> "$GITHUB_OUTPUT"
 
       # Open or update a GitHub issue when tests fail
+      - name: Ensure labels exist
+        if: steps.status.outputs.status == 'FAILED'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh label create "model-test-failure" --color "d93f0b" --description "Daily model test failed" 2>/dev/null || true
+          gh label create "bug" --color "d73a4a" --description "Something isn't working" 2>/dev/null || true
+
       - name: Find existing failure issue
         if: steps.status.outputs.status == 'FAILED'
         id: find_issue
@@ -425,7 +433,8 @@ jobs:
             gh issue create \
               --title "Daily model tests failing — $(date -u '+%Y-%m-%d')" \
               --body "$BODY" \
-              --label "model-test-failure,bug"
+              --label "model-test-failure" \
+              --label "bug"
             echo "Created new failure issue"
           fi
 
