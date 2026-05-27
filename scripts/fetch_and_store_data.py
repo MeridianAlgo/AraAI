@@ -15,17 +15,17 @@ import yfinance as yf
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Multiple timeframe configs to maximize data per symbol
+# Daily-only. Earlier versions also fetched hourly + weekly bars into the same
+# table; training then computed "next-step returns" across daily->hourly->weekly
+# boundaries (a ~5% weekly move sitting next to a ~0.1% hourly move), which
+# poisoned the target distribution and biased the model. One consistent
+# timeframe => one consistent prediction target (next-day return).
 STOCK_TIMEFRAMES = [
     ("max", "1d"),  # Max daily history (~20+ years for major stocks)
-    ("2y", "1h"),  # 2 years of hourly data (yfinance limit)
-    ("5y", "1wk"),  # 5 years of weekly data
 ]
 
 FOREX_TIMEFRAMES = [
     ("max", "1d"),  # Max daily history
-    ("2y", "1h"),  # 2 years hourly
-    ("5y", "1wk"),  # 5 years weekly
 ]
 
 
@@ -82,7 +82,9 @@ def fetch_and_store(symbol, db_file, asset_type, period="2y", interval="1d"):
             ticker_symbol = f"{symbol}=X"
 
         ticker = yf.Ticker(ticker_symbol)
-        df = ticker.history(period=period, interval=interval)
+        # auto_adjust=True => prices are split/dividend adjusted, so a 4:1 split
+        # no longer shows up as a fake -75% daily "return" in the training data.
+        df = ticker.history(period=period, interval=interval, auto_adjust=True)
 
         if df.empty:
             return 0

@@ -142,7 +142,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
-            WHERE asset_type = 'stock' AND symbol IN ({placeholders})
+            WHERE asset_type = 'stock' AND interval = '1d' AND symbol IN ({placeholders})
             ORDER BY symbol, date ASC
         """
     elif timeframe and timeframe in timeframe_days:
@@ -150,7 +150,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
-            WHERE asset_type = 'stock' AND symbol IN ({placeholders})
+            WHERE asset_type = 'stock' AND interval = '1d' AND symbol IN ({placeholders})
             AND date >= datetime('now', '-{days} days')
             ORDER BY symbol, date ASC
         """
@@ -159,7 +159,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
-            WHERE asset_type = 'stock' AND symbol IN ({placeholders})
+            WHERE asset_type = 'stock' AND interval = '1d' AND symbol IN ({placeholders})
             AND date >= datetime('now', '-90 days')
             ORDER BY symbol, date ASC
         """
@@ -183,7 +183,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         query = f"""
             SELECT symbol, date, open, high, low, close, volume
             FROM market_data
-            WHERE asset_type = 'stock' AND symbol IN ({placeholders})
+            WHERE asset_type = 'stock' AND interval = '1d' AND symbol IN ({placeholders})
             ORDER BY symbol, date ASC
         """
         df = pd.read_sql_query(query, conn, params=list(symbols))

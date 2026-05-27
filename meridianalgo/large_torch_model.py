@@ -639,7 +639,10 @@ class AdvancedMLSystem:
             # Fix: scrub NaN/Inf, winsorize at 0.5/99.5 percentiles, then hard-
             # clip to ±target_clip. Keep raw return scale so direction loss
             # operates on signed returns and predict() needs no denormalization.
-            target_clip = 1.0 if self.model_type == "stock" else 0.10
+            # Daily equity moves beyond ±25% are almost always bad data even
+            # after split adjustment; ±100% (the old cap) let split/bad-tick
+            # artefacts dominate the loss surface and skewed the target range.
+            target_clip = 0.25 if self.model_type == "stock" else 0.10
             y_tensor = torch.nan_to_num(y_tensor, nan=0.0, posinf=0.0, neginf=0.0)
             if y_tensor.numel() > 0:
                 lo_q = torch.quantile(y_tensor, 0.005).item()
@@ -653,18 +656,22 @@ class AdvancedMLSystem:
             # apply min-max denormalization. We persist this contract via
             # metadata["target_normalization"] = "raw".
 
-            # Scaler for features — normalize in-place to avoid doubling memory
-            self.scaler_mean = X_tensor.mean(dim=0)
-            self.scaler_std = X_tensor.std(dim=0) + 1e-8
+            # Train/validation split boundary. Samples arrive sorted by date,
+            # so the tail is the most-recent period — a real out-of-sample holdout.
+            n_val = int(len(X_tensor) * validation_split)
+            n_train = len(X_tensor) - n_val
+
+            # Fit the feature scaler on the TRAIN split ONLY. Fitting on the full
+            # tensor (the old behaviour) leaks validation-set mean/std into
+            # normalisation and inflates the held-out metrics.
+            self.scaler_mean = X_tensor[:n_train].mean(dim=0)
+            self.scaler_std = X_tensor[:n_train].std(dim=0) + 1e-8
             X_tensor.sub_(self.scaler_mean).div_(self.scaler_std)
             # Clip extreme normalised values — a feature with near-zero std can produce
             # values of ±100σ after normalisation, saturating activations and blowing gradients.
             X_tensor.clamp_(-5.0, 5.0)
 
             # Train/validation split (views, not copies)
-            n_val = int(len(X_tensor) * validation_split)
-            n_train = len(X_tensor) - n_val
-
             X_train = X_tensor[:n_train]
             y_train = y_tensor[:n_train]
             X_val = X_tensor[n_train:]

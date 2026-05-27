@@ -276,41 +276,62 @@ class UnifiedStockML:
             print(f"Dataset loaded: {len(df)} rows")
             print(f"Date range: {df.index[0]} to {df.index[-1]}")
 
-            # Add indicators
-            df = self._add_indicators(df)
-
             lookback = int(kwargs.get("lookback", 30))
 
-            # Prepare training data — vectorized (no per-row DataFrame slicing)
-            # float32 to halve memory (GitHub Actions runners have 7GB RAM)
-            feature_matrix = df[self.FEATURE_COLS].values.astype(np.float32)
-            close_vals = df["Close"].values.astype(np.float64)
+            # Build (X, y) PER SYMBOL so technical indicators, lookback windows,
+            # and next-day return targets never cross a symbol boundary.
+            #
+            # The previous implementation concatenated every symbol (and every
+            # timeframe) into one flat array, then ran _add_indicators and the
+            # window/return slicing over the whole thing. That let a 200-day SMA
+            # bleed across the AAPL->AMZN seam, built windows that were half one
+            # symbol and half the next, and computed "returns" across symbol and
+            # timeframe jumps — producing impossible +100% daily targets and a
+            # downward-biased, scale-confused model.
+            if "Symbol" in df.columns:
+                groups = [g for _, g in df.groupby("Symbol", sort=False)]
+            else:
+                groups = [df]
 
-            n_samples = len(df) - lookback - 1
-            if n_samples <= 0:
-                print("Error: Not enough data for lookback window")
-                return {"success": False, "error": "Not enough data for lookback window"}
+            X_parts, y_parts, date_parts = [], [], []
+            for g in groups:
+                if len(g) < lookback + 2:
+                    continue
+                g = g.sort_index().copy()
+                g = self._add_indicators(g)
+                fm = g[self.FEATURE_COLS].values.astype(np.float32)
+                cv = g["Close"].values.astype(np.float64)
+                n = len(g)
+                Xg = np.array(
+                    [fm[i - lookback + 1 : i + 1] for i in range(lookback, n - 1)],
+                    dtype=np.float32,
+                )
+                yg = (cv[lookback + 1 : n] - cv[lookback : n - 1]) / (cv[lookback : n - 1] + 1e-10)
+                yg = yg.astype(np.float32)
+                dg = g.index.values[lookback : n - 1]  # window end-date per sample
+                m = np.isfinite(Xg).all(axis=(1, 2)) & np.isfinite(yg)
+                if not m.any():
+                    continue
+                X_parts.append(Xg[m])
+                y_parts.append(yg[m])
+                date_parts.append(dg[m])
 
-            # Build X windows and y targets using NumPy slicing
-            X = np.array(
-                [feature_matrix[i - lookback + 1 : i + 1] for i in range(lookback, len(df) - 1)],
-                dtype=np.float32,
-            )
-            del feature_matrix  # Free ~N*44*4 bytes
-
-            y = (close_vals[lookback + 1 : len(df)] - close_vals[lookback : len(df) - 1]) / (
-                close_vals[lookback : len(df) - 1] + 1e-10
-            )
-            y = y.astype(np.float32)
-
-            # Remove NaN and Inf to prevent training explosion
-            mask = np.isfinite(X).all(axis=(1, 2)) & np.isfinite(y)
-            X = X[mask]
-            y = y[mask]
-
-            if len(X) == 0:
+            if not X_parts:
                 print("Error: No valid training samples")
                 return {"success": False, "error": "No valid training samples"}
+
+            X = np.concatenate(X_parts)
+            y = np.concatenate(y_parts)
+            dates = np.concatenate(date_parts)
+            del X_parts, y_parts, date_parts
+
+            # Sort all samples by window end-date so the downstream chronological
+            # train/val split holds out the most RECENT dates across all symbols
+            # — an honest out-of-sample test instead of "whichever symbols landed
+            # at the tail of the array".
+            order = np.argsort(dates, kind="stable")
+            X = X[order]
+            y = y[order]
 
             # 60K samples × (30 timesteps × 44 features × 4 bytes) ≈ 316MB for X.
             # At dim=256, no-Mamba: ~27 min for training steps, leaving ~18 min
