@@ -88,9 +88,7 @@ def test_training_history_has_finite_losses(ckpt_fix: str, request: pytest.Fixtu
     # expected.  We only require that training converged at least once (i.e. at
     # least one epoch recorded a finite val_loss).
     good = [
-        i
-        for i, h in enumerate(history)
-        if math.isfinite(float(h.get("val_loss", float("inf"))))
+        i for i, h in enumerate(history) if math.isfinite(float(h.get("val_loss", float("inf"))))
     ]
     assert good, (
         f"training_history has no finite val_loss entries across {len(history)} runs "
