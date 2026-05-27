@@ -1,0 +1,446 @@
+name: Ara.AI Daily Model Tests
+
+on:
+  schedule:
+    # Runs at 11:00 PM UTC every day (end of trading day buffer)
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_live_data:
+        description: "Skip live yfinance tests (NO_NET=1)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  HF_REPO: meridianal/ARA.AI
+  STOCKS_MODEL: models/Meridian.AI_Stocks.pt
+  FOREX_MODEL: models/Meridian.AI_Forex.pt
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ──────────────────────────────────────────────
+  # 1. Download the live models from Hugging Face
+  # ──────────────────────────────────────────────
+  download-models:
+    name: "Download Models from HF Hub"
+    runs-on: ubuntu-latest
+    outputs:
+      stocks_ok: ${{ steps.check.outputs.stocks_ok }}
+      forex_ok: ${{ steps.check.outputs.forex_ok }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
+
+      - name: Download checkpoints
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python - <<'EOF'
+          import os
+          from huggingface_hub import hf_hub_download
+
+          repo  = os.environ["HF_REPO"]
+          token = os.environ.get("HF_TOKEN") or None
+
+          os.makedirs("models_hf/models", exist_ok=True)
+
+          for fname, dest in [
+              (os.environ["STOCKS_MODEL"], "models_hf/models/Meridian.AI_Stocks.pt"),
+              (os.environ["FOREX_MODEL"],  "models_hf/models/Meridian.AI_Forex.pt"),
+          ]:
+              print(f"Downloading {fname} ...")
+              path = hf_hub_download(repo_id=repo, filename=fname, token=token, local_dir="models_hf")
+              print(f"  saved to {path}")
+          EOF
+
+      - name: Verify files exist
+        id: check
+        run: |
+          if [ -f "models_hf/models/Meridian.AI_Stocks.pt" ]; then
+            echo "stocks_ok=true"  >> "$GITHUB_OUTPUT"
+            echo "Stocks model: $(du -sh models_hf/models/Meridian.AI_Stocks.pt | cut -f1)"
+          else
+            echo "stocks_ok=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Stocks checkpoint not found after download"
+          fi
+
+          if [ -f "models_hf/models/Meridian.AI_Forex.pt" ]; then
+            echo "forex_ok=true"   >> "$GITHUB_OUTPUT"
+            echo "Forex model:  $(du -sh models_hf/models/Meridian.AI_Forex.pt  | cut -f1)"
+          else
+            echo "forex_ok=false"  >> "$GITHUB_OUTPUT"
+            echo "::error::Forex checkpoint not found after download"
+          fi
+
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf-models
+          path: models_hf/
+          retention-days: 1
+
+  # ──────────────────────────────────────────────
+  # 2. Checkpoint health — metadata & structure
+  # ──────────────────────────────────────────────
+  test-checkpoint-health:
+    name: "Checkpoint Health"
+    needs: download-models
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install torch numpy pytest --extra-index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package
+        run: pip install -e . --no-deps
+
+      - name: Download model artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: hf-models
+          path: models_hf/
+
+      - name: Run checkpoint health tests
+        run: |
+          pytest tests/test_checkpoint_health.py \
+            -v \
+            --tb=long \
+            --no-header \
+            -p no:warnings \
+            --junit-xml=results/checkpoint_health.xml
+        env:
+          PYTHONPATH: .
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-checkpoint-health
+          path: results/
+
+  # ──────────────────────────────────────────────
+  # 3. Model inference — forward pass & numerics
+  # ──────────────────────────────────────────────
+  test-model-inference:
+    name: "Model Inference"
+    needs: download-models
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install torch numpy pytest --extra-index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package
+        run: pip install -e . --no-deps
+
+      - name: Download model artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: hf-models
+          path: models_hf/
+
+      - name: Run inference tests
+        run: |
+          pytest tests/test_model_inference.py \
+            -v \
+            --tb=long \
+            --no-header \
+            -p no:warnings \
+            --junit-xml=results/model_inference.xml
+        env:
+          PYTHONPATH: .
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-model-inference
+          path: results/
+
+  # ──────────────────────────────────────────────
+  # 4. Denormalization regression tests
+  # ──────────────────────────────────────────────
+  test-denormalization:
+    name: "Predict Denormalization"
+    needs: download-models
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install torch numpy pytest --extra-index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package
+        run: pip install -e . --no-deps
+
+      - name: Download model artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: hf-models
+          path: models_hf/
+
+      - name: Run denormalization tests
+        run: |
+          pytest tests/test_predict_denormalization.py \
+            -v \
+            --tb=long \
+            --no-header \
+            -p no:warnings \
+            --junit-xml=results/denormalization.xml
+        env:
+          PYTHONPATH: .
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-denormalization
+          path: results/
+
+  # ──────────────────────────────────────────────
+  # 5. Live directional accuracy on real market data
+  # ──────────────────────────────────────────────
+  test-directional-signal:
+    name: "Live Directional Signal"
+    needs: download-models
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install torch numpy pytest yfinance pandas scikit-learn \
+            --extra-index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package
+        run: pip install -e . --no-deps
+
+      - name: Download model artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: hf-models
+          path: models_hf/
+
+      - name: Run directional signal tests
+        run: |
+          NO_NET=${{ github.event.inputs.skip_live_data == 'true' && '1' || '0' }} \
+          pytest tests/test_directional_signal.py \
+            -v \
+            --tb=long \
+            --no-header \
+            -p no:warnings \
+            --junit-xml=results/directional_signal.xml
+        env:
+          PYTHONPATH: .
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-directional-signal
+          path: results/
+
+  # ──────────────────────────────────────────────
+  # 6. Summary — report pass/fail and open issues
+  # ──────────────────────────────────────────────
+  report:
+    name: "Test Report"
+    needs:
+      - test-checkpoint-health
+      - test-model-inference
+      - test-denormalization
+      - test-directional-signal
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all result artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: all-results/
+          merge-multiple: true
+
+      - name: Install junit-xml parser
+        run: pip install junitparser
+
+      - name: Parse results and build summary
+        id: summary
+        run: |
+          python - <<'PYEOF'
+          import os, glob, sys
+          from junitparser import JUnitXml, Failure, Error
+
+          files = glob.glob("all-results/**/*.xml", recursive=True)
+          if not files:
+              print("No JUnit XML files found.")
+              sys.exit(0)
+
+          total_tests = total_failures = total_errors = total_skipped = 0
+          failed_cases = []
+
+          for f in sorted(files):
+              xml = JUnitXml.fromfile(f)
+              suite_name = os.path.splitext(os.path.basename(f))[0]
+              for suite in xml:
+                  for case in suite:
+                      total_tests += 1
+                      result = case.result
+                      if result:
+                          for r in result:
+                              if isinstance(r, Failure):
+                                  total_failures += 1
+                                  failed_cases.append(
+                                      f"FAIL  [{suite_name}] {case.classname}.{case.name}\n"
+                                      f"       {r.message}"
+                                  )
+                              elif isinstance(r, Error):
+                                  total_errors += 1
+                                  failed_cases.append(
+                                      f"ERROR [{suite_name}] {case.classname}.{case.name}\n"
+                                      f"       {r.message}"
+                                  )
+                      else:
+                          pass  # passed or skipped
+
+          passed = total_tests - total_failures - total_errors - total_skipped
+          status = "PASSED" if (total_failures + total_errors) == 0 else "FAILED"
+
+          summary = f"""
+          ## Ara.AI Daily Model Test Results — {status}
+
+          | Metric | Count |
+          |--------|-------|
+          | Total  | {total_tests} |
+          | Passed | {passed} |
+          | Failed | {total_failures} |
+          | Errors | {total_errors} |
+          | Skipped| {total_skipped} |
+          """
+
+          if failed_cases:
+              summary += "\n### Failures & Errors\n\n```\n"
+              summary += "\n\n".join(failed_cases)
+              summary += "\n```\n"
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+              fh.write(summary)
+
+          print(summary)
+
+          # Write for downstream steps
+          with open("test_status.txt", "w") as f:
+              f.write(status)
+          with open("failure_count.txt", "w") as f:
+              f.write(str(total_failures + total_errors))
+          PYEOF
+
+      - name: Read status outputs
+        id: status
+        run: |
+          echo "status=$(cat test_status.txt)"   >> "$GITHUB_OUTPUT"
+          echo "failures=$(cat failure_count.txt)" >> "$GITHUB_OUTPUT"
+
+      # Open or update a GitHub issue when tests fail
+      - name: Find existing failure issue
+        if: steps.status.outputs.status == 'FAILED'
+        id: find_issue
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          issue_number=$(gh issue list \
+            --label "model-test-failure" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          echo "issue_number=${issue_number}" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update failure issue
+        if: steps.status.outputs.status == 'FAILED'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          BODY="Daily model tests failed on $(date -u '+%Y-%m-%d %H:%M UTC').
+
+          **${{ steps.status.outputs.failures }} test(s) failed.**
+
+          Full details and logs: $RUN_URL
+
+          Check the *Test Report* step summary for individual failure messages."
+
+          if [ -n "${{ steps.find_issue.outputs.issue_number }}" ]; then
+            gh issue comment ${{ steps.find_issue.outputs.issue_number }} \
+              --body "$BODY"
+            echo "Updated existing issue #${{ steps.find_issue.outputs.issue_number }}"
+          else
+            gh issue create \
+              --title "Daily model tests failing — $(date -u '+%Y-%m-%d')" \
+              --body "$BODY" \
+              --label "model-test-failure,bug"
+            echo "Created new failure issue"
+          fi
+
+      # Close the failure issue when tests pass again
+      - name: Close resolved failure issue
+        if: steps.status.outputs.status == 'PASSED' && steps.find_issue.outputs.issue_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh issue close ${{ steps.find_issue.outputs.issue_number }} \
+            --comment "All daily model tests are passing again as of $(date -u '+%Y-%m-%d %H:%M UTC'). Closing."
+          echo "Closed issue #${{ steps.find_issue.outputs.issue_number }}"
+
+      - name: Fail the workflow if tests failed
+        if: steps.status.outputs.status == 'FAILED'
+        run: |
+          echo "::error::${{ steps.status.outputs.failures }} test(s) failed. See the Test Report step summary above."
+          exit 1
