@@ -205,7 +205,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install torch numpy pytest psutil --extra-index-url https://download.pytorch.org/whl/cpu
+        run: pip install torch numpy pytest psutil accelerate --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Install package
         run: pip install -e . --no-deps
@@ -253,7 +253,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install torch numpy pytest yfinance pandas scikit-learn psutil \
+          pip install torch numpy pytest yfinance pandas scikit-learn psutil accelerate \
             --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Install package
