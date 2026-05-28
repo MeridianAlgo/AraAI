@@ -4,7 +4,7 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-5.2.2-green.svg)
+![Version](https://img.shields.io/badge/version-5.2.3-green.svg)
 [![Forex Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml)
 [![Stock Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml)
 [![Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
@@ -175,7 +175,7 @@ Every checkpoint is a single `.pt` file that holds both the weights and enough c
 | `model_state_dict` | `dict` | The PyTorch model weights |
 | `model_type` | `str` | Either `stock` or `forex` |
 | `architecture` | `str` | `MeridianModel-2026` |
-| `version` | `str` | The model version, currently `5.2.2` |
+| `version` | `str` | The model version, currently `5.2.3` |
 | `input_size` | `int` | `44`, the feature count |
 | `seq_len` | `int` | `30`, the lookback window |
 | `dim` | `int` | Hidden dimension |

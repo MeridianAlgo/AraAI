@@ -17,14 +17,14 @@ import torch.nn.functional as F
 from accelerate import Accelerator
 
 # ---------------------------------------------------------------------------
-# v5.2.2 — step-based LR schedule on capped runs. With --max-steps the old
-# epoch-based scheduler never finished its 2-epoch warmup (a run is under one
-# epoch), so LR stayed pinned at the 0.1x warmup floor and the model barely
-# moved. Now warmup + cosine are sized to max_steps and stepped per optimizer
-# step, and the step budget is raised to 300 (~2.5h) so training actually
-# progresses. v5.2.1 fixed the validation OOM that froze HF since 2026-05-15.
-# State-dict layout unchanged since v5.1.0 so existing checkpoints keep training.
-MODEL_VERSION = "5.2.2"
+# v5.2.3 — raise step budget to 2000 so the model actually trains on the new
+# clean per-symbol daily pipeline. Per-step compute dropped ~10x after the
+# leak fix (no more cross-symbol cache thrash), so 300 steps barely moved the
+# loss and direction acc collapsed to coin-flip. 2000 steps fits in ~90min at
+# the new per-step time, well under the 6h CI cap. v5.2.2 introduced the
+# step-based LR schedule the budget bump relies on. State-dict layout
+# unchanged since v5.1.0 so existing checkpoints keep training.
+MODEL_VERSION = "5.2.3"
 ARCHITECTURE_NAME = "MeridianModel-2026"
 # ---------------------------------------------------------------------------
 

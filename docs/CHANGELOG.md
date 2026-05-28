@@ -4,6 +4,22 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v5.2.3] — 2026-05-28 — Real training budget for the clean data pipeline
+
+**Direction accuracy was a coin flip.** The leak fix in `5bc80af` (per symbol windows, daily only, scaler fit on train split, target clip 0.25) was correct — the prior 73 percent figure was inflated by data contamination — but the model's honest baseline on the cleaned pipeline was 49 percent. The model was learning, just nowhere near enough.
+
+### Root cause
+
+Two effects compounded. First, the clean per symbol pipeline removed all the cross symbol cache thrash, so each optimizer step takes about 2.7 seconds on the runner instead of 27 seconds. Second, the step budget was still 300, which is roughly 1.6 epochs over 48k samples. Train loss moved 0.001 per epoch and the down bias never had time to wash out.
+
+### Fix
+
+Raise `--max-steps` from 300 to **2000** in both `stocks.yml` and `forex.yml`. At 2.7 seconds per step that is about 90 minutes of training plus validation overhead, well under the 6 hour CI cap and consistent with the existing concurrency model.
+
+Nothing else changes. The step based LR schedule from v5.2.2 carries straight over (warmup over the first 200 steps, then cosine `5e-4` to `2.5e-5` over the remaining 1800), the leak fixes from `5bc80af` stay in place, and the state dict layout is unchanged so existing checkpoints continue training.
+
+---
+
 ## [v5.2.2] — 2026-05-26 — Step-based LR schedule and a real training budget
 
 **The model can finally learn again.** With v5.2.1 the pipeline was stable and pushing, but the loss curve was flat. The cause was the learning rate schedule, not the data.
