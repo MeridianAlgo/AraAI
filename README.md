@@ -4,7 +4,7 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-5.2.3-green.svg)
+![Version](https://img.shields.io/badge/version-6.0.0-green.svg)
 [![Forex Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml)
 [![Stock Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml)
 [![Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
@@ -19,7 +19,7 @@ The trained models live here: [meridianal/ARA.AI](https://huggingface.co/meridia
 
 ## Architecture
 
-The model is called MeridianModel. It is a compact transformer style network adapted for financial time series, and it carries roughly 33 million parameters in the configuration that ships in the hourly pipeline. The design favors techniques that stay stable on a CPU and train quickly, because every hourly run happens on a standard GitHub Actions runner with no GPU attached.
+The model is called MeridianModel. It is a compact transformer style network adapted for financial time series, and it carries roughly 430 thousand parameters in the configuration that ships in the hourly pipeline. Earlier versions used an 11 million parameter configuration, but a fully clean training pipeline revealed that capacity caused the model to collapse onto a trivial constant prediction; a deliberately smaller network has to extract real signal from the technical indicators in order to minimize the loss. The design favors techniques that stay stable on a CPU and train quickly, because every hourly run happens on a standard GitHub Actions runner with no GPU attached.
 
 Each component has a specific job:
 
@@ -38,12 +38,12 @@ Each component has a specific job:
 
 | Setting | Value |
 |---------|-------|
-| Parameters | about 33 million |
-| Hidden dimension | 256 |
-| Layers | 6 |
+| Parameters | about 430 thousand |
+| Hidden dimension | 96 |
+| Layers | 3 |
 | Attention heads | 4, with 2 key and value heads |
-| Experts | 4, with top 2 routing |
-| Prediction heads | 4 |
+| Experts | 2, with top 2 routing |
+| Prediction heads | 2 |
 | Input features | 44 technical indicators |
 | Sequence length | 30 timesteps |
 | Mamba SSM | off by default on CPU |
@@ -175,7 +175,7 @@ Every checkpoint is a single `.pt` file that holds both the weights and enough c
 | `model_state_dict` | `dict` | The PyTorch model weights |
 | `model_type` | `str` | Either `stock` or `forex` |
 | `architecture` | `str` | `MeridianModel-2026` |
-| `version` | `str` | The model version, currently `5.2.3` |
+| `version` | `str` | The model version, currently `6.0.0` |
 | `input_size` | `int` | `44`, the feature count |
 | `seq_len` | `int` | `30`, the lookback window |
 | `dim` | `int` | Hidden dimension |

@@ -4,6 +4,36 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v6.0.0] — 2026-05-28 — Shrink the network so it can actually generalize
+
+**Honest baseline reset.** The 73 percent direction accuracy reported in earlier versions was an artifact of cross symbol data leakage in the training pipeline. Once that leakage was fixed in `5bc80af`, the honest baseline on held out daily data was 49 percent — a coin flip — and the model would not move off it no matter how many extra training steps we threw at it.
+
+### Root cause
+
+The 11 million parameter v5 configuration was wildly overparameterized for the cleaned dataset. With roughly 60 thousand samples and 11 million parameters the model could solve the regression loss by predicting near zero for every input, which is exactly what it did. Train loss and validation loss both pinned at the dead prediction equilibrium of `0.277` (which is `0.6 * tiny_Huber + 0.4 * log 2`), and direction accuracy floated between 48 and 49 percent across 2000 optimizer steps and 11 epochs.
+
+A synthetic data sweep at realistic signal to noise confirmed the diagnosis: a 385 parameter model reached 53 percent held out direction accuracy, while a 5 million parameter model reached 95 percent on training data and 50 percent on held out data — the classic noise memorization failure mode.
+
+### Fix
+
+Shrink the architecture so the model is forced to extract signal instead of memorizing zero:
+
+| Dimension | v5 | v6 |
+|-----------|----|----|
+| Hidden dimension | 256 | 96 |
+| Layers | 6 | 3 |
+| Experts in MoE | 4 | 2 |
+| Prediction heads | 4 | 2 |
+| Total parameters | about 11 million | about 430 thousand |
+
+Dropout and stochastic depth are also disabled. A controlled sweep showed that on weak signal to noise data (the real regime for daily stock direction) `dropout=0.15` actively pushes validation direction accuracy below 50 percent — the regularizer destroys what little learnable signal exists — while `dropout=0.0` keeps it slightly above. On a strong signal control the same architecture reached 80 percent without dropout and only 56 percent with it. With 140 samples per parameter the model is already small enough that explicit dropout is pure noise injection.
+
+The state dict shape changes, so `_MIN_LOADABLE` bumps to `(6, 0)`. The next hourly run trains from scratch on the new architecture, then subsequent runs resume from the v6 checkpoint normally.
+
+Everything else carries over from v5.2.3: the clean per symbol daily pipeline from `5bc80af`, the step based learning rate schedule from v5.2.2, the batched validation forward pass from v5.2.1, and the 2000 step training budget.
+
+---
+
 ## [v5.2.3] — 2026-05-28 — Real training budget for the clean data pipeline
 
 **Direction accuracy was a coin flip.** The leak fix in `5bc80af` (per symbol windows, daily only, scaler fit on train split, target clip 0.25) was correct — the prior 73 percent figure was inflated by data contamination — but the model's honest baseline on the cleaned pipeline was 49 percent. The model was learning, just nowhere near enough.

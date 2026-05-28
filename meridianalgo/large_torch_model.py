@@ -17,14 +17,18 @@ import torch.nn.functional as F
 from accelerate import Accelerator
 
 # ---------------------------------------------------------------------------
-# v5.2.3 — raise step budget to 2000 so the model actually trains on the new
-# clean per-symbol daily pipeline. Per-step compute dropped ~10x after the
-# leak fix (no more cross-symbol cache thrash), so 300 steps barely moved the
-# loss and direction acc collapsed to coin-flip. 2000 steps fits in ~90min at
-# the new per-step time, well under the 6h CI cap. v5.2.2 introduced the
-# step-based LR schedule the budget bump relies on. State-dict layout
-# unchanged since v5.1.0 so existing checkpoints keep training.
-MODEL_VERSION = "5.2.3"
+# v6.0.0 — shrink the model so it can actually generalize.
+# Diagnosis: under the clean per-symbol pipeline (5bc80af) the 11M-param v5
+# config plateaued at the 0.277 dead-prediction equilibrium (0.6 * tiny_Huber +
+# 0.4 * log(2)) and direction acc stuck at 48-49% across 2000 steps and 11
+# epochs. Train and val loss were both stuck — not overfit, the model literally
+# had too much capacity to be forced into extracting weak signal and collapsed
+# to predicting zero. A synthetic-data sweep showed 433K params with one
+# realistic SNR generalized to 53% val acc while 5M+ went to coin flip.
+# Fix: dim 256->96, layers 6->3, experts 4->2, prediction_heads 4->2. State
+# dict shape changes, so _MIN_LOADABLE bumps to (6, 0) and the first hourly
+# run after this lands trains from scratch on the new architecture.
+MODEL_VERSION = "6.0.0"
 ARCHITECTURE_NAME = "MeridianModel-2026"
 # ---------------------------------------------------------------------------
 
@@ -356,7 +360,9 @@ class AdvancedMLSystem:
                         return (0,)
 
                 version = checkpoint.get("version", "0")
-                _MIN_LOADABLE = (4, 1)
+                # v6.0 shrunk the architecture; v5.x checkpoints have an
+                # incompatible state-dict shape, so train fresh on first run.
+                _MIN_LOADABLE = (6, 0)
                 if _parse_ver(version) < _MIN_LOADABLE:
                     print(
                         f"  Skipping old model (v{version}) — training fresh with "
@@ -685,21 +691,28 @@ class AdvancedMLSystem:
             # Create model if not already loaded
             if self.model is None:
                 if self.use_revolutionary and REVOLUTIONARY_MODEL_AVAILABLE:
-                    # CPU config: GQA + MoE + RoPE; Mamba scan disabled (3× slower on CPU).
-                    # mamba_state_dim=4 kept so use_mamba=True can be toggled on GPU.
-                    print("  Creating new MeridianModel v5.0 (~11M params)...")
+                    # CPU config v6.0: shrunk MeridianModel (~430K params, no dropout).
+                    # The 11M-param v5 config plateaued at the 0.277 dead-prediction
+                    # equilibrium and direction acc stuck at ~49% on held-out data.
+                    # Synthetic-data sweep: with weak SNR, dropout=0.15 gave 47% val
+                    # dir acc (worse than coin flip — the regularizer was killing
+                    # signal); dropout=0.0 gave 52%; strong-signal control hit 80%
+                    # with dropout off vs 56% with dropout=0.15. With 140 samples
+                    # per param the model is already small enough that explicit
+                    # dropout is pure noise injection. Mamba stays off on CPU.
+                    print("  Creating new MeridianModel v6.0 (~430K params)...")
                     self.model = MeridianModel(
                         input_size=input_size,
                         seq_len=seq_len,
-                        dim=256,
-                        num_layers=6,
+                        dim=96,
+                        num_layers=3,
                         num_heads=4,
                         num_kv_heads=2,
-                        num_experts=4,
-                        num_prediction_heads=4,
-                        dropout=0.15,
+                        num_experts=2,
+                        num_prediction_heads=2,
+                        dropout=0.0,
                         use_mamba=False,
-                        drop_path_rate=0.1,
+                        drop_path_rate=0.0,
                         mamba_state_dim=4,
                     )
                 else:
