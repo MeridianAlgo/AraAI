@@ -4,7 +4,7 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-6.0.0-green.svg)
+![Version](https://img.shields.io/badge/version-6.0.1-green.svg)
 [![Forex Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml)
 [![Stock Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml)
 [![Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
@@ -66,13 +66,21 @@ Grouped Query Attention with rotary positions
 Mixture of Experts layer (SwiGLU experts, top 2 routing)
         |
         v
-Four prediction heads, combined into one output
+Prediction heads, combined into one output
         |
         v
 Price forecast and direction signal
 ```
 
-The four prediction heads each make their own forecast, and the model blends them with learned weights into a final number. The direction signal comes from the same forward pass, which is why the loss function trains both targets at the same time.
+The prediction heads each make their own forecast, and the model blends them with learned weights into a final number. The direction signal comes from the same forward pass, which is why the loss function trains both targets at the same time.
+
+## Performance and Honest Expectations
+
+This is a next-day directional model. Measured live on held-out daily data (eight large-cap stocks, 240 predictions), it scores about 57 percent directional accuracy against a roughly 55 percent always-up baseline. The mean prediction is small and positive, in line with the real daily drift of equities, and it predicts both up and down rather than collapsing onto one direction.
+
+That is a small but genuine edge for a single day ahead. It is not a multi-day or week-ahead forecaster. Daily price direction is close to efficient, recursive multi-step forecasts compound their error quickly, and any tool that claims reliable week-ahead price prediction from price and indicator data alone is overfitting. Treat the output as a next-day directional tilt, not a crystal ball.
+
+Earlier versions reported much higher accuracy during training but performed near chance live, because a contaminated data pipeline let the model collapse onto a near-constant downward prediction. Version 6.0 fixed the pipeline (see How Training Works) and added a sanity gate that blocks a degenerate model from ever being published.
 
 ## Quick Start
 
@@ -129,10 +137,11 @@ Training runs on its own, without anyone starting it. GitHub Actions launches th
 
 Each run moves through four stages:
 
-1. Fetch. The pipeline pulls recent market data for up to 50 stocks or up to 30 forex pairs and stores it in a local SQLite database. It collects several timeframes per symbol so the model sees both short and long horizons.
-2. Train. The pipeline downloads the current checkpoint from Hugging Face and continues training it for 70 optimizer steps. There is no wall clock time limit. The step count is the only stop condition, which keeps every run predictable in length. Training uses gradient accumulation to simulate a batch size of 256, light data augmentation, and an exponential moving average of the weights for a smoother final model.
-3. Track. Every optimizer step reports its loss, learning rate, gradient norm, and elapsed time to Comet ML, so you can watch the training curves live. Per epoch metrics such as validation loss and direction accuracy are recorded as well.
-4. Deploy. Once training finishes, the updated checkpoint is written to disk and uploaded back to Hugging Face, ready for the next run and for anyone who wants to download it.
+1. Fetch. The pipeline pulls recent market data for up to 50 stocks or up to 30 forex pairs and stores it in a local SQLite database. It fetches a single timeframe, daily bars, split and dividend adjusted. Earlier versions mixed daily, hourly, and weekly bars in one table, which poisoned the prediction target; one consistent timeframe means one consistent next-day target.
+2. Train. The pipeline downloads the current checkpoint from Hugging Face and continues training it for up to 2000 optimizer steps. The step count is the stop condition, which keeps every run predictable in length. Windows are built per symbol and then sorted by date, the feature scaler is fit on the training split only, and targets are clipped to a realistic daily range so a single bad bar cannot distort the objective. Training uses gradient accumulation to simulate a batch size of 256, light data augmentation, and an exponential moving average of the weights for a smoother final model.
+3. Track. Every optimizer step reports its loss, learning rate, gradient norm, and elapsed time to Comet ML, so you can watch the training curves live. Per epoch metrics such as validation loss and direction accuracy are recorded as well, along with a per-symbol audit of exactly which data fed the run.
+4. Gate. Before anything is published, a sanity gate runs the fresh checkpoint over held-out windows and checks for the failure signatures of a broken model: a constant output, a collapse onto one direction, or a blown-up prediction scale. If the model is degenerate it is deleted instead of pushed, and the run is marked as failed so a tracking issue opens automatically.
+5. Deploy. Once a model clears the gate, the updated checkpoint is written to disk and uploaded back to Hugging Face, ready for the next run and for anyone who wants to download it.
 
 The whole pipeline runs as a single GitHub Actions job. The model file never leaves the machine that produced it, which removes a class of failures where a checkpoint could go missing while it was handed between separate jobs.
 
@@ -175,7 +184,7 @@ Every checkpoint is a single `.pt` file that holds both the weights and enough c
 | `model_state_dict` | `dict` | The PyTorch model weights |
 | `model_type` | `str` | Either `stock` or `forex` |
 | `architecture` | `str` | `MeridianModel-2026` |
-| `version` | `str` | The model version, currently `6.0.0` |
+| `version` | `str` | The model version, currently `6.0.1` |
 | `input_size` | `int` | `44`, the feature count |
 | `seq_len` | `int` | `30`, the lookback window |
 | `dim` | `int` | Hidden dimension |
@@ -191,7 +200,7 @@ Every checkpoint is a single `.pt` file that holds both the weights and enough c
 | `scaler_std` | `Tensor` | Standard deviation used to normalize features |
 | `metadata` | `dict` | Best validation loss, direction accuracy, target bounds, and training history |
 
-The loader accepts any checkpoint at version 4.1 or newer. Older checkpoints are skipped so that a stale format can never corrupt a fresh run.
+The loader only accepts checkpoints at version 6.0 or newer. The v6.0 architecture is deliberately smaller than the v5.x networks, so their state dictionaries are incompatible; older checkpoints are skipped, and the previous v5.x models are archived under `legacy/` on Hugging Face for reference only.
 
 ## Project Structure
 
@@ -209,6 +218,7 @@ scripts/
   train_forex.py           Forex training entry point
   fetch_and_store_data.py  Market data ingestion into SQLite
   push_to_hf.py            Uploads checkpoints to Hugging Face
+  sanity_check_model.py    Post-training gate that blocks degenerate models from publishing
   migrate_hf_legacy.py     Moves older checkpoints into a legacy folder on Hugging Face
   clean_workflow_runs.py   Maintenance helper for old GitHub Actions runs
 .github/workflows/

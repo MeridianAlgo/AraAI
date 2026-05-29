@@ -16,53 +16,76 @@ tags:
 
 ## Overview
 
-Meridian.AI is a deep-learning system for predicting price movements across
-stocks and forex pairs. Version 5.1 keeps the **MeridianModel** architecture
-introduced in v5.0 (Grouped Query Attention + Mixture-of-Experts + optional
-Mamba SSM) and adds a hardened training pipeline: signal-safe shutdown,
-atomic checkpoint writes, comprehensive Comet ML telemetry on every run,
-and an audit trail of which symbols / date ranges fed each training job.
+Meridian.AI is a deep-learning system that forecasts next-day price movement
+for stocks and forex pairs. It reads recent market history, turns it into 44
+technical indicators, and outputs a next-day return estimate plus a direction
+signal (up/down).
+
+Version 6.0 is a deliberate reset. Earlier versions reported very high
+direction accuracy in training but performed near chance live — they had
+collapsed onto a near-constant downward prediction. The root cause was a
+contaminated training pipeline, not the architecture. v6.0 rebuilds the data
+path from the ground up and shrinks the network so it has to learn real signal
+instead of memorizing noise. See **What changed in v6.0** below.
+
+The models retrain automatically every hour via GitHub Actions and publish
+each fresh checkpoint here. You do not need a GPU.
+
+## What changed in v6.0
+
+| Area | Before (≤ v5.x) | Now (v6.0) |
+|------|-----------------|------------|
+| Training data | Daily **+ hourly + weekly** bars mixed in one table | **Daily only** — one consistent prediction target |
+| Windowing | One flat array concatenated across all symbols (windows spanned symbol boundaries) | **Per-symbol** windowing, then sorted by date |
+| Targets | Raw next-step return, clip ±1.0 (allowed impossible +100% targets) | Next-day return, clip **±0.25 (stocks) / ±0.10 (forex)** |
+| Feature scaler | Fit on the whole dataset (val leaked into train) | Fit on the **train split only** |
+| Price adjustment | Splits/dividends showed up as fake returns | `auto_adjust=True` — no fake split-day moves |
+| Capacity | ~11M params (collapsed to a constant) | **~430K params** (forced to extract signal) |
+| Push safety | None | **Sanity gate** blocks degenerate models from publishing |
+
+## Honest performance
+
+This is a next-day directional model. Measured live on held-out daily data
+(8 large-cap stocks, 240 predictions):
+
+- Directional accuracy: **~57%**, vs a ~55% always-up baseline.
+- Mean prediction: small and positive (~+0.7%), in line with real daily drift.
+- No directional collapse (it predicts both up and down).
+
+That is a small but real edge for **one day ahead**. It is not a multi-day or
+week-ahead forecaster — daily price direction is close to efficient, error
+compounds quickly past one step, and any tool claiming reliable week-ahead
+price prediction from OHLCV alone is overfitting. Use this for a next-day
+directional tilt, not as a crystal ball.
 
 ## Repository layout
 
 ```
 meridianal/ARA.AI/
 ├── models/
-│   ├── Meridian.AI_Stocks.pt    ← current v5 stock checkpoint
-│   └── Meridian.AI_Forex.pt     ← current v5 forex checkpoint
+│   ├── Meridian.AI_Stocks.pt    ← current v6 stock checkpoint
+│   └── Meridian.AI_Forex.pt     ← current v6 forex checkpoint
 └── legacy/
-    └── <archived pre-v5 checkpoints>
+    ├── Meridian.AI_Stocks_v5.2.2.pt   ← archived pre-v6 (biased) checkpoint
+    └── Meridian.AI_Forex_v5.2.2.pt    ← archived pre-v6 (biased) checkpoint
 ```
 
-Anything older than v5 has been moved into `legacy/`. Loaders accept both
-old (`RevolutionaryFinancialModel-2026`) and new (`MeridianModel-2026`)
-architecture strings, but newly trained checkpoints always advertise
-`MeridianModel-2026` and `version=5.1.0`.
-
-## Model versions
-
-| Version | Architecture string | Params | Status |
-|---------|--------------------|--------|--------|
-| v5.1 | `MeridianModel-2026` | ~11M (CPU) | **Current** — hardened CI, full Comet telemetry, atomic saves |
-| v5.0 | `MeridianModel-2026` | ~11M (CPU) | Loadable |
-| v4.1 | `RevolutionaryFinancialModel-2026` | ~45M | Loadable; archived in `legacy/` on HF |
-| ≤ v4.0 | various | various | Archived; loader refuses |
+The loader only accepts checkpoints at **version 6.0 or newer**. The v5.x
+checkpoints in `legacy/` have an incompatible (larger) architecture and are
+kept only for reference — do not use them for live prediction.
 
 ## Architecture
 
-### MeridianBlock
-
-Each layer of MeridianModel is a `MeridianBlock` containing:
+The model is **MeridianModel**: a compact transformer adapted for financial
+time series. Each block contains:
 
 1. **RMSNorm** — pre-norm before attention
-2. **GroupedQueryAttention (GQA)** — multi-head attention with fewer KV heads; QK-Norm for stability; RoPE position encoding
-3. **Optional MambaBlock** — vectorised selective-scan SSM (disabled in CPU default)
-4. **Layer Scale** — per-block learnable scalar (init 0.1) for training stability at depth
+2. **Grouped Query Attention (GQA)** — fewer KV heads, QK-Norm for stability, RoPE positions
+3. **Optional Mamba SSM** — vectorised selective scan (off by default on CPU)
+4. **Layer Scale** — per-block learnable scalar for stable training at depth
 5. **Stochastic Depth** — drop-path regularisation
-6. **RMSNorm** — pre-norm before MoE
-7. **MixtureOfExperts** — `num_experts` SwiGLU expert networks, top-2 routing
-
-### Component table
+6. **RMSNorm** — pre-norm before the MoE
+7. **Mixture of Experts** — SwiGLU experts, top-2 routing
 
 | Component | Implementation | Purpose |
 |-----------|---------------|---------|
@@ -71,41 +94,40 @@ Each layer of MeridianModel is a `MeridianBlock` containing:
 | Expert routing | MoE, top-2, SwiGLU | Regime-specific specialization |
 | Activations | SwiGLU | Better gradient flow vs GELU/ReLU |
 | Normalisation | RMSNorm + Layer Scale | Stable training at depth |
-| Regularisation | Stochastic Depth | Generalisation, prevents overfitting |
-| Optional SSM | Mamba (vectorised scan) | Long-range sequential dependencies |
+| Regularisation | Stochastic Depth | Generalisation |
+| Optional SSM | Mamba (vectorised scan) | Long-range dependencies |
 | Loss | BalancedDirectionLoss | Joint regression + direction accuracy |
 
-## Model specifications
+## Model specifications (v6.0 default)
 
-| Spec | CPU Default (v5.0) | GPU / Large |
-|------|--------------------|-------------|
-| Parameters | ~11M | ~45M |
-| Hidden dimension | 256 | 384 |
-| Layers | 6 | 6 |
-| Attention heads | 4 | 6 |
-| KV heads | 2 | 2 |
-| Experts | 4 (top-2) | 4 (top-2) |
-| Prediction heads | 4 | 4 |
-| Mamba SSM | Disabled | Optional |
-| Input features | 44 | 44 |
-| Sequence length | 30 timesteps | 30 timesteps |
+| Spec | Value |
+|------|-------|
+| Parameters | ~430K |
+| Hidden dimension | 96 |
+| Layers | 3 |
+| Attention heads | 4 (2 KV heads) |
+| Experts | 2 (top-2) |
+| Prediction heads | 2 |
+| Mamba SSM | Disabled (CPU default) |
+| Input features | 44 technical indicators |
+| Sequence length | 30 timesteps (daily) |
 
 ## Available models
 
 ### Meridian.AI Stocks
 
 - **File**: `models/Meridian.AI_Stocks.pt`
-- **Coverage**: 49+ equities — AAPL, MSFT, GOOGL, AMZN, TSLA, NVDA, JPM, SPY, and more
-- **Data**: Daily + 2yr hourly + 5yr weekly OHLCV with 44 technical indicators
-- **Training**: Automatic CI retrain (GitHub Actions)
+- **Coverage**: ~50 large-cap US equities per run (AAPL, MSFT, GOOGL, AMZN, NVDA, JPM, SPY, …)
+- **Data**: Max daily history, split/dividend adjusted, 44 technical indicators
+- **Training**: Automatic hourly CI retrain (GitHub Actions)
 - **Tracking**: Comet project `meridianalgo/meridian-ai-stock-v5`
 
 ### Meridian.AI Forex
 
 - **File**: `models/Meridian.AI_Forex.pt`
-- **Coverage**: 22 currency pairs — EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CHF, USD/CAD, etc.
-- **Data**: Multi-timeframe OHLCV with 44 technical indicators
-- **Training**: Automatic CI retrain (GitHub Actions)
+- **Coverage**: 22 currency pairs (EUR/USD, GBP/USD, USD/JPY, AUD/USD, …)
+- **Data**: Max daily history, 44 technical indicators
+- **Training**: Automatic hourly CI retrain (GitHub Actions)
 - **Tracking**: Comet project `meridianalgo/meridian-ai-forex-v5`
 
 ## Usage
@@ -138,56 +160,57 @@ prediction = ml.predict("EURUSD=X", days=5)
 print(prediction)
 ```
 
+> Note: the model needs ~200 days of price history to compute its indicators
+> (it uses a 200-day moving average), and it outputs a **single next-day**
+> return. A multi-day horizon is produced by rolling that one-step prediction
+> forward, so confidence drops sharply after the first day.
+
 ## Training configuration
 
 | Setting | Value |
 |---------|-------|
 | Optimizer | AdamW (`weight_decay=0.02`, `betas=(0.9, 0.95)`) |
-| LR warmup | 2-epoch linear ramp, 10% → 100% of base LR |
-| Scheduler | CosineAnnealingWarmRestarts after warmup |
+| LR warmup | Linear ramp, then CosineAnnealingWarmRestarts |
 | Loss | BalancedDirectionLoss (60% Huber + 40% weighted BCE) |
 | Effective batch size | 256 via gradient accumulation |
 | Gradient clipping | Max norm 1.0 |
-| EMA | Decay 0.999 — used for validation and saved checkpoint |
-| Data augmentation | Gaussian noise (0.5%) + timestep masking (5%) |
-| Early stopping | Patience 15 on EMA validation loss |
-| Mixed precision | bfloat16 on CPU, float16 on CUDA |
+| EMA | Decay 0.999 — used for validation and the saved checkpoint |
+| Data augmentation | Gaussian noise + timestep masking |
+| Train/val split | Chronological — last 20% held out (no shuffle) |
+| Scaler fit | **Train split only** (no validation leakage) |
+| Target clip | ±0.25 (stocks) / ±0.10 (forex) |
 | Feature clamping | `[-10, 10]` after z-score normalisation |
 | Sample cap | 60K most-recent rows per run |
-| CI budget | 35 minutes, up to 999 epochs (was 45 — tightened in v5.1) |
-| Signal handling | SIGTERM/SIGINT → save best EMA, then exit (v5.1) |
-| Checkpoint write | Atomic (`.tmp` → `os.replace`) — never partial (v5.1) |
-| Comet logging | Every loss, every metric, per-symbol dataset audit (v5.1) |
+| CI step budget | Up to 2000 optimizer steps per run |
+| Checkpoint write | Atomic (`.tmp` → `os.replace`) |
+| Push safety | Sanity gate blocks degenerate models |
+| Comet logging | Every step loss/LR/grad-norm + per-epoch metrics + per-symbol dataset audit |
 
 ## Checkpoint format
-
-Every v5.0 `.pt` file contains:
 
 ```python
 {
     "model_state_dict": ...,       # PyTorch weights
     "model_type": "stock",         # or "forex"
     "architecture": "MeridianModel-2026",
-    "version": "5.1.0",
+    "version": "6.0.1",
     "input_size": 44,
     "seq_len": 30,
-    "dim": 256,
-    "num_layers": 6,
+    "dim": 96,
+    "num_layers": 3,
     "num_heads": 4,
     "num_kv_heads": 2,
-    "num_experts": 4,
-    "num_prediction_heads": 4,
-    "dropout": 0.1,
+    "num_experts": 2,
+    "num_prediction_heads": 2,
+    "dropout": 0.15,
     "use_mamba": False,
-    "mamba_state_dim": 4,
-    "scaler_mean": Tensor,         # shape (44,)
-    "scaler_std": Tensor,          # shape (44,)
+    "scaler_mean": Tensor,         # shape (30, 44)
+    "scaler_std": Tensor,          # shape (30, 44)
     "metadata": {
         "best_val_loss": float,
-        "direction_accuracy": float,   # percent (0–100)
-        "target_min": float,
-        "target_max": float,
         "training_history": [...],
+        "trained_symbols": [...],
+        "training_date": str,
     }
 }
 ```
@@ -207,11 +230,12 @@ Every v5.0 `.pt` file contains:
 
 ## Limitations
 
-1. Performance may degrade during black swan events or extreme market dislocation.
-2. Predictive accuracy decreases as the forecast horizon extends beyond a few days.
-3. The model reflects statistical patterns in historical data — these patterns may not persist.
-4. Pre-v5.0 checkpoints (before 2026-05-15) have a known bug where validation never ran; direction accuracy is unreliable on those models.
-5. For research and educational use only — not financial advice.
+1. Next-day model only. Multi-day output is recursive and degrades fast past day one.
+2. Daily direction is near-efficient; the live edge over a naive baseline is small.
+3. Performance degrades during black-swan events and regime shifts.
+4. Patterns are statistical and may not persist.
+5. Pre-v6 checkpoints in `legacy/` have a known downward-bias bug — do not use them.
+6. For research and educational use only — not financial advice.
 
 ## Citation
 
@@ -220,14 +244,17 @@ Every v5.0 `.pt` file contains:
   title  = {Meridian.AI: Financial Prediction Engine},
   author = {MeridianAlgo},
   year   = {2026},
-  version = {5.1.0},
+  version = {6.0.1},
   url    = {https://github.com/MeridianAlgo/AraAI}
 }
 ```
 
 ## Disclaimer
 
-These models are for research and educational purposes only. They do not constitute financial advice. Trading financial instruments carries significant risk. Past performance does not guarantee future results. The developers and contributors are not liable for any financial losses. All trading decisions are yours alone.
+These models are for research and educational purposes only. They do not
+constitute financial advice. Trading carries significant risk and past
+performance does not guarantee future results. The developers and contributors
+are not liable for any financial losses. All trading decisions are yours alone.
 
 ## License
 

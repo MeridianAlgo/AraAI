@@ -227,6 +227,22 @@ jobs:
           echo "--- disk ---"
           df -h /
 
+      - name: Sanity Gate
+        if: always() && hashFiles('models/Meridian.AI_Forex.pt') != ''
+        run: |
+          echo "--- Running post-training sanity gate ---"
+          # If the model is degenerate (constant output, directional collapse,
+          # or blown-up target scale), delete the .pt so the push step below
+          # skips it, then fail the run so a tracking issue is opened.
+          if ! python scripts/sanity_check_model.py \
+              --model-path models/Meridian.AI_Forex.pt \
+              --model-type forex \
+              --db-file training.db; then
+            echo "Sanity gate FAILED — removing degenerate model so it is NOT pushed."
+            rm -f models/Meridian.AI_Forex.pt
+            exit 1
+          fi
+
       - name: Push to Hugging Face
         if: always() && hashFiles('models/Meridian.AI_Forex.pt') != ''
         env:

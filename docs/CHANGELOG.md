@@ -4,6 +4,22 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v6.0.1] — 2026-05-29 — Publish guardrail and honest documentation
+
+**The model works now, and the docs finally say so honestly.** After a full day of hourly runs on the clean v6 pipeline, the live held-out direction accuracy on eight large-cap stocks settled at about 57 percent against a 55 percent always-up baseline — a small but real edge, with no directional collapse. This release locks that in and makes sure a broken model can never quietly replace it.
+
+### Sanity gate
+
+A new post-training gate, `scripts/sanity_check_model.py`, runs in both the stock and forex workflows between verification and the Hugging Face push. It loads the freshly trained checkpoint, runs it over held-out windows pulled from the same training database, and fails the run if the model shows any classic degeneracy signature: a constant output (prediction std near zero), a directional collapse (almost everything predicted one way — the exact failure of the pre-v6 models), or a blown-up prediction scale (the fingerprint of the old multi-timeframe target contamination). When the gate fails it deletes the checkpoint so the push step skips it, and opens a tracking issue. A healthy model passes untouched.
+
+### Documentation
+
+The Hugging Face model card (`docs/MODEL_CARD.md`) and the README were both rewritten to match reality. They previously advertised the v5.1 architecture (11 million parameters, six layers) and, worse, the contaminated "daily plus hourly plus weekly" data recipe that caused the original bias. Both now describe the v6 architecture, the daily-only per-symbol pipeline, the honest performance numbers, and the fact that this is a next-day model, not a week-ahead forecaster.
+
+No architecture or training-data changes — `_MIN_LOADABLE` stays `(6, 0)`, so v6.0.0 checkpoints continue to load and resume.
+
+---
+
 ## [v6.0.0] — 2026-05-28 — Shrink the network so it can actually generalize
 
 **Honest baseline reset.** The 73 percent direction accuracy reported in earlier versions was an artifact of cross symbol data leakage in the training pipeline. Once that leakage was fixed in `5bc80af`, the honest baseline on held out daily data was 49 percent — a coin flip — and the model would not move off it no matter how many extra training steps we threw at it.

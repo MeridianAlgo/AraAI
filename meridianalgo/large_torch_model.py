@@ -28,7 +28,7 @@ from accelerate import Accelerator
 # Fix: dim 256->96, layers 6->3, experts 4->2, prediction_heads 4->2. State
 # dict shape changes, so _MIN_LOADABLE bumps to (6, 0) and the first hourly
 # run after this lands trains from scratch on the new architecture.
-MODEL_VERSION = "6.0.0"
+MODEL_VERSION = "6.0.1"
 ARCHITECTURE_NAME = "MeridianModel-2026"
 # ---------------------------------------------------------------------------
 
