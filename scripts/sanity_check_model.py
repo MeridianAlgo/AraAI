@@ -109,7 +109,9 @@ def main():
 
     windows, trues = _windows_from_db(args.db_file, args.model_type)
     if len(windows) < MIN_PREDICTIONS:
-        print(f"  [WARN] only {len(windows)} eval windows (<{MIN_PREDICTIONS}) — passing without judgment.")
+        print(
+            f"  [WARN] only {len(windows)} eval windows (<{MIN_PREDICTIONS}) — passing without judgment."
+        )
         return 0
 
     preds = np.array([float(np.ravel(sysm.predict(w)[0])[0]) for w in windows])
