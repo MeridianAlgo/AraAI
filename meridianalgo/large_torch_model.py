@@ -1367,6 +1367,17 @@ class AdvancedMLSystem:
             best_val_loss if math.isfinite(float(best_val_loss)) else None
         )
         self.metadata["direction_accuracy"] = direction_metrics.get("direction_accuracy", 0)
+        # Record how many validation windows that accuracy was measured on. Daily
+        # direction is near-efficient, so on a small chronological holdout the
+        # accuracy fluctuates around 50% by pure sampling noise. Persisting the
+        # sample count lets health checks gate on a noise-aware floor instead of
+        # a hard 50% line that flaps run-to-run.
+        self.metadata["val_samples"] = int(
+            direction_metrics.get("true_positives", 0)
+            + direction_metrics.get("false_positives", 0)
+            + direction_metrics.get("true_negatives", 0)
+            + direction_metrics.get("false_negatives", 0)
+        )
         self.metadata["target_min"] = float(y_min)
         self.metadata["target_max"] = float(y_max)
         # Tag normalization contract so predict() knows whether to denormalize.
