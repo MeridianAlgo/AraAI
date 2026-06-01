@@ -65,7 +65,7 @@ for p in result['predictions']:
 from meridianalgo.forex_ml import ForexML
 
 ml = ForexML(model_path=forex_path)
-result = ml.predict("EURUSD=X", days=5)
+result = ml.predict_forex("EURUSD=X", days=5)
 
 print(f"Current rate:   {result['current_price']:.5f}")
 print(f"Direction:      {result['direction']}")

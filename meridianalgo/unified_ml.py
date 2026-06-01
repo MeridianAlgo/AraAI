@@ -450,9 +450,10 @@ class UnifiedStockML:
             for day in range(1, days + 1):
                 # Predict
                 pred_return, _ = self.ml_system.predict(current_features.reshape(1, lookback, -1))
-                pred_return = (
-                    float(pred_return) if np.isscalar(pred_return) else float(pred_return[0])
-                )
+                # predict() returns a (1, 1) array; flatten before scalar
+                # conversion so float() doesn't choke on a 1-D array under
+                # numpy 2.x ("only 0-dimensional arrays can be converted").
+                pred_return = float(np.asarray(pred_return).reshape(-1)[0])
 
                 # Apply volatility bounds
                 max_daily_move = hist_volatility * 2.5

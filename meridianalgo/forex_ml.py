@@ -91,12 +91,17 @@ class ForexML:
 
     def get_forex_symbol(self, pair):
         """Convert forex pair to Yahoo Finance symbol"""
-        pair = pair.upper().replace("/", "").replace("-", "")
+        # Strip an existing "=X" suffix so a yfinance-style symbol passed in
+        # ("EURUSD=X") doesn't get doubled to "EURUSD=X=X".
+        pair = pair.upper().replace("/", "").replace("-", "").replace("=X", "")
         return self.forex_pairs.get(pair, f"{pair}=X")
 
     def get_pair_info(self, pair):
         """Get information about currency pair"""
-        pair = pair.upper().replace("/", "").replace("-", "")
+        # Accept the yfinance ticker form ("EURUSD=X") as well as "EUR/USD",
+        # "EUR-USD" and "EURUSD" — strip the suffix/separators so the 6-char
+        # base/quote split below works for all of them.
+        pair = pair.upper().replace("/", "").replace("-", "").replace("=X", "")
 
         if len(pair) == 6:
             base = pair[:3]
@@ -246,9 +251,10 @@ class ForexML:
 
                 # Predict using PyTorch model
                 pred_return, _ = self.ml_system.predict(X_features)
-                pred_return = (
-                    float(pred_return) if np.isscalar(pred_return) else float(pred_return[0])
-                )
+                # predict() returns a (1, 1) array; flatten before scalar
+                # conversion so float() doesn't choke on a 1-D array under
+                # numpy 2.x ("only 0-dimensional arrays can be converted").
+                pred_return = float(np.asarray(pred_return).reshape(-1)[0])
 
                 # Apply volatility-based bounds to prevent unrealistic predictions
                 max_daily_move = hist_volatility * 2.5  # 2.5 sigma move

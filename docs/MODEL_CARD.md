@@ -156,7 +156,7 @@ model_path = hf_hub_download(
 )
 
 ml = ForexML(model_path=model_path)
-prediction = ml.predict("EURUSD=X", days=5)
+prediction = ml.predict_forex("EUR/USD", days=5)
 print(prediction)
 ```
 
