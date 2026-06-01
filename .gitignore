@@ -94,9 +94,14 @@ Thumbs.db
 Desktop.ini
 ehthumbs.db
 
-# Claude
+# Claude / AI agent local state (may contain auth tokens or machine-specific paths)
 .claude/
 .claude-memory/
+.claude.json
+.claude.json.backup
+CLAUDE.local.md
+.aider*
+.cursor/
 
 # Local HF model downloads (reproducible via huggingface_hub)
 models_hf/
