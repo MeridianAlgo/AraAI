@@ -1,6 +1,6 @@
 # MeridianModel Architecture
 
-A technical reference for MeridianModel v5.0 — the hybrid transformer backbone used for financial time-series prediction.
+A technical reference for MeridianModel-2026 — the hybrid transformer backbone used for financial time-series prediction.
 
 ---
 
@@ -98,7 +98,7 @@ h_t = A * h_{t-1} + B_t * x_t      # state update
 y_t = C_t * h_t + D * x_t          # output
 ```
 
-Where `B_t`, `C_t` are input-dependent (the "selective" part). In v5.0, the scan is vectorised: `dA` and `dB` are precomputed for all timesteps before the scan loop, and `h` is reset to zero at the start of each sample.
+Where `B_t`, `C_t` are input-dependent (the "selective" part). The scan is vectorised: `dA` and `dB` are precomputed for all timesteps before the scan loop, and `h` is reset to zero at the start of each sample.
 
 **CPU default**: `use_mamba=False`. The Mamba block is an identity pass-through when disabled — no overhead. GQA alone handles temporal dependencies on CPU. Mamba adds value on GPU where the SSM can be parallelised efficiently.
 
@@ -160,17 +160,17 @@ pred, confidence = model(x)   # pred: (batch, 1), confidence: (batch,)
 
 ## Hyperparameter defaults
 
-| Parameter | CPU Default | Description |
-|-----------|-------------|-------------|
+| Parameter | Default | Description |
+|-----------|---------|-------------|
 | `input_size` | 44 | Number of input features |
 | `seq_len` | 30 | Lookback window (timesteps) |
-| `dim` | 256 | Hidden dimension |
-| `num_layers` | 6 | Number of MeridianBlocks |
+| `dim` | 96 | Hidden dimension |
+| `num_layers` | 3 | Number of MeridianBlocks |
 | `num_heads` | 4 | Query attention heads |
 | `num_kv_heads` | 2 | Key/value heads (GQA) |
-| `num_experts` | 4 | MoE expert count |
-| `num_prediction_heads` | 4 | Output heads (averaged) |
-| `dropout` | 0.1 | Dropout rate |
+| `num_experts` | 2 | MoE expert count |
+| `num_prediction_heads` | 2 | Output heads (averaged) |
+| `dropout` | 0.15 | Dropout rate (disabled in the shipped CPU config) |
 | `use_mamba` | False | Enable Mamba SSM sublayer |
 | `mamba_state_dim` | 4 | Mamba hidden state size |
 
@@ -178,39 +178,30 @@ pred, confidence = model(x)   # pred: (batch, 1), confidence: (batch,)
 
 ## Parameter count
 
-At CPU default config (`dim=256`, `num_layers=6`, `num_heads=4`, `num_experts=4`, `use_mamba=False`):
+The shipped config is deliberately compact (`dim=96`, `num_layers=3`, `num_heads=4`, `num_experts=2`, `use_mamba=False`). An 11M-parameter v5-era configuration could solve the training loss by predicting near-zero for every input — the classic overparameterized collapse — so v6 shrank the network by roughly 25x to force it to extract real signal.
 
-| Component | Params |
-|-----------|--------|
-| Input projection | 256 × 44 = 11K |
-| GQA per layer | Q: 256×256, KV: 256×2×64, out: 256×256 ≈ 230K |
-| MoE per layer (4 experts) | 4 × SwiGLU(256→1024→256) ≈ 2M |
+| Component | Params (order of magnitude) |
+|-----------|------------------------------|
+| Input projection | 96 × 44 ≈ 4K |
+| GQA per layer | Q: 96×96, KV: 96×2×48, out: 96×96 ≈ 28K |
+| MoE per layer (2 experts) | 2 × SwiGLU(96→384→96) ≈ 110K |
 | RMSNorm, LayerScale | negligible |
-| Output heads (4) | 4 × 256 = 1K |
-| **Total** | **~11M** |
-
-At GPU/large config (`dim=384`, same depth):
-
-| Total | **~45M** |
-|-------|---------|
+| Output heads (2) | 2 × 96 ≈ 0.2K |
+| **Total (3 layers)** | **~430K** |
 
 ---
 
 ## Backward compatibility
 
-The canonical implementation lives in `meridianalgo/meridian_model.py`. The old `meridianalgo/revolutionary_model.py` is now a shim that re-exports everything with the old names:
+The canonical (and only) implementation lives in `meridianalgo/meridian_model.py`. The standalone `revolutionary_model.py` shim has been removed; the backward-compatible aliases are now defined at the bottom of `meridian_model.py` itself, so old imports keep working:
 
 ```python
-from .meridian_model import (
-    MeridianModel,
-    MeridianModel as RevolutionaryFinancialModel,
-    MeridianModel as RevolutionaryModel,
-    MeridianBlock as RevolutionaryTransformerBlock,
-    ...
-)
+# meridianalgo/meridian_model.py
+RevolutionaryFinancialModel = MeridianModel
+RevolutionaryModel = MeridianModel
 ```
 
-Old checkpoints saved with `"RevolutionaryFinancialModel-2026"` load transparently — the loader accepts both architecture strings.
+The loader accepts both architecture strings (`"MeridianModel-2026"` and the legacy `"RevolutionaryFinancialModel-2026"`), but only checkpoints at architecture version `6.0` or newer load — the pre-v6 state dicts have an incompatible (larger) shape.
 
 ---
 

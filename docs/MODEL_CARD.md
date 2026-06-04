@@ -21,19 +21,22 @@ for stocks and forex pairs. It reads recent market history, turns it into 44
 technical indicators, and outputs a next-day return estimate plus a direction
 signal (up/down).
 
-Version 6.0 is a deliberate reset. Earlier versions reported very high
-direction accuracy in training but performed near chance live — they had
-collapsed onto a near-constant downward prediction. The root cause was a
-contaminated training pipeline, not the architecture. v6.0 rebuilds the data
-path from the ground up and shrinks the network so it has to learn real signal
-instead of memorizing noise. See **What changed in v6.0** below.
+This is the **v1.0.0 production release**. It ships the sixth and final
+pre-production architecture revision (the checkpoint format is internally
+tagged `6.0.1`), which was a deliberate reset: earlier pre-1.0 versions
+reported very high direction accuracy in training but performed near chance
+live — they had collapsed onto a near-constant downward prediction. The root
+cause was a contaminated training pipeline, not the architecture. The current
+pipeline rebuilds the data path from the ground up and shrinks the network so
+it has to learn real signal instead of memorizing noise. See **What changed in
+the v6 architecture** below.
 
 The models retrain automatically every hour via GitHub Actions and publish
 each fresh checkpoint here. You do not need a GPU.
 
-## What changed in v6.0
+## What changed in the v6 architecture
 
-| Area | Before (≤ v5.x) | Now (v6.0) |
+| Area | Before (≤ v5.x) | Now (v6) |
 |------|-----------------|------------|
 | Training data | Daily **+ hourly + weekly** bars mixed in one table | **Daily only** — one consistent prediction target |
 | Windowing | One flat array concatenated across all symbols (windows spanned symbol boundaries) | **Per-symbol** windowing, then sorted by date |
@@ -258,7 +261,7 @@ print(prediction)
   title  = {Meridian.AI: Financial Prediction Engine},
   author = {MeridianAlgo},
   year   = {2026},
-  version = {6.0.1},
+  version = {1.0.0},
   url    = {https://github.com/MeridianAlgo/AraAI}
 }
 ```

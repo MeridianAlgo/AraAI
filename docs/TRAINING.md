@@ -13,14 +13,17 @@ GitHub Actions (every hour)
 fetch_and_store_data.py          ← yfinance → SQLite (training.db)
         |
         v
-train_stock_model.py             ← SQLite → MeridianModel → .pt file
-train_forex_model.py
+train_stocks.py                  ← SQLite → MeridianModel → .pt file
+train_forex.py
         |
         v
-push_elite_models.py             ← .pt file → Hugging Face Hub
+sanity_check_model.py            ← gate: blocks degenerate models from publishing
+        |
+        v
+push_to_hf.py                    ← .pt file → Hugging Face Hub
 ```
 
-Each step runs as a separate GitHub Actions job so failures are isolated and artifacts are passed between jobs explicitly.
+The whole pipeline runs as a single GitHub Actions job per workflow, so the `.pt` file never leaves the runner that produced it — removing the class of failures where a checkpoint could go missing while handed between separate jobs.
 
 ---
 
@@ -94,16 +97,16 @@ On each CI run, the script attempts to download the current checkpoint from Hugg
 hf_hub_download(repo_id="meridianal/ARA.AI", filename="models/Meridian.AI_Stocks.pt")
 ```
 
-If a valid checkpoint is found (architecture string `"MeridianModel-2026"` or `"RevolutionaryFinancialModel-2026"`, version ≥ 4.1), it is loaded and training continues. If no checkpoint exists or the version is too old, a fresh model is initialised.
+If a valid checkpoint is found (architecture string `"MeridianModel-2026"` or `"RevolutionaryFinancialModel-2026"`, checkpoint architecture version ≥ 6.0), it is loaded and training continues. If no checkpoint exists or the version is too old, a fresh model is initialised.
 
-**CPU default config** (used in CI):
+**Default config** (used in CI):
 ```python
 MeridianModel(
     input_size=44, seq_len=30,
-    dim=256, num_layers=6,
+    dim=96, num_layers=3,
     num_heads=4, num_kv_heads=2,
-    num_experts=4, num_prediction_heads=4,
-    dropout=0.1,
+    num_experts=2, num_prediction_heads=2,
+    dropout=0.15,
     use_mamba=False, mamba_state_dim=4,
 )
 ```
@@ -243,7 +246,7 @@ The `use_mamba` flag is read from the live model object — not hardcoded — so
 
 ## Deployment
 
-**Script**: `scripts/push_elite_models.py`
+**Script**: `scripts/push_to_hf.py`
 
 The trained `.pt` file is uploaded to the Hugging Face Hub repository `meridianal/ARA.AI`:
 
@@ -252,34 +255,23 @@ models/Meridian.AI_Stocks.pt
 models/Meridian.AI_Forex.pt
 ```
 
-The upload uses the `HF_TOKEN` secret. If the upload fails, the checkpoint artifact is still preserved in GitHub Actions for 7 days.
+The upload uses the `HF_TOKEN` secret and authenticates per request with backoff retry on rate limits. The push step only runs after the sanity gate passes; a degenerate checkpoint is deleted before it can be uploaded.
 
 ---
 
 ## CI workflow structure
 
+The whole pipeline runs as a single GitHub Actions job per workflow, so the `.pt` file never leaves the runner that produced it.
+
 ```
-setup job
-  ├─ Checkout code
-  ├─ Install dependencies
-  ├─ Fetch market data → training.db
-  ├─ Check row count → set has_data output
-  └─ Upload training.db artifact
-
-train job (needs: setup, if has_data)
-  ├─ Download training.db artifact
-  ├─ Download existing model from HF Hub
+single training job
+  ├─ Checkout code + install dependencies
+  ├─ Fetch market data → training.db (skip the rest if no data)
+  ├─ Download existing model from HF Hub (resume) or start fresh
   ├─ python scripts/train_*.py --max-time 45 --epochs 999
-  └─ Upload model artifact (retention: 7 days)
-
-deploy job (needs: train)
-  ├─ Download model artifact
-  └─ python scripts/push_elite_models.py
-
-cleanup job (always runs)
-  ├─ Delete training.db artifact
-  ├─ If train succeeded → close any open failure issues
-  └─ If train failed → create/update failure issue on GitHub
+  ├─ sanity_check_model.py → delete the checkpoint if degenerate
+  ├─ python scripts/push_to_hf.py  (only if the gate passed)
+  └─ On failure → open/update a GitHub failure issue; on success → close it
 ```
 
 Concurrency groups (`forex-training`, `stock-training`) ensure only one run per asset type is active at a time. When CI triggers two overlapping runs, the second waits in the queue rather than cancelling the first.
@@ -296,7 +288,7 @@ python scripts/fetch_and_store_data.py \
   --limit 50
 
 # Train (adjust --max-time for your machine)
-python scripts/train_stock_model.py \
+python scripts/train_stocks.py \
   --db-file training.db \
   --output models/Meridian.AI_Stocks.pt \
   --use-all-data \

@@ -1,6 +1,6 @@
 # Meridian.AI — Quick Start Guide
 
-**MeridianModel v5.0 | Hourly CI | 11M–45M Parameters**
+**MeridianModel-2026 | Hourly CI | ~430K Parameters**
 
 Get predictions running in under 5 minutes.
 
@@ -88,13 +88,14 @@ for p in result['predictions']:
 
 | Property | Value |
 |----------|-------|
-| Architecture | MeridianModel v5.0 |
-| Parameters | ~11M (CPU default) |
+| Architecture | MeridianModel-2026 |
+| Parameters | ~430K |
 | Input | 44 technical indicators |
 | Lookback | 30 timesteps |
-| Hidden dim | 256 |
+| Hidden dim | 96 |
+| Layers | 3 |
 | Attention | GQA — 4 heads, 2 KV heads |
-| Experts | 4 (top-2 MoE) |
+| Experts | 2 (top-2 MoE) |
 | Training | Hourly via GitHub Actions |
 
 ---
@@ -130,7 +131,7 @@ python scripts/fetch_and_store_data.py \
 
 ```bash
 # Train stock model (45-minute budget, up to 999 epochs)
-python scripts/train_stock_model.py \
+python scripts/train_stocks.py \
   --db-file training.db \
   --output models/Meridian.AI_Stocks.pt \
   --use-all-data \
@@ -138,7 +139,7 @@ python scripts/train_stock_model.py \
   --max-time 45
 
 # Train forex model
-python scripts/train_forex_model.py \
+python scripts/train_forex.py \
   --db-file training.db \
   --output models/Meridian.AI_Forex.pt \
   --use-all-data \
@@ -149,7 +150,7 @@ python scripts/train_forex_model.py \
 ### 4. Push to Hugging Face (optional)
 
 ```bash
-python scripts/push_elite_models.py \
+python scripts/push_to_hf.py \
   --model-path models/Meridian.AI_Stocks.pt \
   --model-type stock
 ```
@@ -169,8 +170,9 @@ CI trains new models every hour automatically. To enable in your fork:
 Available workflows:
 | Workflow | Schedule | File |
 |----------|----------|------|
-| Meridian.AI for Stocks | Every hour at :00 | `meridian-stocks.yml` |
-| Meridian.AI for Forex | Every hour at :30 | `meridian-forex.yml` |
+| Meridian.AI for Stocks | Every hour at :00 | `stocks.yml` |
+| Meridian.AI for Forex | Every hour at :30 | `forex.yml` |
+| Daily model tests | Daily | `daily-model-tests.yml` |
 | Lint | On push / PR | `lint.yml` |
 
 ---
@@ -193,7 +195,7 @@ pytest tests/test_checkpoint_health.py -v
 Test files:
 | File | What it checks |
 |------|---------------|
-| `test_checkpoint_health.py` | Required keys, finite losses, direction accuracy > 50%, target range sanity |
+| `test_checkpoint_health.py` | Required keys, finite losses, noise-aware direction-accuracy floor, target range sanity |
 | `test_model_inference.py` | Forward pass shape, state dict loading, no NaNs in output |
 | `test_directional_signal.py` | Live directional accuracy on real yfinance data |
 
@@ -244,4 +246,4 @@ This is the bug fixed in v5.0. The old model never ran validation. Download the 
 
 ---
 
-**Version**: 5.0.0 | **Maintained by**: [MeridianAlgo](https://github.com/MeridianAlgo)
+**Version**: 1.0.0 (Production) | **Maintained by**: [MeridianAlgo](https://github.com/MeridianAlgo)
