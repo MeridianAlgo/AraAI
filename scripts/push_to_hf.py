@@ -7,11 +7,13 @@ Supports both stock and forex unified models
 import argparse
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-from huggingface_hub import HfApi, login
+from huggingface_hub import HfApi
+from huggingface_hub.utils import HfHubHTTPError
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +21,31 @@ load_dotenv()
 # Increase Hugging Face Hub timeout to 3 hours (10800 seconds)
 os.environ["HUGGINGFACE_HUB_READ_TIMEOUT"] = "10800"
 os.environ["HUGGINGFACE_HUB_WRITE_TIMEOUT"] = "10800"
+
+
+def _upload_with_retry(api, *, attempts=5, base_delay=10, **upload_kwargs):
+    """Call api.upload_file with backoff on HTTP 429 (rate limit).
+
+    The stock and forex workflows push hourly, each uploading a model file
+    plus a README. That can trip Hugging Face's per-endpoint rate limits
+    (notably /whoami-v2 and the commit endpoint), which surface as 429s.
+    Retrying with exponential backoff lets the second pusher wait out the
+    window instead of failing the whole job.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            return api.upload_file(**upload_kwargs)
+        except HfHubHTTPError as e:
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            if status == 429 and attempt < attempts:
+                delay = base_delay * (2 ** (attempt - 1))
+                print(
+                    f"   Rate limited (429) on attempt {attempt}/{attempts}; "
+                    f"retrying in {delay}s..."
+                )
+                time.sleep(delay)
+                continue
+            raise
 
 
 def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"):
@@ -40,11 +67,11 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
         return False
 
     try:
-        # Login to Hugging Face
-        print("Logging into Hugging Face...")
-        login(token=hf_token)
-
-        api = HfApi()
+        # Authenticate by passing the token to every API call instead of
+        # calling login(). login() validates via /whoami-v2, which is
+        # rate-limited hard; with stocks + forex pushing hourly we were
+        # hitting that limit and failing the upload before it even started.
+        api = HfApi(token=hf_token)
 
         # Determine filename based on model type
         if model_type == "stock":
@@ -58,7 +85,8 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
         print(f"   Destination: {repo_id}/{filename}")
 
         # Upload to Hugging Face
-        api.upload_file(
+        _upload_with_retry(
+            api,
             path_or_fileobj=str(model_path),
             path_in_repo=filename,
             repo_id=repo_id,
@@ -109,7 +137,8 @@ See full documentation at: https://github.com/MeridianAlgo/Meridian.AI
 """
 
         # Upload model card
-        api.upload_file(
+        _upload_with_retry(
+            api,
             path_or_fileobj=model_card_content.encode(),
             path_in_repo="README.md",
             repo_id=repo_id,
