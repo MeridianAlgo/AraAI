@@ -4,7 +4,8 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-6.0.1-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![Status](https://img.shields.io/badge/status-Production-success.svg)
 [![Forex Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml)
 [![Stock Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml)
 [![Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
@@ -76,11 +77,20 @@ The prediction heads each make their own forecast, and the model blends them wit
 
 ## Performance and Honest Expectations
 
-This is a next-day directional model. Measured live on held-out daily data (eight large-cap stocks, 240 predictions), it scores about 57 percent directional accuracy against a roughly 55 percent always-up baseline. The mean prediction is small and positive, in line with the real daily drift of equities, and it predicts both up and down rather than collapsing onto one direction.
+These are next-day directional models. The numbers below come from a walk-forward backtest: for many random historical dates the model is given only the data available up to that date and asked to predict the next day's move, and the sign of that prediction is compared to what actually happened. Every feature is backward-looking and the target is strictly in the future, so there is no lookahead.
 
-That is a small but genuine edge for a single day ahead. It is not a multi-day or week-ahead forecaster. Daily price direction is close to efficient, recursive multi-step forecasts compound their error quickly, and any tool that claims reliable week-ahead price prediction from price and indicator data alone is overfitting. Treat the output as a next-day directional tilt, not a crystal ball.
+| Model | Samples | Directional accuracy | Always-up baseline | Edge | Significance |
+|-------|---------|----------------------|--------------------|------|--------------|
+| **Forex** | 960 | **63.5%** | 51.7% | **+11.9 pts** | z = 8.4 (highly significant) |
+| Stocks | 1,680 | 51.6% | 51.5% | +0.1 pts | z = 1.3 (not significant) |
 
-Earlier versions reported much higher accuracy during training but performed near chance live, because a contaminated data pipeline let the model collapse onto a near-constant downward prediction. Version 6.0 fixed the pipeline (see How Training Works) and added a sanity gate that blocks a degenerate model from ever being published.
+**Forex is the flagship.** Across eight major pairs it calls next-day direction correctly about 63 percent of the time — a large, statistically robust edge (EUR/USD 72.5 percent, USD/JPY and EUR/GBP 67.5 percent). One honest caveat: the model is trained for direction, not magnitude, so its raw return size is not calibrated; the production path clips it to a realistic daily range. Use the sign, not the number.
+
+**Stocks are experimental.** On daily equity direction the model lands at roughly chance once you account for the market's natural upward drift — about 51.6 percent against a 51.5 percent always-up baseline, which is not statistically distinguishable from the baseline. Daily stock direction is close to efficient; we ship the model for completeness and research, but it carries no demonstrated live edge and should not be treated as one.
+
+Neither model is a multi-day or week-ahead forecaster. Recursive multi-step forecasts compound their error quickly, and any tool that claims reliable week-ahead price prediction from price and indicator data alone is overfitting. Treat the output as a next-day directional tilt, not a crystal ball.
+
+Earlier (pre-1.0) versions reported much higher accuracy during training but performed near chance live, because a contaminated data pipeline let the model collapse onto a near-constant downward prediction. The current pipeline fixed that (see How Training Works) and added a sanity gate that blocks a degenerate model from ever being published.
 
 ## Quick Start
 
@@ -184,7 +194,7 @@ Every checkpoint is a single `.pt` file that holds both the weights and enough c
 | `model_state_dict` | `dict` | The PyTorch model weights |
 | `model_type` | `str` | Either `stock` or `forex` |
 | `architecture` | `str` | `MeridianModel-2026` |
-| `version` | `str` | The model version, currently `6.0.1` |
+| `version` | `str` | The checkpoint architecture version, currently `6.0.1`. This is the model-format revision used to gate loadable checkpoints; it is intentionally separate from the v1.0.0 product release that ships it. |
 | `input_size` | `int` | `44`, the feature count |
 | `seq_len` | `int` | `30`, the lookback window |
 | `dim` | `int` | Hidden dimension |

@@ -4,6 +4,40 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v1.0.0] — 2026-06-04 — First production release
+
+**This is the first production release of Meridian.AI.** Everything before it — every tag from `v1.0.0-Beta` through `v6.0.1` — was pre-production: a long sequence of architecture experiments, data-pipeline rewrites, and honesty corrections that are preserved below as development history. Those releases and their tags have been retired; v1.0.0 is the single supported release going forward.
+
+Nothing in the architecture or training pipeline changed between v6.0.1 and v1.0.0 — the checkpoints are identical and the loader still gates on checkpoint architecture version `6.0` (the model-format revision is deliberately separate from this product version). What changed is that the system has now been validated end to end and is being declared stable.
+
+### Walk-forward validation
+
+Before cutting the release, both models were backtested across many random historical dates. For each sampled date the model received only the data available up to that day and predicted the next day's direction; the sign of that prediction was compared to the realized move. Every feature is backward-looking and every target is strictly future, so there is no lookahead.
+
+| Model | Samples | Directional accuracy | Always-up baseline | Edge | Significance |
+|-------|---------|----------------------|--------------------|------|--------------|
+| Forex | 960 | 63.5% | 51.7% | +11.9 pts | z = 8.4 (highly significant) |
+| Stocks | 1,680 | 51.6% | 51.5% | +0.1 pts | z = 1.3 (not significant) |
+
+Forex is the flagship: a large, statistically robust next-day directional edge across eight major pairs (EUR/USD 72.5 percent, USD/JPY and EUR/GBP 67.5 percent). Its return magnitude is not calibrated — the model is trained for direction, and the production path clips the size to a realistic daily range — so the reliable signal is the sign. Stocks ship as experimental: at roughly chance once the market's upward drift is accounted for, with no statistically demonstrated live edge.
+
+### Operational fixes folded into 1.0.0
+
+- The Hugging Face push no longer calls `login()`; it authenticates per request and retries with backoff on rate limits, so the hourly forex push stopped failing on the `/whoami-v2` limit.
+- GitHub Actions were moved off the deprecated Node 20 runtime (`actions/cache` and `actions/github-script` bumped).
+
+### Versioning from here
+
+The product version (`__version__`, `pyproject.toml`) is now `1.0.0` and tracks the release. The checkpoint architecture version (`MODEL_VERSION`, `_MIN_LOADABLE`) stays on the `6.x` line because it gates which checkpoint formats the loader will accept; the two are intentionally decoupled.
+
+---
+
+# Pre-1.0 development history (experimental / beta)
+
+Everything below predates the production release. These versions were the research and stabilization path that led to v1.0.0 — useful for understanding how the model and pipeline evolved, but their tags and GitHub releases have been retired and they are not supported. Treat the numbers in older entries as the honest, in-context findings of that moment, several of which were later corrected.
+
+---
+
 ## [v6.0.1] — 2026-05-29 — Publish guardrail and honest documentation
 
 **The model works now, and the docs finally say so honestly.** After a full day of hourly runs on the clean v6 pipeline, the live held-out direction accuracy on eight large-cap stocks settled at about 57 percent against a 55 percent always-up baseline — a small but real edge, with no directional collapse. This release locks that in and makes sure a broken model can never quietly replace it.

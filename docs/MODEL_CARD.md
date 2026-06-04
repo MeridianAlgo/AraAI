@@ -45,18 +45,32 @@ each fresh checkpoint here. You do not need a GPU.
 
 ## Honest performance
 
-This is a next-day directional model. Measured live on held-out daily data
-(8 large-cap stocks, 240 predictions):
+These are next-day directional models. The numbers below come from a
+walk-forward backtest over many random historical dates: the model sees only
+the data available up to each date and predicts the next day's direction, and
+the sign is compared to the realized move. Every feature is backward-looking
+and the target is strictly future — no lookahead.
 
-- Directional accuracy: **~57%**, vs a ~55% always-up baseline.
-- Mean prediction: small and positive (~+0.7%), in line with real daily drift.
-- No directional collapse (it predicts both up and down).
+| Model | Samples | Directional accuracy | Always-up baseline | Edge | Significance |
+|-------|---------|----------------------|--------------------|------|--------------|
+| **Forex** | 960 | **63.5%** | 51.7% | **+11.9 pts** | z = 8.4 (highly significant) |
+| Stocks | 1,680 | 51.6% | 51.5% | +0.1 pts | z = 1.3 (not significant) |
 
-That is a small but real edge for **one day ahead**. It is not a multi-day or
-week-ahead forecaster — daily price direction is close to efficient, error
-compounds quickly past one step, and any tool claiming reliable week-ahead
-price prediction from OHLCV alone is overfitting. Use this for a next-day
-directional tilt, not as a crystal ball.
+**Forex is the flagship.** A large, statistically robust next-day directional
+edge across eight major pairs (EUR/USD 72.5%, USD/JPY and EUR/GBP 67.5%). The
+model is trained for direction, not magnitude, so its raw return size is not
+calibrated — the production path clips it to a realistic daily range. Use the
+sign, not the number.
+
+**Stocks are experimental.** On daily equity direction the model sits at
+roughly chance once the market's natural upward drift is accounted for (51.6%
+vs a 51.5% always-up baseline, not statistically distinguishable). It ships for
+research completeness and carries no demonstrated live edge.
+
+Neither is a multi-day or week-ahead forecaster — daily price direction is
+close to efficient, error compounds quickly past one step, and any tool
+claiming reliable week-ahead price prediction from OHLCV alone is overfitting.
+Use this for a next-day directional tilt, not as a crystal ball.
 
 ## Repository layout
 
