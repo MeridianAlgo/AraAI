@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-from huggingface_hub import HfApi
+from huggingface_hub import CommitOperationAdd, HfApi
 from huggingface_hub.utils import HfHubHTTPError
 
 # Load environment variables
@@ -23,22 +23,36 @@ os.environ["HUGGINGFACE_HUB_READ_TIMEOUT"] = "10800"
 os.environ["HUGGINGFACE_HUB_WRITE_TIMEOUT"] = "10800"
 
 
-def _upload_with_retry(api, *, attempts=5, base_delay=10, **upload_kwargs):
-    """Call api.upload_file with backoff on HTTP 429 (rate limit).
+def _retry_after_seconds(e):
+    """Extract the server-suggested wait from a 429 response, if present."""
+    headers = getattr(getattr(e, "response", None), "headers", None) or {}
+    raw = headers.get("Retry-After") or headers.get("retry-after")
+    if raw:
+        try:
+            return max(1, int(float(raw)))
+        except (TypeError, ValueError):
+            return None
+    return None
 
-    The stock and forex workflows push hourly, each uploading a model file
-    plus a README. That can trip Hugging Face's per-endpoint rate limits
-    (notably /whoami-v2 and the commit endpoint), which surface as 429s.
-    Retrying with exponential backoff lets the second pusher wait out the
-    window instead of failing the whole job.
+
+def _commit_with_retry(api, *, attempts=8, base_delay=15, max_delay=300, **commit_kwargs):
+    """Call api.create_commit with backoff on HTTP 429 (rate limit).
+
+    The stock and forex workflows push hourly to the same repo. That can trip
+    Hugging Face's per-endpoint rate limits (notably /preupload and the commit
+    endpoint), which surface as 429s and can persist for several minutes.
+    Retrying with exponential backoff — and honoring the server's Retry-After
+    header when it sends one — lets the pusher wait out the window instead of
+    failing the whole job.
     """
     for attempt in range(1, attempts + 1):
         try:
-            return api.upload_file(**upload_kwargs)
+            return api.create_commit(**commit_kwargs)
         except HfHubHTTPError as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
             if status == 429 and attempt < attempts:
-                delay = base_delay * (2 ** (attempt - 1))
+                delay = min(max_delay, base_delay * (2 ** (attempt - 1)))
+                delay = _retry_after_seconds(e) or delay
                 print(
                     f"   Rate limited (429) on attempt {attempt}/{attempts}; "
                     f"retrying in {delay}s..."
@@ -84,20 +98,36 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
         print(f"Uploading {model_path.name} to Hugging Face...")
         print(f"   Destination: {repo_id}/{filename}")
 
-        # Upload to Hugging Face
-        _upload_with_retry(
+        # Commit the model file and the model card in a SINGLE commit. Doing
+        # them as two separate upload_file() calls meant two commits (= two
+        # /preupload round-trips) per run; with stocks + forex pushing hourly
+        # to the same repo that doubled the request rate and tripped HF's 429
+        # rate limiter. One atomic commit halves the per-run request count.
+        operations = [
+            CommitOperationAdd(path_in_repo=filename, path_or_fileobj=str(model_path)),
+        ]
+
+        model_card_content = _build_model_card(model_type)
+        if model_card_content is not None:
+            operations.append(
+                CommitOperationAdd(
+                    path_in_repo="README.md",
+                    path_or_fileobj=model_card_content.encode(),
+                )
+            )
+
+        _commit_with_retry(
             api,
-            path_or_fileobj=str(model_path),
-            path_in_repo=filename,
             repo_id=repo_id,
+            operations=operations,
             token=hf_token,
-            commit_message=f"Update {model_type} model - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            commit_message=(
+                f"Update {model_type} model - "
+                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            ),
         )
 
-        print(f"Successfully uploaded {filename}")
-
-        # Update model card
-        update_model_card(api, hf_token, repo_id, model_type)
+        print(f"Successfully uploaded {filename} (+ model card)")
 
         return True
 
@@ -106,18 +136,21 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
         return False
 
 
-def update_model_card(api, hf_token, repo_id, model_type):
-    """Update model card on Hugging Face"""
+def _build_model_card(model_type):
+    """Return the model-card markdown to commit alongside the model.
+
+    Returns None if the card cannot be built, so the model still gets pushed.
+    """
     try:
         # Read the professional model card
         model_card_path = Path(__file__).parent.parent / "docs" / "MODEL_CARD.md"
 
         if model_card_path.exists():
             with open(model_card_path, encoding="utf-8") as f:
-                model_card_content = f.read()
-        else:
-            # Fallback to basic model card
-            model_card_content = f"""---
+                return f.read()
+
+        # Fallback to basic model card
+        return f"""---
 library_name: pytorch
 license: mit
 tags:
@@ -135,21 +168,9 @@ See full documentation at: https://github.com/MeridianAlgo/Meridian.AI
 
 **Last Updated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
-
-        # Upload model card
-        _upload_with_retry(
-            api,
-            path_or_fileobj=model_card_content.encode(),
-            path_in_repo="README.md",
-            repo_id=repo_id,
-            token=hf_token,
-            commit_message=f"Update model card - {model_type}",
-        )
-
-        print("Successfully updated model card on Hugging Face")
-
     except Exception as e:
-        print(f"WARNING: Could not update model card: {e}")
+        print(f"WARNING: Could not build model card: {e}")
+        return None
 
 
 def main():

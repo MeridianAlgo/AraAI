@@ -10,14 +10,14 @@ This package provides:
 - Advanced technical indicators
 - Automated model validation and learning
 
-Version: 1.0.0 (Production)
+Version: 1.1.0 (Production)
 """
 
 # Product / package release version. This is distinct from the checkpoint
 # architecture version (MODEL_VERSION / _MIN_LOADABLE in large_torch_model.py),
 # which stays on the 6.x line to gate loadable checkpoint formats. v1.0.0 is the
 # first production release; the 6.x architecture revision is what it ships.
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "MeridianAlgo Team"
 __email__ = "support@meridianalgo.com"
 __license__ = "MIT"

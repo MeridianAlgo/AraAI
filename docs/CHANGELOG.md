@@ -4,6 +4,23 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v1.1.0] — 2026-06-05 — Hugging Face push reliability
+
+Both the stock and forex hourly training pipelines were intermittently failing
+at the upload step with `HTTP 429 Too Many Requests` on Hugging Face's
+`/preupload/main` endpoint (e.g. forex run #79). Root cause: each run pushed the
+model file and the model card as two *separate* commits to the shared
+`meridianal/ARA.AI` repo, and with stocks and forex both pushing hourly that
+doubled the request rate into HF's rate limiter.
+
+- `scripts/push_to_hf.py` now commits the model file and the model card in a
+  single atomic commit (`create_commit`), halving the per-run request count.
+- The retry logic honors the server's `Retry-After` header and uses a deeper
+  backoff (8 attempts, up to 5 min cap) so transient 429s are waited out rather
+  than failing the job.
+
+---
+
 ## [v1.0.0] — 2026-06-04 — First production release
 
 **This is the first production release of Meridian.AI.** Everything before it — every tag from `v1.0.0-Beta` through `v6.0.1` — was pre-production: a long sequence of architecture experiments, data-pipeline rewrites, and honesty corrections that are preserved below as development history. Those releases and their tags have been retired; v1.0.0 is the single supported release going forward.

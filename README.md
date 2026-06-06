@@ -4,7 +4,7 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
 ![Status](https://img.shields.io/badge/status-Production-success.svg)
 [![Forex Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml)
 [![Stock Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml)
