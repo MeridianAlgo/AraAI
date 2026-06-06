@@ -122,8 +122,7 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
             operations=operations,
             token=hf_token,
             commit_message=(
-                f"Update {model_type} model - "
-                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                f"Update {model_type} model - " f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             ),
         )
 
