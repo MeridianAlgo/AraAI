@@ -5,12 +5,14 @@ Supports both stock and forex unified models
 """
 
 import argparse
+import json
 import os
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
 
+import requests
 from dotenv import load_dotenv
 from huggingface_hub import CommitOperationAdd, HfApi
 from huggingface_hub.utils import HfHubHTTPError
@@ -36,7 +38,7 @@ def _retry_after_seconds(e):
 
 
 def _commit_with_retry(api, *, attempts=8, base_delay=15, max_delay=300, **commit_kwargs):
-    """Call api.create_commit with backoff on HTTP 429 (rate limit).
+    """Call api.create_commit with backoff on transient HF failures.
 
     The stock and forex workflows push hourly to the same repo. That can trip
     Hugging Face's per-endpoint rate limits (notably /preupload and the commit
@@ -44,18 +46,43 @@ def _commit_with_retry(api, *, attempts=8, base_delay=15, max_delay=300, **commi
     Retrying with exponential backoff — and honoring the server's Retry-After
     header when it sends one — lets the pusher wait out the window instead of
     failing the whole job.
+
+    When HF is rate-limited (or a gateway is overloaded) it sometimes replies
+    with an empty / HTML body instead of JSON. huggingface_hub then raises a
+    raw JSONDecodeError ("Expecting value: line 1 column 1") rather than an
+    HfHubHTTPError, which used to slip past this loop and fail the whole run.
+    We treat those — plus connection/timeout errors — as transient and retry
+    them with the same backoff.
     """
+    transient = (
+        json.JSONDecodeError,
+        requests.exceptions.JSONDecodeError,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.Timeout,
+    )
     for attempt in range(1, attempts + 1):
         try:
             return api.create_commit(**commit_kwargs)
         except HfHubHTTPError as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
-            if status == 429 and attempt < attempts:
+            transient_status = status == 429 or (status is not None and status >= 500)
+            if transient_status and attempt < attempts:
                 delay = min(max_delay, base_delay * (2 ** (attempt - 1)))
                 delay = _retry_after_seconds(e) or delay
                 print(
-                    f"   Rate limited (429) on attempt {attempt}/{attempts}; "
+                    f"   HF transient {status} on attempt {attempt}/{attempts}; "
                     f"retrying in {delay}s..."
+                )
+                time.sleep(delay)
+                continue
+            raise
+        except transient as e:
+            if attempt < attempts:
+                delay = min(max_delay, base_delay * (2 ** (attempt - 1)))
+                print(
+                    f"   HF returned a non-JSON/transient response "
+                    f"({type(e).__name__}) on attempt {attempt}/{attempts} "
+                    f"— likely a rate-limit body; retrying in {delay}s..."
                 )
                 time.sleep(delay)
                 continue
