@@ -21,15 +21,15 @@ for stocks and forex pairs. It reads recent market history, turns it into 44
 technical indicators, and outputs a next-day return estimate plus a direction
 signal (up/down).
 
-This is the **v1.0.0 production release**. It ships the sixth and final
-pre-production architecture revision (the checkpoint format is internally
-tagged `6.0.1`), which was a deliberate reset: earlier pre-1.0 versions
-reported very high direction accuracy in training but performed near chance
-live — they had collapsed onto a near-constant downward prediction. The root
-cause was a contaminated training pipeline, not the architecture. The current
-pipeline rebuilds the data path from the ground up and shrinks the network so
-it has to learn real signal instead of memorizing noise. See **What changed in
-the v6 architecture** below.
+This is the **v1.2.0 production release**, shipping checkpoint format
+**v7.0.0**. v7 makes all 44 input features scale-invariant (raw price/volume
+levels mostly encoded symbol identity after cross-symbol normalisation),
+rescales the loss to percent units so return magnitudes are actually
+calibrated, and adds a 1-day embargo for forex after discovering that the
+source's daily forex bars leak next-day information (see **Honest
+performance**). The v6 reset that preceded it — per-symbol windowing, daily
+bars only, train-split-only scaling, a compact ~430K-parameter network — is
+retained unchanged.
 
 The models retrain automatically every hour via GitHub Actions and publish
 each fresh checkpoint here. You do not need a GPU.
@@ -48,27 +48,27 @@ each fresh checkpoint here. You do not need a GPU.
 
 ## Honest performance
 
-These are next-day directional models. The numbers below come from a
-walk-forward backtest over many random historical dates: the model sees only
-the data available up to each date and predicts the next day's direction, and
-the sign is compared to the realized move. Every feature is backward-looking
-and the target is strictly future — no lookahead.
+These are next-day models, evaluated truly out of sample: trained only on
+data before 2025-06-01 and tested on the year after
+(`scripts/benchmark_model.py --holdout-start 2025-06-01`).
 
-| Model | Samples | Directional accuracy | Always-up baseline | Edge | Significance |
-|-------|---------|----------------------|--------------------|------|--------------|
-| **Forex** | 960 | **63.5%** | 51.7% | **+11.9 pts** | z = 8.4 (highly significant) |
-| Stocks | 1,680 | 51.6% | 51.5% | +0.1 pts | z = 1.3 (not significant) |
+| Model (v7) | Holdout samples | Directional accuracy | Always-up baseline | Return MAE | Zero-pred MAE floor |
+|-------|---------|----------------------|--------------------|------|------|
+| Stocks | 12,800 | 50.2% | 51.4% | 0.0127 | 0.0127 |
+| Forex (1-day embargo) | 5,830 | 48.7% | 52.0% | 0.0031 | 0.0030 |
 
-**Forex is the flagship.** A large, statistically robust next-day directional
-edge across eight major pairs (EUR/USD 72.5%, USD/JPY and EUR/GBP 67.5%). The
-model is trained for direction, not magnitude, so its raw return size is not
-calibrated — the production path clips it to a realistic daily range. Use the
-sign, not the number.
+**Magnitudes are calibrated; direction is not an edge.** v7's return-size
+predictions sit at the zero-prediction MAE floor (v6 was up to 3.7× worse and
+predicted ~17%/day moves). Neither model beats the always-up drift baseline
+on next-day direction out of sample — the market-efficiency expectation for
+daily OHLCV + technical indicators. Treat direction as a weak tilt only.
 
-**Stocks are experimental.** On daily equity direction the model sits at
-roughly chance once the market's natural upward drift is accounted for (51.6%
-vs a 51.5% always-up baseline, not statistically distinguishable). It ships for
-research completeness and carries no demonstrated live edge.
+**The pre-1.2.0 forex claim (63.5%, "z = 8.4") is retracted.** The daily
+`*=X` forex bars are internally inconsistent: day-t high/low span a later
+window than the stored close and leak the t+1 close (a plain OLS on day-t
+OHL ratios scores 81% sign accuracy; see `scripts/diag_feat_corr.py`). Forex
+now trains and evaluates with a 1-day embargo, which blocks the leak — and
+with it, the apparent edge disappears.
 
 Neither is a multi-day or week-ahead forecaster — daily price direction is
 close to efficient, error compounds quickly past one step, and any tool
@@ -80,16 +80,18 @@ Use this for a next-day directional tilt, not as a crystal ball.
 ```
 meridianal/ARA.AI/
 ├── models/
-│   ├── Meridian.AI_Stocks.pt    ← current v6 stock checkpoint
-│   └── Meridian.AI_Forex.pt     ← current v6 forex checkpoint
+│   ├── Meridian.AI_Stocks.pt    ← current v7 stock checkpoint
+│   └── Meridian.AI_Forex.pt     ← current v7 forex checkpoint
 └── legacy/
     ├── Meridian.AI_Stocks_v5.2.2.pt   ← archived pre-v6 (biased) checkpoint
     └── Meridian.AI_Forex_v5.2.2.pt    ← archived pre-v6 (biased) checkpoint
 ```
 
-The loader only accepts checkpoints at **version 6.0 or newer**. The v5.x
-checkpoints in `legacy/` have an incompatible (larger) architecture and are
-kept only for reference — do not use them for live prediction.
+The loader only accepts checkpoints at **version 7.0 or newer** — v6
+checkpoints have identical tensor shapes but incompatible feature semantics
+(raw levels vs scale-invariant ratios) and are refused. The v5.x checkpoints
+in `legacy/` are kept only for reference — do not use them for live
+prediction.
 
 ## Architecture
 
@@ -115,7 +117,7 @@ time series. Each block contains:
 | Optional SSM | Mamba (vectorised scan) | Long-range dependencies |
 | Loss | BalancedDirectionLoss | Joint regression + direction accuracy |
 
-## Model specifications (v6.0 default)
+## Model specifications (v7.0 default)
 
 | Spec | Value |
 |------|-------|
@@ -126,8 +128,8 @@ time series. Each block contains:
 | Experts | 2 (top-2) |
 | Prediction heads | 2 |
 | Mamba SSM | Disabled (CPU default) |
-| Input features | 44 technical indicators |
-| Sequence length | 30 timesteps (daily) |
+| Input features | 44 scale-invariant technical indicators |
+| Sequence length | 30 timesteps (daily; forex: window ends 1 day before the prediction base) |
 
 ## Available models
 
@@ -188,7 +190,7 @@ print(prediction)
 |---------|-------|
 | Optimizer | AdamW (`weight_decay=0.02`, `betas=(0.9, 0.95)`) |
 | LR warmup | Linear ramp, then CosineAnnealingWarmRestarts |
-| Loss | BalancedDirectionLoss (60% Huber + 40% weighted BCE) |
+| Loss | BalancedDirectionLoss (60% Huber + 40% BCE, percent units) |
 | Effective batch size | 256 via gradient accumulation |
 | Gradient clipping | Max norm 1.0 |
 | EMA | Decay 0.999 — used for validation and the saved checkpoint |
@@ -210,7 +212,7 @@ print(prediction)
     "model_state_dict": ...,       # PyTorch weights
     "model_type": "stock",         # or "forex"
     "architecture": "MeridianModel-2026",
-    "version": "6.0.1",
+    "version": "7.0.0",
     "input_size": 44,
     "seq_len": 30,
     "dim": 96,
@@ -219,7 +221,7 @@ print(prediction)
     "num_kv_heads": 2,
     "num_experts": 2,
     "num_prediction_heads": 2,
-    "dropout": 0.15,
+    "dropout": 0.0,                # saved from the live model, not hardcoded
     "use_mamba": False,
     "scaler_mean": Tensor,         # shape (30, 44)
     "scaler_std": Tensor,          # shape (30, 44)

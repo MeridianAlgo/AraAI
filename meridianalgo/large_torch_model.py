@@ -28,8 +28,22 @@ from accelerate import Accelerator
 # Fix: dim 256->96, layers 6->3, experts 4->2, prediction_heads 4->2. State
 # dict shape changes, so _MIN_LOADABLE bumps to (6, 0) and the first hourly
 # run after this lands trains from scratch on the new architecture.
-MODEL_VERSION = "6.0.1"
 ARCHITECTURE_NAME = "MeridianModel-2026"
+# ---------------------------------------------------------------------------
+# v7.0.0 — scale-invariant features + percent-scale loss.
+# Two compounding defects kept v6 pinned at ~coin-flip on held-out data:
+#   1. 14 of 44 features were raw price/volume LEVELS z-scored across symbols
+#      spanning 300x price ranges — they encoded symbol identity, not signal
+#      (fixed in UnifiedStockML._add_indicators; same 44-feature count).
+#   2. The loss operated on raw daily returns (~0.005): SmoothL1 gradients
+#      were ~200x too small to matter and BCE logits (10*r ~ 0.05) sat at
+#      log(2), the documented 0.277 dead equilibrium. The direction term
+#      also inflated |pred| to ~0.17 (17%/day!) with no regression pushback.
+#      BalancedDirectionLoss now works in percent units (returns * 100).
+# Feature SEMANTICS changed while the tensor shapes did not, so a v6
+# checkpoint would silently mis-read v7 inputs: _MIN_LOADABLE bumps to (7, 0)
+# and the first run after this lands trains from scratch.
+MODEL_VERSION = "7.0.0"
 # ---------------------------------------------------------------------------
 
 try:
@@ -360,9 +374,10 @@ class AdvancedMLSystem:
                         return (0,)
 
                 version = checkpoint.get("version", "0")
-                # v6.0 shrunk the architecture; v5.x checkpoints have an
-                # incompatible state-dict shape, so train fresh on first run.
-                _MIN_LOADABLE = (6, 0)
+                # v7.0 changed feature semantics (scale-invariant indicators);
+                # a v6 checkpoint would silently mis-read v7 inputs, so train
+                # fresh on the first run after the bump.
+                _MIN_LOADABLE = (7, 0)
                 if _parse_ver(version) < _MIN_LOADABLE:
                     print(
                         f"  Skipping old model (v{version}) — training fresh with "
@@ -474,7 +489,14 @@ class AdvancedMLSystem:
                         "num_kv_heads": int(getattr(unwrapped_model, "num_kv_heads", 2)),
                         "num_experts": int(getattr(unwrapped_model, "num_experts", 6)),
                         "num_prediction_heads": len(unwrapped_model.prediction_heads),
-                        "dropout": 0.15,
+                        # Persist the model's ACTUAL dropout. This was
+                        # hardcoded to 0.15, so warm-started runs silently
+                        # recreated the model with the dropout that fresh
+                        # models deliberately set to 0.0 (it kills the weak
+                        # signal — see the v6 notes above).
+                        "dropout": float(
+                            getattr(getattr(unwrapped_model, "input_dropout", None), "p", 0.0)
+                        ),
                         "use_mamba": _use_mamba,
                         "mamba_state_dim": int(getattr(unwrapped_model, "mamba_state_dim", 16)),
                     }
@@ -700,7 +722,7 @@ class AdvancedMLSystem:
                     # with dropout off vs 56% with dropout=0.15. With 140 samples
                     # per param the model is already small enough that explicit
                     # dropout is pure noise injection. Mamba stays off on CPU.
-                    print("  Creating new MeridianModel v6.0 (~430K params)...")
+                    print(f"  Creating new MeridianModel v{MODEL_VERSION} (~430K params)...")
                     self.model = MeridianModel(
                         input_size=input_size,
                         seq_len=seq_len,
@@ -911,6 +933,12 @@ class AdvancedMLSystem:
             ema_model = ema_model.to(self.device)
 
             # === Training loop ===
+            # Checkpoint selection is by min EMA val LOSS, deliberately NOT by
+            # val direction accuracy. We tried dir-acc selection (v7 dev): on
+            # clean stock data it was OOS-neutral (50.28% vs 50.30%), and on
+            # data with intra-bar leakage it maximally selects checkpoints that
+            # exploit the artifact (a forex run jumped to a fake 76.7% holdout
+            # score). Loss selection is the safer default for unattended CI.
             best_val_loss = float("inf")
             best_ema_state = None
             patience = 20

@@ -4,6 +4,72 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v1.2.0] — 2026-06-12 — v7 model format, forex data-leak retraction, honest benchmarking
+
+### The forex edge was an artifact — retracted
+
+The walk-forward forex result reported in v1.0.0 (63.5%, "z = 8.4, highly
+significant") is retracted. The daily forex (`*=X`) bars in the training
+database are internally inconsistent: each bar's high/low spans a later time
+window than its stored close, so day-t high/low leak information about the
+t+1 close. A plain linear regression on day-t high/close, low/close,
+open/close alone reaches **81% sign accuracy** on a held-out year
+(`scripts/diag_feat_corr.py`), and identically configured neural-net runs
+scored anywhere from 57% to 78.5% depending on seed — artifact readout, not
+skill. Stock bars are clean (same probe: 51.9%, chance).
+
+Mitigation: forex now trains **and** evaluates with a 1-day embargo — the
+input window ends the day before the prediction's base day
+(`embargo_days=1`, persisted in checkpoint metadata; benchmark defaults to
+`--embargo 1` for forex). With the artifact blocked, the honest forex result
+is no direction edge (48.7% vs 52.0% always-up on the 2025-06 → 2026-06
+holdout). The full fix is re-ingesting forex history from a source with
+consistent bar semantics.
+
+### Checkpoint format v7 (MODEL_VERSION 7.0.0)
+
+- All 44 input features are now scale-invariant (ratios, percentages,
+  bounded oscillators). The v6 set fed 14 raw price/volume levels into a
+  scaler fitted across symbols spanning 300× price ranges, so those columns
+  mostly encoded *which symbol* a window came from. Same tensor shapes,
+  different semantics — the loader gates with `_MIN_LOADABLE = (7, 0)` and
+  refuses v6 checkpoints, so the first CI run after this release cold-starts.
+- `BalancedDirectionLoss` now works in percent units (`return_scale=100`).
+  Raw daily returns (~0.005) were ~200× too small for SmoothL1's quadratic
+  region, which made the loss bottom out at the 0.277 "dead prediction"
+  equilibrium (0.6·~0 + 0.4·log 2) with uncalibrated magnitudes — live v6
+  checkpoints predicted ~17%/day moves. v7 magnitude MAE sits at the
+  zero-prediction floor on held-out data for both asset classes.
+- Class-weighted BCE is now opt-in (`balance_classes=False` default): the
+  weighting recentred the direction optimum at 50/50, erasing the market's
+  learnable up-drift prior and collapsing one run to constant-bearish.
+- Fixed a warm-start bug where `_save_model` hardcoded `dropout: 0.15` into
+  checkpoint metadata, silently re-enabling dropout the config had set to 0.
+
+### Honest benchmarking tooling
+
+- `scripts/benchmark_model.py` — chronological holdout benchmark with
+  always-up / always-down / momentum / SMA-trend baselines, prediction-
+  degeneracy stats, and `--holdout-start` for true out-of-sample tests.
+- `scripts/make_timesplit_db.py` — build a training DB truncated at a cutoff
+  date so models can be trained pre-cutoff and tested post-cutoff.
+- `scripts/diag_feat_corr.py`, `scripts/diag_bars.py`, `scripts/diag_leak.py`
+  — the leakage probes that caught the forex artifact.
+- Honest out-of-sample numbers (trained pre-2025-06, tested on the following
+  year) are in `LOCAL_BENCHMARK_REPORT.md` and the README.
+
+### CI / portability
+
+- `scripts/hf_download.py`: the warm-start model download now retries HF 429s
+  with `Retry-After` + jitter and never fails the job (warm start is
+  best-effort).
+- Training stays hourly, staggered (stocks at :00, forex at :30) so the two
+  pipelines never hit the shared HF repo simultaneously.
+- Unicode console output (`✓`, `⚠️`, `→`) replaced with ASCII — it crashed
+  training and benchmarks on Windows cp1252 consoles.
+
+---
+
 ## [v1.1.0] — 2026-06-05 — Hugging Face push reliability
 
 Both the stock and forex hourly training pipelines were intermittently failing

@@ -175,7 +175,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
 
     if rows_per_symbol < min_rows_per_symbol:
         print(
-            f"  ⚠️  Warning: Only {rows_per_symbol:.0f} rows per symbol (minimum {min_rows_per_symbol} recommended)"
+            f"  [WARN] Only {rows_per_symbol:.0f} rows per symbol (minimum {min_rows_per_symbol} recommended)"
         )
         print("  Fetching all available data instead...")
 
@@ -189,7 +189,7 @@ def load_stock_data(db_file, symbols, use_all_data=True, timeframe=None):
         df = pd.read_sql_query(query, conn, params=list(symbols))
 
     print(
-        f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} stocks ({len(df) / df['symbol'].nunique():.0f} rows/stock)"
+        f"  [OK] Loaded {len(df)} rows for {df['symbol'].nunique()} stocks ({len(df) / df['symbol'].nunique():.0f} rows/stock)"
     )
     conn.close()
     return df

@@ -179,7 +179,7 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
 
     if rows_per_pair < min_rows_per_pair:
         print(
-            f"  ⚠️  Warning: Only {rows_per_pair:.0f} rows per pair (minimum {min_rows_per_pair} recommended)"
+            f"  [WARN] Only {rows_per_pair:.0f} rows per pair (minimum {min_rows_per_pair} recommended)"
         )
         print("  Fetching all available data instead...")
 
@@ -193,7 +193,7 @@ def load_forex_data(db_file, pairs, use_all_data=True, timeframe=None):
         df = pd.read_sql_query(query, conn, params=list(pairs))
 
     print(
-        f"  ✓ Loaded {len(df)} rows for {df['symbol'].nunique()} pairs ({len(df) / df['symbol'].nunique():.0f} rows/pair)"
+        f"  [OK] Loaded {len(df)} rows for {df['symbol'].nunique()} pairs ({len(df) / df['symbol'].nunique():.0f} rows/pair)"
     )
     conn.close()
     return df
@@ -277,6 +277,10 @@ def train_forex_model(
         target_symbol="UNIFIED_FOREX",
         period="custom",
         custom_data=data,
+        # Yahoo forex daily bars leak the next close through day-t high/low
+        # (see diag_feat_corr.py / unified_ml.train_from_dataset docstring);
+        # a 1-day embargo keeps the contaminated bar out of the input window.
+        embargo_days=1,
         epochs=epochs,
         batch_size=batch_size,
         lr=lr,

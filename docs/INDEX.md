@@ -18,7 +18,7 @@
 | [Model Card](MODEL_CARD.md) | Specs, checkpoint format, Hugging Face usage, limitations |
 | [Architecture](ARCHITECTURE.md) | MeridianBlock internals — GQA, RoPE, MoE, Mamba, output heads |
 | [Technical Indicators](INDICATORS.md) | All 44 features: formulas, index positions, category descriptions |
-| [Loss Functions](LOSS_FUNCTIONS.md) | BalancedDirectionLoss, direction metrics, class weighting |
+| [Loss Functions](LOSS_FUNCTIONS.md) | BalancedDirectionLoss (percent units), direction metrics |
 
 ## Training reference
 
@@ -33,11 +33,11 @@
 
 - **Training**: Every hour — stocks at `:00`, forex at `:30` — via GitHub Actions
 - **Models**: `models/Meridian.AI_Stocks.pt` and `models/Meridian.AI_Forex.pt` on Hugging Face
-- **Architecture**: MeridianModel-2026 — GQA + MoE + optional Mamba SSM (checkpoint architecture rev `6.0`)
+- **Architecture**: MeridianModel-2026 — GQA + MoE + optional Mamba SSM (checkpoint architecture rev `7.0`)
 - **Parameters**: ~430K (`dim=96`, 3 layers, 2 experts) — deliberately compact so the model must extract signal instead of memorising noise
-- **Input**: 30 timesteps × 44 technical indicators
+- **Input**: 30 timesteps × 44 scale-invariant technical indicators (forex: 1-day embargo)
 - **Output**: Predicted next-day return + confidence (std across prediction heads)
-- **Validated**: Walk-forward backtest — forex 63.5% next-day directional (z=8.4, flagship); stocks 51.6% vs a 51.5% drift baseline (experimental, no significant edge)
+- **Validated**: True out-of-sample (trained pre-2025-06, tested on the year after) — magnitudes calibrated at the zero-prediction MAE floor; direction ≈ drift baseline for both asset classes (the pre-1.2.0 forex 63.5% claim was a data artifact and is retracted — see the changelog)
 
 ## Source layout
 

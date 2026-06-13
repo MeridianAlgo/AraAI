@@ -36,7 +36,18 @@ class UnifiedStockML:
         }
 
     def _add_indicators(self, df):
-        """Add 44 real technical indicators — no zero padding"""
+        """Add 44 real technical indicators — all scale-invariant (v7).
+
+        v7.0.0: every feature is now a ratio, percentage, or bounded
+        oscillator. The v6 set fed 14 raw price/volume LEVELS (sma_5 ...
+        ema_200, bb_upper/lower, kc_upper/lower, macd, momentum, atr,
+        volume_sma) into a scaler fitted ACROSS symbols whose prices range
+        from 0.6 (EURGBP) to 190 (GBPJPY) — or $4 to $900 for stocks. After
+        cross-symbol z-scoring those columns mostly encoded *which symbol* a
+        window came from, not anything predictive, wasting a third of the
+        model's input capacity. Ratios (close/sma - 1 etc.) carry the same
+        information in a symbol-independent scale.
+        """
         close = df["Close"]
         high = df["High"]
         low = df["Low"]
@@ -47,7 +58,7 @@ class UnifiedStockML:
         df["log_returns"] = np.log(close / close.shift(1))
         df["volatility"] = df["returns"].rolling(20).std()
 
-        # True Range and ATR
+        # True Range and ATR (kept as intermediates; the FEATURE is atr_pct)
         tr = pd.concat(
             [
                 high - low,
@@ -57,11 +68,15 @@ class UnifiedStockML:
             axis=1,
         ).max(axis=1)
         df["atr"] = tr.rolling(14).mean()
+        # Intraday range as % of close (replaces the raw-price atr feature)
+        df["hl_range_pct"] = (high - low) / (close + 1e-8)
 
-        # === 5-14: Moving averages (SMA + EMA for 5 periods) ===
+        # === 5-14: Moving-average distances (scale-free) ===
         for period in [5, 10, 20, 50, 200]:
             df[f"sma_{period}"] = close.rolling(period).mean()
             df[f"ema_{period}"] = close.ewm(span=period).mean()
+            df[f"close_vs_sma_{period}"] = close / (df[f"sma_{period}"] + 1e-8) - 1
+            df[f"close_vs_ema_{period}"] = close / (df[f"ema_{period}"] + 1e-8) - 1
 
         # === 15-17: RSI variants ===
         delta = close.diff()
@@ -80,30 +95,35 @@ class UnifiedStockML:
         rsi_max = rsi_series.rolling(14).max()
         df["stoch_rsi"] = (rsi_series - rsi_min) / (rsi_max - rsi_min + 1e-8)
 
-        # === 18-20: MACD ===
+        # === 18-20: MACD (normalized by price so it is scale-free) ===
         ema_12 = close.ewm(span=12).mean()
         ema_26 = close.ewm(span=26).mean()
-        df["macd"] = ema_12 - ema_26
+        df["macd"] = (ema_12 - ema_26) / (close + 1e-8)
         df["macd_signal"] = df["macd"].ewm(span=9).mean()
         df["macd_hist"] = df["macd"] - df["macd_signal"]
 
-        # === 21-24: Bollinger Bands ===
+        # === 21-24: Bollinger Bands (distances as % of price) ===
         sma_20 = close.rolling(20).mean()
         std_20 = close.rolling(20).std()
-        df["bb_upper"] = sma_20 + (std_20 * 2)
-        df["bb_lower"] = sma_20 - (std_20 * 2)
-        df["bb_width"] = (df["bb_upper"] - df["bb_lower"]) / (sma_20 + 1e-8)
-        df["bb_pct"] = (close - df["bb_lower"]) / (df["bb_upper"] - df["bb_lower"] + 1e-8)
+        bb_upper = sma_20 + (std_20 * 2)
+        bb_lower = sma_20 - (std_20 * 2)
+        df["bb_upper_dist"] = bb_upper / (close + 1e-8) - 1
+        df["bb_lower_dist"] = bb_lower / (close + 1e-8) - 1
+        df["bb_width"] = (bb_upper - bb_lower) / (sma_20 + 1e-8)
+        df["bb_pct"] = (close - bb_lower) / (bb_upper - bb_lower + 1e-8)
 
         # === 25-27: Volume indicators ===
-        df["volume_sma"] = volume.rolling(20).mean()
-        df["volume_ratio"] = volume / (df["volume_sma"] + 1e-8)
+        volume_sma = volume.rolling(20).mean()
+        # 20d vs 100d volume trend (replaces the raw-level volume_sma feature)
+        df["volume_trend"] = volume_sma / (volume.rolling(100, min_periods=20).mean() + 1e-8) - 1
+        df["volume_ratio"] = volume / (volume_sma + 1e-8)
         # OBV (On-Balance Volume)
         obv = (np.sign(close.diff()) * volume).fillna(0).cumsum()
         df["obv_norm"] = (obv - obv.rolling(20).mean()) / (obv.rolling(20).std() + 1e-8)
 
         # === 28-30: Momentum ===
-        df["momentum"] = close - close.shift(10)
+        # 5-day return (the old raw-price "momentum" duplicated roc once scaled)
+        df["ret_5d"] = close.pct_change(5)
         df["roc"] = ((close - close.shift(10)) / (close.shift(10) + 1e-8)) * 100
         # Williams %R
         highest_14 = high.rolling(14).max()
@@ -119,12 +139,14 @@ class UnifiedStockML:
         tp_mad = typical_price.rolling(20).apply(lambda x: np.abs(x - x.mean()).mean(), raw=True)
         df["cci"] = (typical_price - tp_sma) / (0.015 * tp_mad + 1e-8)
 
-        # === 34-36: Keltner Channels ===
+        # === 34-36: Keltner Channels (distances as % of price) ===
         kc_mid = close.ewm(span=20).mean()
         kc_atr = df["atr"]
-        df["kc_upper"] = kc_mid + (2 * kc_atr)
-        df["kc_lower"] = kc_mid - (2 * kc_atr)
-        df["kc_pct"] = (close - df["kc_lower"]) / (df["kc_upper"] - df["kc_lower"] + 1e-8)
+        kc_upper = kc_mid + (2 * kc_atr)
+        kc_lower = kc_mid - (2 * kc_atr)
+        df["kc_upper_dist"] = kc_upper / (close + 1e-8) - 1
+        df["kc_lower_dist"] = kc_lower / (close + 1e-8) - 1
+        df["kc_pct"] = (close - kc_lower) / (kc_upper - kc_lower + 1e-8)
 
         # === 37-39: ADX (Average Directional Index) ===
         plus_dm = high.diff()
@@ -139,9 +161,13 @@ class UnifiedStockML:
         df["plus_di"] = plus_di
         df["minus_di"] = minus_di
 
-        # === 40-42: Price position and trend strength ===
-        df["price_vs_sma50"] = (close - df["sma_50"]) / (df["sma_50"] + 1e-8)
-        df["price_vs_sma200"] = (close - df["sma_200"]) / (df["sma_200"] + 1e-8)
+        # === 40-42: Volatility regime and monthly momentum ===
+        # (price-vs-SMA50/200 now live in the MA-distance block as
+        # close_vs_sma_50 / close_vs_sma_200)
+        df["vol_regime"] = df["volatility"] / (
+            df["returns"].rolling(100, min_periods=20).std() + 1e-8
+        ) - 1
+        df["ret_20d"] = close.pct_change(20)
         # Avg True Range as % of price (normalized volatility)
         df["atr_pct"] = df["atr"] / (close + 1e-8)
 
@@ -157,43 +183,44 @@ class UnifiedStockML:
 
         return df
 
-    # Ordered list of all 44 feature columns (must match _add_indicators output)
+    # Ordered list of all 44 feature columns (must match _add_indicators output).
+    # v7.0.0: all features are scale-invariant — see _add_indicators docstring.
     FEATURE_COLS = [
         # 1-4: Price-based
         "returns",
         "log_returns",
         "volatility",
-        "atr",
-        # 5-14: Moving averages
-        "sma_5",
-        "ema_5",
-        "sma_10",
-        "ema_10",
-        "sma_20",
-        "ema_20",
-        "sma_50",
-        "ema_50",
-        "sma_200",
-        "ema_200",
+        "hl_range_pct",
+        # 5-14: Moving-average distances
+        "close_vs_sma_5",
+        "close_vs_ema_5",
+        "close_vs_sma_10",
+        "close_vs_ema_10",
+        "close_vs_sma_20",
+        "close_vs_ema_20",
+        "close_vs_sma_50",
+        "close_vs_ema_50",
+        "close_vs_sma_200",
+        "close_vs_ema_200",
         # 15-17: RSI variants
         "rsi",
         "rsi_fast",
         "stoch_rsi",
-        # 18-20: MACD
+        # 18-20: MACD (price-normalized)
         "macd",
         "macd_signal",
         "macd_hist",
         # 21-24: Bollinger Bands
-        "bb_upper",
-        "bb_lower",
+        "bb_upper_dist",
+        "bb_lower_dist",
         "bb_width",
         "bb_pct",
         # 25-27: Volume
-        "volume_sma",
+        "volume_trend",
         "volume_ratio",
         "obv_norm",
         # 28-30: Momentum
-        "momentum",
+        "ret_5d",
         "roc",
         "williams_r",
         # 31-33: Stochastic + CCI
@@ -201,16 +228,16 @@ class UnifiedStockML:
         "stoch_d",
         "cci",
         # 34-36: Keltner Channels
-        "kc_upper",
-        "kc_lower",
+        "kc_upper_dist",
+        "kc_lower_dist",
         "kc_pct",
         # 37-39: ADX
         "adx",
         "plus_di",
         "minus_di",
-        # 40-42: Trend position
-        "price_vs_sma50",
-        "price_vs_sma200",
+        # 40-42: Volatility regime + monthly momentum
+        "vol_regime",
+        "ret_20d",
         "atr_pct",
         # 43-44: Mean reversion
         "zscore_20",
@@ -277,6 +304,14 @@ class UnifiedStockML:
             print(f"Date range: {df.index[0]} to {df.index[-1]}")
 
             lookback = int(kwargs.get("lookback", 30))
+            # Embargo: end each input window `embargo_days` BEFORE the target's
+            # base day. Needed for forex, whose daily `*=X` bars are internally
+            # inconsistent — day-t high/low span a later window than the stored
+            # close, so they leak the t->t+1 return (OLS on day-t OHL ratios
+            # alone hits 81% sign accuracy; see scripts/diag_feat_corr.py).
+            # With embargo_days=1 the window ends at t-1 and cannot read the
+            # artifact. Stock bars are clean; keep 0 there.
+            embargo = int(kwargs.get("embargo_days", 0))
 
             # Build (X, y) PER SYMBOL so technical indicators, lookback windows,
             # and next-day return targets never cross a symbol boundary.
@@ -295,20 +330,21 @@ class UnifiedStockML:
 
             X_parts, y_parts, date_parts = [], [], []
             for g in groups:
-                if len(g) < lookback + 2:
+                if len(g) < lookback + embargo + 2:
                     continue
                 g = g.sort_index().copy()
                 g = self._add_indicators(g)
                 fm = g[self.FEATURE_COLS].values.astype(np.float32)
                 cv = g["Close"].values.astype(np.float64)
                 n = len(g)
+                lo = lookback + embargo  # first target-base index
                 Xg = np.array(
-                    [fm[i - lookback + 1 : i + 1] for i in range(lookback, n - 1)],
+                    [fm[i - lookback + 1 - embargo : i + 1 - embargo] for i in range(lo, n - 1)],
                     dtype=np.float32,
                 )
-                yg = (cv[lookback + 1 : n] - cv[lookback : n - 1]) / (cv[lookback : n - 1] + 1e-10)
+                yg = (cv[lo + 1 : n] - cv[lo : n - 1]) / (cv[lo : n - 1] + 1e-10)
                 yg = yg.astype(np.float32)
-                dg = g.index.values[lookback : n - 1]  # window end-date per sample
+                dg = g.index.values[lo : n - 1]  # target-base date per sample
                 m = np.isfinite(Xg).all(axis=(1, 2)) & np.isfinite(yg)
                 if not m.any():
                     continue
@@ -351,6 +387,7 @@ class UnifiedStockML:
                     self.ml_system.metadata[key] = value
 
             self.ml_system.metadata["lookback"] = lookback
+            self.ml_system.metadata["embargo_days"] = embargo
 
             # Train large PyTorch model with validation
             result = self.ml_system.train(

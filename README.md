@@ -77,20 +77,20 @@ The prediction heads each make their own forecast, and the model blends them wit
 
 ## Performance and Honest Expectations
 
-These are next-day directional models. The numbers below come from a walk-forward backtest: for many random historical dates the model is given only the data available up to that date and asked to predict the next day's move, and the sign of that prediction is compared to what actually happened. Every feature is backward-looking and the target is strictly in the future, so there is no lookahead.
+These are next-day models. The numbers below are a true out-of-sample test: the models were trained only on data before 2025-06-01 and evaluated on the year that followed (`scripts/benchmark_model.py --holdout-start`), against baselines any model must beat to matter.
 
-| Model | Samples | Directional accuracy | Always-up baseline | Edge | Significance |
-|-------|---------|----------------------|--------------------|------|--------------|
-| **Forex** | 960 | **63.5%** | 51.7% | **+11.9 pts** | z = 8.4 (highly significant) |
-| Stocks | 1,680 | 51.6% | 51.5% | +0.1 pts | z = 1.3 (not significant) |
+| Model (v7) | Holdout samples | Directional accuracy | Always-up baseline | Return MAE | Zero-prediction MAE |
+|-------|---------|----------------------|--------------------|------|------|
+| Stocks | 12,800 | 50.2% | 51.4% | 0.0127 | 0.0127 |
+| Forex (1-day embargo) | 5,830 | 48.7% | 52.0% | 0.0031 | 0.0030 |
 
-**Forex is the flagship.** Across eight major pairs it calls next-day direction correctly about 63 percent of the time — a large, statistically robust edge (EUR/USD 72.5 percent, USD/JPY and EUR/GBP 67.5 percent). One honest caveat: the model is trained for direction, not magnitude, so its raw return size is not calibrated; the production path clips it to a realistic daily range. Use the sign, not the number.
+**What the model is good at: calibrated magnitudes.** v7 predicts return sizes at the theoretical floor (its MAE matches the zero-prediction floor) — earlier versions predicted absurd moves (up to ~17% per day on forex, MAE 3.7× worse than predicting zero). The predicted size is now a meaningful, honest number.
 
-**Stocks are experimental.** On daily equity direction the model lands at roughly chance once you account for the market's natural upward drift — about 51.6 percent against a 51.5 percent always-up baseline, which is not statistically distinguishable from the baseline. Daily stock direction is close to efficient; we ship the model for completeness and research, but it carries no demonstrated live edge and should not be treated as one.
+**What no model here has: a next-day direction edge.** On clean daily bars with technical-indicator inputs, neither model beats the always-up drift baseline out of sample. That is the market-efficiency expectation for this data, and we say it plainly rather than reporting in-sample scores. Treat the direction output as a weak tilt, not a signal.
 
-Neither model is a multi-day or week-ahead forecaster. Recursive multi-step forecasts compound their error quickly, and any tool that claims reliable week-ahead price prediction from price and indicator data alone is overfitting. Treat the output as a next-day directional tilt, not a crystal ball.
+**A previously claimed forex edge was retracted.** Versions before 1.2.0 reported a "highly significant" 63.5% forex accuracy. That number was an artifact of the data source: the daily forex (`*=X`) candles are internally inconsistent — each bar's high/low spans a later window than its stored close, so day-t high/low leak the next close. A plain linear regression on day-t OHL ratios alone "achieves" 81% sign accuracy on this data, and neural nets trained on it reach 57–78% depending on the seed — none of it real. Since 1.2.0 forex trains and evaluates with a one-day embargo (the input window ends the day before the prediction base), which blocks the leak. The probes live in `scripts/diag_feat_corr.py` and `scripts/diag_bars.py`; reproduce the honest benchmark with `scripts/make_timesplit_db.py` + `scripts/benchmark_model.py`.
 
-Earlier (pre-1.0) versions reported much higher accuracy during training but performed near chance live, because a contaminated data pipeline let the model collapse onto a near-constant downward prediction. The current pipeline fixed that (see How Training Works) and added a sanity gate that blocks a degenerate model from ever being published.
+Neither model is a multi-day or week-ahead forecaster. Recursive multi-step forecasts compound their error quickly, and any tool that claims reliable week-ahead price prediction from price and indicator data alone is overfitting.
 
 ## Quick Start
 
@@ -165,7 +165,7 @@ The whole pipeline runs as a single GitHub Actions job. The model file never lea
 | Gradient clipping | A maximum norm of 1.0 to keep gradients from exploding |
 | Gradient accumulation | Builds an effective batch size of 256 from smaller micro batches |
 | Data augmentation | Small Gaussian noise plus occasional masking of timesteps |
-| BalancedDirectionLoss | Roughly 60 percent Huber regression and 40 percent weighted direction loss |
+| BalancedDirectionLoss | Roughly 60 percent Huber regression and 40 percent direction loss, computed in percent units |
 | Early stopping | Stops when the moving average validation loss stops improving |
 | Feature clamping | Bounds features to a fixed range after normalization |
 | Mixed precision | bfloat16 on CPU and float16 on CUDA |

@@ -106,6 +106,18 @@ CLAUDE.local.md
 # Local HF model downloads (reproducible via huggingface_hub)
 models_hf/
 
+# Local benchmark artifacts (scripts/benchmark_model.py)
+bench_models/
+bench_results_*.json
+
+# Local training/eval scratch
+prod_*.log
+*_train.log
+AraAI_v6eval/
+*.pt.bak
+*.orig
+*.rej
+
 # Comet ML
 .cometml-runs/
 

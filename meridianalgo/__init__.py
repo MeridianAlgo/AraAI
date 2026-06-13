@@ -15,9 +15,9 @@ Version: 1.1.0 (Production)
 
 # Product / package release version. This is distinct from the checkpoint
 # architecture version (MODEL_VERSION / _MIN_LOADABLE in large_torch_model.py),
-# which stays on the 6.x line to gate loadable checkpoint formats. v1.0.0 is the
-# first production release; the 6.x architecture revision is what it ships.
-__version__ = "1.1.0"
+# which gates loadable checkpoint formats (7.x since v1.2.0). v1.0.0 was the
+# first production release; v1.2.0 ships the v7 checkpoint format.
+__version__ = "1.2.0"
 __author__ = "MeridianAlgo Team"
 __email__ = "support@meridianalgo.com"
 __license__ = "MIT"

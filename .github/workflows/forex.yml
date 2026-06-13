@@ -2,6 +2,10 @@ name: Forex Training
 
 on:
   schedule:
+    # Hourly, offset 30 min from the stock workflow so the two pipelines
+    # never hit the shared HF repo at the same time. The 429 rate-limit
+    # failures are handled by the atomic single-commit push (v1.1.0) and the
+    # retrying warm-start download (scripts/hf_download.py).
     - cron: '30 * * * *'
   workflow_dispatch:
 
@@ -124,20 +128,17 @@ jobs:
              ORDER BY symbol;"
 
       - name: Download Existing Model
-        timeout-minutes: 5
+        timeout-minutes: 15
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p models
-          python -c "
-          import os
-          from huggingface_hub import hf_hub_download
-          try:
-              hf_hub_download(repo_id='meridianal/ARA.AI', filename='models/Meridian.AI_Forex.pt', local_dir='.', token=os.environ.get('HF_TOKEN'))
-              print('Downloaded existing forex model (loader will skip if old version).')
-          except Exception as e:
-              print(f'No existing model found, will train fresh: {e}')
-          "
+          # 429-aware retry wrapper — a transient HF rate limit must not
+          # silently discard the warm start (always exits 0).
+          python scripts/hf_download.py \
+            --repo-id meridianal/ARA.AI \
+            --filename models/Meridian.AI_Forex.pt \
+            --local-dir .
 
       - name: Existing Model Info
         run: |

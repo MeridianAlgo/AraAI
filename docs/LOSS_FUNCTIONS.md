@@ -7,44 +7,35 @@ Meridian.AI uses two loss functions: **BalancedDirectionLoss** for training and 
 ## BalancedDirectionLoss (used in training)
 
 ```python
-loss = 0.6 * HuberLoss(pred_return, true_return)
-     + 0.4 * WeightedBCE(pred_return, direction)
+pred_scaled = pred_return * 100   # percent units
+true_scaled = true_return * 100
+
+loss = 0.6 * HuberLoss(pred_scaled, true_scaled)
+     + 0.4 * BCE(pred_scaled, direction)
 ```
 
-This is the primary training objective. It jointly optimises two objectives:
+This is the primary training objective. Both components operate in **percent units** (`return_scale=100`). It jointly optimises two objectives:
 
 ### Component 1: Huber regression (60%)
 
 ```python
-SmoothL1Loss(pred_returns, true_returns)
+SmoothL1Loss(pred_scaled, true_scaled)
 ```
 
-Huber loss is quadratic for small errors (`|error| < 1`) and linear for large errors. This makes it more robust than MSE to outlier returns that survive the ±100%/±20% clip threshold — a single extreme return won't dominate the loss surface.
+Huber loss is quadratic for small errors (`|error| < 1`) and linear for large errors, so it is robust to outlier returns. The percent scaling is what makes it work: raw daily returns (~0.005) are ~200× too small for SmoothL1's quadratic region, so on raw returns the regression gradient was negligible and training bottomed out at a degenerate "predict ~0" equilibrium (loss ≈ 0.6·0 + 0.4·log 2 ≈ 0.277) with uncalibrated magnitudes. In percent units a typical error is ~0.5 — squarely in the quadratic region.
 
-### Component 2: Weighted direction BCE (40%)
+### Component 2: Direction BCE (40%)
 
-Financial datasets tend to be directionally imbalanced — during a bull market, most daily returns are positive. Predicting "up" for every sample would score ~60% accuracy while learning nothing.
-
-The fix: class-weighted BCE.
+The percent-scaled prediction is used directly as the direction logit:
 
 ```python
-# Compute class weights from this batch
-n_up   = (true_returns > 0).sum()
-n_down = (true_returns <= 0).sum()
-N      = len(true_returns)
-
-weight_up   = N / (2 * n_up)    # upsamples minority class
-weight_down = N / (2 * n_down)
-
-# Scale raw predictions to logit range (returns are ~0.001 scale)
-pred_logits = pred_returns * 10.0
-
-# Weighted binary cross-entropy
-bce = F.binary_cross_entropy_with_logits(pred_logits, direction, reduction='none')
-loss = (bce * weights).mean()
+pred_logits = pred_scaled                       # percent units ARE the logits
+bce = F.binary_cross_entropy_with_logits(pred_logits, direction)
 ```
 
-The `* 10.0` logit scaling is necessary because raw return predictions are on the order of 0.001–0.01. Feeding these directly into BCE produces outputs near `log(2)` regardless of the prediction — the direction signal would be invisible. Scaling to `[-1, 1]` or wider makes the BCE gradient meaningful.
+A ~0.5% predicted move gives `sigmoid(0.5) ≈ 0.62` up-probability — well-ranged logits with a meaningful gradient. At the optimum the logit approaches `logit(P(up | x))`, so the model can express the market's base rate.
+
+**Class weighting is opt-in and off by default** (`balance_classes=False`). With weighting on, the BCE optimum for a weak-signal input is a 50/50 logit instead of the true base rate — it erases the market's up-drift prior, the one signal the always-up baseline gets for free. A v7 development run with weighting on collapsed to a constant slightly-bearish prediction (48.7% vs 52.0% always-up). Enable it only for genuinely balanced research datasets.
 
 ### Why 60/40 split?
 
