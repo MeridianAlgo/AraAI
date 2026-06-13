@@ -164,9 +164,9 @@ class UnifiedStockML:
         # === 40-42: Volatility regime and monthly momentum ===
         # (price-vs-SMA50/200 now live in the MA-distance block as
         # close_vs_sma_50 / close_vs_sma_200)
-        df["vol_regime"] = df["volatility"] / (
-            df["returns"].rolling(100, min_periods=20).std() + 1e-8
-        ) - 1
+        df["vol_regime"] = (
+            df["volatility"] / (df["returns"].rolling(100, min_periods=20).std() + 1e-8) - 1
+        )
         df["ret_20d"] = close.pct_change(20)
         # Avg True Range as % of price (normalized volatility)
         df["atr_pct"] = df["atr"] / (close + 1e-8)

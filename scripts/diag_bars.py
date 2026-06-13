@@ -45,14 +45,12 @@ for sym in symbols[:30]:
             # open[t] == close[t]? (close sampled at bar start)
             "o_eq_c": float(np.mean(np.abs(o - c) / c < 1e-4)),
             # corr(next-day ret, today's range midpoint vs close)
-            "corr_mid": float(
-                np.corrcoef((h + lo) / 2 / c - 1, c_next / c - 1)[0, 1]
-            ),
+            "corr_mid": float(np.corrcoef((h + lo) / 2 / c - 1, c_next / c - 1)[0, 1]),
         }
     )
 
 d = pd.DataFrame(stats)
 print(f"asset={asset}  symbols={len(d)}")
-print(d.drop(columns='sym').mean().round(4).to_string())
+print(d.drop(columns="sym").mean().round(4).to_string())
 print("\nper-symbol (first 8):")
 print(d.head(8).round(3).to_string(index=False))

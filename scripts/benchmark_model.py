@@ -155,7 +155,9 @@ def main():
         n_hold = max(1, int(len(X) * args.holdout))
         Xh, yh, dh, ph = X[-n_hold:], y[-n_hold:], dates[-n_hold:], prev[-n_hold:]
     print(f"  samples total : {len(X)}")
-    print(f"  holdout       : {len(Xh)}  ({pd.Timestamp(dh[0]).date()} -> {pd.Timestamp(dh[-1]).date()})")
+    print(
+        f"  holdout       : {len(Xh)}  ({pd.Timestamp(dh[0]).date()} -> {pd.Timestamp(dh[-1]).date()})"
+    )
 
     sysm = AdvancedMLSystem(Path(args.model_path), model_type=args.model_type)
     if not sysm.is_trained():
@@ -189,8 +191,12 @@ def main():
     print(f"  direction accuracy : {acc:6.2f}%   (F1 up-class {f1:.2f})")
     print(f"  return MAE / RMSE  : {mae:.5f} / {rmse:.5f}   (zero-pred MAE {mae_zero:.5f})")
     print(f"  pred mean/std      : {preds.mean():+.5f} / {preds.std():.5f}")
-    print(f"  pred %positive     : {100 * float(np.mean(preds > 0)):.1f}%   (true %up {100 * float(np.mean(yh > 0)):.1f}%)")
-    print(f"  inference          : {1000 * infer_s / len(Xh):.2f} ms/sample ({len(Xh)} samples, {infer_s:.1f}s)")
+    print(
+        f"  pred %positive     : {100 * float(np.mean(preds > 0)):.1f}%   (true %up {100 * float(np.mean(yh > 0)):.1f}%)"
+    )
+    print(
+        f"  inference          : {1000 * infer_s / len(Xh):.2f} ms/sample ({len(Xh)} samples, {infer_s:.1f}s)"
+    )
     print("-" * 64)
     print("  baselines (direction accuracy):")
     print(f"    always-up        : {base_up:6.2f}%")
@@ -200,7 +206,9 @@ def main():
     best_base = max(base_up, base_dn, base_mom, base_trend)
     edge = acc - best_base
     print("-" * 64)
-    print(f"  EDGE vs best baseline: {edge:+.2f} pts {'(beats baselines)' if edge > 0 else '(NO edge)'}")
+    print(
+        f"  EDGE vs best baseline: {edge:+.2f} pts {'(beats baselines)' if edge > 0 else '(NO edge)'}"
+    )
 
     if args.json_out:
         Path(args.json_out).write_text(

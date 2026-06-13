@@ -125,7 +125,9 @@ def main():
     ]
     print("\naccuracy by |move| size:")
     for name, m in bins:
-        print(f"  {name}: {acc(pred[m], y1[m]):6.2f}%  (n={m.sum()}, %up {100 * float(np.mean(y1[m] > 0)):.1f})")
+        print(
+            f"  {name}: {acc(pred[m], y1[m]):6.2f}%  (n={m.sum()}, %up {100 * float(np.mean(y1[m] > 0)):.1f})"
+        )
 
     print("\nper-symbol accuracy (top/bottom 5):")
     rows = []

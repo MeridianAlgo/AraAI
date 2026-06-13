@@ -20,9 +20,9 @@ def main():
 
     shutil.copy(args.src, args.dst)
     conn = sqlite3.connect(args.dst)
-    n = conn.execute(
-        "SELECT COUNT(*) FROM market_data WHERE date >= ?", (args.cutoff,)
-    ).fetchone()[0]
+    n = conn.execute("SELECT COUNT(*) FROM market_data WHERE date >= ?", (args.cutoff,)).fetchone()[
+        0
+    ]
     conn.execute("DELETE FROM market_data WHERE date >= ?", (args.cutoff,))
     conn.commit()
     conn.execute("VACUUM")
