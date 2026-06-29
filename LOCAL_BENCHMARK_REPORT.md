@@ -51,6 +51,31 @@ What v7 genuinely fixed (visible in the trustworthy stock/magnitude rows):
   literature predicts: ~zero. Claims above that level from this data should
   be treated as leakage until proven otherwise (see below).
 
+## HF live checkpoints re-benchmarked (2026-06-29)
+
+Pulled the current production checkpoints from `meridianal/ARA.AI`
+(`models/Meridian.AI_{Stocks,Forex}.pt`, retrained hourly by CI, last trained
+2026-06-29) and ran them on the **same holdout slice** as the honest table
+above. **Caveat: these models trained *through* the holdout** (most-recent-60K
+cap), so this is an in-sample readout, not an out-of-sample test — there is no
+clean holdout left for a model that has trained on all of `training.db`.
+
+| | HF latest stocks | v7 stocks (honest) | HF latest forex | v7 forex (honest) |
+|---|---|---|---|---|
+| direction accuracy | 50.74% | 50.23% | 50.79% | 48.68% |
+| always-up baseline | 51.44% | 51.44% | 52.02% | 52.02% |
+| edge vs best baseline | −0.70 | −1.21 | −1.23 | −3.34 |
+| return MAE | 0.01282 | 0.01274 | 0.00317 | 0.00308 |
+| zero-prediction MAE (floor) | 0.01273 | 0.01273 | 0.00304 | 0.00304 |
+
+The takeaway reinforces the honest conclusion, not the old hype: **even reading
+their own training window, the live checkpoints cannot clear the always-up
+drift baseline** (edge −0.70 / −1.23). The earlier "79.86% in-sample" euphoria
+was pure retraining memory; with calibrated v7 magnitudes the in-sample edge
+collapses to ~0. MAE sits at the zero-prediction floor for both classes — the
+regression head is calibrated but not predictive. No daily direction edge in
+this data. (JSON: `bench_results_{stocks,forex}_hf_latest.json`.)
+
 ## CRITICAL: the forex bars in training.db are internally inconsistent
 
 A linear regression using **only day-t** `high/close`, `low/close`,
