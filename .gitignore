@@ -49,6 +49,7 @@ Thumbs.db
 *.h5
 *.onnx
 /models/*.pt
+/models/*.json
 !/models/README.md
 
 # Data
