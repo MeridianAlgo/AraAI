@@ -1,12 +1,11 @@
-name: Stock Training
+name: Stock Training (legacy v7)
 
+# FROZEN — superseded by ara-v8.yml. The hourly cron is gone: this pipeline
+# retrained a transformer 24x a day on daily bars that change once a day, and
+# the resulting checkpoint had no measured edge (50.23% direction vs a 51.44%
+# always-up baseline). Kept dispatch-only so the v7 checkpoints stay
+# reproducible. See docs/ARA_V8.md.
 on:
-  schedule:
-    # Hourly on the hour (forex runs at :30) so the two pipelines never hit
-    # the shared HF repo at the same time. The 429 rate-limit failures are
-    # handled by the atomic single-commit push (v1.1.0) and the retrying
-    # warm-start download (scripts/hf_download.py).
-    - cron: '0 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -64,7 +63,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('legacy/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
 
@@ -74,7 +73,7 @@ jobs:
           echo "--- Installing dependencies ---"
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -r requirements.txt
+          pip install -r legacy/requirements.txt
           pip install comet-ml huggingface_hub
           echo ""
           echo "--- Installed versions ---"
@@ -175,7 +174,7 @@ jobs:
           echo "   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "   Max steps: 2000 | No time limit (~2.5h budget)"
           echo "=================================================="
-          python -u scripts/train_stocks.py \
+          python -u legacy/scripts/train_stocks.py \
             --db-file training.db \
             --output models/Meridian.AI_Stocks.pt \
             --use-all-data \
@@ -235,7 +234,7 @@ jobs:
           # If the model is degenerate (constant output, directional collapse,
           # or blown-up target scale), delete the .pt so the push step below
           # skips it, then fail the run so a tracking issue is opened.
-          if ! python scripts/sanity_check_model.py \
+          if ! python legacy/scripts/sanity_check_model.py \
               --model-path models/Meridian.AI_Stocks.pt \
               --model-type stock \
               --db-file training.db; then

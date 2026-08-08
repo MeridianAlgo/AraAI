@@ -1,280 +1,117 @@
 ---
-library_name: pytorch
+library_name: sklearn
 license: mit
 tags:
 - finance
 - trading
 - time-series
-- transformer
-- moe
-- grouped-query-attention
 - stock-prediction
-- forex-prediction
+- gradient-boosting
+- cross-sectional
 ---
 
-# Meridian.AI — Financial Prediction Models
+# Ara.AI — Stock Ranking Models
 
-## Overview
+This repository hosts two generations of model. **v8 is current**; the v7
+transformer checkpoints are kept for reproducibility only.
 
-Meridian.AI is a deep-learning system that forecasts next-day price movement
-for stocks and forex pairs. It reads recent market history, turns it into 44
-technical indicators, and outputs a next-day return estimate plus a direction
-signal (up/down).
+| file | model | status |
+|---|---|---|
+| `models/ara_v8_stocks.joblib` | Ara.AI v8, cross-sectional gradient-boosted ranker | **current** |
+| `models/ara_v8_stocks.json` | v8 training metadata | current |
+| `models/Meridian.AI_Stocks.pt` | v7 transformer, absolute next-day return | frozen |
+| `models/Meridian.AI_Forex.pt` | v7 transformer, forex | frozen |
 
-This is the **v1.2.0 production release**, shipping checkpoint format
-**v7.0.0**. v7 makes all 44 input features scale-invariant (raw price/volume
-levels mostly encoded symbol identity after cross-symbol normalisation),
-rescales the loss to percent units so return magnitudes are actually
-calibrated, and adds a 1-day embargo for forex after discovering that the
-source's daily forex bars leak next-day information (see **Honest
-performance**). The v6 reset that preceded it — per-symbol windowing, daily
-bars only, train-split-only scaling, a compact ~430K-parameter network — is
-retained unchanged.
+Source: <https://github.com/MeridianAlgo/AraAI> · Design notes:
+[`docs/ARA_V8.md`](https://github.com/MeridianAlgo/AraAI/blob/main/docs/ARA_V8.md)
 
-The models retrain automatically every hour via GitHub Actions and publish
-each fresh checkpoint here. You do not need a GPU.
+## What v8 predicts
 
-## What changed in the v6 architecture
+For each stock on each day, the **next-day return relative to the universe
+average that day** — not the absolute return. The output is a ranking; the
+intended use is a dollar-neutral long/short book (long the top names, short the
+bottom ones).
 
-| Area | Before (≤ v5.x) | Now (v6) |
-|------|-----------------|------------|
-| Training data | Daily **+ hourly + weekly** bars mixed in one table | **Daily only** — one consistent prediction target |
-| Windowing | One flat array concatenated across all symbols (windows spanned symbol boundaries) | **Per-symbol** windowing, then sorted by date |
-| Targets | Raw next-step return, clip ±1.0 (allowed impossible +100% targets) | Next-day return, clip **±0.25 (stocks) / ±0.10 (forex)** |
-| Feature scaler | Fit on the whole dataset (val leaked into train) | Fit on the **train split only** |
-| Price adjustment | Splits/dividends showed up as fake returns | `auto_adjust=True` — no fake split-day moves |
-| Capacity | ~11M params (collapsed to a constant) | **~430K params** (forced to extract signal) |
-| Push safety | None | **Sanity gate** blocks degenerate models from publishing |
-
-## Honest performance
-
-These are next-day models, evaluated truly out of sample: trained only on
-data before 2025-06-01 and tested on the year after
-(`scripts/benchmark_model.py --holdout-start 2025-06-01`).
-
-| Model (v7) | Holdout samples | Directional accuracy | Always-up baseline | Return MAE | Zero-pred MAE floor |
-|-------|---------|----------------------|--------------------|------|------|
-| Stocks | 12,800 | 50.2% | 51.4% | 0.0127 | 0.0127 |
-| Forex (1-day embargo) | 5,830 | 48.7% | 52.0% | 0.0031 | 0.0030 |
-
-**Magnitudes are calibrated; direction is not an edge.** v7's return-size
-predictions sit at the zero-prediction MAE floor (v6 was up to 3.7× worse and
-predicted ~17%/day moves). Neither model beats the always-up drift baseline
-on next-day direction out of sample — the market-efficiency expectation for
-daily OHLCV + technical indicators. Treat direction as a weak tilt only.
-
-**The pre-1.2.0 forex claim (63.5%, "z = 8.4") is retracted.** The daily
-`*=X` forex bars are internally inconsistent: day-t high/low span a later
-window than the stored close and leak the t+1 close (a plain OLS on day-t
-OHL ratios scores 81% sign accuracy; see `scripts/diag_feat_corr.py`). Forex
-now trains and evaluates with a 1-day embargo, which blocks the leak — and
-with it, the apparent edge disappears.
-
-Neither is a multi-day or week-ahead forecaster — daily price direction is
-close to efficient, error compounds quickly past one step, and any tool
-claiming reliable week-ahead price prediction from OHLCV alone is overfitting.
-Use this for a next-day directional tilt, not as a crystal ball.
-
-## Repository layout
-
-```
-meridianal/ARA.AI/
-├── models/
-│   ├── Meridian.AI_Stocks.pt    ← current v7 stock checkpoint
-│   └── Meridian.AI_Forex.pt     ← current v7 forex checkpoint
-└── legacy/
-    ├── Meridian.AI_Stocks_v5.2.2.pt   ← archived pre-v6 (biased) checkpoint
-    └── Meridian.AI_Forex_v5.2.2.pt    ← archived pre-v6 (biased) checkpoint
-```
-
-The loader only accepts checkpoints at **version 7.0 or newer** — v6
-checkpoints have identical tensor shapes but incompatible feature semantics
-(raw levels vs scale-invariant ratios) and are refused. The v5.x checkpoints
-in `legacy/` are kept only for reference — do not use them for live
-prediction.
+This matters for reading the numbers: a score of `+0.004` means "expected to
+beat the universe average by about 40 bp tomorrow", not "expected to rise
+0.4%". A market-neutral model does not forecast market direction and should not
+be compared against an always-up baseline.
 
 ## Architecture
 
-The model is **MeridianModel**: a compact transformer adapted for financial
-time series. Each block contains:
+- `HistGradientBoostingRegressor` × 3 seeds, averaged (400 iterations, 15 leaf
+  nodes, lr 0.03, L2 1.0, `max_features` 0.7, no early stopping)
+- ~40 scale-invariant daily features per (symbol, date): multi-horizon returns,
+  realized vol and vol-normalized shocks, SMA distances, intraday range/gap
+  structure, ATR, Wilder RSI, volume z-scores, 52-week distances, calendar
+- 8 of those additionally as cross-sectional within-day percentile ranks
+- Target: cross-sectionally demeaned forward return, winsorized at 4 per-day σ
+- No price or volume levels anywhere (they encode symbol identity, not signal)
 
-1. **RMSNorm** — pre-norm before attention
-2. **Grouped Query Attention (GQA)** — fewer KV heads, QK-Norm for stability, RoPE positions
-3. **Optional Mamba SSM** — vectorised selective scan (off by default on CPU)
-4. **Layer Scale** — per-block learnable scalar for stable training at depth
-5. **Stochastic Depth** — drop-path regularisation
-6. **RMSNorm** — pre-norm before the MoE
-7. **Mixture of Experts** — SwiGLU experts, top-2 routing
+## Performance
 
-| Component | Implementation | Purpose |
-|-----------|---------------|---------|
-| Attention | GQA + QK-Norm | Reduced KV cache, training stability |
-| Position | RoPE | Relative temporal awareness |
-| Expert routing | MoE, top-2, SwiGLU | Regime-specific specialization |
-| Activations | SwiGLU | Better gradient flow vs GELU/ReLU |
-| Normalisation | RMSNorm + Layer Scale | Stable training at depth |
-| Regularisation | Stochastic Depth | Generalisation |
-| Optional SSM | Mamba (vectorised scan) | Long-range dependencies |
-| Loss | BalancedDirectionLoss | Joint regression + direction accuracy |
+Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-06-08, retrained
+from scratch before each fold with a 1-day embargo between train and test.
 
-## Model specifications (v7.0 default)
+| metric | value | reference |
+|---|---|---|
+| mean daily rank IC | +0.0126 | 0.0 = no skill |
+| IC t-statistic | +1.08 | > 2 would be significant |
+| IC hit rate | 55.1% of days | 50% = no skill |
+| long/short spread, top-5 vs bottom-5 | +12.6 bp/day | — |
+| long/short Sharpe, annualized, **pre-cost** | +1.25 | — |
+| 1-day reversal baseline | IC +0.0026, −8.6 bp/day | v8 beats it |
+| direction accuracy on residual | 50.57% | 50% = no skill |
 
-| Spec | Value |
-|------|-------|
-| Parameters | ~430K |
-| Hidden dimension | 96 |
-| Layers | 3 |
-| Attention heads | 4 (2 KV heads) |
-| Experts | 2 (top-2) |
-| Prediction heads | 2 |
-| Mamba SSM | Disabled (CPU default) |
-| Input features | 44 scale-invariant technical indicators |
-| Sequence length | 30 timesteps (daily; forex: window ends 1 day before the prediction base) |
+The signal is positive in all four folds and across four independent seeds, and
+it beats the naive reversal baseline. **It is not statistically significant**
+(t = 1.08 over 256 test days), and the pre-cost Sharpe would not survive daily
+turnover on a five-name-per-side book at retail commissions. Treat this as a
+small measured tilt, not a trading system.
 
-## Available models
+### v7, for comparison
 
-### Meridian.AI Stocks
+Trained on data before 2025-06-01 and evaluated on the year after:
 
-- **File**: `models/Meridian.AI_Stocks.pt`
-- **Coverage**: ~50 large-cap US equities per run (AAPL, MSFT, GOOGL, AMZN, NVDA, JPM, SPY, …)
-- **Data**: Max daily history, split/dividend adjusted, 44 technical indicators
-- **Training**: Automatic hourly CI retrain (GitHub Actions)
-- **Tracking**: Comet project `meridianalgo/meridian-ai-stock-v5`
+| v7 model | direction accuracy | always-up baseline | return MAE | zero-pred MAE |
+|---|---|---|---|---|
+| Stocks | 50.23% | 51.44% | 0.0127 | 0.0127 |
+| Forex (1-day embargo) | 48.68% | 52.02% | 0.0031 | 0.0030 |
 
-### Meridian.AI Forex
+v7 had no edge and its magnitude forecast sat exactly on the
+zero-prediction floor. Any higher figure in older documentation came from a CI
+checkpoint that had trained through its own evaluation window.
 
-- **File**: `models/Meridian.AI_Forex.pt`
-- **Coverage**: 22 currency pairs (EUR/USD, GBP/USD, USD/JPY, AUD/USD, …)
-- **Data**: Max daily history, 44 technical indicators
-- **Training**: Automatic hourly CI retrain (GitHub Actions)
-- **Tracking**: Comet project `meridianalgo/meridian-ai-forex-v5`
+## Limitations
+
+- **Stocks only.** 22 FX pairs is too thin a cross-section to rank, and the
+  source FX daily bars leak next-day information through day-t high/low.
+- **50-name universe.** Few independent bets per day; this is the main reason
+  the t-statistic is small.
+- **Daily close-to-close only.** No intraday, no multi-day horizon.
+- **Pre-cost.** No transaction costs, slippage, borrow, or capacity modeling.
+- **Survivorship.** The symbol list is today's large caps; delisted names are
+  absent from the history.
 
 ## Usage
 
 ```python
-from huggingface_hub import hf_hub_download
-from meridianalgo.unified_ml import UnifiedStockML
+import joblib
 
-model_path = hf_hub_download(
-    repo_id="meridianal/ARA.AI",
-    filename="models/Meridian.AI_Stocks.pt"
-)
-
-ml = UnifiedStockML(model_path=model_path)
-prediction = ml.predict_ultimate("AAPL", days=5)
-print(prediction)
+p = joblib.load("ara_v8_stocks.joblib")   # {"models": [...], "features": [...], "meta": {...}}
+# Build features with `ara.make_dataset` from the repo, then:
+# scores = np.mean([m.predict(X) for m in p["models"]], axis=0) / 100.0
 ```
 
-```python
-from huggingface_hub import hf_hub_download
-from meridianalgo.forex_ml import ForexML
+The repository provides the whole path:
 
-model_path = hf_hub_download(
-    repo_id="meridianal/ARA.AI",
-    filename="models/Meridian.AI_Forex.pt"
-)
-
-ml = ForexML(model_path=model_path)
-prediction = ml.predict_forex("EUR/USD", days=5)
-print(prediction)
-```
-
-> Note: the model needs ~200 days of price history to compute its indicators
-> (it uses a 200-day moving average), and it outputs a **single next-day**
-> return. A multi-day horizon is produced by rolling that one-step prediction
-> forward, so confidence drops sharply after the first day.
-
-## Training configuration
-
-| Setting | Value |
-|---------|-------|
-| Optimizer | AdamW (`weight_decay=0.02`, `betas=(0.9, 0.95)`) |
-| LR warmup | Linear ramp, then CosineAnnealingWarmRestarts |
-| Loss | BalancedDirectionLoss (60% Huber + 40% BCE, percent units) |
-| Effective batch size | 256 via gradient accumulation |
-| Gradient clipping | Max norm 1.0 |
-| EMA | Decay 0.999 — used for validation and the saved checkpoint |
-| Data augmentation | Gaussian noise + timestep masking |
-| Train/val split | Chronological — last 20% held out (no shuffle) |
-| Scaler fit | **Train split only** (no validation leakage) |
-| Target clip | ±0.25 (stocks) / ±0.10 (forex) |
-| Feature clamping | `[-10, 10]` after z-score normalisation |
-| Sample cap | 60K most-recent rows per run |
-| CI step budget | Up to 2000 optimizer steps per run |
-| Checkpoint write | Atomic (`.tmp` → `os.replace`) |
-| Push safety | Sanity gate blocks degenerate models |
-| Comet logging | Every step loss/LR/grad-norm + per-epoch metrics + per-symbol dataset audit |
-
-## Checkpoint format
-
-```python
-{
-    "model_state_dict": ...,       # PyTorch weights
-    "model_type": "stock",         # or "forex"
-    "architecture": "MeridianModel-2026",
-    "version": "7.0.0",
-    "input_size": 44,
-    "seq_len": 30,
-    "dim": 96,
-    "num_layers": 3,
-    "num_heads": 4,
-    "num_kv_heads": 2,
-    "num_experts": 2,
-    "num_prediction_heads": 2,
-    "dropout": 0.0,                # saved from the live model, not hardcoded
-    "use_mamba": False,
-    "scaler_mean": Tensor,         # shape (30, 44)
-    "scaler_std": Tensor,          # shape (30, 44)
-    "metadata": {
-        "best_val_loss": float,
-        "training_history": [...],
-        "trained_symbols": [...],
-        "training_date": str,
-    }
-}
-```
-
-## Technical indicators (44 features)
-
-| Category | Indicators |
-|----------|-----------|
-| Price | Returns, Log Returns, Volatility, ATR |
-| Trend | SMA (5/10/20/50/200), EMA (5/10/20/50/200) |
-| Momentum | RSI, Fast RSI, Stochastic RSI, Momentum, ROC, Williams %R |
-| Oscillators | MACD, MACD Signal, MACD Histogram, Stochastic K/D, CCI |
-| Volatility | Bollinger Bands (Upper/Lower/Width/%B), Keltner Channels (Upper/Lower/%K) |
-| Volume | Volume SMA, Volume Ratio, OBV (normalized) |
-| Trend Strength | ADX, +DI, -DI, Price vs SMA50/SMA200, ATR% |
-| Mean Reversion | Z-Score (20d), Distance from 52-week High |
-
-## Limitations
-
-1. Next-day model only. Multi-day output is recursive and degrades fast past day one.
-2. Daily direction is near-efficient; the live edge over a naive baseline is small.
-3. Performance degrades during black-swan events and regime shifts.
-4. Patterns are statistical and may not persist.
-5. Pre-v6 checkpoints in `legacy/` have a known downward-bias bug — do not use them.
-6. For research and educational use only — not financial advice.
-
-## Citation
-
-```bibtex
-@software{meridianalgo_2026,
-  title  = {Meridian.AI: Financial Prediction Engine},
-  author = {MeridianAlgo},
-  year   = {2026},
-  version = {1.0.0},
-  url    = {https://github.com/MeridianAlgo/AraAI}
-}
+```bash
+pip install -r requirements.txt
+python -m ara predict --db-file training.db --model-path models/ara_v8_stocks.joblib
 ```
 
 ## Disclaimer
 
-These models are for research and educational purposes only. They do not
-constitute financial advice. Trading carries significant risk and past
-performance does not guarantee future results. The developers and contributors
-are not liable for any financial losses. All trading decisions are yours alone.
-
-## License
-
-MIT License. See the [GitHub repository](https://github.com/MeridianAlgo/AraAI) for details.
+Research and educational use only. Not financial advice. Past performance does
+not guarantee future results, and the figures above are pre-cost and not
+statistically significant. Never trade with money you cannot afford to lose.

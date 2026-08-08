@@ -1,282 +1,213 @@
-# Meridian.AI
+# Ara.AI
 
-### Real Time Financial Prediction Engine
+### Cross-sectional daily stock ranking
 
-![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
+![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-1.2.0-green.svg)
-![Status](https://img.shields.io/badge/status-Production-success.svg)
-[![Forex Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/forex.yml)
-[![Stock Training](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/stocks.yml)
+![Version](https://img.shields.io/badge/version-2.0.0-green.svg)
+![Model](https://img.shields.io/badge/model-v8-blue.svg)
+[![Ara.AI v8](https://github.com/MeridianAlgo/AraAI/actions/workflows/ara-v8.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/ara-v8.yml)
 [![Lint](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml/badge.svg)](https://github.com/MeridianAlgo/AraAI/actions/workflows/lint.yml)
 
 ## Overview
 
-Meridian.AI is a deep learning system that forecasts price movements for any stock or forex pair. It reads recent market history, turns that history into a set of technical features, and produces two things at once: a price forecast and a direction signal that estimates whether the next move is likely to be up or down.
+Ara.AI v8 ranks a universe of stocks by their expected **next-day return
+relative to each other**, and holds that view as a dollar-neutral long/short
+book. It is a gradient-boosted tree ensemble over ~40 scale-free daily
+features. It trains in about eleven seconds on a CPU, needs no GPU, and the
+whole GitHub Actions pipeline — fetch, four-fold walk-forward backtest, final
+fit, publish — finishes in a few minutes.
 
-The system retrains itself every hour through GitHub Actions and publishes each fresh checkpoint to Hugging Face, so the version you download is always the most recent one. You do not need a GPU to use it, and you do not need to run any training yourself.
+It replaces v7, a 433K-parameter transformer that predicted each stock's
+absolute next-day return, retrained hourly, and had **no measured edge**:
+50.23% direction accuracy against a 51.44% always-up baseline. The full
+rationale, the diagnosis, and every number are in
+**[docs/ARA_V8.md](docs/ARA_V8.md)**. The v7 stack is frozen under
+[`legacy/`](legacy/README.md) and still runs on demand.
 
-The trained models live here: [meridianal/ARA.AI](https://huggingface.co/meridianal/ARA.AI).
+Trained models: [meridianal/ARA.AI](https://huggingface.co/meridianal/ARA.AI).
 
-## Architecture
+## What changed, in one paragraph
 
-The model is called MeridianModel. It is a compact transformer style network adapted for financial time series, and it carries roughly 430 thousand parameters in the configuration that ships in the hourly pipeline. Earlier versions used an 11 million parameter configuration, but a fully clean training pipeline revealed that capacity caused the model to collapse onto a trivial constant prediction; a deliberately smaller network has to extract real signal from the technical indicators in order to minimize the loss. The design favors techniques that stay stable on a CPU and train quickly, because every hourly run happens on a standard GitHub Actions runner with no GPU attached.
+Most of a stock's next-day return is the *market's* next-day return, which
+daily OHLCV cannot predict — so a model trained on absolute returns spends all
+its capacity on noise, and "always up" beats it because the market drifts up.
+v8 subtracts the universe's mean return out of the label and predicts only the
+residual: which names beat their peers. That target is forecastable, the
+baseline it must beat is a true 50%, and the natural output is a ranking rather
+than a price. Switching from a transformer to gradient-boosted trees followed
+from the same honesty: ~40 weak tabular features is the regime where trees win,
+and they cost seconds instead of minutes.
 
-Each component has a specific job:
+## Performance
 
-| Component | What it is | Why it is there |
-|-----------|------------|-----------------|
-| Attention | Grouped Query Attention with query and key normalization | Lets every timestep look at the others while sharing key and value projections, which keeps memory use low |
-| Position encoding | Rotary Position Embeddings | Gives the model a sense of relative time without a fixed lookup table |
-| Expert routing | Mixture of Experts with SwiGLU experts and top 2 routing | Sends each input to the two experts best suited to it, so different market conditions get different treatment |
-| Activations | SwiGLU gated units | Smoother gradient flow than plain ReLU or GELU |
-| Normalization | RMSNorm with layer scale | Keeps training numerically stable |
-| Regularization | Stochastic depth and dropout | Reduces overfitting |
-| Optional state space block | Mamba SSM with a vectorized scan | Captures long range patterns when it is switched on |
-| Loss | BalancedDirectionLoss, a blend of Huber regression and binary cross entropy | Trains for price accuracy and direction accuracy together |
+Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-06-08, retrained
+before each fold with a 1-day embargo. Out-of-sample, reproducible with the
+command in [Quick Start](#quick-start).
 
-### Default configuration
+| metric | v8 | reference |
+|---|---|---|
+| mean daily rank IC | **+0.0126** | 0.0 = no skill |
+| IC t-statistic | +1.08 | > 2 would be significant |
+| IC hit rate | 55.1% of days | 50% = no skill |
+| long/short spread (top-5 vs bottom-5) | **+12.6 bp/day** | — |
+| long/short Sharpe (annualized, pre-cost) | +1.25 | — |
+| 1-day reversal baseline | IC +0.0026, −8.6 bp/day | v8 beats it |
 
-| Setting | Value |
-|---------|-------|
-| Parameters | about 430 thousand |
-| Hidden dimension | 96 |
-| Layers | 3 |
-| Attention heads | 4, with 2 key and value heads |
-| Experts | 2, with top 2 routing |
-| Prediction heads | 2 |
-| Input features | 44 technical indicators |
-| Sequence length | 30 timesteps |
-| Mamba SSM | off by default on CPU |
+**Read this honestly.** The signal is positive in every fold and every seed,
+and it beats the naive reversal baseline — but it is not statistically
+significant (t = 1.08 over 256 test days), and a pre-cost Sharpe of 1.25 on a
+five-name-per-side book would not survive daily turnover at retail commissions.
+Re-run by CI on a longer window (297 days, through 2026-08-07) the IC improved
+to +0.0153 (t 1.39, 56.9% hit rate) while the long/short spread fell to
++5.9 bp/day — the ranking held, the P&L on ten names a day is much noisier than
+the IC. Both windows are in [docs/ARA_V8.md](docs/ARA_V8.md). The defensible
+claim is "a small, consistently positive cross-sectional signal, measured with
+a harness that market drift cannot game." Not a trading system.
 
-## How a Prediction Is Made
-
-The model reads the last 30 timesteps of market data. For each timestep it computes 44 technical indicators from the raw open, high, low, close, and volume values. After normalization, every feature is clamped to a fixed range (`[-10, 10]` in the code) so that extreme values cannot push the gradients toward zero. The cleaned features then flow through the network and out the other side as a single combined prediction.
-
-```
-Market data for any ticker or pair
-        |
-        v
-44 technical indicators
-(RSI, MACD, Bollinger Bands, ATR, OBV, VWAP, and more)
-        |
-        v
-Grouped Query Attention with rotary positions
-        |
-        v
-Mixture of Experts layer (SwiGLU experts, top 2 routing)
-        |
-        v
-Prediction heads, combined into one output
-        |
-        v
-Price forecast and direction signal
-```
-
-The prediction heads each make their own forecast, and the model blends them with learned weights into a final number. The direction signal comes from the same forward pass, which is why the loss function trains both targets at the same time.
-
-## Performance and Honest Expectations
-
-These are next-day models. The numbers below are a true out-of-sample test: the models were trained only on data before 2025-06-01 and evaluated on the year that followed (`scripts/benchmark_model.py --holdout-start`), against baselines any model must beat to matter.
-
-| Model (v7) | Holdout samples | Directional accuracy | Always-up baseline | Return MAE | Zero-prediction MAE |
-|-------|---------|----------------------|--------------------|------|------|
-| Stocks | 12,800 | 50.2% | 51.4% | 0.0127 | 0.0127 |
-| Forex (1-day embargo) | 5,830 | 48.7% | 52.0% | 0.0031 | 0.0030 |
-
-**What the model is good at: calibrated magnitudes.** v7 predicts return sizes at the theoretical floor (its MAE matches the zero-prediction floor) — earlier versions predicted absurd moves (up to ~17% per day on forex, MAE 3.7× worse than predicting zero). The predicted size is now a meaningful, honest number.
-
-**What no model here has: a next-day direction edge.** On clean daily bars with technical-indicator inputs, neither model beats the always-up drift baseline out of sample. That is the market-efficiency expectation for this data, and we say it plainly rather than reporting in-sample scores. Treat the direction output as a weak tilt, not a signal.
-
-**A previously claimed forex edge was retracted.** Versions before 1.2.0 reported a "highly significant" 63.5% forex accuracy. That number was an artifact of the data source: the daily forex (`*=X`) candles are internally inconsistent — each bar's high/low spans a later window than its stored close, so day-t high/low leak the next close. A plain linear regression on day-t OHL ratios alone "achieves" 81% sign accuracy on this data, and neural nets trained on it reach 57–78% depending on the seed — none of it real. Since 1.2.0 forex trains and evaluates with a one-day embargo (the input window ends the day before the prediction base), which blocks the leak. The probes live in `scripts/diag_feat_corr.py` and `scripts/diag_bars.py`; reproduce the honest benchmark with `scripts/make_timesplit_db.py` + `scripts/benchmark_model.py`.
-
-Neither model is a multi-day or week-ahead forecaster. Recursive multi-step forecasts compound their error quickly, and any tool that claims reliable week-ahead price prediction from price and indicator data alone is overfitting.
+The binding constraint is universe size: the database carries 50 mega-caps, so
+each day offers ~50 ranks and very few independent bets. Widening the symbol
+list in `scripts/fetch_and_store_data.py` is the highest-leverage change
+available.
 
 ## Quick Start
 
-**Requirements:** Python 3.9+ and an internet connection. No GPU and no training required — predictions download a ready-made checkpoint from Hugging Face.
-
-**1. Clone the repository.**
+**Requirements:** Python 3.9+. No GPU, no torch.
 
 ```bash
 git clone https://github.com/MeridianAlgo/AraAI.git
 cd AraAI
-```
-
-**2. Create a virtual environment.**
-
-```bash
-python -m venv venv
-source venv/bin/activate  # on Windows use: venv\Scripts\activate
-```
-
-**3. Install the dependencies.**
-
-```bash
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**4. Run a prediction** using one of the snippets below.
+```bash
+# Fetch daily bars into training.db
+python scripts/fetch_and_store_data.py --db-file training.db --asset-type stock --limit 50
 
-### Predict a stock
+# The honest number: walk-forward backtest (~50 s)
+python -m ara eval --db-file training.db --holdout-start 2025-06-01 --folds 4
 
-```python
-from meridianalgo.unified_ml import UnifiedStockML
-from huggingface_hub import hf_hub_download
+# Fit on all data and save
+python -m ara train --db-file training.db --output models/ara_v8_stocks.joblib
 
-model_path = hf_hub_download(
-    repo_id="meridianal/ARA.AI",
-    filename="models/Meridian.AI_Stocks.pt",
-)
-
-ml = UnifiedStockML(model_path=model_path)
-result = ml.predict_ultimate("AAPL", days=5)
-print(result)
+# Rank the most recent day
+python -m ara predict --model-path models/ara_v8_stocks.joblib
 ```
 
-### Predict a forex pair
+### From Python
 
 ```python
-from meridianalgo.forex_ml import ForexML
-from huggingface_hub import hf_hub_download
+from ara import load, load_panel, make_dataset, predict
 
-model_path = hf_hub_download(
-    repo_id="meridianal/ARA.AI",
-    filename="models/Meridian.AI_Forex.pt",
-)
+model = load("models/ara_v8_stocks.joblib")
+data = make_dataset(load_panel("training.db", "stock"))
+today = data[data["date"] == data["date"].max()].copy()
 
-ml = ForexML(model_path=model_path)
-result = ml.predict_forex("EURUSD=X", days=5)
-print(result)
+today["score"] = predict(model, today)          # expected return vs the universe
+print(today.sort_values("score", ascending=False)[["symbol", "score"]].head(10))
 ```
 
-The first call downloads the checkpoint from Hugging Face and caches it locally, so later runs start instantly.
+`score` is a predicted **residual** return: +0.004 means "expected to beat the
+universe average by ~40 bp tomorrow", not "expected to rise 0.4%".
 
-## How Training Works
+## How it works
 
-Training runs on its own, without anyone starting it. GitHub Actions launches the stock pipeline at the top of every hour and the forex pipeline at half past every hour. If a run is still going when the next one is due, the new run waits in line rather than canceling the one already in progress, so a checkpoint is never lost to a restart.
+```
+daily OHLCV panel  ->  build_features()  ->  one row per (symbol, date):
+                                             ~40 scale-free features + xs_* day-ranks
+                                                        |
+                             target = fwd_ret - universe_mean(fwd_ret), winsorized at 4σ
+                                                        |
+                                       3x HistGradientBoosting (seed-averaged)
+                                                        |
+                                     predicted residual return -> daily ranking
+```
 
-Each run moves through four stages:
+Every feature is a return, ratio, z-score, or within-day rank — no price or
+volume **levels**, which encode symbol identity rather than signal. Eight
+features additionally carry a cross-sectional percentile rank so the model can
+ask whether a name is stretched *relative to its peers today*.
 
-1. Fetch. The pipeline pulls recent market data for up to 50 stocks or up to 30 forex pairs and stores it in a local SQLite database. It fetches a single timeframe, daily bars, split and dividend adjusted. Earlier versions mixed daily, hourly, and weekly bars in one table, which poisoned the prediction target; one consistent timeframe means one consistent next-day target.
-2. Train. The pipeline downloads the current checkpoint from Hugging Face and continues training it for up to 2000 optimizer steps. The step count is the stop condition, which keeps every run predictable in length. Windows are built per symbol and then sorted by date, the feature scaler is fit on the training split only, and targets are clipped to a realistic daily range so a single bad bar cannot distort the objective. Training uses gradient accumulation to simulate a batch size of 256, light data augmentation, and an exponential moving average of the weights for a smoother final model.
-3. Track. Every optimizer step reports its loss, learning rate, gradient norm, and elapsed time to Comet ML, so you can watch the training curves live. Per epoch metrics such as validation loss and direction accuracy are recorded as well, along with a per-symbol audit of exactly which data fed the run.
-4. Gate. Before anything is published, a sanity gate runs the fresh checkpoint over held-out windows and checks for the failure signatures of a broken model: a constant output, a collapse onto one direction, or a blown-up prediction scale. If the model is degenerate it is deleted instead of pushed, and the run is marked as failed so a tracking issue opens automatically.
-5. Deploy. Once a model clears the gate, the updated checkpoint is written to disk and uploaded back to Hugging Face, ready for the next run and for anyone who wants to download it.
+The v7 pipeline fed a 30×44 tensor per sample; v8 feeds one row with lagged
+returns as columns, since a tree reads `ret_21` directly and never needed the
+window. That is most of the 40× memory reduction and the speedup.
 
-The whole pipeline runs as a single GitHub Actions job. The model file never leaves the machine that produced it, which removes a class of failures where a checkpoint could go missing while it was handed between separate jobs.
+## Efficiency vs v7
 
-### Training techniques
+| | v7 | v8 |
+|---|---|---|
+| training time | ~7 min (2000 steps, CPU) | **~11 s** |
+| CI dependencies | torch, accelerate, comet-ml (~200 MB) | numpy, pandas, scikit-learn (~50 MB) |
+| CI runs per day | 48 (hourly stocks + forex) | **1** |
+| model | 433,059 parameters | 3 × 400 trees, 15 leaves |
 
-| Technique | Detail |
-|-----------|--------|
-| Learning rate warmup | A short linear ramp before cosine annealing begins |
-| Cosine warm restarts | Periodic restarts of the learning rate to escape shallow minima |
-| EMA weight averaging | A decay of 0.999, which produces weights that tend to generalize better |
-| Gradient clipping | A maximum norm of 1.0 to keep gradients from exploding |
-| Gradient accumulation | Builds an effective batch size of 256 from smaller micro batches |
-| Data augmentation | Small Gaussian noise plus occasional masking of timesteps |
-| BalancedDirectionLoss | Roughly 60 percent Huber regression and 40 percent direction loss, computed in percent units |
-| Early stopping | Stops when the moving average validation loss stops improving |
-| Feature clamping | Bounds features to a fixed range after normalization |
-| Mixed precision | bfloat16 on CPU and float16 on CUDA |
+Daily bars change once a day, so 23 of every 24 hourly runs retrained on
+identical data. The daily schedule is not a compromise; it is the correct one.
 
-## Technical Indicators
+## The CI gate
 
-The model reads 44 features computed from raw open, high, low, close, and volume data. There is no zero padding, so every feature carries real information.
-
-| Category | Indicators |
-|----------|------------|
-| Price | Returns, Log Returns, Volatility, ATR |
-| Trend | SMA (5, 10, 20, 50, 200), EMA (5, 10, 20, 50, 200) |
-| Momentum | RSI, Fast RSI, Stochastic RSI, Momentum, Rate of Change, Williams %R |
-| Oscillators | MACD, MACD Signal, MACD Histogram, Stochastic K and D, CCI |
-| Volatility | Bollinger Bands (Upper, Lower, Width, %B), Keltner Channels (Upper, Lower, %K) |
-| Volume | Volume SMA, Volume Ratio, OBV (normalized) |
-| Trend strength | ADX, Plus DI, Minus DI, Price versus SMA50 and SMA200, ATR percent |
-| Mean reversion | Z Score over 20 days, Distance from the 52 week high |
-
-## Checkpoint Format
-
-Every checkpoint is a single `.pt` file that holds both the weights and enough configuration to rebuild the model exactly. The main keys are:
-
-| Key | Type | Description |
-|-----|------|-------------|
-| `model_state_dict` | `dict` | The PyTorch model weights |
-| `model_type` | `str` | Either `stock` or `forex` |
-| `architecture` | `str` | `MeridianModel-2026` |
-| `version` | `str` | The checkpoint architecture version, currently `7.0.0`. This is the model-format revision used to gate loadable checkpoints; it is intentionally separate from the product release (`1.2.0`) that ships it. |
-| `input_size` | `int` | `44`, the feature count |
-| `seq_len` | `int` | `30`, the lookback window |
-| `dim` | `int` | Hidden dimension |
-| `num_layers` | `int` | Network depth |
-| `num_heads` | `int` | Attention heads |
-| `num_kv_heads` | `int` | Key and value heads for Grouped Query Attention |
-| `num_experts` | `int` | Number of experts in the Mixture of Experts layer |
-| `num_prediction_heads` | `int` | Number of output heads |
-| `dropout` | `float` | Dropout rate |
-| `use_mamba` | `bool` | Whether the Mamba block is active |
-| `mamba_state_dim` | `int` | Size of the Mamba hidden state |
-| `scaler_mean` | `Tensor` | Mean used to normalize features |
-| `scaler_std` | `Tensor` | Standard deviation used to normalize features |
-| `metadata` | `dict` | Best validation loss, direction accuracy, target bounds, and training history |
-
-The loader only accepts checkpoints at version 7.0 or newer. The v7 input pipeline changed the feature layout (a v6 checkpoint would silently mis-read v7 inputs), so older checkpoints are skipped and the previous v5.x/v6.x models are archived under `legacy/` on Hugging Face for reference only.
+`ara-v8.yml` runs the walk-forward backtest **before** fitting the shipped
+model and fails the run if mean IC is negative (`--min-ic 0.0`). Nothing
+reaches Hugging Face unless it measured a positive out-of-sample signal — which
+is precisely how v7 managed to publish an edgeless checkpoint every hour for
+months.
 
 ## Project Structure
 
 ```
-meridianalgo/
-  meridian_model.py        The MeridianModel architecture (GQA, MoE, optional Mamba SSM)
-  large_torch_model.py     Training loop, data handling, checkpoint save and load, inference
-  direction_loss.py        BalancedDirectionLoss and the direction accuracy metrics
-  unified_ml.py            Stock prediction interface and feature engineering
-  forex_ml.py              Forex prediction interface
-  utils.py                 GPU detection and accuracy tracking helpers
-  __init__.py              Package metadata and entry points
+ara/
+  features.py              Vectorized panel feature engineering
+  model.py                 Dataset, training, evaluation, walk-forward, persistence
+  __main__.py              CLI: python -m ara train|eval|predict
 scripts/
-  train_stocks.py          Stock training entry point
-  train_forex.py           Forex training entry point
   fetch_and_store_data.py  Market data ingestion into SQLite
-  push_to_hf.py            Uploads checkpoints to Hugging Face
-  sanity_check_model.py    Post-training gate that blocks degenerate models from publishing
-  migrate_hf_legacy.py     Moves older checkpoints into a legacy folder on Hugging Face
-.github/workflows/
-  stocks.yml               Hourly stock training at minute 00
-  forex.yml                Hourly forex training at minute 30
-  lint.yml                 Formatting and lint checks
+  push_to_hf.py            Uploads models to Hugging Face
+  hf_download.py           429-aware model download
 tests/
-  conftest.py                     Shared fixtures, including model checkpoints
-  test_checkpoint_health.py       Checks on checkpoint metadata
-  test_model_inference.py         Forward pass and state dictionary tests
-  test_directional_signal.py      Direction accuracy on real market data
-  test_predict_denormalization.py Verifies predictions are scaled back correctly
+  test_ara_v8.py           Lookahead, symbol-isolation, target, roundtrip, planted-signal
+.github/workflows/
+  ara-v8.yml               Daily train + backtest gate + publish
+  lint.yml                 Formatting and lint
+  stocks.yml / forex.yml   Legacy v7 pipelines, dispatch-only
+legacy/                    Frozen v7 transformer stack — see legacy/README.md
 ```
 
 ## Documentation
 
-Full documentation lives in [docs/](docs/INDEX.md):
+- **[Ara.AI v8](docs/ARA_V8.md)** — design rationale, measured numbers, limits
+- [Legacy v7](legacy/README.md) — what it was, why it was retired, how to run it
+- [Local Benchmark Report](LOCAL_BENCHMARK_REPORT.md) — the v6/v7 audit that motivated v8
+- [Quick Start](docs/QUICK_START.md), [FAQ](docs/FAQ.md), [Model Card](docs/MODEL_CARD.md)
+- [Changelog](docs/CHANGELOG.md)
 
-- [Quick Start](docs/QUICK_START.md) — install and run a prediction in 5 minutes
-- [FAQ & Troubleshooting](docs/FAQ.md) — common questions and fixes
-- [Model Card](docs/MODEL_CARD.md) and [Architecture](docs/ARCHITECTURE.md) — model internals
-- [Technical Indicators](docs/INDICATORS.md) and [Loss Functions](docs/LOSS_FUNCTIONS.md) — feature and objective details
-- [Training Guide](docs/TRAINING.md) — data pipeline, schedule, and CI structure
+## Forex
 
-## Version History
-
-The full record of changes lives in [docs/CHANGELOG.md](docs/CHANGELOG.md), kept separate from this document.
+v8 is stocks-only. A 22-pair cross-section is too thin to rank, and the source
+FX bars leak next-day information through day-t high/low — a plain regression
+on day-t OHL ratios "achieves" 81% sign accuracy on that data, none of it real.
+The v7 forex pipeline is frozen and dispatch-only rather than ported. Details
+in [LOCAL_BENCHMARK_REPORT.md](LOCAL_BENCHMARK_REPORT.md).
 
 ## Disclaimer
 
-This software is for research and educational purposes only. It is not financial advice.
+This software is for research and educational purposes only. It is not
+financial advice.
 
-Trading financial instruments carries significant risk. Every prediction is a probabilistic forecast based on historical data, and past performance does not guarantee future results. Markets can behave in ways no model expects during sudden shocks, liquidity crises, or structural shifts.
+Trading financial instruments carries significant risk. Every prediction is a
+probabilistic forecast based on historical data, and past performance does not
+guarantee future results. Markets can behave in ways no model expects during
+sudden shocks, liquidity crises, or structural shifts. The performance figures
+above are pre-cost, pre-slippage, and not statistically significant.
 
-You should never trade with money you cannot afford to lose. Any trading decision you make is yours alone. MeridianAlgo and its contributors are not liable for any financial loss that results from using this software.
+You should never trade with money you cannot afford to lose. Any trading
+decision you make is yours alone. MeridianAlgo and its contributors are not
+liable for any financial loss that results from using this software.
 
-The software is provided as is, without warranty of any kind. By using it you agree to hold MeridianAlgo and all contributors harmless from any claim that arises from your use of it. You are responsible for following all financial regulations that apply to you.
+The software is provided as is, without warranty of any kind. By using it you
+agree to hold MeridianAlgo and all contributors harmless from any claim that
+arises from your use of it. You are responsible for following all financial
+regulations that apply to you.
 
 ## License
 

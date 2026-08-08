@@ -1,0 +1,11 @@
+{
+  "model_version": "8.0.0",
+  "architecture": "AraAI-v8-CrossSectional",
+  "trained_at": "2026-08-08T19:42:42.936188+00:00",
+  "train_start": "1973-06-05",
+  "train_end": "2026-06-08",
+  "n_symbols": 50,
+  "seed": 0,
+  "n_seeds": 3,
+  "n_train": 471154
+}

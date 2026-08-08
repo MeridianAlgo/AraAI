@@ -1,0 +1,135 @@
+name: Ara.AI v8
+
+# Daily bars change once a day, so this runs once a day — 22:30 UTC, after the
+# US close. The whole pipeline (fetch, 4-fold walk-forward, final fit, push)
+# finishes in a few minutes on a 2-core runner with no torch installed.
+on:
+  schedule:
+    - cron: '30 22 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      skip_push:
+        description: 'Evaluate only, do not push to Hugging Face'
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - 'ara/**'
+      - 'tests/**'
+      - '.github/workflows/ara-v8.yml'
+
+concurrency:
+  group: ara-v8
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: '3.12'
+  MODEL_PATH: models/ara_v8_stocks.joblib
+  HOLDOUT_START: '2025-06-01'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  pipeline:
+    name: Evaluate, train, publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      # No torch, no accelerate, no CUDA wheels: ~15s of installing instead of
+      # the several minutes the v7 pipeline spent pulling a 200MB runtime.
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Unit tests
+        run: python -m pytest tests/ -q
+
+      - name: Fetch daily bars
+        run: |
+          python scripts/fetch_and_store_data.py \
+            --db-file training.db \
+            --asset-type stock \
+            --limit 50
+
+      - name: Database stats
+        run: |
+          python - <<'PY'
+          import sqlite3
+          c = sqlite3.connect("training.db")
+          n, s, d0, d1 = c.execute(
+              "SELECT COUNT(*), COUNT(DISTINCT symbol), MIN(date), MAX(date) "
+              "FROM market_data WHERE asset_type='stock' AND interval='1d'"
+          ).fetchone()
+          print(f"{n:,} bars | {s} symbols | {d0} -> {d1}")
+          PY
+
+      # The gate. Walk-forward IC must be positive out of sample or the run
+      # fails and nothing is published — a degenerate model cannot reach the
+      # hub by accident, which is exactly how v7 shipped for months.
+      - name: Walk-forward backtest (gate)
+        run: |
+          python -m ara eval \
+            --db-file training.db \
+            --holdout-start "$HOLDOUT_START" \
+            --folds 4 \
+            --json-out bench_results_v8_stocks.json \
+            --min-ic 0.0
+
+      - name: Train on all data
+        run: |
+          python -m ara train \
+            --db-file training.db \
+            --output "$MODEL_PATH"
+
+      - name: Today's ranking
+        run: python -m ara predict --db-file training.db --model-path "$MODEL_PATH"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ara-v8-${{ github.run_number }}
+          path: |
+            models/ara_v8_stocks.joblib
+            models/ara_v8_stocks.json
+            bench_results_v8_stocks.json
+          retention-days: 30
+
+      - name: Push to Hugging Face
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.skip_push)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python scripts/push_to_hf.py \
+            --model-path "$MODEL_PATH" \
+            --model-type v8 \
+            --repo-id meridianal/ARA.AI
+
+      - name: Summary
+        if: always()
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+          p = pathlib.Path("bench_results_v8_stocks.json")
+          if not p.exists():
+              print("## Ara.AI v8\n\nBacktest did not complete.")
+              raise SystemExit
+          r = json.loads(p.read_text())
+          m = r["pooled"]
+          print(f"## Ara.AI v8 — {r['architecture']} {r['model_version']}\n")
+          print("| metric | value |\n|---|---|")
+          print(f"| pooled test days | {m['n_days']} |")
+          print(f"| mean daily rank IC | {m['mean_ic']:+.4f} (t {m['ic_t_stat']:+.2f}) |")
+          print(f"| IC hit rate | {m['ic_hit_rate']*100:.1f}% |")
+          print(f"| long/short spread | {m['ls_mean_daily']*1e4:+.2f} bp/day |")
+          print(f"| long/short Sharpe | {m['ls_sharpe_annual']:+.2f} |")
+          print(f"| 1-day reversal baseline IC | {m['baseline_reversal_ic']:+.4f} |")
+          print(f"| total train time | {r['total_train_seconds']}s |")
+          PY

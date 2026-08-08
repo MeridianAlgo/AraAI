@@ -1,12 +1,10 @@
-name: Forex Training
+name: Forex Training (legacy v7)
 
+# FROZEN — dispatch-only. Honest holdout accuracy was 48.68% against a 52.02%
+# always-up baseline, and the source FX bars leak next-day information through
+# day-t high/low (see LOCAL_BENCHMARK_REPORT.md). Not superseded by v8: v8 is
+# stocks-only, because a 22-pair FX cross-section is too thin to rank.
 on:
-  schedule:
-    # Hourly, offset 30 min from the stock workflow so the two pipelines
-    # never hit the shared HF repo at the same time. The 429 rate-limit
-    # failures are handled by the atomic single-commit push (v1.1.0) and the
-    # retrying warm-start download (scripts/hf_download.py).
-    - cron: '30 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -64,7 +62,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('legacy/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
 
@@ -74,7 +72,7 @@ jobs:
           echo "--- Installing dependencies ---"
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -r requirements.txt
+          pip install -r legacy/requirements.txt
           pip install comet-ml huggingface_hub
           echo ""
           echo "--- Installed versions ---"
@@ -175,7 +173,7 @@ jobs:
           echo "   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "   Max steps: 2000 | No time limit (~2.5h budget)"
           echo "=================================================="
-          python -u scripts/train_forex.py \
+          python -u legacy/scripts/train_forex.py \
             --db-file training.db \
             --output models/Meridian.AI_Forex.pt \
             --use-all-data \
@@ -235,7 +233,7 @@ jobs:
           # If the model is degenerate (constant output, directional collapse,
           # or blown-up target scale), delete the .pt so the push step below
           # skips it, then fail the run so a tracking issue is opened.
-          if ! python scripts/sanity_check_model.py \
+          if ! python legacy/scripts/sanity_check_model.py \
               --model-path models/Meridian.AI_Forex.pt \
               --model-type forex \
               --db-file training.db; then

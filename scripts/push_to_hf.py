@@ -120,6 +120,8 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
         elif model_type == "forex":
             filename = "models/Meridian.AI_Forex.pt"
         else:
+            # v8 and anything later: keep the artifact's own name so the
+            # legacy .pt files stay untouched next to it.
             filename = f"models/{model_path.name}"
 
         print(f"Uploading {model_path.name} to Hugging Face...")
@@ -133,6 +135,16 @@ def push_model_to_hf(model_path, model_type="stock", repo_id="meridianal/ARA.AI"
         operations = [
             CommitOperationAdd(path_in_repo=filename, path_or_fileobj=str(model_path)),
         ]
+
+        # v8 writes a sidecar <name>.json with training metadata; ship it in
+        # the same commit so the hub copy is self-describing.
+        sidecar = model_path.with_suffix(".json")
+        if sidecar.exists():
+            operations.append(
+                CommitOperationAdd(
+                    path_in_repo=f"models/{sidecar.name}", path_or_fileobj=str(sidecar)
+                )
+            )
 
         model_card_content = _build_model_card(model_type)
         if model_card_content is not None:
@@ -203,7 +215,7 @@ def main():
     parser = argparse.ArgumentParser(description="Push models to Hugging Face Hub")
     parser.add_argument("--model-path", required=True, help="Path to model file")
     parser.add_argument(
-        "--model-type", default="stock", choices=["stock", "forex"], help="Model type"
+        "--model-type", default="stock", choices=["stock", "forex", "v8"], help="Model type"
     )
     parser.add_argument("--repo-id", default="meridianal/ARA.AI", help="Hugging Face repo ID")
 

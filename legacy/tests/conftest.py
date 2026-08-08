@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import pytest
 import torch
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+LEGACY_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = LEGACY_ROOT.parent
+# The v7 package lives under legacy/ now; keep `import meridianalgo` working
+# for these frozen tests without touching their bodies.
+sys.path.insert(0, str(LEGACY_ROOT))
 STOCKS_PT = REPO_ROOT / "models_hf" / "models" / "Meridian.AI_Stocks.pt"
 FOREX_PT = REPO_ROOT / "models_hf" / "models" / "Meridian.AI_Forex.pt"
 

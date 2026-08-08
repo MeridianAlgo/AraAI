@@ -4,6 +4,64 @@ All notable changes to Meridian.AI are documented here, from the first commit to
 
 ---
 
+## [v2.0.0] — 2026-08-08 — Ara.AI v8: cross-sectional stock ranking
+
+The v7 transformer is retired as the production stock model and frozen under
+`legacy/`. The new `ara/` package predicts a different thing, with a different
+model class, on a different schedule.
+
+### Why v7 was retired
+
+Trained honestly (data before 2025-06-01, evaluated on the year after), the v7
+stock checkpoint scored **50.23%** next-day direction accuracy against a
+**51.44%** always-up baseline, with return MAE exactly at the zero-prediction
+floor. It had no edge, and it retrained hourly to keep not having one. The
+architecture was not the problem: the target was.
+
+### What v8 changes
+
+- **Cross-sectional residual target.** Predicts next-day return *minus the
+  universe mean that day*, so the unforecastable market factor is removed from
+  the label and the baseline to beat is a true 50%. Output is a ranking, held
+  as a dollar-neutral long/short book.
+- **Gradient-boosted trees, not a transformer.** Three seed-averaged
+  `HistGradientBoostingRegressor`s over ~40 scale-free features. ~11 s per fit
+  versus ~7 min for v7's 2000 steps. No torch, no accelerate, no GPU.
+- **One row per (symbol, date), not a 30×44 window.** A tree reads `ret_21`
+  directly; the raw window was never needed. ~40× less memory.
+- **Cross-sectional rank features.** Eight indicators additionally enter as
+  within-day percentile ranks — the question the residual target actually poses.
+- **Honest metrics.** Daily rank IC and long/short spread replace direction
+  accuracy, which on raw returns is dominated by market drift. The reported
+  aggregate pools daily observations across folds rather than averaging
+  per-fold t-statistics.
+- **Expanding-window walk-forward** with a 1-day embargo, retrained per fold,
+  replacing the single train/test split.
+- **A publishing gate that measures.** `ara-v8.yml` fails the run if
+  out-of-sample IC is negative, before the shipped model is fitted.
+- **Daily schedule, not hourly.** Daily bars change once a day; 23 of every 24
+  runs retrained on identical data. 48 CI runs/day → 1.
+
+### Measured (4-fold walk-forward, 2025-06-02 → 2026-06-08)
+
+Mean daily rank IC **+0.0126** (t = 1.08, positive in all four folds and across
+four seeds), IC hit rate 55.1%, long/short spread **+12.6 bp/day**, pre-cost
+Sharpe +1.25 — beating a 1-day reversal baseline that scores IC +0.0026 and
+−8.6 bp/day. Positive and consistent, **not statistically significant**, and
+pre-cost. Full detail and limits in [ARA_V8.md](ARA_V8.md).
+
+### Repository changes
+
+- `meridianalgo/`, the v7 training/benchmark scripts, its tests, and its
+  `requirements.txt` moved to `legacy/`; see [`legacy/README.md`](../legacy/README.md).
+- `stocks.yml` / `forex.yml` are dispatch-only. Forex is not ported: 22 pairs
+  is too thin to rank cross-sectionally, and those bars leak.
+- Root `requirements.txt` is now the v8 runtime — no torch.
+- New tests cover lookahead, cross-symbol feature isolation, target neutrality,
+  save/load roundtrip, and a planted-signal sanity check.
+
+---
+
 ## [v1.2.1] — 2026-07-21 — cleanup and documentation
 
 - Removed dead code from `meridianalgo/__init__.py`: the `quick_predict` entry

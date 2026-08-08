@@ -124,7 +124,7 @@ jobs:
 
       - name: Run checkpoint health tests
         run: |
-          pytest tests/test_checkpoint_health.py \
+          pytest legacy/tests/test_checkpoint_health.py \
             -v \
             --tb=long \
             --no-header \
@@ -171,7 +171,7 @@ jobs:
 
       - name: Run inference tests
         run: |
-          pytest tests/test_model_inference.py \
+          pytest legacy/tests/test_model_inference.py \
             -v \
             --tb=long \
             --no-header \
@@ -218,7 +218,7 @@ jobs:
 
       - name: Run denormalization tests
         run: |
-          pytest tests/test_predict_denormalization.py \
+          pytest legacy/tests/test_predict_denormalization.py \
             -v \
             --tb=long \
             --no-header \
@@ -268,7 +268,7 @@ jobs:
       - name: Run directional signal tests
         run: |
           NO_NET=${{ github.event.inputs.skip_live_data == 'true' && '1' || '0' }} \
-          pytest tests/test_directional_signal.py \
+          pytest legacy/tests/test_directional_signal.py \
             -v \
             --tb=long \
             --no-header \
