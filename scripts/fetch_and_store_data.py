@@ -139,7 +139,13 @@ def main():
     parser = argparse.ArgumentParser(description="Fetch and store market data")
     parser.add_argument("--db-file", required=True, help="Database file path")
     parser.add_argument("--asset-type", choices=["stock", "forex"], required=True)
-    parser.add_argument("--limit", type=int, default=10, help="Number of symbols to fetch")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Fetch only the first N symbols of the list (default: all). For local "
+        "testing only — a partial universe changes what a cross-sectional model sees.",
+    )
     parser.add_argument("--period", default=None, help="Data period (overrides multi-timeframe)")
     parser.add_argument(
         "--interval", default=None, help="Data interval (overrides multi-timeframe)"
@@ -217,7 +223,7 @@ def main():
             "SLB",
             "EOG",
             "OXY",
-            "PXD",
+            # PXD removed: acquired by Exxon in 2024, delisted, fetches empty.
             "VLO",
             "MPC",
             "PSX",
@@ -282,10 +288,13 @@ def main():
         ]
         timeframes = FOREX_TIMEFRAMES
 
-    import random
-
-    random.shuffle(symbols)
-    symbols = symbols[: args.limit]
+    # No shuffling. This used to be `random.shuffle(symbols); symbols[:limit]`,
+    # which handed every CI run a different random half of the universe — two
+    # runs of identical code measured rank IC +0.0153 and +0.0089 purely because
+    # they trained on different symbols. A cross-sectional model is defined by
+    # its universe; the universe has to be the same every run.
+    if args.limit:
+        symbols = symbols[: args.limit]
 
     # Determine timeframes to fetch
     if args.period and args.interval:

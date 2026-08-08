@@ -50,24 +50,26 @@ be compared against an always-up baseline.
 
 ## Performance
 
-Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-06-08, retrained
+Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-08-06, retrained
 from scratch before each fold with a 1-day embargo between train and test.
+99 symbols, median 70 names per day, 297 test days.
 
 | metric | value | reference |
 |---|---|---|
-| mean daily rank IC | +0.0126 | 0.0 = no skill |
-| IC t-statistic | +1.08 | > 2 would be significant |
-| IC hit rate | 55.1% of days | 50% = no skill |
-| long/short spread, top-5 vs bottom-5 | +12.6 bp/day | — |
-| long/short Sharpe, annualized, **pre-cost** | +1.25 | — |
-| 1-day reversal baseline | IC +0.0026, −8.6 bp/day | v8 beats it |
-| direction accuracy on residual | 50.57% | 50% = no skill |
+| mean daily rank IC | +0.0205 | 0.0 = no skill |
+| IC t-statistic | +2.26 | > 2 is the significance bar |
+| IC hit rate | 56.6% of days | 50% = no skill |
+| long/short spread, top-5 vs bottom-5 | +18.6 bp/day | — |
+| long/short Sharpe, annualized, **pre-cost** | +1.58 | — |
+| 1-day reversal baseline | IC +0.0025, −8.4 bp/day | v8 beats it |
+| direction accuracy on residual | 51.03% | 50% = no skill |
 
-The signal is positive in all four folds and across four independent seeds, and
-it beats the naive reversal baseline. **It is not statistically significant**
-(t = 1.08 over 256 test days), and the pre-cost Sharpe would not survive daily
-turnover on a five-name-per-side book at retail commissions. Treat this as a
-small measured tilt, not a trading system.
+Positive in all four folds and stable across seed groups (IC +0.0204 to
++0.0209, t 2.25–2.30). **t = 2.26 clears the conventional bar only just**, on a
+single window, and one fold (+0.0405) carries much of the average while the
+other three sit near +0.013 with t < 1 individually. The long/short figures are
+pre-cost and would not survive daily turnover on a five-name-per-side book at
+retail commissions. Treat this as a small measured edge, not a trading system.
 
 ### v7, for comparison
 
@@ -86,8 +88,9 @@ checkpoint that had trained through its own evaluation window.
 
 - **Stocks only.** 22 FX pairs is too thin a cross-section to rank, and the
   source FX daily bars leak next-day information through day-t high/low.
-- **50-name universe.** Few independent bets per day; this is the main reason
-  the t-statistic is small.
+- **99-name universe.** Median 70 tradeable names per day and 5 per side means
+  few independent bets, which is why the long/short P&L is much noisier than
+  the rank IC.
 - **Daily close-to-close only.** No intraday, no multi-day horizon.
 - **Pre-cost.** No transaction costs, slippage, borrow, or capacity modeling.
 - **Survivorship.** The symbol list is today's large caps; delisted names are

@@ -57,8 +57,7 @@ jobs:
         run: |
           python scripts/fetch_and_store_data.py \
             --db-file training.db \
-            --asset-type stock \
-            --limit 50
+            --asset-type stock
 
       - name: Database stats
         run: |
@@ -75,6 +74,9 @@ jobs:
       # The gate. Walk-forward IC must be positive out of sample or the run
       # fails and nothing is published — a degenerate model cannot reach the
       # hub by accident, which is exactly how v7 shipped for months.
+      # --min-symbols guards the other failure mode: a partial fetch silently
+      # shrinks the universe, and a cross-sectional model measured on a
+      # different universe is measuring a different thing.
       - name: Walk-forward backtest (gate)
         run: |
           python -m ara eval \
@@ -82,7 +84,8 @@ jobs:
             --holdout-start "$HOLDOUT_START" \
             --folds 4 \
             --json-out bench_results_v8_stocks.json \
-            --min-ic 0.0
+            --min-ic 0.0 \
+            --min-symbols 90
 
       - name: Train on all data
         run: |
@@ -125,6 +128,7 @@ jobs:
           m = r["pooled"]
           print(f"## Ara.AI v8 — {r['architecture']} {r['model_version']}\n")
           print("| metric | value |\n|---|---|")
+          print(f"| universe | {r['n_symbols']} symbols, median {r['median_universe_per_day']:.0f}/day |")
           print(f"| pooled test days | {m['n_days']} |")
           print(f"| mean daily rank IC | {m['mean_ic']:+.4f} (t {m['ic_t_stat']:+.2f}) |")
           print(f"| IC hit rate | {m['ic_hit_rate']*100:.1f}% |")

@@ -44,6 +44,10 @@ def cmd_eval(args):
     )
     m = report["pooled"]
     print("-" * 66)
+    print(
+        f"  universe: {report['n_symbols']} symbols, "
+        f"median {report['median_universe_per_day']:.0f} names/day"
+    )
     for f in report["folds"]:
         print(
             f"  fold {f['fold']} {f['test_start']}->{f['test_end']}  "
@@ -80,6 +84,12 @@ def cmd_eval(args):
     if args.json_out:
         Path(args.json_out).write_text(json.dumps(report, indent=2))
         print(f"  wrote {args.json_out}")
+
+    # Universe gate first: a shrunken universe invalidates the IC gate below
+    # rather than failing it, so it has to be its own check.
+    if args.min_symbols is not None and report["n_symbols"] < args.min_symbols:
+        print(f"  GATE FAILED: {report['n_symbols']} symbols < {args.min_symbols} expected")
+        return 1
     if args.min_ic is not None and m["mean_ic"] < args.min_ic:
         print(f"  GATE FAILED: mean IC {m['mean_ic']:.4f} < {args.min_ic}")
         return 1
@@ -124,6 +134,9 @@ def main(argv=None):
     e.add_argument("--folds", type=int, default=4)
     e.add_argument("--json-out")
     e.add_argument("--min-ic", type=float, help="exit 1 if mean IC is below this (CI gate)")
+    e.add_argument(
+        "--min-symbols", type=int, help="exit 1 if the universe is smaller than this (CI gate)"
+    )
     e.set_defaults(fn=cmd_eval)
 
     p = sub.add_parser("predict", parents=[common], help="rank the most recent day in the DB")

@@ -73,46 +73,69 @@ raw window. That is the ~40× memory reduction and most of the speedup.
 
 ## Measured performance
 
-Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-06-08, retrained
-from scratch before each fold with a 1-day embargo between train and test:
+Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-08-06, retrained
+from scratch before each fold with a 1-day embargo between train and test. 99
+symbols, median 70 names per day, 297 test days.
 
 | metric | v8 | reference |
 |---|---|---|
-| mean daily rank IC | **+0.0126** | 0.0 = no skill |
-| IC t-statistic | **+1.08** | > 2 would be significant |
-| IC hit rate | 55.1% of days | 50% = no skill |
-| long/short spread (top-5 vs bottom-5) | **+12.6 bp/day** | — |
-| long/short Sharpe (annualized, pre-cost) | **+1.25** | — |
-| 1-day reversal baseline IC | +0.0026 | v8 beats it |
-| 1-day reversal baseline L/S | −8.6 bp/day | v8 beats it |
-| direction accuracy on residual | 50.57% | 50% = no skill |
-| direction accuracy on raw return | 50.05% | always-up 51.44% |
+| mean daily rank IC | **+0.0205** | 0.0 = no skill |
+| IC t-statistic | **+2.26** | > 2 is the significance bar |
+| IC hit rate | 56.6% of days | 50% = no skill |
+| long/short spread (top-5 vs bottom-5) | **+18.6 bp/day** | — |
+| long/short Sharpe (annualized, pre-cost) | **+1.58** | — |
+| 1-day reversal baseline IC | +0.0025 | v8 beats it |
+| 1-day reversal baseline L/S | −8.4 bp/day | v8 beats it |
+| direction accuracy on residual | 51.03% | 50% = no skill |
+| direction accuracy on raw return | 50.12% | always-up 51.64% |
 
-Per-seed runs (single booster, no averaging) landed at IC +0.0099 / +0.0147 /
-+0.0157 / +0.0163 — consistently positive, which is why the shipped model
-averages three seeds rather than gambling on one.
+Per-fold IC: +0.0147 / +0.0405 / +0.0114 / +0.0155 — positive in all four.
+Repeating the whole backtest with different seed groups gives IC +0.0205 /
++0.0205 / +0.0209 / +0.0204 (t 2.25–2.30), so the number is not a seed draw.
 
-### The same run on a longer window
+**Read this carefully.** t = 2.26 clears the conventional bar, but only just,
+and it is one test on one window. Fold 1 (+0.0405) carries much of the average
+while the other three sit at +0.011 to +0.015 with t < 1 individually. The
+long/short spread ranges +12.6 to +18.6 bp/day across seed groups — ten names a
+day carries far more idiosyncratic variance than the IC it comes from, so trust
+the IC and treat the P&L as an illustration, pre-cost and pre-slippage. This is
+a small measured edge, not a trading system.
 
-CI re-ran this on data through 2026-08-07 (297 test days instead of 256):
+### What the earlier 50-symbol numbers were
 
-| metric | 256-day window | 297-day window |
-|---|---|---|
-| mean daily rank IC | +0.0126 (t 1.08) | **+0.0153 (t 1.39)** |
-| IC hit rate | 55.1% | **56.9%** |
-| long/short spread | +12.6 bp/day | **+5.9 bp/day** |
-| long/short Sharpe | +1.25 | **+0.60** |
-| 1-day reversal baseline IC | +0.0026 | −0.0016 |
+Before the universe fix below, the same code measured IC +0.0126 (t 1.08) and
+then +0.0089 (t 0.81) on two CI runs that differed only in which symbols got
+fetched. Those numbers are superseded, not a second opinion — they were
+measured on randomly drawn half-universes.
 
-The ranking signal held up — IC and hit rate both improved. The *P&L* did not:
-the added fold (2026-04-22 → 2026-08-06) scored IC +0.0018 and −11.0 bp/day,
-roughly halving the long/short spread. Both tables are reported because
-quoting only the first would be cherry-picking the window.
+### Why the universe fix mattered so much
 
-The gap is informative. A top-5/bottom-5 book converts a rank signal into P&L
-through ten names a day, so it carries far more idiosyncratic variance than the
-IC does. IC is the metric to trust here; the long/short numbers are an
-illustration of what the ranking is worth before costs, not a track record.
+`scripts/fetch_and_store_data.py` used to call `random.shuffle(symbols)` and
+then take the first `--limit 50` of 100. Every CI run therefore trained and
+evaluated on a *different random half* of the universe, and `training.db` is
+not cached between runs. Two runs of byte-identical code measured IC +0.0153
+and +0.0089 for that reason alone.
+
+Removing the shuffle and fetching all 99 symbols (PXD dropped — delisted in
+2024, fetches empty) roughly doubled the cross-section and moved IC from
++0.0089/+0.0153 to a stable +0.0205.
+
+Two distinct things caused that, and they are worth separating:
+
+1. **More training data.** Twice the symbols, ~1.02M usable samples instead of
+   ~0.47M.
+2. **A more precise measurement.** Each day's IC is now a rank correlation over
+   ~70 names instead of ~35. Halving the noise in each daily observation raises
+   the t-statistic even when the underlying signal is unchanged — a better
+   instrument, not a stronger effect.
+
+Both are real gains, but only the first means the model got better. The honest
+summary is that the 50-symbol setup was too noisy to measure this signal at
+all, in either direction.
+
+A guard is now in CI: `--min-symbols 90` fails the run if the fetched universe
+shrinks, and the backtest JSON records `n_symbols` and
+`median_universe_per_day` so two reports can be compared meaningfully.
 
 **Read this honestly.** The IC is positive in all four folds and across every
 seed, and it beats the naive reversal baseline on both IC and P&L. It is *not*
@@ -127,15 +150,15 @@ and that is expected and fine: a market-neutral model is not trying to predict
 market direction. Comparing it to always-up is the category error v7's metrics
 were built on.
 
-### The binding constraint is universe size
+### Universe size is still the top lever
 
-The training DB carries 50 mega-cap symbols. A 50-name cross-section gives
-~50 ranks per day and, at 5 names per side, very few independent bets — which
-is most of why the t-statistic is small. Widening the fetch universe (the
-symbol list in `scripts/fetch_and_store_data.py`) to a few hundred liquid names
-is the single highest-leverage change available, and it costs one list edit
-plus a longer fetch. It has not been done here because it cannot be validated
-without re-ingesting data.
+99 symbols, median 70 tradeable names per day, is enough to measure the signal
+but not much more. At 5 names per side there are still few independent bets,
+which is why the long/short P&L swings so much more than the IC. Extending
+the list in `scripts/fetch_and_store_data.py` to a few hundred liquid names is
+the next obvious step; the fetch cost is roughly linear (99 symbols take
+~2 minutes) and the walk-forward already scales fine (~105 s for 4 folds on
+1.02M samples).
 
 ## Efficiency
 

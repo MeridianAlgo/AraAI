@@ -41,34 +41,38 @@ and they cost seconds instead of minutes.
 
 ## Performance
 
-Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-06-08, retrained
-before each fold with a 1-day embargo. Out-of-sample, reproducible with the
-command in [Quick Start](#quick-start).
+Expanding-window walk-forward, 4 folds over 2025-06-02 → 2026-08-06, retrained
+before each fold with a 1-day embargo. 99 symbols, median 70 names per day,
+297 test days. Out-of-sample, reproducible with the command in
+[Quick Start](#quick-start).
 
 | metric | v8 | reference |
 |---|---|---|
-| mean daily rank IC | **+0.0126** | 0.0 = no skill |
-| IC t-statistic | +1.08 | > 2 would be significant |
-| IC hit rate | 55.1% of days | 50% = no skill |
-| long/short spread (top-5 vs bottom-5) | **+12.6 bp/day** | — |
-| long/short Sharpe (annualized, pre-cost) | +1.25 | — |
-| 1-day reversal baseline | IC +0.0026, −8.6 bp/day | v8 beats it |
+| mean daily rank IC | **+0.0205** | 0.0 = no skill |
+| IC t-statistic | **+2.26** | > 2 is the significance bar |
+| IC hit rate | 56.6% of days | 50% = no skill |
+| long/short spread (top-5 vs bottom-5) | **+18.6 bp/day** | — |
+| long/short Sharpe (annualized, pre-cost) | +1.58 | — |
+| 1-day reversal baseline | IC +0.0025, −8.4 bp/day | v8 beats it |
 
-**Read this honestly.** The signal is positive in every fold and every seed,
-and it beats the naive reversal baseline — but it is not statistically
-significant (t = 1.08 over 256 test days), and a pre-cost Sharpe of 1.25 on a
-five-name-per-side book would not survive daily turnover at retail commissions.
-Re-run by CI on a longer window (297 days, through 2026-08-07) the IC improved
-to +0.0153 (t 1.39, 56.9% hit rate) while the long/short spread fell to
-+5.9 bp/day — the ranking held, the P&L on ten names a day is much noisier than
-the IC. Both windows are in [docs/ARA_V8.md](docs/ARA_V8.md). The defensible
-claim is "a small, consistently positive cross-sectional signal, measured with
-a harness that market drift cannot game." Not a trading system.
+**Read this carefully.** Positive in all four folds, stable across seed groups
+(IC +0.0204 to +0.0209, t 2.25–2.30), and it beats the naive reversal baseline.
+But t = 2.26 clears the conventional bar only just, on one window; fold 1
+(+0.0405) carries much of the average while the other three sit near +0.013
+with t < 1 individually. The long/short numbers are pre-cost and range +12.6 to
++18.6 bp/day across seeds — ten names a day is far noisier than the IC it comes
+from. Trust the IC, treat the P&L as an illustration. A small measured edge,
+not a trading system.
 
-The binding constraint is universe size: the database carries 50 mega-caps, so
-each day offers ~50 ranks and very few independent bets. Widening the symbol
-list in `scripts/fetch_and_store_data.py` is the highest-leverage change
-available.
+Earlier versions of this table reported IC +0.0126 (t 1.08) on 50 symbols.
+Those numbers were measured on a randomly drawn *half* of the universe — the
+data fetcher shuffled its symbol list, so every run saw different names. That
+is fixed; [docs/ARA_V8.md](docs/ARA_V8.md) has the before/after and separates
+how much of the improvement is more data versus a more precise measurement.
+
+Universe size is still the top lever: at 5 names per side there are few
+independent bets. Extending the symbol list in
+`scripts/fetch_and_store_data.py` is the next step.
 
 ## Quick Start
 

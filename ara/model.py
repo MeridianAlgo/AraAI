@@ -273,6 +273,12 @@ def walk_forward(
     return {
         "architecture": ARCHITECTURE_NAME,
         "model_version": MODEL_VERSION,
+        # The universe defines what "cross-sectional" means, so it belongs in
+        # the report: two runs on different symbol sets are not comparable, and
+        # that is not visible from the metrics alone.
+        "n_symbols": int(data["symbol"].nunique()),
+        "n_samples": int(len(data)),
+        "median_universe_per_day": float(data.groupby("date").size().median()),
         "folds": per_fold,
         "pooled": {
             "n_days": int(len(ic)),
