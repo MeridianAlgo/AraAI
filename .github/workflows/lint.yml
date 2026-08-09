@@ -35,7 +35,14 @@ jobs:
       - name: Auto-lint codes (Ruff)
         run: ruff check . --fix
 
+      # ponytail: PR branches can't be pushed to (no-merge-commits ruleset rejects
+      # the auto-format commit), so PRs only report; main still self-formats.
+      - name: Check formatting (PRs)
+        if: github.event_name == 'pull_request'
+        run: git diff --exit-code
+
       - name: Commit and Push Changes
+        if: github.event_name == 'push'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"

@@ -4,7 +4,12 @@ version = "2.0.0"
 description = "Ara.AI v8 - cross-sectional daily stock ranking"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
+
+# legacy/ is the frozen v7 stack, reached via PYTHONPATH, not installed.
+# Without this, flat-layout auto-discovery sees ['ara', 'legacy'] and errors out.
+[tool.setuptools.packages.find]
+include = ["ara*"]
 
 [tool.ruff]
 line-length = 100
